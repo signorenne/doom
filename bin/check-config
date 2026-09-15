@@ -1,0 +1,34 @@
+#!/bin/bash
+# Check the private config the way a fresh Emacs would see it: start a
+# throwaway daemon, byte-compile every private file into a temporary
+# directory (no .elc lands in the config), report what the compiler and
+# the startup said, list the repeating timers, ask whether every
+# function the config refers to is callable, and reload the config
+# twice to see what the second reload grows. Run after doom sync, from
+# the host, with emacs on PATH:
+#   bin/check-config
+# The daemon is stopped without kill-emacs-hook, so nothing that hangs
+# on that hook (the notes autocommit) runs.
+set -u
+name=xn-check-$$
+dir=$(mktemp -d "${TMPDIR:-/tmp}/check-config.XXXXXX")
+here=$(cd "$(dirname "$0")" && pwd)
+cleanup() {
+  emacsclient -s "$name" -e '(let ((kill-emacs-hook nil)) (kill-emacs))' >/dev/null 2>&1
+  # Without the hook the server does not remove its own socket file.
+  # Emacs puts it under $XDG_RUNTIME_DIR/emacs/, and in /tmp/emacs<uid>/
+  # with no emacs/ of its own when that variable is not set.
+  if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    rm -f "$XDG_RUNTIME_DIR/emacs/$name"
+  else
+    rm -f "/tmp/emacs$(id -u)/$name"
+  fi
+  rm -rf "$dir"
+}
+trap cleanup EXIT
+emacs --daemon="$name" > "$dir/daemon.log" 2>&1 || {
+  echo "the daemon did not start:"; cat "$dir/daemon.log"; exit 1; }
+emacsclient -s "$name" -e "(progn (load \"$here/check-config.el\" nil t) (check-config--run \"$dir/elc/\" \"$dir/report.txt\"))" >/dev/null
+cat "$dir/report.txt"
+grep -iE 'error|void' "$dir/daemon.log" | grep -v 'lexical-binding' && exit 1
+! grep -qE '^[0-9]+ files, [1-9]|^ +[^ ].*(Error|failed to compile| grew: )|problem\(s\)|out of date' "$dir/report.txt"
