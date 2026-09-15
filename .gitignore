@@ -1,0 +1,10 @@
+# Doom private config, ignore generated/transient files
+*.elc
+*~
+\#*\#
+.\#*
+custom.el
+.cache/
+.local/
+eln-cache/
+debug-adapters/
