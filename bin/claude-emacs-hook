@@ -1,0 +1,16 @@
+#!/bin/sh
+# Claude Code hook -> Emacs bridge. Installed into ~/.claude/settings.json by
+# M-x +ai/install-claude-hooks; never fails the hook (Claude keeps working
+# even when Emacs is not running or emacsclient is unavailable).
+#   usage: claude-emacs-hook <event>
+event="${1:-unknown}"
+dir="${CLAUDE_PROJECT_DIR:-$PWD}"
+command -v emacsclient >/dev/null 2>&1 || exit 0
+# Both go into an elisp string: a quote or a backslash in a path must not
+# end the string or change what is evaluated.
+esc() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
+# Doom names the socket after EMACS_SERVER_NAME when it is set; emacsclient
+# does not read that variable by itself.
+if [ -n "$EMACS_SERVER_NAME" ]; then set -- -s "$EMACS_SERVER_NAME"; else set --; fi
+emacsclient "$@" -q -e "(+ai--claude-event \"$(esc "$event")\" \"$(esc "$dir")\")" >/dev/null 2>&1 || true
+exit 0
