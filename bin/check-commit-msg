@@ -1,0 +1,22 @@
+#!/bin/sh
+# The shape a commit subject has here: type(scope): what, the what in
+# the imperative (add, drop, keep, stop, say) and no trailer that
+# names a tool. The scope is not optional. Install as a hook with
+#   ln -s ../../bin/check-commit-msg .git/hooks/commit-msg
+# from the config directory; git passes the message file as $1.
+file="$1"
+subject=$(sed -n '1p' "$file")
+fail() { printf 'commit-msg: %s\n  subject: %s\n' "$1" "$subject" >&2; exit 1; }
+
+case "$subject" in
+  ''|'#'*) exit 0 ;;                           # empty or a comment: git handles it
+esac
+printf '%s' "$subject" | grep -Eq '^(feat|fix|refactor|perf|docs|chore|test|style|build|ci|revert)\([a-z0-9._-]+\): [^ ]' \
+  || fail "the subject is type(scope): what, and the scope is not optional"
+case "$subject" in
+  *'; '*) fail "one change per commit: the subject lists two" ;;
+  *.) fail "no full stop at the end of the subject" ;;
+esac
+grep -Eiq '^(Co-Authored-By|Signed-off-by|Generated-by|Generated with)' "$file" \
+  && fail "no attribution trailers"
+exit 0
