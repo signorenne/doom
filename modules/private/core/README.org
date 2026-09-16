@@ -1,0 +1,231 @@
+#+title:    :private core
+#+subtitle: environment, defaults and maintenance
+
+* Description
+The small global things:
+
+- environment: tree-sitter grammars install themselves, =~/.local/bin= stays
+  on =exec-path=, and an Emacs server runs so =emacsclient= works,
+- editing defaults: fine-grained undo, bash tree-sitter mode,
+  completion as you type with the first candidate chosen, and what a
+  candidate means beside the list on ~M-d~,
+- images opened as pictures rather than as their bytes: fitted to the
+  window, centred, panned with ~hjkl~, zoomed with ~+~ and ~-~, ~f~ back to
+  the window and ~1~ to the picture's own size; SVG through librsvg, so
+  the size written into the file is the size drawn, and ~C-c C-c~ edits
+  it as the XML it is,
+- Doom maintenance in a compilation buffer, with a restart prompt,
+- [[https://github.com/kickingvegas/casual][casual]] menus: ~SPC m SPC~ in dired, ibuffer, info, bookmarks, re-builder
+  and the agenda shows what that mode can do, ~C-o~ in calc and isearch.
+
+* Menus
+Every transient menu closes with =q= or =ESC=, through transient's own
+~transient-bind-q-to-quit~ and the ESC binding Doom makes in its magit
+module, applied here as soon as transient loads. A menu that had a command
+on =q= shows it on =Q= instead; transient does that substitution itself.
+
+* Keybindings
+| Key         | Command                     | What it does                      |
+|-------------+-----------------------------+-----------------------------------|
+| ~SPC h r s~   | ~+core/doom-sync~             | sync, then offer a restart        |
+| ~SPC h r d~   | ~+core/doom-doctor~           | run doom doctor                   |
+| ~SPC h r u~   | ~+core/doom-upgrade~          | update Doom, pinned packages stay |
+| ~SPC t a~     | ~+corfu/toggle-auto-complete~ | as-you-type completion on and off |
+| ~SPC t S~     | ~subword-mode~                | move inside camelCase words       |
+| ~SPC t T~     | ~+core/toggle-transparency~   | frame opacity, ~C-u N~ to set it    |
+| ~SPC f x~     | ~+core/open-externally~       | open the file in its desktop app  |
+| ~SPC f n~     | ~+core/yank-file-name~        | copy the file name                |
+| ~SPC f N~     | ~+core/yank-file-directory~   | copy its directory                |
+| ~SPC f a~     | ~+core/yank-file-path~        | copy its absolute path            |
+| ~SPC f L~     | ~+core/yank-file-line~        | copy path:line, region aware      |
+| ~SPC f k~     | ~+core/copy-menu~             | every copy, with its value shown  |
+| ~SPC f t~     | ~+core/trash~                 | the trash, newest first           |
+| ~SPC o -~     | ~+core/dirvish-here~          | the file manager on this file's directory, preview pane on |
+| ~SPC f d~     | ~+core/dirvish-directory~     | the same on a directory asked for |
+| ~SPC s F~     | ~+core/find-any-file~         | a project file, ignored ones too  |
+| ~SPC p t~     | ~+core/project-todos~         | find TODO and friends             |
+| ~SPC m SPC~   | ~casual-*-tmenu~              | menu for the current mode         |
+| ~SPC m f~     | ~+core/dired-search~          | find files under here, by words   |
+| ~SPC m n~     | ~+core/dired-create~          | a new file, or directory with /   |
+| ~SPC m m~     | ~dirvish-move~                | move the marked files here        |
+| ~M-y~ (dired) | ~dirvish-yank-menu~           | copy, move, link the marked here  |
+| ~yc~ (dired)  | ~+core/files-to-clipboard~    | the files, to another app         |
+| ~yv~ (dired)  | ~+core/files-from-clipboard~  | files from another app, here      |
+| ~yd~ (dired)  | ~+core/dired-duplicate~       | a copy beside the original        |
+| ~yt~ (dired)  | ~+core/copy-file-contents~    | the file's text, to the kill ring |
+| ~SPC m t~     | ~+core/restore-from-trash~    | put back, from the trash listing  |
+| ~SPC m s~     | ~dired-do-symlink~            | symlink here, ~S~ relative, ~r~ rsync |
+| ~SPC m 2~     | ~+core/dirvish-other-pane~    | a second listing beside this one  |
+| ~SPC m o~     | ~+core/dired-open-marked~     | open every marked file            |
+| ~SPC m b~     | ~+core/quick-access-add~      | this directory in the b menu, ~B~ drops one |
+| ~TAB~ (dired) | ~+core/dired-subtree-cycle~   | this directory: open, open all the way down, shut |
+| ~S-TAB~ (dired) | ~+core/dired-fold-cycle~    | the whole listing, the same three steps |
+| ~b /~ (dired) | quick access                | the root of the filesystem        |
+| ~SPC p >~     | ~+core/find-file-in-other-project~ | choose another project, then a file in it |
+| ~SPC s f~     | ~consult-fd~                  | a file by name, here and below, ~SPC f l~ too |
+| ~zM~ ~zR~       | ~+fold/close-all~ ~+fold/open-all~ | close, open every fold        |
+| ~M-d~ (corfu) | ~corfu-popupinfo-toggle~      | what the candidate means, ~M-n~ ~M-p~ read it |
+| ~f~ (image)   | ~+core/image-fit~             | fill the window, ~1~ the true size  |
+| ~n~ ~p~ (image) | ~image-next-file~           | the next and previous picture     |
+
+The copy menu also copies the region as a fenced code block with the
+path:line on top, the symbol under the cursor, and the forge link.
+~SPC f d~ and ~SPC o -~ take Doom's dired keys, on purpose: the file
+manager is dirvish either way.
+
+Projectile's file list is not cached: fd lists a project in milliseconds
+and a cache goes stale the moment another program adds a file.
+
+Deleting moves to the desktop's trash (~delete-by-moving-to-trash~), the
+freedesktop one under =~/.local/share/Trash= that Dolphin shows, so ~D~,
+~x~ and ~SPC f D~ can be undone: ~SPC f t~ lists the trash and ~SPC m t~
+there reads each file's =.trashinfo= record and moves it back to the path
+it came from. ~r~ in dired is ~revert-buffer~, a full refresh, since
+=dired-do-redisplay= could leave a dirvish listing looking emptied.
+
+Files go to other apps as =text/uri-list= through =wl-copy= (=xclip= on
+X11), which is what Dolphin, mail and chat clients read; the kill ring
+gets the paths. The same two tools bring files in. The copy menu ~SPC f k~
+has both of these too, plus the file's whole text.
+
+The file manager is dirvish, opened with the preview pane by ~SPC o -~
+and ~SPC f d~ (~F~ hides it). Images, video frames and audio details are
+made with ImageMagick, ffmpeg and ffprobe, which this machine has; with
+=vipsthumbnail= installed (package =vips-tools=) images use that. ~b~
+jumps to a quick access entry (home, notes, projects, doom, downloads,
+documents, media, scratch, ~+core-quick-access~), and ~SPC m b~ adds the
+directory you are in under a letter, kept by savehist in
+~+core-quick-access-extra~; the menu is rebuilt through the variable's
+own setter, never with setq. ~SPC m 2~ opens a second listing beside the
+first, the preview making way; ~C~ and ~R~ then offer the other pane.
+The localleader has the symlink and rsync commands dirvish leaves
+without a key. ~dirvish-peek-mode~ shows the same preview beside the
+minibuffer while choosing a file. A file can be dragged out of a listing
+into another program, a right click is a menu, wdired edits permission
+bits, and renaming a tracked file is a git mv.
+
+* Searching and replacing
+~SPC s SPC~ is a menu of the searches and of the flags ripgrep takes for
+them: a literal string, whole words, case, only the names that match,
+only a kind of file it knows, lines of context. consult already passes
+on whatever follows a lone =--= in its prompt, which works and has to be
+remembered; the menu sets the same flags by name and then searches the
+project, this directory, one it asks for, another project, or the word
+under the cursor. The flags go to ~+vertico-file-search~ as its ~:args~, which is the way
+Doom takes them: it builds ripgrep's whole command line itself every
+time it searches, so binding ~consult-ripgrep-args~ round it would be
+thrown away without a word.
+
+The same options narrow a replace. ~r~ opens ~+core/replace-menu~, which
+asks where with the letters the search column already uses: this
+buffer, the project, this directory, one it asks for, another project,
+the files marked in dired. A transient only answers for itself, so the
+flags are kept in ~+core--kept-flags~ as the replace menu opens and
+written at the top of it; ~+core--search-flags~ falls back to them.
+
+Each of those asks ripgrep which files under the place hold the text,
+with the flags that are set, and hands that list to ~fileloop~: the
+replace visits those files and no others, asking at every match. The
+one exception is ~f~, the files marked in dired, which is Emacs's own
+~dired-do-find-regexp-and-replace~: it asks for its own regexp, ignores
+the flags, and visits every file that is marked. ~F~
+makes the text literal by quoting it into the regexp, ~w~ replaces whole
+words only, ~i~ ignores case, and the word under the cursor is offered
+as the thing to replace. ~SPC s R~ is the project one without the menu.
+
+* Configuration
+- ~+core-transparency-alpha~, 85 by default.
+- ~corfu-auto~ is on, 0.15 s after two characters, ~corfu-preselect~ is
+  ~first~ so ~RET~ takes the candidate; ~SPC t a~ makes it manual, ~C-SPC~.
+- ~+core-notes-dir~ (=~/org/=) and ~+core-projects-dir~ (=~/projects/=):
+  where the notes and the projects live; the notes module and the C++
+  scaffolds read them.
+
+* The shared library
+=autoload/lib.el= holds what the other private modules ask core for, one
+answer each: ~+core-project-root~ (the VCS root, else the topmost CMake or
+PlatformIO directory, remembered for ~+core-project-root-memo-seconds~
+since projectile walks the whole tree for a directory without a
+repository), ~+core-file-at-point~ (dired marks, the file at
+point, this file), ~+core-compile~ (a compilation buffer that carries its
+name in ~+core-compile-name~), ~+core-last-compilation-buffer~ (the build,
+test or run that started last, whoever started it), ~+core-run-in-vterm~,
+~+core-git~ and ~+core-git-state~ (no-repo, stopped, dirty, clean),
+~+core-todo-regexp~, ~+core-language~ (a mode's language for a fenced
+block or a babel block, one table, ~+core-languages~).
+core loads first in the =:private= block and every one of them is
+autoloaded, so a module calls them without a declaration.
+
+* Working on the config
+Three habits keep the config sound, each backed by a check:
+
+- A config file must survive =SPC h r r= (~doom/reload~): a form that
+  appends to a list, adds a hook or starts a timer runs again on reload,
+  so it removes its own entries first, or keeps a handle it cancels.
+  Twice a reload doubled a list here (dc7a3ca, the capture templates);
+  =bin/check-config= reloads twice and names what this config grew.
+- A function bound, hooked, advised or listed in =config.el= but defined
+  in =autoload/= needs its =;;;###autoload= cookie, or the first use is
+  void in a fresh Emacs; =doom sync= does not notice. =doom doctor=
+  reads the modules for that, and =SPC h C= asks the running session.
+- A commit is one change, =type(scope): what=, no trailer. The what is
+  written in the imperative, as an instruction to the code: =add=, =drop=,
+  =keep=, =stop=, =say=, =make=. The scope is never left off: it is the
+  module the change belongs to, or =project= when the change is across
+  the tree.
+  =bin/check-commit-msg= refuses the rest once linked as
+  =.git/hooks/commit-msg=.
+- Every =package!= carries a =:pin=, the commit installed here, so =doom
+  sync= on another machine installs the same versions and an upgrade is a
+  decision: =M-x doom/bump-package-at-point= on the line (or
+  =doom/bump-packages-in-buffer=) moves the pin to the newest commit, then
+  =SPC h r s= installs it. =SPC h r u= updates Doom and its own pins and
+  leaves the private packages where they are.
+
+=doom doctor= also names the tools and fonts each module wants, and
+=bin/check-config= (run on the host after =doom sync=) starts a throwaway
+daemon, byte-compiles every private file into a temporary directory,
+reports the compiler's and the startup's complaints, lists the repeating
+timers, asks whether every referenced function is callable, and reloads
+the config twice to name any list, hook or timer of this config's that
+the second reload grew: ten seconds, the check to run after any large
+change.
+
+* Performance
+Measured on 2026-09-17 in a fresh frame: a 47 MB log opens in 216 ms
+(fundamental mode, as Doom arranges for big files), 200 cursor moves in it
+30 ms; a 2 MB C++ file opens in 1.3 s (the tree-sitter parse), 20 page
+downs 52 ms; a 155 KB org file opens in 188 ms; the fdc project's 1684
+files list in 92 ms; a C++ buffer of that project comes back in 338 ms and
+its server, started in the container, attaches within half a second; a
+cursor move in dired costs 2 to 6 ms.
+
+What keeps it that way:
+- No repeating timer runs for a buffer nobody sees: every timer wake is a
+  redisplay, and with dirvish on screen a redisplay costs some 20 ms. The
+  dashboard animation stops off screen; the butler wakes once per step.
+- ~eglot-sync-connect~ is nil: the buffer comes back at once, the server
+  attaches when ready, instead of a one second wait on every first open.
+- clangd indexes at low priority, with half the cores.
+- dired shows no vc state: that attribute ran git twice per file, in the
+  background, every time a directory of a repository was entered. Add
+  ~vc-state~ back to ~dirvish-attributes~ if the fringe marks are missed.
+- Tree-sitter grammars for the enabled modes are installed ahead of time,
+  so no first open compiles one; ~treesit-auto-install-grammar~ stays
+  ~always~ for the next language. (Not listed here: the list rots.)
+- Projectile has no cache; fd lists a project in milliseconds.
+- Completion runs after a pause of 0.15 s, not on every keystroke.
+- Backspace in the popup deletes a character. Doom makes it reset the
+  popup whenever a candidate is chosen, for the preview it inserts;
+  with the first chosen from the start that was every backspace.
+- ~large-file-warning-threshold~ is 64 MB; below that, files just open.
+
+Doom's own part, left as it is: gcmh (16 MB idle, 64 MB busy, 128 MB with
+a language server), ~read-process-output-max~ 1 MB under eglot, native
+compilation of every package ahead of time, so-long and fundamental mode
+for huge files, ~redisplay-skip-fontification-on-input~.
+
+When something is slow: =M-x profiler-start=, do the slow thing, =M-x
+profiler-report=. In a running session, =emacsclient -s server -e= can run
+the same from outside, and =/proc/PID/stat= over a few seconds tells
+whether Emacs is busy while idle.
