@@ -1,0 +1,42 @@
+#+title:    :private qtcreator
+#+subtitle: Qt Creator's own files, read
+
+* Description
+Qt Creator keeps what it knows in XML: the kits, toolchains, Qt
+versions and devices in its settings directory, and a
+=CMakeLists.txt.user= beside a project saying which of them that project
+builds with, in which configuration, and how it is run. This module
+reads both and answers in plists.
+
+It writes nothing. Qt Creator need not be running, or installed, for
+its settings to be worth reading: what matters is that somebody once
+defined a kit there. The =cpp= module builds its own kits from what it
+says; nothing here knows what a build is.
+
+* What it answers
+| Function                  | What it says                                    |
+|---------------------------+-------------------------------------------------|
+| ~+qtcreator-kits~           | every kit defined, as plists: name, compilers, toolchain, sysroot, Qt, device, environment |
+| ~+qtcreator-kit~ ID         | one of them by its id                           |
+| ~+qtcreator-configurations~ ROOT | the build configurations of that project   |
+| ~+qtcreator-active~ ROOT    | what it has active there: kit, configuration, directory, run target, arguments and whether the run is remote |
+| ~+qtcreator-forget~         | read the files again                            |
+
+The settings are looked for in ~+qtcreator-settings-dirs~ on the host and
+under the same path in each container's home, stopped ones included,
+since a kit defined in a container is a kit that runs there. That part
+is asked of the =:private container= module.
+
+A value may name another: =%{Qt:QT_INSTALL_PREFIX}= and the compilers are
+expanded as Qt Creator expands them, asking =qmake= where its Qt is when
+it has to, in the container when the kit runs in one.
+
+* Configuration
+- ~+qtcreator-settings-dirs~ ("~/.config/QtProject/qtcreator"), where to
+  look, host and container alike.
+- =doctor.el= says so when there is nothing on the host, which is only a
+  remark: a Qt Creator in a container is read all the same.
+
+* The files
+- =autoload/qtcreator.el= is all of it: the XML reader and its cache, the
+  settings directories, the kits, the project's user file.
