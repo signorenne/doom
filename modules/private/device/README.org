@@ -1,0 +1,33 @@
+#+title:    :private device
+#+subtitle: a machine that is not this one, over ssh
+
+* Description
+A board on the bench, a box on the desk. Where it is and how to reach
+it is a plist of ~:name~, ~:host~, ~:user~, ~:port~ and ~:key~, which another
+module works out; the =cpp= module reads it from the Qt Creator kit, as
+Qt Creator's Projects mode has it.
+
+This module turns that into command lines: run something there, copy a
+tree over, stop what is running. It runs nothing itself. The lines are
+handed back and the caller decides where they go, which is why the same
+line can be shown in a prompt, sent to a compilation buffer, or made
+into a process.
+
+* What it builds
+| Function              | The line it returns                         |
+|-----------------------+---------------------------------------------|
+| ~+device-ssh-argv~      | the ssh command that reaches it, as a list  |
+| ~+device-where~         | =user@host=, for a prompt or a message        |
+| ~+device-run~           | a shell command run there                   |
+| ~+device-run-argv~      | the same from a list of arguments           |
+| ~+device-kill~          | stop a program there, quiet if it was not running |
+| ~+device-copy~          | rsync a directory over, through the same ssh |
+
+The key and the port are left out of the ssh command when there is
+nothing to say: no ~-i~ without a key, no ~-p~ for 22.
+
+* Configuration
+Nothing of its own. =doctor.el= says so when ssh or rsync is missing.
+
+* The files
+- =autoload/device.el= is all of it.
