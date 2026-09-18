@@ -1,0 +1,44 @@
+#+title:    :private container
+#+subtitle: where a toolchain lives when it is not on this machine
+
+* Description
+A compiler, an SDK or a runtime that is not installed on the host often
+lives in a container. This module answers the questions about that, and
+nothing else: which containers there are, which one holds a program,
+what a command must look like to run in one, where the container keeps
+its home, and how to reach a file inside it.
+
+It knows nothing about C++, kits or builds. The =cpp= module builds its
+kits on top of it: the kit says which container it runs in, and asks
+here how to enter it.
+
+* What it answers
+| Function                        | What it says                              |
+|---------------------------------+-------------------------------------------|
+| ~+container-list~ (ALL)           | the running containers, or every one      |
+| ~+container-for~ PROGRAM          | the container holding PROGRAM, or nil for the host |
+| ~+container-has-p~ NAME PATH      | whether PATH is a file or a command there |
+| ~+container-run~ NAME ARGV        | the first line ARGV prints there          |
+| ~+container-home~ NAME            | the home it was given, as the host sees it |
+| ~+container-path~ NAME PATH       | that path as TRAMP reaches it             |
+| ~+container-enter~ NAME           | the argv that starts a command inside it  |
+| ~+container-forget~               | drop what was found, for one started since |
+| ~+container/forget~               | the same, as a command                     |
+
+~+container-for~ asks the running containers first and starts a stopped
+one only if none of them has the program, saying so while it does;
+what it finds is cached against the list of running containers, so a
+container started later is looked at again rather than a miss sticking.
+
+~+container-enter~ drops the shell functions this Emacs exports
+(=BASH_FUNC_x%%=), which a bash of another version refuses with a line of
+noise on every command.
+
+* Configuration
+- ~+container-program~ ("distrobox"): what lists and enters them.
+- ~+container-runtime~ ("podman"): what is asked about the inside of one,
+  and the TRAMP method that reaches in.
+- =doctor.el= says so when either is missing.
+
+* The files
+- =autoload/container.el= is all of it; =config.el= holds the two names.
