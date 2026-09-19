@@ -1,0 +1,114 @@
+#+title:    :private ui
+#+subtitle: glyphs, dashboard and visual aids
+
+* Description
+- one more font fallback for arrows, technical and dingbat symbols, on top
+  of the Nerd Font and emoji fonts Doom already maps,
+- glyph helpers: insert an icon, insert it as elisp, or check the fonts,
+- a dashboard with the name as an ASCII banner a ripple runs through,
+  carrying a slow wave of colour, a greeting another module may register
+  (the butler's), the date as it would be announced, and the entry points
+  with their current keys; the same in a terminal,
+- where you are, in code buffers: a header line with the project path
+  and the symbol path, file > class > function, replaced by the first
+  line of the enclosing function while that is scrolled off the top;
+  the symbol outline at the side on ~SPC t o~; a thumb in the right
+  fringe, as long a part of the edge as the window is of the buffer and
+  sitting where you are in it, drawn by Emacs in the theme's colours
+  rather than by the desktop; the minimap on the right
+  on ~SPC t m~, off until asked since its window lays out the whole
+  buffer on every redisplay, eight milliseconds a frame for a thousand
+  lines on a big frame, its marks held still while the wheel turns;
+  indent guides on ~SPC t i~,
+  off until asked since each bar costs a redisplay per scroll step on a
+  big frame; diagnostics at the end of the line as well as in the
+  popup, flymake underneath, which eglot reports into directly,
+- Treemacs settings and documentation popups.
+
+* The banner and the greeting
+The banner spells out ~+ui-banner-name~, your login name unless
+=config.el= says otherwise, in the letters of ~+ui-banner-font~: the
+ascii9 figlet font, seven rows of seven columns a glyph, so a name is
+drawn by laying its glyphs side by side when the dashboard is built
+rather than kept as art.
+~+ui-banner~ takes art of your own instead, one string per line, when
+there is something better than a name to put up there. Either way it
+stands in for Doom's banner widget, which is how the dashboard README
+says to replace the banner in both the GUI and a terminal.
+
+The banner is alive in two ways. A ripple rolls through it letter by
+letter: each letter moves as one piece, a row up or down, so the word stays
+readable while it sways; ~+ui-banner-ripple-letters~ is the length of the
+wave in letters and ~+ui-banner-ripple-speed~ how far it travels per tick.
+Behind that a wave of colour runs between the two theme colours in
+~+ui-banner-gradient~ over ~+ui-banner-wave-steps~ shades, so it follows
+the theme; on a theme that is not a Doom theme the banner keeps Doom's face
+and only the ripple moves. The frames of the ripple and the runs of the
+wave are computed once when the banner is drawn, since both repeat; a tick
+picks its frame. One timer drives both, every ~+ui-dashboard-tick-interval~
+seconds, and it runs only while a client frame shows the dashboard, not on
+a daemon's terminal frame. ~+ui-dashboard-animate~ nil stops it.
+
+Doom centres the dashboard down the window by padding it, and measures
+the window with ~get-buffer-window~, which answers for the selected frame.
+A child frame, the butler's bubble or a completion popup, is the
+selected frame while the window hooks run for it, and the dashboard was
+then padded for a seven row window: the centring was lost and, nothing
+else resizing the real window, it never came back. A child frame
+changing size says nothing about the dashboard, so ~+doom-dashboard-resize-h~
+is skipped while one is selected; the real frame's own resizes still
+run it, margins and all.
+
+The greeting is whatever ~+ui-dashboard-greeting-function~ inserts, given
+the width to centre in; with the butler module on it is his, in his
+bubble, and ~+ui-dashboard-tick-hook~, run in the dashboard buffer at
+every tick with the ticks elapsed, is what keeps him blinking there. The
+dashboard itself knows no module: nil and an empty hook show the date
+alone. The bubble is drawn in characters, so the words keep the normal
+size and are bold instead, face ~+ui-greeting~. A line below, the date is
+announced the way it would be said, "Tuesday, the 15th of September 2026,
+at 11:36", in English whatever the system locale, and the minute is kept,
+face ~+ui-date~.
+
+The dashboard can be scrolled, ~C-u~ and ~C-d~ or the wheel, when it is
+taller than its window; Doom's habit of pulling the cursor back to the menu
+after every command is set aside for scrolling commands. Nothing on it gets
+selected or lit up: the cursor is hidden, the mouse does not highlight the
+entries as it passes, and a drag selects nothing. Clicking an entry, or
+~RET~ on it, still opens it.
+
+A picture instead of the banner wants ~doom-dashboard-widget-banner~
+back in ~+doom-dashboard-functions~ and ~fancy-splash-image~ pointed at
+it.
+
+* Keybindings
+| Key     | Command                 | What it does                       |
+|---------+-------------------------+------------------------------------|
+| ~SPC i g~ | ~+ui/insert-glyph~        | insert an icon, ~C-u~ keeps its face |
+| ~SPC i G~ | ~+ui/insert-glyph-form~   | insert the elisp form for an icon  |
+| ~SPC i e~ | ~emoji-search~            | insert an emoji by name            |
+| ~SPC i u~ | ~insert-char~             | insert any character by name       |
+| ~SPC t G~ | ~+ui/glyph-test~          | see whether the fonts render       |
+| ~SPC t o~ | ~imenu-list-smart-toggle~ | the symbol outline at the side     |
+| ~SPC t h~ | ~+ui-where-mode~          | the header line saying where you are |
+| ~SPC t m~ | ~demap-toggle~            | the minimap, off until asked       |
+| ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
+| ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
+| ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation in a popup           |
+| ~SPC e t~ | ~+treemacs/toggle~          | the project drawer, as Doom's ~SPC o p~ |
+| ~SPC h '~ | ~doom/describe-char~      | which font draws the character     |
+
+~]e~ and ~[e~ are ~next-error~, which walks whatever buffer last reported
+errors. With flymake doing the checking, that is some compilation log
+from an hour ago, and the key leaves the file altogether. Flymake says
+in its own manual that it does not take ~next-error~ over and that one
+should say so oneself, so a buffer flymake checks gets a
+~next-error-function~ of its own and ~]e~ walks that buffer's diagnostics.
+
+* Configuration
+- ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
+- The thumb in the fringe is the face ~yascroll:thumb-fringe~, the theme's
+  ~base6~; it is never drawn shorter than two lines, which a window of
+  forty on a file of fifty thousand would otherwise earn.
+- The fonts themselves are in =$DOOMDIR/config.el=; ~SPC h r f~ reloads them.
+- Dashboard entries: ~+doom-dashboard-menu-sections~.
