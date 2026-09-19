@@ -1,0 +1,436 @@
+#+title:    :private cpp
+#+subtitle: CMake, PlatformIO, Qt, clangd and dape
+
+* Description
+Configure, build, run, test, debug and fix, from the keyboard, in any
+project; C and C++ get the most, the rest get the same menu:
+
+- [[https://github.com/mohkale/projection][projection]] drives the build: CMake through the kit (below), and its
+  own types for Cargo, Meson, Make, Gradle, Maven, npm, Python and some
+  sixty more. ~SPC k SPC~ is one menu for all of them; the columns follow
+  the project type.
+- The kit, the one thing every CMake command goes through: the build
+  directory, and where the commands run, read from the disk the way Qt
+  Creator would.
+- Problems and fixes in one place: next and previous problem, the list,
+  the server's quickfix at point, every code action, clang-tidy on a file
+  or the project, with a prefix to apply its fixes, clang-format.
+- [[https://gitlab.com/jgkamat/rmsbolt][rmsbolt]] shows the assembly beside the source, line for line, live,
+  compiled with the flags the compilation database records, in the kit's
+  container when that is where the compiler is. C, C++, Rust, Go, Zig,
+  Java and more.
+- Rust, Kotlin, Go, Java, Python, JavaScript, TypeScript, web and Zig
+  modules are on with tree-sitter and eglot; =doom doctor= lists the
+  servers that are missing and how to install each. Rust debugs with
+  codelldb, which =+cpp/install-codelldb= fetches.
+- PlatformIO is registered as another project type, with =+pio/= commands
+  for environments, upload, the serial monitor in a terminal, the board
+  catalogue and gdb.
+- clangd is the language server, ccls is one keystroke away, per project if
+  you want. =--query-driver= lets clangd read PlatformIO's cross compilers.
+  QML gets =qmlls= (=qmlls6= on openSUSE) and =CMakeLists.txt= gets
+  =cmake-language-server=, when they are installed; =doom doctor= says so.
+- [[https://github.com/svaante/dape][dape]] debugs through gdb. CMake executables are offered by name, anything
+  else asks for the program.
+- The style gates you run before finishing: clang-format over the tracked
+  files, clang-tidy over the project or one file.
+- Project templates that already carry the style, see below.
+
+* The kit
+Every CMake command, configure, build, ctest, run, gdb, clangd, clang-tidy,
+goes through one thing, the kit: a build directory, and where the commands
+that touch it run. It is read from the disk, never asked:
+
+- =build/*/CMakeCache.txt=, one kit per configured directory, with the
+  compiler, toolchain file, generator and build type CMake recorded;
+- =CMakeLists.txt.user=, Qt Creator's targets, one per kit, with every
+  build configuration of each, built or not: its directory, type and
+  initial arguments, what its build step makes, and the run
+  configuration: the executable, its arguments, its working directory,
+  on the device or here;
+- Qt Creator's settings, =profiles.xml= and its neighbours, on the host
+  or in a distrobox whose home the host can see: the kits themselves,
+  compilers, Qt, cmake, gdb, sysroot, the whole environment the kit
+  sets, the device it deploys to. A kit defined in a container's
+  settings runs in that container, no probing needed; Qt Creator's
+  macros in the arguments, =%{Qt:qmakeExecutable}= and the rest, are
+  filled in from it, so a configuration never built configures the way
+  Qt Creator would, in a fresh checkout too;
+- =CMakePresets.json=, one kit per configure preset with a =binaryDir=,
+  its build type followed through =inherits=;
+- =.dir-locals.el=, the kits =SPC k w= wrote down as =+cpp-kits=, which
+  complete what the disk knows and stand in for what it lacks.
+
+The kit in use is, in order: the one chosen for the project (=SPC k K=,
+written to =.dir-locals.el= as =+cpp-kit=), Qt Creator's active
+configuration when its directory is configured, the newest configured
+kit whatever wrote it, a preset or a plain directory, else the first
+preset, and last a plain =build= on the host. =SPC k ?= says which one
+and why; both menus show it in their header. A directory whose cache
+was written for another path, the project moved since, is stale: CMake
+would refuse it, so it is not a kit; =SPC k ?= names it, =SPC k K= picks
+it and =SPC k m F= configures it fresh.
+
+The kit owns the preset: a preset kit passes =--preset= to configure
+beside its directory, build and test take the directory only, and
+projection is told which preset that is, so nothing asks. There is no
+separate "set preset": the kit list offers every preset.
+
+Build types are siblings: =SPC k y= picks Debug, Release, RelWithDebInfo
+or MinSizeRel and switches to the kit of that type in the current kit's
+family, the same Qt Creator kit in another configuration, the preset
+with that type, the other directory of a plain project. A sibling that
+exists but was never built, a Qt Creator configuration or a preset, is
+configured first; one that does not exist is made: a new directory
+next to the current kit's, named the way
+the family names its types (=Desktop-Release=, =cmake-build-release=,
+=build/Release= for a plain =build=, and =-manual= when the name would
+be a preset's), configured with the current kit's tool set read from its
+cache, compilers, make program, toolchain, sysroot, Qt prefix and qmake,
+the generator, the project's overrides, and the type; never in another
+kit's directory. A Qt project with no prefix anywhere is asked which Qt
+(=SPC k m -D= =CMAKE_PREFIX_PATH= changes it later; the system Qt and
+=~/Qt/*/gcc_64= are offered). Both headers list the family's types. Nothing of this
+invents a configuration where one exists: what Qt Creator, a preset or
+a previous configure made is used as it is.
+
+A family is what the kit names have in common once the type is taken
+off, which for a Qt Creator project is the kit: fdc-mule has
+=horizon-sdk=, =horizon-pc= and =local-pc=. =SPC k Y= switches family
+keeping the type, and a family whose kit of that type was never built
+gets it configured from a built kit of the same family, with the
+arguments Qt Creator planned for it. Those arguments win over the
+cache they are made from, and a toolchain file among them stands for
+a whole tool set: nothing of another SDK is carried beside it, the
+configure runs where that SDK is, found by the file, and a family with
+nothing built configures from them alone; one with neither says so.
+Qt Creator's Profile is offered by its name where it exists.
+
+Packaging: =SPC k P= builds the target that packages the project, found
+among the targets by name (=NAME.hpkg=, =NAME.hpkglite=,
+=NAME.debug.hpkg=, =package=, =package_source=, =dist=), or picked with
+a prefix argument, and kept as =+cpp-package-target=; when it ends the
+packages it wrote into the build directory are named. =SPC k o= copies
+the newest into =+cpp-package-dir=, asked once. =SPC k S= runs one of the
+project's scripts, executables under =scripts/=, =tools/=, =bin/= or a
+shell script at the top, where the kit runs, with the arguments last
+given. Targets come from the file API reply of the build directory,
+the shared one Qt Creator writes, or from the generator's help when
+there is none, so custom targets are there whoever configured.
+
+=.dir-locals.el= is a snapshot, not something to type: every setter
+writes its own key, and =SPC k w= writes the whole setup as it stands,
+every kit whole (=+cpp-kits=: directory, type, generator, the tool set
+as =-D= arguments, the environment, the build targets, the run
+configuration, the container), then the kit in use, the container, the
+server, the build target and configuration, the run target and
+arguments, the overrides, so what was detected becomes explicit and
+the project carries it without Qt Creator, its caches or its settings;
+run it again whenever the setup changed. A =+cpp-kit= that names
+nothing on disk any more is said once, and a fresh directory of that
+name is what the next configure makes.
+
+=SPC k G= writes the same as CMake presets, =CMakeUserPresets.json=
+since the tool sets are this machine's (=CMakePresets.json= with a
+prefix argument): a configure preset per kit with its directory,
+generator, cache variables and environment, a build preset with the
+targets the kit's build step makes, =all fdc.hpkg install= for the
+mule, a test preset. Then =cmake --preset horizon-sdk-Release= and
+=cmake --build --preset horizon-sdk-Release=, in the container, do what
+Qt Creator does, from any shell; and the presets are kits here like
+any other, completed from =+cpp-kits= with what a preset cannot say.
+
+A multi-config generator, Ninja Multi-Config, chooses the type at
+build time: the kit lists its configurations, =SPC k y= sets which one
+(=+cpp-build-config=), and every build, install and ctest passes it as
+=--config= or =-C=; run and debug take that configuration's executable.
+
+What Qt Creator itself says is read by the =:private qtcreator= module:
+the kits it defines, and what a project has active there. This module
+turns that into its own kits, and works without it, from the caches
+and presets on the disk alone.
+
+A kit whose compiler is not on the host lives in a container, the way an
+embedded SDK does: the =:private container= module is asked which one has
+the compiler, the kit finds the SDK's =environment-setup-*= script next to
+its sysroots,
+and every command for that kit runs inside the container from the
+project directory with that script sourced. That is what Qt Creator does
+when it builds with such a kit, and what makes a build, a run or a debug
+session work when the executable's own loader lives in the SDK sysroot.
+clangd runs there too, so every Qt type resolves; a jump into an SDK
+header opens through TRAMP, =/podman:<name>:/opt/...=, read only, from
+any buffer of the project.
+
+When a compiler exists on the host and in a container both, detection
+picks the host; =SPC k l b= names the container instead, written to
+=.dir-locals.el= as =+cpp-container=, and everything moves there: builds,
+tests, the debugger, the server. An empty name goes back to detecting.
+A container started after the first look is noticed by =SPC k m Z=,
+which forgets what the kits read.
+
+Run and debug take Qt Creator's run configuration when there is one: the
+target, the arguments and the working directory; =A= in the panel chooses
+another target, =a= other arguments, both kept in =.dir-locals.el=. Every
+build, run and debug saves the project's buffers first.
+
+A kit whose Qt Creator kit names a device, the mule's ARM kit and its
+=FDC_PROTO_B=, runs there: =SPC k r= starts the installed executable on
+the device over ssh, at the path the build's install step puts it,
+with the key, user and port the settings hold, and =SPC k U= deploys
+first the way Qt Creator's steps do, the app stopped, the build
+installed into =.deploy= under the build directory with its prefix,
+that prefix synced over rsync; shown and asked before anything runs.
+Debugging there is =SPC k D=, further down.
+
+* The CMake panel
+=SPC k m= opens the panel, the equivalent of Qt Creator's Projects mode. Its
+header shows what a build depends on: the generator, the build type, the
+kit and where it runs, the default target, the job count and how many
+cache variables you have overridden.
+
+| Group               | Keys                                             |
+|---------------------+--------------------------------------------------|
+| Kit                 | =K= pick the kit, =y= build type, =Y= kit family,      |
+|                     | =Z= forget the kits and read the disk again      |
+| Settings            | =-D= set a cache variable, =-U= clear one,           |
+|                     | =-L= log level, =-j= jobs, =-v= verbose,               |
+|                     | =s= default target, =A= run target, =a= run arguments  |
+| Configure and build | =c= configure, =F= configure fresh (drops the      |
+|                     | cache), =z= configure, reindex and restart the   |
+|                     | server, =b= build, =C= clean, =W= rebuild             |
+| Files and status    | =I= project status, =v c= CMakeCache.txt,          |
+|                     | =v p= CMakePresets.json,                           |
+|                     | =v j= compile_commands.json, =v d= .dir-locals.el,   |
+|                     | =w= write the setup to .dir-locals.el,           |
+|                     | =G= generate the presets from it                 |
+
+The CMake flags are the keys: =-D= sets a cache variable, =-U= clears one,
+=-j= the jobs, =-v= verbose, =-L= the log level. Running, testing and
+debugging are on the leader and in =SPC k m=, not here.
+
+- a *preset* comes from =CMakePresets.json= and brings its own build
+  directory, build type and cache variables; each preset is a kit.
+- *cache variables* you set with =v= are passed as =-DNAME=VALUE= to every
+  configure, the way Qt Creator keeps its CMake configuration table. =v=
+  completes over what =CMakeCache.txt= already holds, with the current value
+  shown, so you are picking from the project's real options rather than
+  typing blind. =V= drops one again.
+
+The panel writes what you choose into the project's =.dir-locals.el=:
+=+cpp-kit=, =+cpp-container=, =+cpp-build-target=, =+cpp-cache-overrides=,
+=+cpp-run-args= and =+cpp-run-target=. They survive a restart, they can be
+read and edited by hand, they are marked safe, so Emacs does not ask
+about them, and a value set in a buffer (a mode or subdirectory entry, a
+=setq-local=) wins over the file's for that buffer. Only the alist is
+rewritten, so comments and other forms in the file stay.
+
+A configure writes =compile_commands.json= into the kit's build directory,
+where clangd does not look on its own, so clangd is started with
+=--compile-commands-dir= pointing at the kit's database, and a restart
+(=SPC k l r=) reads the kit again. For tools that look in the root only,
+clang-tidy run by hand or another editor, ~SPC k l l~ links the kit's
+database there. If a jump lands in the wrong place, =?= says which
+database the server was given, and =z= configures and restarts.
+
+A project that has no database at all, qmake or a hand written Makefile,
+gets one thing more: ~SPC k l c~ writes a =.clangd= whose fallback flags
+carry a C++ standard and every Qt include path on the machine, so =gd= on
+=QString= reaches =qstring.h= even there. ~SPC k l r~ restarts the server
+to read it.
+
+~F4~ and Doom's ~SPC p o~ switch between header and source in either kind of
+buffer, and a name with a platform in it, =foo.arm.cpp=, finds =foo.h=.
+
+** A project that Qt Creator already builds
+Nothing to set up. Qt Creator's active configuration is the kit, its
+build directory is where =SPC k b= builds, inside the container its
+compiler lives in, with the SDK environment sourced; =SPC k r= runs what
+Qt Creator's run configuration runs, from its working directory; =SPC k d=
+debugs it with the container's gdb. =SPC k K= switches to another of its
+configurations, or to a plain host directory.
+
+When something is off, =?= prints what is actually set: the kit and how it
+was chosen, the build directory and whether it is configured, where the
+commands run and which environment script is sourced, the other kits,
+build type, generator, compiler, Qt version, your overrides, the run
+arguments, where the compilation database is and whether the root link
+exists, which server is running, and the versions of clangd, cmake, gdb
+and clang-tidy. =z= is the usual repair: it configures, relinks
+=compile_commands.json= and restarts the server.
+
+* Running one test
+=SPC k T= runs only the test the cursor is in. It reads
+the framework from the includes, then the case name out of the buffer:
+=TEST_CASE("...")= for doctest, the slot name for QtTest. The name goes to
+the built binary as =--test-case=NAME= or as the slot argument, so the run
+is the same one you would type by hand.
+
+=SPC k u= runs a whole test executable and asks which one when the
+build has several. Both run what is in the build directory, so build first.
+
+* New files
+New files open from a template in the house style, with the include guard,
+the namespace and the Doxygen header already written:
+
+| Pattern        | What it starts from           |
+|----------------+-------------------------------|
+| =*.hpp=          | a header with its namespace   |
+| =*.cpp=          | a source including its header |
+| =main.cpp=       | a program entry point         |
+| =test_*.cpp=     | a doctest suite               |
+| =CMakeLists.txt= | a target skeleton             |
+
+Inside a buffer, type the key and press =TAB=:
+
+| Key   | What it expands                 |
+|-------+---------------------------------|
+| =doxy=  | a Doxygen block                 |
+| =tc=    | a doctest case, =sc= a subcase    |
+| =qprop= | a Q_PROPERTY with its accessors |
+| =qobj=  | a QObject class                 |
+
+* Keybindings
+Two menus, one rule: a key means the same thing on the leader, in the
+menu and in the panel. =SPC k SPC= is the menu, what you do, and its
+columns follow the project type; =SPC k m= is the CMake panel, what you
+set, with the CMake flags as keys. Both show the state in their header:
+the kit, the types of its family, the default target, the server.
+
+| Key       | What it does                                                                                               |
+|-----------+------------------------------------------------------------------------------------------------------------|
+| ~SPC k SPC~ | the menu; ~SPC k m~ the CMake panel                                                                          |
+| ~SPC k c~   | configure, ~b~ build, ~r~ run, ~d~ debug; Doom's ~SPC c C~ recompiles, ~SPC d d~ picks a debug configuration          |
+| ~SPC k t~   | the ctest suite, ~T~ only the test at point, ~u~ a test executable whole                                       |
+| ~SPC k B~   | build any target, ~s~ sets the default one, ~i~ installs, ~P~ packages, ~o~ copies the package out, ~S~ runs a script, ~U~ deploys to the device |
+| ~SPC k K~   | pick a kit (a preset, a directory, a Qt Creator configuration), ~y~ the build type, ~Y~ the family, ~?~ which one and why |
+| ~SPC k I~   | project status, ~w~ write the setup to .dir-locals.el, ~G~ generate the presets from it                        |
+| ~SPC k e~   | next problem, ~E~ previous, ~.~ the server's fix at point, ~f~ clang-format this buffer                          |
+| ~SPC k g t~ | clang-tidy this file, ~g T~ with its fixes applied, ~g p~ the project, ~g F~ clang-format the project              |
+| ~SPC k H~   | any file of the project; Doom's ~SPC p o~ and ~F4~ switch header and source                                    |
+| ~SPC m D~   | the declaration, ~SPC m u~ where it is used                                                                  |
+| ~SPC k a~   | assembly, live, beside the source; ~A~ disassemble at point                                                  |
+| ~SPC k n~   | new project, ~N~ new Qt MVVM app                                                                             |
+| ~SPC k l s~ | switch server, ~r~ restart it, ~i~ inlay hints, ~e~ its log                                                     |
+| ~SPC k l c~ | write .clangd, ~l~ link compile_commands.json                                                                |
+| ~SPC k l b~ | run the kit in a distrobox, kept in .dir-locals.el                                                           |
+| ~SPC k p~   | PlatformIO: ~e~ environment, ~b~ build, ~u~ upload, ~m~ monitor, ~t~ test, ~i~ index, ~d~ debug, ~B~ boards, ~n~ new project |
+| ~SPC d~     | Doom's debugger keys                                                                                       |
+
+The panel, =SPC k m=: ~K~ ~y~ ~Y~ ~Z~ for the kit (pick, type, family,
+forget); ~-D~ ~-U~ ~-L~ ~-j~ ~-v~ for the cache variables (=CMAKE_PREFIX_PATH=
+offers the Qts found), the log level, the jobs and verbosity; ~s~ ~A~ ~a~ for the default target, the run target and
+its arguments; ~c~ ~F~ ~z~ ~b~ ~C~ ~W~ to configure (plain, fresh, with a
+reindex), build, clean, rebuild; ~I~ ~v c~ ~v p~ ~v j~ ~v d~ ~w~ for the status
+and the files behind it, ~G~ generates the presets. A setter keeps the panel open, so the header
+shows what it did. In either menu ~q~ closes it and ~?~ then a key
+explains the key, so no command sits on those two.
+
+** Function keys, as in Qt Creator
+| Key | What it does                              |
+|-----+-------------------------------------------|
+| ~F2~  | go to definition, ~S-F2~ the declaration    |
+| ~F4~  | header and source                         |
+| ~F5~  | debug or continue, ~S-F5~ stop              |
+| ~F6~  | run, ~F7~ build, ~F8~ configure               |
+| ~F9~  | breakpoint, ~F10~ over, ~F11~ into, ~S-F11~ out |
+
+* Templates
+=SPC k n= copies a template from =$DOOMDIR/templates/cpp/= and replaces
+={{PROJECT}}= and ={{PROJECT_UPPER}}= with the name you give.
+
+| kind | what you get                                                                                     |
+|------+--------------------------------------------------------------------------------------------------|
+| =lib=  | header-only C++23 library, doctest suites, one example per component, install and package config |
+| =app=  | C++23 program: the logic in headers the tests link, =src/main.cpp= only wires it                   |
+| =qt=   | Qt Quick application in MVVM: model, view model, QML, and the view model under QtTest            |
+
+All three carry the same tooling: =.clang-format=, =.clang-tidy= (plus a
+relaxed one for the tests), =.editorconfig=, a warnings interface target, and
+=CMakePresets.json= with =dev=, =release=, =asan= and =ci=. They also ship an
+=AGENTS.md= stating the rules, so an agent working in the project follows the
+same style you do. What every kind shares, the editorconfig, the gitignore,
+the warnings target and the agent pointer, lives once in =_base/= and is
+copied first; a kind's own file of the same name wins.
+
+The C++ templates use the library style: snake_case, trailing return types,
+braced init, east const, =std::expected=, Doxygen on every symbol. The Qt
+template uses Qt style: PascalCase types, camelCase functions, =m_= members,
+=QObject *parent=, with the view models registered through =QML_ELEMENT=.
+
+* Workflow
+- CMake: ~SPC k n~ or open a project, ~SPC k K~ pick the =dev= preset,
+  ~F8~, ~F7~, ~F6~. ~F9~ then ~F5~ to debug.
+- Before finishing: ~SPC k g F~, ~SPC k g p~, then the =ci= and =asan=
+  presets through ~SPC k K~ and ~SPC k t~.
+- PlatformIO: ~SPC k p e~ pick the environment, ~SPC k p b~ build,
+  ~SPC k p u~ upload, ~SPC k p m~ watch the serial output. Run
+  ~SPC k p i~ once so clangd knows the compiler flags.
+
+* Indentation
+A C++ buffer indents the way its project's =.clang-format= says, read
+when the buffer opens: the width (=IndentWidth=, or the named style's),
+tabs or spaces, where braces go (Allman when =BreakBeforeBraces= is
+Allman or a Custom that puts a function's brace on its own line, Linux
+and GNU by name, K&R otherwise, which is what Google, LLVM, WebKit and
+the rest are), whether namespace bodies indent and whether case labels
+step in from the switch. A project without one gets K&R by four. This
+fills the holes in Emacs's own C++ rules, which push the brace of a
+namespace, class or enum body in and keep case labels on the switch;
+what you type lands where clang-format would put it, and clang-format
+on save settles the rest.
+
+* Hierarchies
+~SPC c h~ asks the server who calls the function under the cursor and what
+it calls in turn; ~SPC c T~ asks what a class derives from and what derives
+from it. Both are eglot's own, which defines them and binds neither, and
+clangd answers both. The tree is walked a branch at a time, so it costs
+only what you open.
+
+* Debugging
+~SPC k d~ debugs what the kit builds, where the kit builds it: on this
+machine for a host kit, inside the container for a cross one, with the
+gdb that sits beside the kit's compiler.
+
+Anything that is not here is attached to over the gdb protocol.
+~+cpp--debug-attach~ starts that gdb under its DAP interpreter with two
+things settled on the command line rather than in the request: ~set
+sysroot~, so the libraries read are the target's and not this machine's,
+and ~file~, so the symbols are the ones built here. The second matters
+more than it looks: gdb 14, which an SDK of this age ships, takes no
+program with an attach request at all and would otherwise step through
+a target it has no symbols for.
+
+- ~SPC k D~ (~+cpp/debug-on-device~) starts =gdbserver= on the kit's device
+  over ssh, on the binary at the install path, and attaches to it. The
+  gdbserver is a process here, not a compilation buffer, so ending the
+  session ends it too; its output is kept in =*gdbserver*= for when it
+  refuses to start.
+- ~SPC k j~ (~+cpp/debug-remote~) attaches to a port something is already
+  serving on: a gdbserver started by hand, a PlatformIO board's debug
+  server, qemu with ~-g~.
+- ~+cpp-debug-port~ (2345) and ~+cpp-gdb~ (nil, worked out from the kit)
+  are the two settings, both safe in =.dir-locals.el=.
+
+* Configuration
+- ~+cpp-lsp-server~, ~+cpp-container~, ~+cpp-clangd-args~,
+  ~+cpp-ccls-init-options~.
+- ~+cpp-templates-dir~, ~+cpp-tidy-file-filter~ (which files
+  ~SPC k g t~ lints).
+- ~+pio-env~, set with ~SPC k p e~, kept per project with a prefix argument.
+- ~+cpp-kit~, ~+cpp-build-target~, ~+cpp-cache-overrides~, ~+cpp-run-args~
+  and ~+cpp-run-target~, written by the panel into the project's
+  =.dir-locals.el=; the kit's directory is what projection builds in.
+- A CMake or PlatformIO tree counts as a project even without git.
+- The files: =project.el= (kind, root, settings, the runner), =kit.el=
+  (what a kit is, read from the disk, chosen and cached, the commands),
+  =container.el= (where a kit runs: the SDK script beside the sysroots,
+  and a command as a shell line or a process there; which container it
+  is, and how to enter it, belongs to the =:private container= module), =build-type.el= (types
+  and families as siblings, switching, making one from the current kit,
+  Qt), =device.el= (deploy to the device, run there),
+  =tasks.el= (package, copy it out, run a script), =cmake.el=,
+  =run.el=,
+  =test.el=, =lsp.el=, =style.el=, =scaffold.el=, =menu.el=, =asm.el=,
+  =pio.el=, and =shim.el=, the one place that calls a private function
+  of projection, dape or jsonrpc.

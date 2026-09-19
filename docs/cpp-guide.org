@@ -1,0 +1,225 @@
+#+title: Starting a C++ project
+#+author: Nicolò Plebani
+#+startup: overview
+#+options: toc:nil
+
+From an empty directory to a built, tested, debugged project, in the
+order you actually do it. Every key here is on the cheat sheet under
+=C and C++=; this is the thread that joins them. The keys are collected
+at the end.
+
+* The short version
+1. =SPC k n= and answer three prompts. It configures itself.
+2. =SPC k ?= to see which kit it picked. =SPC k K= if it picked wrong.
+3. =F7= build, =F6= run.
+4. =F9= on a line, =F5= to debug it.
+5. =SPC k g F= and =SPC k g p= before you call it done.
+
+The rest of this guide says what each of those does and when it matters.
+
+* Making the project
+=SPC k n= asks three things: which template, where to put it, what to
+call it. Then it offers to make a git repository, opens the file you
+would start in, and tells you the next key.
+
+| Template | What you get                                         |
+|----------+------------------------------------------------------|
+| =lib=      | header-only C++23 library, doctest, install rules    |
+| =app=      | a program whose logic sits in headers the tests link |
+| =qt=       | Qt Quick in MVVM, the view model under QtTest        |
+
+=SPC k N= is the same thing with =qt= chosen for you.
+
+Whichever you pick, a shared overlay goes down first and the template's
+own files go on top. From the overlay you get =.clang-format=,
+=.clang-tidy=, =.editorconfig=, =.gitignore=, the warnings target, and a
+=CLAUDE.md= stating the style rules, so an agent working in the project
+writes what you would have written. From the template you get four
+presets: =dev=, =release=, =asan= and =ci=.
+
+The =app= template puts the logic in headers rather than in =main.cpp=
+on purpose: the tests link the headers, and =main= stays a few lines
+that wire things together. That is what makes the test target possible
+without a second build of everything.
+
+* The kit, the one idea worth understanding
+Every CMake command in this config, configure, build, ctest, run, gdb,
+clangd, clang-tidy, goes through one thing called the kit: a build
+directory, and where the commands that touch it run. Nothing asks you
+for a build directory, ever. It is read off the disk, in this order:
+
+1. the kit you chose for this project, written to =.dir-locals.el=;
+2. Qt Creator's active configuration, if its directory is configured;
+3. the newest configured directory, whatever wrote it;
+4. a preset, or a plain directory;
+5. a plain =build= on the host.
+
+For a project you just made from a template, that is the =dev= preset,
+configured before the file even opened, and you never think about it
+again.
+
+It matters the day it guesses differently from what you meant. Two keys
+answer that:
+
+- =SPC k ?= says which kit is in use and why it was chosen. Press it
+  once on any project you did not make yourself.
+- =SPC k K= picks another: any preset, any configured directory, any Qt
+  Creator configuration whether it has ever been built or not.
+
+A kit whose cache was written for a different path, because the project
+moved, is stale. CMake would refuse it, so it is not offered as a kit;
+=SPC k ?= names it anyway, and =SPC k m F= configures it fresh.
+
+=SPC k y= switches the build type, Debug to Release and back, by moving
+to the sibling kit of that type. There is no separate "set the build
+type": the type is part of which kit you are on.
+
+* The first configure
+It is already done. Making a project runs =cmake --preset dev= before it
+opens the file, because that is the only thing that knows where Qt's
+headers are, or doctest's, or anything else CMake finds or fetches. It
+takes under a second, and without it the file opens as a wall of red
+that means nothing.
+
+Configuring is what gives clangd its compilation database, so it is also
+what turns on completion, jumps, diagnostics and every fix key. =F8= is
+what you press afterwards, when something in a CMakeLists changes, or on
+a project somebody else made that has never been configured here.
+
+If =SPC k ?= says the kit is not the one you meant, =SPC k K= picks
+another and =F8= configures that one.
+
+* The loop you spend the day in
+| Key  | What it does             |
+|------+--------------------------|
+| =F7=   | build                    |
+| =F6=   | run                      |
+| =S-F6= | build, then run          |
+| =F9=   | breakpoint on this line  |
+| =F5=   | debug, or continue       |
+| =S-F5= | stop debugging           |
+| =F10=  | step over                |
+| =F11=  | step into, =S-F11= out     |
+| =F2=   | go to the definition     |
+| =F4=   | switch header and source |
+
+=F2= and =F4= to =F9= work wherever you are. =F10=, =F11= and =S-F5=
+belong to a running session and do nothing outside one.
+
+A program that takes arguments is run with =SPC k R=, which asks for
+them; =SPC k m a= writes them down for the project so =F6= passes them
+every time. The cursor goes into the run buffer as it starts, so a
+program that asks a question can be answered there; a program that
+printed something keeps its window when it ends, and one that printed
+nothing takes the window with it. A window that stayed is closed with
+=q= or =ESC= once you have read it.
+
+The same things are on the leader when your hands are already there:
+=SPC k c= configure, =SPC k b= build, =SPC k r= run, =SPC k d= debug.
+
+While writing, four abbreviations expand with =TAB= and carry the house
+style with them: =doxy= a Doxygen block, =tc= a doctest case, =sc= a
+subcase, =qprop= a Q_PROPERTY with its accessors, =qobj= a QObject
+class.
+
+* Tests
+| Key     | What it runs                   |
+|---------+--------------------------------|
+| =SPC k T= | only the test under the cursor |
+| =SPC k t= | the whole suite                |
+| =SPC k u= | one test executable, whole     |
+
+=SPC k T= is the one to live on while a test is being written: it runs
+that case alone, which is a second or two rather than a minute. It runs
+what is in the build directory, so =F7= first if the test has changed.
+=SPC k t= before you commit.
+
+* When it misbehaves
+=F9= on the line, =F5=. The debugger is dape driving gdb; for a CMake
+project the executables are offered by name, so there is nothing to
+configure.
+
+Three other places to debug:
+
+- =SPC k d= debugs what the kit builds, where the kit runs. If the kit
+  lives in a container, that is where gdb runs too.
+- =SPC k D= debugs it on the device, over gdbserver.
+- =SPC k j= attaches to a gdb server already listening.
+
+Problems and fixes are all in one place:
+
+| Key       | What it does                                      |
+|-----------+---------------------------------------------------|
+| =SPC k e=   | the next problem, =SPC k E= the previous            |
+| =SPC k .=   | fix the one at point, the server's quickfix       |
+| =SPC k g t= | clang-tidy this file, =SPC k g T= applies its fixes |
+
+=SPC k a= puts the assembly of the file beside it, live, compiled with
+the flags the compilation database recorded. =SPC k A= disassembles just
+the function at point. Useful more often than it sounds, when a loop is
+slower than it looks.
+
+* Before you call it done
+| Key       | What it does                                |
+|-----------+---------------------------------------------|
+| =SPC k f=   | clang-format this buffer                    |
+| =SPC k g F= | clang-format every tracked file             |
+| =SPC k g p= | clang-tidy the whole project, ~C-u~ applies the fixes |
+
+Then build once under =asan= and once under =ci=: =SPC k K= picks the
+preset. The =asan= preset is where the memory mistakes surface, and =ci=
+is the build the pipeline will do, so failing it here is cheaper than
+failing it there.
+
+* Two menus, when a key slips your mind
+- =SPC k SPC= is the menu for whatever project type you are in. It is
+  not only CMake: Cargo, Meson, Make, Gradle, Maven, npm, Python and
+  some sixty more go through the same menu, with the columns following
+  the project type.
+- =SPC k m= is the CMake panel: the kit, the cache variables, the
+  targets, the files.
+
+=SPC k I= says what the project has set up and what it is missing, which
+is the quickest way to understand a project somebody else made.
+
+* If it is PlatformIO instead
+=SPC k p n= makes the project. Then run =SPC k p i= once, so clangd
+learns the cross compiler's flags; without it the editor will underline
+half the file in red for no reason.
+
+| Key       | What it does                     |
+|-----------+----------------------------------|
+| =SPC k p e= | pick the environment             |
+| =SPC k p b= | build, =u= upload                  |
+| =SPC k p m= | the serial monitor in a terminal |
+| =SPC k p t= | test, =d= debug                    |
+| =SPC k p B= | the board catalogue              |
+
+* Every key in this guide
+| Key       | What it does                                        |
+|-----------+-----------------------------------------------------|
+| =SPC k n=   | new project from a template                         |
+| =SPC k N=   | new Qt Quick MVVM application                       |
+| =SPC k p n= | new PlatformIO project                              |
+| =SPC k ?=   | which kit is in use, and why                        |
+| =SPC k K=   | pick another kit, preset or configuration           |
+| =SPC k y=   | build type: Debug, Release, RelWithDebInfo, MinSize |
+| =SPC k Y=   | switch family, the SDK kit against the PC kit       |
+| =F8=        | configure, =SPC k c=                                  |
+| =F7=        | build, =SPC k b=; =SPC k B= any target                  |
+| =F6=        | run, =SPC k r=                                        |
+| =F5=        | debug or continue, =SPC k d=; =S-F5= stops              |
+| =F9=        | toggle a breakpoint                                 |
+| =F10= =F11=   | step over, step into; =S-F11= out                     |
+| =F2= =F4=     | definition, header and source                       |
+| =SPC k T=   | the test at point, =SPC k t= the suite                |
+| =SPC k e=   | next problem, =SPC k E= previous, =SPC k .= fix it      |
+| =SPC k f=   | format this buffer, =SPC k g F= the project           |
+| =SPC k g t= | tidy this file, =SPC k g p= the project               |
+| =SPC k a=   | assembly beside the source, =SPC k A= at point        |
+| =SPC k I=   | project status                                      |
+| =SPC k SPC= | the menu for this project type                      |
+| =SPC k m=   | the CMake panel                                     |
+
+The cheat sheet has the rest, on =SPC h /= or =F12=. =SPC h j= asks the
+butler in your own words when you would rather not hunt for the section.
