@@ -1,0 +1,132 @@
+---
+# C++23 formatting rules. Options are pinned explicitly so the result is
+# deterministic across clang-format versions. Minimum clang-format: 20.
+Language:        Cpp
+BasedOnStyle:    LLVM
+Standard:        Latest
+ColumnLimit:     100
+LineEnding:      LF
+InsertNewlineAtEOF: true
+
+# Indentation: two spaces, never tabs.
+IndentWidth:                       2
+TabWidth:                          2
+UseTab:                            Never
+ContinuationIndentWidth:           2
+ConstructorInitializerIndentWidth: 4
+AccessModifierOffset:             -2
+IndentAccessModifiers:             false
+IndentCaseLabels:                  true
+IndentCaseBlocks:                  false
+IndentExternBlock:                 NoIndent
+IndentGotoLabels:                  true
+IndentPPDirectives:                None
+IndentRequiresClause:              true
+IndentWrappedFunctionNames:        false
+NamespaceIndentation:              None
+LambdaBodyIndentation:             Signature
+
+# Qualifiers (east const); pointers and references bind to the type.
+QualifierAlignment:                Right
+PointerAlignment:                  Left
+ReferenceAlignment:                Left
+DerivePointerAlignment:            false
+
+# Braces: attach, never merge short forms (clang-tidy enforces actual braces).
+BreakBeforeBraces:                   Attach
+Cpp11BracedListStyle:                true
+InsertBraces:                        false
+RemoveBracesLLVM:                    false
+AllowShortBlocksOnASingleLine:       Empty
+AllowShortCaseLabelsOnASingleLine:   false
+AllowShortEnumsOnASingleLine:        false
+AllowShortFunctionsOnASingleLine:    Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine:      All
+AllowShortLoopsOnASingleLine:        false
+AllowShortCompoundRequirementOnASingleLine: true
+
+# Wrapping and breaking.
+AlignAfterOpenBracket:                     BlockIndent
+AlwaysBreakTemplateDeclarations:           Yes
+BreakBeforeConceptDeclarations:            Always
+RequiresClausePosition:                    OwnLine
+BreakBeforeBinaryOperators:                NonAssignment
+BreakBeforeTernaryOperators:               true
+BreakConstructorInitializers:              BeforeComma
+BreakInheritanceList:                      BeforeComma
+BreakAfterAttributes:                      Leave
+PackConstructorInitializers:               NextLine
+AllowAllArgumentsOnNextLine:               true
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments:                          false
+BinPackParameters:                         false
+AlwaysBreakAfterReturnType:                None
+AlwaysBreakBeforeMultilineStrings:         false
+BreakStringLiterals:                       true
+CompactNamespaces:                         false
+
+# Alignment.
+AlignConsecutiveAssignments:   None
+AlignConsecutiveDeclarations:  None
+AlignConsecutiveMacros:        None
+AlignConsecutiveBitFields:     None
+AlignArrayOfStructures:        None
+AlignEscapedNewlines:          Right
+AlignOperands:                 Align
+AlignTrailingComments:
+  Kind:                        Always
+  OverEmptyLines:              0
+
+# Empty lines and access modifiers.
+EmptyLineAfterAccessModifier:     Never
+EmptyLineBeforeAccessModifier:    LogicalBlock
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep:              1
+SeparateDefinitionBlocks:         Always
+
+# Spaces.
+SpaceAfterCStyleCast:              false
+SpaceAfterLogicalNot:              false
+SpaceAfterTemplateKeyword:         true
+SpaceBeforeAssignmentOperators:    true
+SpaceBeforeCaseColon:              false
+SpaceBeforeCpp11BracedList:        false
+SpaceBeforeCtorInitializerColon:   true
+SpaceBeforeInheritanceColon:       true
+SpaceBeforeParens:                 ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets:         false
+SpaceInEmptyBlock:                 false
+SpacesBeforeTrailingComments:      2
+SpacesInAngles:                    Never
+SpacesInContainerLiterals:         false
+SpacesInLineCommentPrefix:
+  Minimum:                         1
+  Maximum:                         1
+SpacesInParens:                    Never
+SpacesInSquareBrackets:            false
+BitFieldColonSpacing:              Both
+
+# Includes: regrouped and sorted, project headers last.
+SortIncludes:   CaseSensitive
+IncludeBlocks:  Regroup
+IncludeCategories:
+  - Regex:    '<doctest/.*>'
+    Priority: 1
+  - Regex:    '<[a-z_]+>'
+    Priority: 2
+  - Regex:    '<.+\.h(pp)?>'
+    Priority: 3
+  - Regex:    '<{{PROJECT}}/.*>'
+    Priority: 4
+  - Regex:    '.*'
+    Priority: 5
+
+# Misc.
+FixNamespaceComments:   true
+ShortNamespaceLines:    0
+ReflowComments:         true
+RemoveSemicolon:        true
+SortUsingDeclarations:  LexicographicNumeric
+InsertTrailingCommas:   None

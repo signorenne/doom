@@ -1,0 +1,30 @@
+#+TITLE: {{PROJECT}}
+#+OPTIONS: toc:nil num:nil
+
+A C++23 command line application.
+
+* Build and run
+
+#+BEGIN_SRC sh
+cmake --preset dev
+cmake --build --preset dev
+./build/dev/bin/{{PROJECT}} --name ada --verbose
+ctest --preset dev
+#+END_SRC
+
+The presets are =dev= (Debug, tests on), =release=, =asan= (AddressSanitizer
+and UBSan) and =ci= (warnings as errors). Each configures into
+=build/<preset>/= and writes the =compile_commands.json= clangd reads.
+
+* Layout
+
+| path                    | holds                                      |
+|-------------------------+--------------------------------------------|
+| =include/{{PROJECT}}/=  | the logic, in headers the tests can link   |
+| =src/main.cpp=          | the wiring: parse, run, report             |
+| =tests/=                | doctest suites                             |
+| =cmake/=                | warnings target and doctest                |
+
+* Style
+
+[[file:AGENTS.md][AGENTS.md]] states the rules; =.clang-format= and =.clang-tidy= enforce them.
