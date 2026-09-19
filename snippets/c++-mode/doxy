@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: doxygen block
+# key: doxy
+# --
+/**
+ * @brief ${1:One sentence, on one line.}
+ *
+ * @param ${2:name} ${3:What it is.}
+ *
+ * @return ${4:What comes back.}
+ *
+ * @pre ${5:None.}
+ * @post ${6:None.}
+ */
+$0

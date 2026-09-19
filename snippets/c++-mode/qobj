@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: QObject class
+# key: qobj
+# --
+class ${1:`(file-name-base (or buffer-file-name "Thing"))`} : public ${2:QObject} {
+  Q_OBJECT
+  QML_ELEMENT
+
+public:
+  explicit $1(QObject *parent = nullptr);
+
+signals:
+  void ${3:somethingChanged}();
+
+private:
+  $0
+};

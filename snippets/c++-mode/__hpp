@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: header
+# key: __hpp
+# --
+#pragma once
+
+/**
+ * @file
+ * @brief ${1:What this header is for.}
+ */
+
+#include <${2:cstddef}>
+
+namespace ${3:`(let ((name (doom-project-name))) (if (member name (list nil "-")) "project" name))`} {
+
+$0
+
+}  // namespace $3

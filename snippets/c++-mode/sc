@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: doctest subcase
+# key: sc
+# --
+SUBCASE("${1:and in this situation}") {
+  $0
+}

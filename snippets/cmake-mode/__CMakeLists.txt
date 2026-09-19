@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: CMakeLists.txt skeleton
+# key: __CMakeLists.txt
+# --
+cmake_minimum_required(VERSION 3.25)
+
+project(${1:`(file-name-nondirectory (directory-file-name (file-name-directory (or buffer-file-name default-directory))))`}
+  VERSION 0.1.0
+  LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD ${2:23})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_executable($1 ${3:src/main.cpp})
+$0

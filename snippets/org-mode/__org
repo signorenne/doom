@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: org document header
+# key: __org
+# --
+#+title: ${1:`(string-replace "-" " " (capitalize (file-name-base (or buffer-file-name "untitled"))))`}
+#+author: `user-full-name`
+#+date: `(format-time-string "%Y-%m-%d")`
+#+filetags: ${2::tag:}
+#+startup: ${3:overview}
+
+$0

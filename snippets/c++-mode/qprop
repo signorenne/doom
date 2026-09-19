@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Q_PROPERTY with accessors
+# key: qprop
+# --
+Q_PROPERTY(${1:QString} ${2:name} READ $2 WRITE set${2:$(concat (capitalize (substring yas-text 0 1)) (substring yas-text 1))} NOTIFY $2Changed)

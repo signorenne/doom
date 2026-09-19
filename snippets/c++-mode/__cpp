@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: source
+# key: __cpp
+# --
+/**
+ * @file
+ * @brief ${1:What this file implements.}
+ */
+
+#include <${2:`(let ((name (doom-project-name))) (if (member name (list nil "-")) "project" name))`}/${3:`(concat (file-name-base (or buffer-file-name "file")) ".hpp")`}>
+
+namespace ${4:$2} {
+
+$0
+
+}  // namespace $4

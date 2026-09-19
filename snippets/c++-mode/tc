@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: doctest case
+# key: tc
+# --
+TEST_CASE("${1:what it should do}") {
+  $0
+}

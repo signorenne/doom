@@ -1,0 +1,6 @@
+#+title: $DOOMDIR/snippets
+
+Snippets and file templates, one directory per major mode, for example
+=org-mode/= or =cmake-mode/=. Doom looks here first for both, so a file named
+=__something= can be used as a ~set-file-template!~ trigger. Run
+~M-x yas-reload-all~ after adding one.
