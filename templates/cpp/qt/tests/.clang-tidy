@@ -1,0 +1,9 @@
+# Relaxed configuration for the tests. QtTest wants a QObject with private
+# slots, which trips the checks that would make them static or move the class
+# into an anonymous namespace.
+InheritParentConfig: true
+
+Checks: >
+  -misc-use-internal-linkage,
+  -readability-convert-member-functions-to-static,
+  -readability-function-cognitive-complexity

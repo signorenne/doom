@@ -1,0 +1,31 @@
+#+TITLE: {{PROJECT}}
+#+OPTIONS: toc:nil num:nil
+
+A Qt Quick application built in MVVM.
+
+* Build and run
+
+#+BEGIN_SRC sh
+cmake --preset dev
+cmake --build --preset dev
+./build/dev/bin/{{PROJECT}}
+ctest --preset dev
+#+END_SRC
+
+* Layers
+
+| path                | holds                                                |
+|---------------------+------------------------------------------------------|
+| =src/model/=        | the data and the rules, no Qt objects, no view       |
+| =src/viewmodel/=    | properties and commands for the screen               |
+| =qml/=              | layout and bindings                                  |
+| =src/main.cpp=      | builds the model and the view model, loads the engine |
+| =tests/=            | the view model, tested without a window              |
+
+The view model reaches QML through =QML_ELEMENT=, so the module registers it
+and no =qmlRegisterType= call exists. The window receives it as a required
+property from C++, which keeps ownership in one place.
+
+* Style
+
+[[file:AGENTS.md][AGENTS.md]] states the rules; =.clang-format= and =.clang-tidy= enforce them.

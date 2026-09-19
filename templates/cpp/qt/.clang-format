@@ -1,0 +1,85 @@
+---
+# Qt coding style: Qt's naming and its pointer placement, this project's two
+# space indent and 100 column limit. Minimum clang-format: 20.
+Language:        Cpp
+BasedOnStyle:    LLVM
+Standard:        Latest
+ColumnLimit:     100
+LineEnding:      LF
+InsertNewlineAtEOF: true
+
+# Indentation.
+IndentWidth:                       2
+TabWidth:                          2
+UseTab:                            Never
+ContinuationIndentWidth:           4
+ConstructorInitializerIndentWidth: 4
+AccessModifierOffset:             -2
+IndentCaseLabels:                  true
+IndentPPDirectives:                None
+NamespaceIndentation:              None
+LambdaBodyIndentation:             Signature
+
+# Qt binds the star and the ampersand to the name: QObject *parent,
+# const QString &text.
+PointerAlignment:       Right
+ReferenceAlignment:     Pointer
+QualifierAlignment:     Left
+DerivePointerAlignment: false
+
+# Braces attach, short forms never merge.
+BreakBeforeBraces:                   Attach
+Cpp11BracedListStyle:                true
+AllowShortBlocksOnASingleLine:       Empty
+AllowShortCaseLabelsOnASingleLine:   false
+AllowShortEnumsOnASingleLine:        false
+AllowShortFunctionsOnASingleLine:    Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine:      All
+AllowShortLoopsOnASingleLine:        false
+
+# Wrapping.
+AlignAfterOpenBracket:                     BlockIndent
+AlwaysBreakTemplateDeclarations:           Yes
+BreakBeforeBinaryOperators:                NonAssignment
+BreakConstructorInitializers:              BeforeComma
+BreakInheritanceList:                      BeforeComma
+PackConstructorInitializers:               NextLine
+BinPackArguments:                          false
+BinPackParameters:                         false
+AllowAllArgumentsOnNextLine:               true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Empty lines, spaces, alignment.
+EmptyLineAfterAccessModifier:     Never
+EmptyLineBeforeAccessModifier:    LogicalBlock
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep:              1
+SeparateDefinitionBlocks:         Always
+SpaceAfterTemplateKeyword:        true
+SpaceBeforeCtorInitializerColon:  true
+SpaceBeforeInheritanceColon:      true
+SpaceBeforeParens:                ControlStatements
+SpacesBeforeTrailingComments:     2
+AlignTrailingComments:
+  Kind:                           Always
+  OverEmptyLines:                 0
+
+# Includes: Qt headers first, then the standard library, then ours.
+SortIncludes:   CaseSensitive
+IncludeBlocks:  Regroup
+IncludeCategories:
+  - Regex:    '<Q[A-Za-z]+>'
+    Priority: 1
+  - Regex:    '<Qt[A-Za-z/]+>'
+    Priority: 1
+  - Regex:    '<[a-z_]+>'
+    Priority: 2
+  - Regex:    '<.+\.h(pp)?>'
+    Priority: 3
+  - Regex:    '.*'
+    Priority: 4
+
+FixNamespaceComments:  true
+ReflowComments:        true
+SortUsingDeclarations: LexicographicNumeric
