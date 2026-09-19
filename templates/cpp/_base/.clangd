@@ -1,0 +1,16 @@
+# What clangd assumes before the project has been configured. Configuring
+# (F8) writes build/dev/compile_commands.json and that is used from then
+# on; until it exists clangd guesses C++17 and every std::print and
+# std::span in the file is underlined for no reason.
+#
+# clangd resolves a relative -I against the directory of the file it is
+# checking, not the project root, so the include directory is named from
+# each depth the layout has: the root, src/ and tests/, and one deeper.
+# A path that does not exist is ignored.
+CompileFlags:
+  Add:
+    - -std=c++23
+    - -Iinclude
+    - -I../include
+    - -I../../include
+  CompilationDatabase: build/dev
