@@ -1,0 +1,41 @@
+#+TITLE: {{PROJECT}}
+#+OPTIONS: toc:nil num:nil
+
+A C++23 header-only library.
+
+* Build
+
+#+BEGIN_SRC sh
+cmake --preset dev
+cmake --build --preset dev
+ctest --preset dev
+#+END_SRC
+
+The presets are =dev= (Debug, tests and examples), =release=, =asan=
+(AddressSanitizer and UBSan) and =ci= (warnings as errors). Each configures
+into =build/<preset>/= and writes =compile_commands.json= there, which is what
+clangd reads.
+
+* Use it
+
+#+BEGIN_SRC cmake
+find_package({{PROJECT}} REQUIRED)
+target_link_libraries(my_app PRIVATE {{PROJECT}}::{{PROJECT}})
+#+END_SRC
+
+#+BEGIN_SRC cpp
+#include <{{PROJECT}}/{{PROJECT}}.hpp>
+#+END_SRC
+
+* Layout
+
+| path                     | holds                                  |
+|--------------------------+----------------------------------------|
+| =include/{{PROJECT}}/=   | the public headers                     |
+| =tests/=                 | doctest suites, one file per component  |
+| =examples/=              | one runnable program per component      |
+| =cmake/=                 | warnings target, doctest, package config |
+
+* Style
+
+[[file:AGENTS.md][AGENTS.md]] states the rules; =.clang-format= and =.clang-tidy= enforce them.

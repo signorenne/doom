@@ -1,0 +1,10 @@
+# Relaxed configuration for the examples. They are small programs written for
+# a reader, so the families that police library design are off; the bug
+# finders and the naming rules stay.
+InheritParentConfig: true
+
+Checks: >
+  -bugprone-exception-escape,
+  -cppcoreguidelines-*,
+  -hicpp-*,
+  -readability-function-cognitive-complexity

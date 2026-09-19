@@ -1,0 +1,150 @@
+# Strict configuration for the library headers. Every relevant check family is
+# on; the exclusions below are the ones that fight this codebase's idioms.
+# Tests carry their own relaxed file.
+#
+# Minimum clang-tidy version: 19.
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  hicpp-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -cert-err58-cpp,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -hicpp-no-array-decay,
+  -hicpp-signed-bitwise,
+  -hicpp-vararg,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-nodiscard,
+  -portability-avoid-pragma-once,
+  -readability-identifier-length,
+  -readability-magic-numbers
+
+# Compile diagnostics are hard errors; the checks above run as warnings.
+WarningsAsErrors:    'clang-diagnostic-*'
+HeaderFilterRegex:   '.*/{{PROJECT}}/.*\.hpp$'
+FormatStyle:         file
+SystemHeaders:       false
+UseColor:            true
+
+CheckOptions:
+  # Naming: snake_case for identifiers, PascalCase for template parameters.
+  - key:   readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key:   readability-identifier-naming.InlineNamespaceCase
+    value: lower_case
+  - key:   readability-identifier-naming.ClassCase
+    value: lower_case
+  - key:   readability-identifier-naming.StructCase
+    value: lower_case
+  - key:   readability-identifier-naming.UnionCase
+    value: lower_case
+  - key:   readability-identifier-naming.EnumCase
+    value: lower_case
+  - key:   readability-identifier-naming.ScopedEnumConstantCase
+    value: lower_case
+  - key:   readability-identifier-naming.EnumConstantCase
+    value: lower_case
+  - key:   readability-identifier-naming.TypeAliasCase
+    value: lower_case
+  - key:   readability-identifier-naming.TypedefCase
+    value: lower_case
+  - key:   readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key:   readability-identifier-naming.MethodCase
+    value: lower_case
+  - key:   readability-identifier-naming.VirtualMethodCase
+    value: lower_case
+  - key:   readability-identifier-naming.MemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.PrivateMemberPrefix
+    value: m_
+  - key:   readability-identifier-naming.ProtectedMemberPrefix
+    value: m_
+  - key:   readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.VariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key:   readability-identifier-naming.ParameterPackCase
+    value: lower_case
+  - key:   readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.GlobalConstantCase
+    value: lower_case
+  - key:   readability-identifier-naming.StaticConstantCase
+    value: lower_case
+  - key:   readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key:   readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.ConstexprFunctionCase
+    value: lower_case
+  - key:   readability-identifier-naming.ConstexprMethodCase
+    value: lower_case
+  - key:   readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.ValueTemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TemplateTemplateParameterCase
+    value: CamelCase
+
+  # Trailing return types everywhere, functions and lambdas alike.
+  - key:   modernize-use-trailing-return-type.TransformLambdas
+    value: 'all'
+  - key:   modernize-use-trailing-return-type.TransformFunctions
+    value: 'true'
+
+  # Views are cheap to copy.
+  - key:   performance-unnecessary-value-param.AllowedTypes
+    value: 'std::string_view;std::span'
+  - key:   performance-for-range-copy.AllowedTypes
+    value: 'std::string_view;std::span'
+
+  # Const by default: every local that is not reassigned is const.
+  - key:   misc-const-correctness.AnalyzeValues
+    value: 'true'
+  - key:   misc-const-correctness.AnalyzeReferences
+    value: 'true'
+  - key:   misc-const-correctness.WarnPointersAsValues
+    value: 'true'
+  - key:   misc-const-correctness.TransformValues
+    value: 'true'
+  - key:   misc-const-correctness.TransformReferences
+    value: 'true'
+
+  # Complexity ceilings: high enough that justified complexity passes, low
+  # enough that runaway growth still warns.
+  - key:   readability-function-cognitive-complexity.Threshold
+    value: 100
+  - key:   readability-function-size.LineThreshold
+    value: 150
+  - key:   readability-implicit-bool-conversion.AllowIntegerConditions
+    value: false
+  - key:   readability-implicit-bool-conversion.AllowPointerConditions
+    value: false
+  - key:   readability-braces-around-statements.ShortStatementLines
+    value: 0

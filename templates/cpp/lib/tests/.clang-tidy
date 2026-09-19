@@ -1,0 +1,18 @@
+# Relaxed configuration for the tests. It inherits the strict library file and
+# drops the opinionated families plus the bug checks that fire on legitimate
+# test patterns. Naming and trailing return types stay.
+InheritParentConfig: true
+
+Checks: >
+  -cppcoreguidelines-*,
+  -hicpp-*,
+  -modernize-*,
+  modernize-use-trailing-return-type,
+  -readability-*,
+  readability-identifier-naming,
+  -bugprone-exception-escape,
+  -bugprone-unused-return-value,
+  -bugprone-use-after-move,
+  -cert-err33-c,
+  -misc-no-recursion,
+  -performance-enum-size
