@@ -1,0 +1,85 @@
+#+title:    :private git
+#+subtitle: magit tuned, the history and branch menus
+
+* Description
+Git for the power user, on Doom's =:tools magit=. Doom gives the status
+buffer, the evil layer and the =SPC g= keys; this module adds:
+
+- settings that show more and ask less: every menu argument visible
+  (transient level 7), file buffers saved before status, word diffs in
+  every hunk, dates instead of ages in the logs, the branch prompt
+  sorted by date, file icons, the repository list on =~/projects=,
+- a log you can read down: refs printed after the summary, not before
+  it, so every summary starts at the same column; the graph's own lines
+  in the theme's colours, which is =log.graphColors= in =~/.gitconfig=,
+- a diff that shows what changed: tab width taken from the file's mode
+  rather than assumed to be eight, indentation with the wrong character
+  highlighted, the =^M= of a CRLF file hidden, and the code's own syntax
+  colours inside the hunks when =delta= is installed,
+- the repository's TODO and FIXME comments as a section in the status
+  buffer, grouped by directory,
+- a safety net: ~magit-wip-mode~ keeps work-in-progress refs before every
+  commit, checkout and reset and after every save, so a botched rebase
+  is one log away (=SPC g h L=),
+- three menus in plain words: the hub, the history, the branches,
+- what magit has no command for: change a commit's date or author,
+  split a commit, uncommit, a branch from the fetched main, the merged
+  branches swept, the diff and the log against main,
+- =C-c C-t= in the commit buffer: the conventional subject with the
+  scope read off the staged paths,
+- the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
+
+* Keybindings
+| Key         | Command                | What it does                           |
+|-------------+------------------------+----------------------------------------|
+| ~SPC g SPC~ | ~+git/menu~            | the hub: every day, menus, repos, tools |
+| ~SPC g h~   | ~+git/history~         | rewrite: reword, edit, date, author, split, drop, fixup, rebase |
+| ~SPC g n~   | ~+git/branches~        | make, switch, rename, delete, compare with main |
+| ~C-c C-t~   | ~+git/commit-conventional~ | in the commit buffer: type(scope):  |
+| ~SPC t B~   | ~blamer-mode~          | the commit behind the current line at its end, on in code buffers under 100k |
+
+Everything else is magit's own, under the keys evil gives it: =SPC g g=
+status, then =s u= stage and unstage, =c= commit, =p= push, =F= pull,
+=l= log, =d= diff, =b= branch, =r= rebase, =Z= stash, =x= discard,
+=o O= reset, =%= worktree, =?= the dispatch. The cheat sheet's Git
+chapter lists them by activity.
+
+* Rewriting a commit that is not HEAD
+=SPC g h d= (date), =SPC g h a= (author) and =SPC g h s= (split) reach an
+older commit the way git does by hand: an interactive rebase that stops
+at it (sed turns its =pick= into =edit=), the amend, and =rebase
+--continue=. The working tree is stashed round it. The commits after it
+are rewritten, as by any rebase, and their committer dates move to now;
+their author dates stay. A rebase that stops on its way, a conflict,
+is left for magit: =r r= continues, =r a= aborts.
+
+* Conflicts
+Doom turns ~smerge-mode~ on by itself when a file is opened with conflict
+markers in it, and puts the commands on the localleader, where nobody
+looks in the middle of a rebase. ~]n~ and ~[n~ move between conflicts as
+they do in vim, and carry on into the next file that has one once this
+buffer is clean; ~SPC g x~ (~x~ in the hub) is the menu for which side to
+keep, with ediff and refine for the ones that are not obvious.
+
+* Configuration
+- ~+git-commit-types~: the types =C-c C-t= offers, the hook's list.
+- ~+git-date-format~: how a commit's date is shown and read.
+- The rebase menu's defaults, =--autostash --autosquash=, are set only
+  when the menu was never saved (=C-x C-s= in it keeps your own).
+- ~+git-delta-max-size~, 400k: past that a diff is painted the plain way,
+  since delta is a process per diff and a release-sized one is not worth
+  the wait.
+- ~+git-blamer-max-size~, 100k: the blame turns itself on below it.
+- The graph's colours are git's, not Emacs's: =log.graphColors= in
+  =~/.gitconfig=, set to the theme's blue, violet, cyan, green, magenta,
+  grey, orange and red.
+- =delta= has to be installed for the coloured diffs: =sudo zypper in
+  git-delta=. Without it nothing breaks and magit paints its own way.
+- Options, not installed: =forge= (issues and pull requests from magit;
+  the =+forge= flag on =:tools magit= and a GitHub token in
+  =~/.authinfo.gpg=, =machine api.github.com login USER^forge password
+  TOKEN=).
+- The files: =config.el= (settings, keys), =autoload/menu.el= (the three
+  menus), =autoload/commit.el= (the subject, date, author, split,
+  uncommit), =autoload/branch.el= (from main, delete merged, against
+  main).
