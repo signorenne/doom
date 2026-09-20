@@ -1,0 +1,18 @@
+#+title: {{PROJECT}}
+
+A command line program in Rust.
+
+* Building
+| Command       | What it does                        |
+|---------------+-------------------------------------|
+| =cargo build=   | build with the dev profile          |
+| =cargo run=     | build and run it                    |
+| =cargo test=    | run the tests                       |
+| =cargo clippy=  | the lints, which CI treats as errors |
+
+In Emacs: =F7= builds, =F6= runs, =SPC k t= tests, =SPC k m= is the panel.
+
+* Layout
+- =src/main.rs= wires the program together: arguments in, a call into the
+  library, a status code out.
+- =src/lib.rs= holds the logic, and the tests that cover it.

@@ -1,0 +1,15 @@
+#+title: {{PROJECT}}
+
+A cargo workspace: several crates sharing one lock file and one target
+directory.
+
+* Layout
+- =crates/{{PROJECT}}_core/= holds the logic.
+- =crates/{{PROJECT}}/= is the binary that uses it.
+
+Add a member with =cargo new crates/NAME= and it is picked up by the glob
+in the workspace =Cargo.toml=.
+
+* Building
+=cargo build= builds every member; =cargo build -p NAME= builds one. In
+Emacs, =SPC k m= picks the member so =F7= and =F6= mean that one.

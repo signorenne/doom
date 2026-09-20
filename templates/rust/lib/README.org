@@ -1,0 +1,18 @@
+#+title: {{PROJECT}}
+
+A Rust library.
+
+* Building
+| Command       | What it does                        |
+|---------------+-------------------------------------|
+| =cargo build=   | build with the dev profile          |
+| =cargo test=    | run the tests                       |
+| =cargo doc=     | build the documentation             |
+| =cargo clippy=  | the lints, which CI treats as errors |
+
+In Emacs: =F7= builds, =SPC k t= tests, =SPC k m= is the panel.
+
+* Layout
+- =src/lib.rs= is the crate root: the =//!= comment says what the crate is
+  for, and every public item carries its own.
+- =tests/= holds the integration tests, which see only the public API.

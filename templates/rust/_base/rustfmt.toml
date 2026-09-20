@@ -1,0 +1,7 @@
+# rustfmt's defaults, said out loud, plus the two this house differs on.
+edition = "2021"
+max_width = 100
+
+# Imports grouped and ordered, so a merge does not fight over them.
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
