@@ -1,0 +1,103 @@
+#+title:    :private pascal
+#+subtitle: Free Pascal and Lazarus, and Delphi sources read
+
+* Description
+Object Pascal, on the keys the rest of the config uses. What runs here
+and what does not:
+
+| Kind                   | Edit | Build | Run | Debug |
+|------------------------+------+-------+-----+-------|
+| Free Pascal (=.lpr=)     | yes  | fpc   | yes | gdb   |
+| Lazarus (=.lpi=)         | yes  | lazbuild | yes | gdb |
+| Delphi (=.dproj= =.dpr=)   | yes  | no    | no  | no    |
+
+Delphi's compiler is Windows software and there is none on this
+machine, so a Delphi project is read, navigated and edited here and
+built in the IDE. The module says so rather than pretending: the panel
+and ~SPC k m I~ both name the limit.
+
+The module adds:
+
+- the modes: =.pas=, =.pp=, =.lpr=, =.dpr=, =.dpk= and =.inc= in ~opascal-mode~,
+  which is Emacs's own and speaks Delphi's dialect; =.lfm= and =.dfm= in
+  ~conf-mode~, since a form is a property list and not code,
+- what a build depends on, which is the Lazarus build mode, the widget
+  set, the target, which program when there is more than one and the
+  run arguments, kept in =.dir-locals.el= and carried by every command,
+- two projection types, so ~SPC k b~ and ~SPC k r~ work here as they do in
+  a CMake tree,
+- the panel on ~SPC k m~, and a new project on ~SPC k n~,
+- gdb through dape, reading the DWARF the build asks fpc for,
+- pasls when it is installed, through eglot.
+
+* The keys
+| Key       | What it does                                  |
+|-----------+-----------------------------------------------|
+| ~F7~        | build, with what the project is set to        |
+| ~F6~        | run it                                        |
+| ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug             |
+| ~SPC k m~   | the panel: what is set, and everything else   |
+| ~SPC k n~   | a new project: console or lcl                 |
+| ~SPC m k x~ | build, then run                               |
+| ~SPC m k y~ | the Lazarus build mode                        |
+| ~SPC m k w~ | the widget set: gtk2, gtk3, qt5, qt6          |
+| ~SPC m k s~ | which program, when the project holds several |
+| ~SPC m k C~ | clean                                         |
+| ~SPC m k I~ | what is installed, and what this project is   |
+| ~SPC m k v~ | open the .lpi, .lpr or .dproj                 |
+
+* Starting a project
+~SPC k n~ then =console= or =lcl=.
+
+- *console* is a Free Pascal program: the =.lpr= wires it together, the
+  logic sits in =src/=, and =fpc -Mobjfpc -Sh -gw3 -FEbin= builds it into
+  =bin/=.
+- *lcl* is a Lazarus application with a window: the =.lpi= Lazarus reads,
+  the =.lpr=, and a form as =mainform.pas= beside =mainform.lfm=. It carries
+  a Debug and a Release build mode, range and overflow checks on in
+  Debug, and DWARF 3 so gdb can read it.
+
+Both get =.editorconfig=, =.gitignore= and =AGENTS.md=, the rules an agent
+reads before touching the repo.
+
+* What has to be installed
+#+begin_src sh
+sudo zypper in fpc fpc-src lazarus
+#+end_src
+
+- *fpc* is the compiler, *fpc-src* its sources: without the sources,
+  go-to-definition stops at the runtime library.
+- *lazarus* brings =lazbuild=, which builds a =.lpi= without opening the IDE,
+  and the LCL the =lcl= template uses.
+
+~SPC h r d~ says what is still missing.
+
+** The language server
+=pasls= puts Lazarus's CodeTools behind LSP. Nobody packages it, so it is
+built once from source:
+
+#+begin_src sh
+git clone --depth 1 https://github.com/genericptr/pascal-language-server ~/src/pasls
+cd ~/src/pasls/src
+LAZARUSDIR=/usr/lib64/lazarus FPCDIR=/usr/share/fpcsrc ./build_fpc.sh
+install -Dm755 ~/src/pasls/dist/x86_64-linux/pasls ~/.local/bin/pasls
+#+end_src
+
+Not =lazbuild pasls.lpi=: that wants two Lazarus packages registered
+first and stops with "Broken dependency: lspserver". =build_fpc.sh= calls
+fpc directly and needs neither.
+
+=~/.local/bin= is already on =exec-path=, so a restart is all it takes.
+The module finds Lazarus and the Free Pascal sources itself, at
+=/usr/lib64/lazarus= and =/usr/share/fpcsrc= on openSUSE, and sets
+=LAZARUSDIR=, =FPCDIR= and =PP= for the server; ~+pascal-lazarus-dir~ and
+~+pascal-fpc-src-dir~ override that when a distribution puts them
+elsewhere.
+
+Until pasls is there, a Pascal buffer has opascal-mode's own navigation,
+imenu and the project's files, and no completion.
+
+* Configuration
+- ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
+  and ~+pascal-run-args~: the per-project settings, all directory local.
+- ~+pascal-templates-dir~, =$DOOMDIR/templates/pascal/= by default.
