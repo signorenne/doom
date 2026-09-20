@@ -1,0 +1,12 @@
+# What the compiler makes.
+bin/
+lib/
+*.o
+*.ppu
+*.compiled
+*.res
+*.dbg
+backup/
+
+# Lazarus session state, which is the user's and not the project's.
+*.lps

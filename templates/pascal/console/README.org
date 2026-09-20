@@ -1,0 +1,15 @@
+#+title: {{PROJECT}}
+
+A Free Pascal console program.
+
+* Building
+| Command                                  | What it does        |
+|------------------------------------------+---------------------|
+| =fpc -Mobjfpc -Sh -gw3 -FEbin {{PROJECT}}.lpr= | build into =bin/=     |
+| =bin/{{PROJECT}}=                              | run it              |
+
+In Emacs: =F7= builds, =F6= runs, =SPC k m= is the panel, =SPC k d= debugs.
+
+* Layout
+- ={{PROJECT}}.lpr= wires the program together.
+- =src/{{PROJECT}}_core.pas= holds the logic.

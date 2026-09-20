@@ -1,0 +1,27 @@
+object MainWindow: TMainWindow
+  Left = 300
+  Height = 200
+  Top = 200
+  Width = 400
+  Caption = '{{PROJECT}}'
+  ClientHeight = 200
+  ClientWidth = 400
+  LCLVersion = '3.0'
+  object GreetingLabel: TLabel
+    Left = 24
+    Height = 20
+    Top = 24
+    Width = 352
+    Caption = 'Press the button'
+    ParentColor = False
+  end
+  object GreetButton: TButton
+    Left = 24
+    Height = 32
+    Top = 64
+    Width = 120
+    Caption = 'Greet'
+    OnClick = GreetButtonClick
+    TabOrder = 0
+  end
+end

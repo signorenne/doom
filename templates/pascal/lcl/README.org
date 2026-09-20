@@ -1,0 +1,21 @@
+#+title: {{PROJECT}}
+
+A Lazarus LCL application: a window, built against whichever widget set
+this machine has.
+
+* Building
+| Command                      | What it does            |
+|------------------------------+-------------------------|
+| =lazbuild {{PROJECT}}.lpi=         | build into =bin/=         |
+| =lazbuild --build-mode=Release= | the optimised one       |
+| =bin/{{PROJECT}}=                  | run it                  |
+
+In Emacs: =F7= builds, =F6= runs, =SPC k m= picks the build mode and the
+widget set, =SPC k d= debugs.
+
+* Layout
+- ={{PROJECT}}.lpi= is the project: units, packages, build modes.
+- ={{PROJECT}}.lpr= starts the application.
+- =mainform.pas= is the window's code, =mainform.lfm= its widgets. Lazarus
+  edits the =.lfm= visually; it is plain text, so it reads and merges
+  here as well.
