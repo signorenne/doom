@@ -1,0 +1,133 @@
+#+title:    :private web
+#+subtitle: Svelte, TypeScript, Tailwind, node and Electron
+
+* Description
+Doom's =:lang web= and =:lang javascript= bring the modes, and eglot knows
+the servers for HTML, CSS and TypeScript already. This module adds the
+part that is this config's:
+
+- *Svelte*: =.svelte= in ~svelte-mode~, with =svelteserver= behind it. Doom
+  has no Svelte module and Emacs no mode, so both are new here.
+- *Tailwind*: in a project that uses it the Tailwind server takes the CSS
+  files, where the plain CSS server reads =@tailwind base= as an error.
+- *The project's own tools*: =node_modules/.bin= goes on ~exec-path~, so the
+  prettier and the typescript that run here are the ones the project
+  pins, not whatever is newest on this machine.
+- *The runner*: the package manager read from the lock file, the scripts
+  read from =package.json=, and both put on =SPC k= where C++, Rust and
+  Pascal have them.
+- *Starting a project*: five kinds on ~SPC k n~, below.
+- *Electron*: run it, debug the main process, package it for Linux and
+  Windows here and for all three through CI.
+
+* The keys
+The build keys are the shared ones: they work here because =SPC k r=,
+=SPC k d=, =SPC k m= and =SPC k n= ask what kind of project this is.
+
+| Key       | What it does                                   |
+|-----------+------------------------------------------------|
+| ~SPC k r~   | the dev server, left running and able to listen |
+| ~SPC k b~   | build                                          |
+| ~SPC k t~   | test                                           |
+| ~SPC k d~   | debug node, or Electron's main process         |
+| ~SPC k m~   | the panel: everything below, and what this is  |
+| ~SPC k n~   | a new project                                  |
+| ~SPC m k r~ | the dev server, from a Svelte buffer           |
+| ~SPC m k v~ | preview what the build made                    |
+| ~SPC m k s~ | any script from package.json                   |
+| ~SPC m k l~ | lint, ~SPC m k c~ check the types without building |
+| ~SPC m k i~ | install, ~SPC m k p~ open package.json           |
+
+* The panel
+~SPC k m~ shows what the project is built with and the line ~SPC k r~ would
+run, then: =r= dev server, =b= build, =v= preview, =t= test, =T= test and keep
+watching, =s= any script; =l= lint, =c= types, =I= status; =i= install, =o= what
+has moved on, =m= the package manager, =p= package.json. An Electron
+project gains =P= to package it and =d= to debug the main process.
+
+The package manager is read from the lock file (=yarn.lock=, =pnpm-lock=,
+=package-lock.json=, =bun.lockb=), so a project cloned from elsewhere is
+built the way its author built it. =m= overrides that per project.
+
+* Starting a project
+~SPC k n~ and one of:
+
+| Kind        | What you get                                          |
+|-------------+-------------------------------------------------------|
+| =sveltekit=   | SvelteKit + Vite + TypeScript + Tailwind, prettier, eslint, vitest |
+| =electron=    | the same, wrapped as a desktop application            |
+| =library=     | a Svelte library, packaged for publishing             |
+| =static=      | one page, Tailwind, Vite, no framework                |
+| =node=        | a TypeScript program for node, with vitest            |
+
+The first three are made by Svelte's own generator, =sv create=, because
+that is what knows the shape of a SvelteKit project this month; the
+house files go on top. The last two are templates here.
+
+Every kind is installed with yarn, gets =.editorconfig= and =AGENTS.md=, and
+is ready to run: ~SPC k r~ starts it, ~SPC k t~ passes.
+
+Tests are unit tests only. The generator can also wire component tests
+through a real browser, which needs a 150 MB download before =yarn test=
+runs at all; add it later with =npx sv add vitest= if you want it.
+
+* Electron
+The =electron= kind puts the SvelteKit build behind an Electron window:
+
+- =electron/main.cjs= is the main process: one window, the dev server
+  while developing and the built files when packaged.
+- =electron/preload.cjs= is the only bridge to the system. The renderer
+  runs with =contextIsolation=, no node and a sandbox, so anything it may
+  do is named in that one file.
+- =electron-builder.yml= describes the packages.
+
+| Command          | What it makes                        |
+|------------------+--------------------------------------|
+| =yarn dev:app=     | the app window, on the dev server    |
+| =yarn package=     | a package for this machine           |
+| ~SPC k m P~        | the same, asking which platform      |
+
+Linux builds here. Windows builds here too, through wine. *macOS does
+not*: an installer for it has to be signed on a Mac, and an unsigned
+build will not open on an arm64 one at all. The template carries
+=.github/workflows/release.yml=, which builds each platform on its own
+runner and signs the macOS one when these secrets are set: =APPLE_ID=,
+=APPLE_APP_SPECIFIC_PASSWORD=, =APPLE_TEAM_ID=, =CSC_LINK=,
+=CSC_KEY_PASSWORD=. Without them the macOS build still runs and is
+unsigned.
+
+* What has to be installed
+node and a package manager are the system's. The servers are npm
+packages and this module looks for them on =PATH=, so it does not care
+where they live:
+
+#+begin_src sh
+# in your home, no root; ~/.local/bin is already on PATH
+npm i -g --prefix ~/.local typescript typescript-language-server \
+  svelte-language-server vscode-langservers-extracted \
+  @tailwindcss/language-server prettier eslint
+
+# or for everyone
+sudo npm i -g typescript typescript-language-server \
+  svelte-language-server vscode-langservers-extracted \
+  @tailwindcss/language-server prettier eslint
+#+end_src
+
+~SPC h r d~ names whatever is missing and repeats the line that installs
+it. =wine= is needed only to build a Windows package from here.
+
+* What this cannot do
+Tailwind class completion inside markup. eglot lets one server manage a
+buffer, so in a =.svelte= or =.html= file that server is the Svelte or HTML
+one, and the Tailwind server is not asked. It does manage the CSS files,
+where it is a superset of the plain CSS server. lsp-mode runs several
+servers at once and would give class completion everywhere; that is the
+trade this config makes by using eglot.
+
+* Configuration
+- ~+web-package-manager~, ~+web-dev-script~, ~+web-build-script~: per-project
+  settings, all directory local, all overriding what is read from the
+  project.
+- ~+web-templates-dir~, =$DOOMDIR/templates/web/= by default.
+- ~+web-scaffold-timeout~, 900 seconds: a first install fetches hundreds
+  of packages.
