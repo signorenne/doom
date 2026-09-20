@@ -1,0 +1,23 @@
+appId: com.{{GITHUB_USER}}.{{PROJECT}}
+productName: {{PROJECT}}
+directories:
+  output: release
+files:
+  - build/**/*
+  - electron/**/*
+  - package.json
+linux:
+  target: [AppImage, deb, rpm]
+  category: Utility
+win:
+  target: [nsis, zip]
+mac:
+  target: [dmg, zip]
+  category: public.app-category.utilities
+  # Unsigned builds will not open on an arm64 Mac. Signing needs an
+  # Apple developer account; the release workflow does it when the
+  # secrets are set and produces an unsigned build when they are not.
+  hardenedRuntime: true
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

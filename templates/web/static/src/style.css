@@ -1,0 +1,4 @@
+/* Tailwind 4 is configured in CSS, not in a tailwind.config.js: this
+   import is the whole of it, and a @theme block below would change the
+   tokens. */
+@import 'tailwindcss';
