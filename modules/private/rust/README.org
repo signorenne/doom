@@ -1,0 +1,100 @@
+#+title:    :private rust
+#+subtitle: cargo on the keys the rest of the config uses
+
+* Description
+Doom's =:lang rust= brings the mode, rustic and rust-analyzer. This module
+adds the part that is this config's:
+
+- what a build here depends on, which is the profile, the features, the
+  workspace member, the target triple and the run arguments, kept in
+  =.dir-locals.el= and carried by every command, so =SPC k b= and the panel
+  and =F6= all run the same line,
+- the panel on ~SPC k m~, the same key the CMake panel is on, showing what
+  is set and the command it would run,
+- a new project on ~SPC k n~: a program, a library or a workspace, made by
+  cargo and then given the house files,
+- debugging with codelldb, which prints Rust's enums and strings as the
+  language writes them, where gdb prints their insides,
+- rust-analyzer told to run clippy on save, so the lints and the
+  diagnostics are one process and one wait instead of two.
+
+* The keys
+The build keys are the shared ones: they work here because =SPC k r=, =SPC k
+d=, =SPC k m= and =SPC k n= ask what kind of project this is, and =SPC k b=,
+=SPC k t= and =SPC k i= go through projection, which this module gives a
+cargo type that knows the settings.
+
+| Key       | What it does                                     |
+|-----------+--------------------------------------------------|
+| ~F7~        | build, with the profile and features that are set |
+| ~F6~        | run it, with the arguments that are set          |
+| ~SPC k b~   | build                                            |
+| ~SPC k t~   | test                                             |
+| ~SPC k r~   | run, ~SPC k R~ with arguments asked now            |
+| ~SPC k d~   | debug with codelldb                              |
+| ~SPC k i~   | =cargo install --path .=                           |
+| ~SPC k m~   | the panel: everything below, and what is set     |
+| ~SPC k n~   | a new project: bin, lib or workspace             |
+| ~SPC m k c~ | check, the fast one                              |
+| ~SPC m k l~ | clippy, ~SPC m k L~ fixing what it is sure of      |
+| ~SPC m k u~ | the test the cursor is in, alone                 |
+| ~SPC m k e~ | the file with its macros expanded                |
+| ~SPC m k d~ | build the documentation and open it              |
+| ~SPC m k v~ | open Cargo.toml                                  |
+
+Doom's own localleader keys are still there: ~SPC m b~ builds, ~SPC m r~
+runs, ~SPC m t a~ tests, ~SPC m f~ formats, through rustic.
+
+* The panel
+~SPC k m~ shows one line of what a build depends on and the command line
+it would run, then:
+
+| Group            | Keys                                              |
+|------------------+---------------------------------------------------|
+| Build with       | =y= profile, =Y= dev against release, =f= features,     |
+|                  | =F= no default features, =p= workspace member,        |
+|                  | =T= target triple, =a= run arguments                  |
+| Do               | =b= build, =r= run, =R= run with arguments,            |
+|                  | =c= check, =l= clippy, =L= clippy fixing,              |
+|                  | =t= test, =u= the test at point                       |
+| And              | =d= documentation, =B= benchmarks, =e= expand,         |
+|                  | =C= clean, =U= update the lock file                   |
+| Files and status | =I= what is installed and set, =v= Cargo.toml,       |
+|                  | =n= a new project                                   |
+
+Everything a setter changes is written to =.dir-locals.el=, so it is the
+project's and not the session's.
+
+* Starting a project
+~SPC k n~ then =bin=, =lib= or =workspace=. cargo makes the skeleton, because
+cargo is what knows the shape of a crate this year; the module then adds
+
+- =.editorconfig= and =rustfmt.toml=,
+- =AGENTS.md=, the rules an agent reads before touching the repo,
+- a =[lints]= table in Cargo.toml, carrying clippy's =all= and =pedantic=,
+  no =unwrap=, no =expect= and a warning on =unsafe=, so the editor, the
+  command line and CI all judge the code the same way,
+- a =README.org= for the kind.
+
+A workspace gets =crates/NAME_core= and =crates/NAME=, the binary already
+depending on the library.
+
+* Configuration
+- ~+rust-profile~, ~+rust-features~, ~+rust-member~, ~+rust-target~ and
+  ~+rust-run-args~: the per-project settings, all directory local.
+- ~+rust-templates-dir~, =$DOOMDIR/templates/rust/= by default.
+- ~+rust-modes~, the three modes a Rust file can open in.
+
+* What has to be installed
+The toolchain is rustup's, not a package; =SPC h r d= says what is
+missing.
+
+#+begin_src sh
+sudo zypper in rustup
+rustup default stable
+rustup component add rust-analyzer rust-src clippy rustfmt
+#+end_src
+
+- *rust-analyzer* is not in Tumbleweed's repos; rustup is the way to it.
+- *rust-src* is what lets go-to-definition reach the standard library.
+- *codelldb*, for ~SPC k d~, is downloaded by =M-x +cpp/install-codelldb=.
