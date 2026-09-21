@@ -1,0 +1,8 @@
+#+title: Ideas
+#+filetags: :idea:
+#+startup: overview
+#+created: {{DATE}}
+
+Unconfirmed ideas (SPC n n i). Promote to a project or kill during review.
+
+* Ideas

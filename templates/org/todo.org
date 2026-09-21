@@ -1,0 +1,12 @@
+#+title: Todo
+#+filetags: :todo:
+#+startup: overview
+#+created: {{DATE}}
+
+Processed tasks. NEXT = the next physical action; WAIT = blocked on someone;
+HOLD = paused by me. The dashboard (SPC o a x) reads these states.
+
+* Next actions
+* Waiting
+* Scheduled
+* Recurring

@@ -1,0 +1,13 @@
+#+title: Habits
+#+filetags: :habit:
+#+startup: overview
+#+created: {{DATE}}
+
+org-habit entries (SPC n n h). The consistency graph shows in the agenda.
+
+* Habits
+** TODO Review the inbox
+SCHEDULED: <{{DATE}} .+1d/3d>
+:PROPERTIES:
+:STYLE:    habit
+:END:

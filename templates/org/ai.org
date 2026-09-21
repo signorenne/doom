@@ -1,0 +1,7 @@
+#+title: AI sessions
+#+filetags: :ai:
+#+startup: overview
+#+created: {{DATE}}
+
+Log of agent sessions (SPC l L): what was asked, what was
+changed, what to remember for the project's CLAUDE.md.

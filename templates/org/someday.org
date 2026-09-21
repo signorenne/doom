@@ -1,0 +1,8 @@
+#+title: Someday, maybe
+#+filetags: :someday:
+#+startup: overview
+#+created: {{DATE}}
+
+Parked tasks and wishes. Refile here from the inbox when it is not for now.
+
+* Someday

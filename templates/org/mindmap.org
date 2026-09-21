@@ -1,0 +1,24 @@
+#+title: Mind map
+#+filetags: :map:
+#+startup: showall
+#+created: {{DATE}}
+
+Render with SPC m M M (whole file) or SPC m M t (current tree); org-mind-map
+writes a PDF/PNG next to this file using graphviz (dot). Headings are nodes,
+:PROPERTIES: OMM-COLOR and OMM-LEGEND set the colours; links between headings
+become edges. The org-roam graph (SPC n r u) is the map of your notes.
+
+* Emacs setup
+** Editing
+*** evil
+*** corfu, vertico
+** Projects
+*** C++, CMake
+*** PlatformIO
+** Notes
+*** org
+*** org-roam
+** AI
+*** Claude Code
+*** agent-shell
+*** gptel

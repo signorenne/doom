@@ -1,0 +1,10 @@
+#+title: Snippets
+#+filetags: :notes:
+#+startup: overview
+#+created: {{DATE}}
+
+Code snippets, captured from a buffer with SPC n n c: the region as a
+source block, with a link back to the file. A note, anything worth
+keeping and linking, is a roam note: SPC n r n, or c n in SPC n SPC.
+
+* Snippets
