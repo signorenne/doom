@@ -1,0 +1,529 @@
+#+title: Working with org-roam
+#+author: Nicolò Plebani
+#+startup: overview
+#+options: toc:nil
+
+How to use the note graph in this config on purpose, rather than letting it
+fill up with notes nobody ever reads again. Open it with =SPC n r ?=. Start
+with the tutorial if this is the first time; the keys are collected at the
+end.
+
+* Tutorial
+Do this once with Emacs open, in order. Twenty minutes, and the rest of
+the guide will read as things you already did.
+
+** Three things to know first
+- A capture opens a small buffer and you are already in insert mode. Type,
+  then =ESC= and =ZZ= to keep it, =ZQ= to throw it away. Same as any file.
+- A prompt at the bottom is a list: type a few letters of what you want,
+  =C-j= and =C-k= move, =RET= takes the highlighted one. =M-RET= takes what
+  you typed as it is, for when a new title looks like an old one.
+- The leader is =SPC= in normal mode. While typing, Doom offers =M-SPC=,
+  but on KDE that key opens KRunner before Emacs sees it, so the habit
+  here is =ESC=, the command, then =i= or =a= to go on typing; the
+  commands of this guide are short enough for that.
+
+** Step 1, write down what you are doing
+Press =SPC n r d n=. A capture opens with the cursor on an empty heading.
+
+Type a heading for what it is about: =starting BLE, reading the Nordic
+intro=. Press =RET= and write a line or two under it if you want. Then
+=ESC=, =ZZ=.
+
+That went under =* Journal= in =~/org/roam/daily/2026-09-14.org=, with the
+time stored on the entry. =SPC n r d t= opens the day when you want to
+write in it directly.
+
+** Step 2, make the first note
+Press =SPC n r n=. The prompt says =Node:=. Type =Nordic BLE fundamentals=
+and press =RET=.
+
+A list of kinds appears: =[c] concept [s] solution [h] howto [b] hardware
+[r] reference [q] question [p] project [P] person [m] meeting=. Press =r=.
+
+It asks =Source, a URL or citation:=. Paste the URL, =RET=.
+
+The note opens with =Key points=, =Quotes=, =My take= already there. Write
+one key point in your own words under the first heading. =ESC=, =ZZ=. The
+note is saved and stays open.
+
+Now tag it: =SPC m m o t=, type =ble=, =RET=. Look at the top of the file:
+=#+filetags: :ref:ble:=. Every note in this subject gets =ble=, because
+that is what the map is built from in step 6.
+
+** Step 3, link a new idea from inside it
+Still in the reference note, under =Key points=, start a sentence: =Every
+service is a table of characteristics, see=.
+
+Press =ESC=, then =SPC n r i=. The =Node:= prompt appears. Type =GATT=,
+=RET=. It is new, so the template list appears: press =c=.
+
+A capture opens with the concept template for GATT. Write one line under
+=Summary=. =ESC=, =ZZ=.
+
+You are back in the reference note, in normal mode, and the sentence
+now ends with a link to GATT. Put the cursor on the link and press =RET=
+to follow it; =SPC n r r= there shows that the reference note links to
+it. That is the graph, two notes in.
+
+Tag GATT with =ble= the same way, =SPC m m o t=.
+
+Do this for every name that deserves a note: GAP, advertising, connection
+interval. Five minutes of reading, five notes, all linked from the source.
+
+** Step 4, write a question
+Press =SPC n r n=, type =Why the connection interval changes after
+pairing=, =RET=, then =q=.
+
+Three headings: what I do not understand, what I tried, answer. Fill the
+first one. Leave the answer empty. =ESC=, =ZZ=, then =SPC m m o t= =ble=.
+
+** Step 5, turn a journal entry into a note
+Press =SPC n r d t= to open today. Put the cursor on the heading you wrote
+in step 1, or write a new one with a real idea in it first: =GAP is the
+layer that decides who can connect=.
+
+Press =SPC m m e=. It asks =Extract node to:= with a file name already
+filled in; type =concepts/= in front of it, =RET=. Then =Tag:=, type
+=ble=, =RET=.
+
+The heading is gone from the day and a link sits where it was. Follow it:
+a note with the date, the title, the tag and the text, ready to be linked
+from elsewhere. This is the move you will make most, so make it once now.
+
+** Step 6, build the map
+Press =SPC n r m=. It asks =Map the notes tagged:=. Type =ble=, =RET=.
+
+A note opens, =roam/maps/ble.org=, listing every note tagged =ble=. Above
+the =# BEGIN MAP= line, write the sentence you would tell someone else:
+=Start with GAP, then GATT; the rest is detail until you need throughput=.
+Save with =SPC f s=.
+
+Run =SPC n r m ble= again next week; your sentence stays, the list grows.
+
+** Step 7, check the graph
+Press =SPC n r v=. Three lists: notes nothing links to, notes without
+tags, notes started and left empty. If a note is in the first list, open
+it and =SPC n r i= a link to something; in the second, =SPC m m o t=; in
+the third, write the sentence or delete the file. Press =q=.
+
+** Step 8, make a card and review it
+Open the GATT note. Put the cursor on the =Summary= heading and press
+=SPC m F n=. It is a card now; the heading is the question and the text
+under it is the answer.
+
+Press =SPC n p=. The card shows its heading. Press =RET= to see the answer,
+then =g= if you knew it, =a= if you did not, =q= to stop. Tomorrow =SPC n p=
+again; the card comes back when the schedule says so.
+
+** Step 9, a task inside a note
+In any note, write on its own line:
+
+#+begin_example
+  ** TODO measure throughput at a 7.5 ms interval
+#+end_example
+
+Save. Press =SPC o a x=: it is in the agenda with everything else.
+
+** Step 10, keep it
+Press =SPC n g=. The notes are committed. They also commit themselves after
+ten minutes of not typing, and when Emacs exits, so this step is for when
+you want to be sure.
+
+* Tutorial, finding it again
+The other half. Every one of these works from anywhere in Emacs.
+
+| You remember             | Press       | Then                     |
+|--------------------------+-------------+--------------------------|
+| part of a title          | =SPC n r f=   | type it, =RET=             |
+| a word inside a note     | =SPC n r /=   | type it, matches preview |
+| the subject              | =SPC n r m=   | the tag; the map opens   |
+| a page you captured      | =SPC n r F=   | pick it by URL           |
+| a paper                  | =SPC n b=     | pick it; its note opens  |
+| the day you wrote it     | =SPC n r d d= | pick the date            |
+| only a related note      | =SPC n r r=   | what links here          |
+| a task                   | =SPC o a x=   | the agenda               |
+| a question you left open | =SPC n r m=   | the tag =question=         |
+| what Claude drafted      | =SPC n r m=   | the tag =draft=            |
+
+Inside any note: =SPC n r r= for what links here, =SPC n r u= for the whole
+graph in the browser with this note in the middle, =SPC n r B= for
+backlinks with a preview, =SPC n r L= for what this note links to.
+
+For a question you cannot phrase as a search, =SPC a c= and ask Claude:
+"search my notes for BLE and tell me what I have", "read the GATT note and
+quiz me". It uses the same graph.
+
+And when none of this comes to mind: =SPC n SPC= is the menu with all of it
+on one screen, =F12= the cheat sheet, =SPC n r ?= this guide.
+
+* What a note is here
+One note, one idea, with a title you could use inside a sentence: "Ring
+buffer", "Why RVO fails on a branch", "Qt property bindings". If the title
+needs "notes on" or "stuff about", the note is really several notes.
+
+The value is not in the note, it is in the links. A note nothing points at
+and that points nowhere is a file you will never open again. Everything
+below exists to keep that from happening.
+
+Two habits carry the whole system:
+
+- never start from a blank note; capture into the day, promote later;
+- never leave a new note unlinked.
+
+* The loop
+This is the whole workflow. It takes a minute a day plus twenty on Sunday.
+
+** While working
+Write into today's note, =SPC n r d n=. A heading for what it is about, the
+time kept on the entry, anything under it: what you tried, what broke, a
+link, a question. No structure beyond that.
+
+A task belongs there too. Write =** TODO measure the copy overhead= inside
+the note; it shows up in the agenda like any task in =todo.org=, because
+this config scans the graph for tasks. =SPC n r h= lists which notes carry
+them.
+
+** When you stop
+Read the day back. Anything you would want to find again in six months gets
+promoted: put the cursor in the heading and press =SPC m m e=. It becomes
+its own note and leaves a link behind, so the day still reads as a story.
+
+Then, in the new note:
+
+1. give it a title that names the idea;
+2. link it to at least one note that already exists, =SPC n r i=, which
+   also creates the note when there is nothing to link to yet;
+3. tag it, =SPC m m o t=, because a map can only find what carries a tag.
+
+That is it. Do not tidy it further; the note is allowed to be three lines.
+
+** Once a week
+=SPC n r v= opens the review: the notes nothing links to, the notes without
+tags, and the ones you started and left empty. Fix a few, ignore the rest,
+close it. Then rebuild the maps you care about with =SPC n r m=.
+
+* The kinds of note
+=SPC n r n= picks the kind. Each one is a directory and a set of headings,
+which are really the questions the note has to answer; the finder shows
+the kind beside the title, so a note is never "some note".
+
+| Key | Kind      | Lands in    | The questions it asks                                  |
+|-----+-----------+-------------+--------------------------------------------------------|
+| =c=   | concept   | =concepts/=   | in one sentence, how it works, example, where it bites |
+| =s=   | solution  | =solutions/=  | symptom, cause, fix, how to verify, applies to         |
+| =h=   | howto     | =howtos/=     | when, steps, gotchas, sources                          |
+| =b=   | hardware  | =hardware/=   | what it is, pinout and links, toolchain, gotchas       |
+| =r=   | reference | =refs/=       | the source, key points, quotes, my take                |
+| =q=   | question  | =questions/=  | answer in one line, what I do not get, tried, answer   |
+| =p=   | project   | =projects/=   | repository, kit, goal, status, decisions, log          |
+| =P=   | person    | =people/=     | context, notes                                         |
+| =m=   | meeting   | =meetings/=   | attendees, agenda, notes, actions                      |
+
+Every note is stamped with a =CREATED= date, so the graph can be read in
+the order you learned things. There is no plain kind on purpose: a note
+that fits none is a concept, and "in one sentence" is the line the
+finder will show you nothing of otherwise.
+
+Concept notes are the ones that compound. Solution notes are for the
+thing you fixed at 23:00 and will hit again next year: what you saw,
+what was actually wrong, what fixed it, how you know, and on which
+board, SDK and compiler. Howtos are the procedures, flash this board,
+set up that SDK, half of what an embedded week writes down. Hardware
+notes hold what a board or a part is and where its pinout and datasheet
+are, tagged with the project that uses it. Reference notes are the
+sources: one per book, paper, video or page, with what it actually said.
+Question notes are the most useful when studying, see below. A project
+note names its repository and its kit in the head, so the note and the
+build stay together.
+
+None of this is only about work. The same kinds take a recipe (a howto),
+a setting you had to hunt for (a solution), what the doctor said (a
+reference). One idea per note, a topic tag, a link to something else:
+that is all the system asks, whatever the subject.
+
+* Titles, tags, aliases
+A title is a handle. Write it the way you would say it out loud, singular,
+no dates, no "my". You are going to type a few letters of it for the rest
+of your life.
+
+An alias, =SPC m m o a=, is the other name you might search for: the
+acronym, the English term next to the Italian one, the old name of a
+library. Aliases are how you find a note you titled differently than you
+now think of it.
+
+Tags are the map's raw material. Two kinds are enough:
+
+- the kind, which the template already wrote: =concept=, =ref=, =question=;
+- the topic: =cpp=, =qt=, =embedded=, =emacs=, =ai=.
+
+Reuse them; five good tags beat fifty precise ones. A URL a note came from
+goes in a ref, =SPC m m o r=, not in the body.
+
+* Linking
+Link while you write, not afterwards. =SPC n r i= in the middle of a
+sentence: pick an existing note, or type a new title and it is created.
+The sentence keeps its flow and the graph grows for free.
+
+When you find yourself explaining the same thing twice in two notes, that
+explanation is a third note. Extract it, =SPC m m e=, and link both.
+
+=SPC n r r= shows what points here. Read it when you open a note: it is
+the part you did not remember writing, and it is where the value hides.
+
+* Maps
+A map is a note that collects other notes. =SPC n r m= asks for a tag and
+writes =roam/maps/<tag>.org=: a real note, in the graph, linkable like any
+other.
+
+The generated list sits between =# BEGIN MAP= and =# END MAP=. Everything
+you write around it is yours and survives regeneration, so the shape to aim
+for is:
+
+#+begin_example
+  * Notes
+  Start with the three that matter, then the rest.
+  # BEGIN MAP
+  - [[id:...][Ring buffer]]
+  - [[id:...][Cache locality]]
+  # END MAP
+#+end_example
+
+Say in your own words what the pieces have to do with each other. That
+paragraph is the thing you will actually reread; the list is just the index.
+
+When a map should read as one document, transclude the notes instead of
+only naming them: put the cursor on a link and press =SPC m N n=, which
+turns it into a =#+transclude:= line, then =SPC m N A= to show them all.
+The text stays in its own note and appears here read only, so there is
+still one copy of everything.
+
+Two other views of the same graph:
+
+- =SPC n r u= opens it in the browser, as a picture that follows the note
+  you are in;
+- =SPC m M M= draws the current file as a mind map through graphviz, which
+  is the right tool for one tree rather than the whole graph.
+
+* Bringing sources in
+A page in the browser becomes a note in one keystroke once the handler is
+installed, =SPC n d P=. It writes the desktop entry and prints two
+bookmarklets: one captures the page into =reading.org=, the other makes a
+reference note whose =ROAM_REFS= is the URL, so opening the same page later
+finds the note you already wrote about it.
+
+Papers go through the bibliography, =~/org/refs.bib=, with the PDFs in
+=~/org/papers=. =SPC n B= opens an entry, =SPC n b= its note, and =SPC m @=
+inserts a citation while writing. The note citar makes for an entry is a
+reference note in the graph, so a cited paper and your notes on it are the
+same object.
+
+* Studying with the graph
+The pattern that works, from a paper, a chapter or a library's docs:
+
+1. one reference note for the source, =SPC n r n r=, filled while reading:
+   key points in your words, quotes only when the wording matters;
+2. a concept note for each idea worth its own name, linked from the
+   reference;
+3. a question note, =SPC n r n q=, for every thing you did not follow. It
+   has three headings on purpose: what I do not understand, what I tried,
+   answer. Leaving the answer empty is the point;
+4. a map of the topic, =SPC n r m=, once you have more than a handful.
+
+Then the pass that makes it stick: open the map, and for each note, say the
+summary out loud before you read it. Rewrite the ones you could not say.
+That is the whole review, and it works because the notes are small.
+
+Come back to the open question notes when something reminds you of them.
+Filling in an answer months later is the clearest sign the system is
+working.
+
+** Cards, for the things that must be recalled cold
+A heading becomes a flashcard with =SPC m F n=, and the card is the heading
+you already wrote: no second pile of material to keep in step. =SPC m F c=
+blanks out part of the text instead, for a definition or a signature.
+
+=SPC n p= reviews everything due, wherever it lives in =~/org=; =SPC n P=
+shows what is coming. The schedule is stored in the heading's own
+properties, so it travels with the note and is versioned with it.
+
+Make a card only for what you want to recall without thinking: a signature,
+a complexity, a register name. Understanding belongs in a concept note, and
+rereading the note is the better review for that.
+
+* A subject from scratch, say BLE
+The rules above as one worked example; replace BLE with anything.
+
+The first session: open the day, =SPC n r d n=, one line on what you are
+about to do. The thing you are reading gets a reference note, =SPC n r n=
+then =r=, titled "Nordic BLE fundamentals", the URL as its source, tagged
+=ble= with =SPC m m o t=; in the browser the second bookmarklet does the
+same in one click. Read, and write the key points in your own words.
+Every name that deserves its own note, GAP, GATT, advertising, the
+connection interval, gets one from inside the sentence: =SPC n r i=,
+create, =c=; the reference keeps a link to it. Whatever you did not
+follow is a question note, =q=, titled as the question, its answer
+heading left empty on purpose.
+
+The sessions after: write into the day first, always, and at the end
+promote what is worth keeping with =SPC m m e= on the heading; then in
+the new note a real title, one link with =SPC n r i=, the =ble= tag.
+The same explanation in two notes is a third note: extract it, link
+both. The board the code runs on gets a hardware note, =b=, with its
+pinout and the toolchain that flashed it; the flashing itself a howto,
+=h=; the bug of the evening a solution, =s=, with how you verified the
+fix and which SDK it applied to.
+
+Once there is a handful: =SPC n r m=, =ble=, and =roam/maps/ble.org=
+lists everything tagged so; write the orientation paragraph above the
+list, the order to read them in. Rerun it whenever notes are added; the
+paragraph stays. Cards only for what has to come back cold, =SPC m F n=
+on the heading, =SPC n p= to review. A task belongs where the thinking
+is: a =TODO= inside the project note shows in =SPC o a x= like any other.
+
+After a week: a reference, four concepts, a question, a hardware note, a
+howto, a solution, one map, the dailies. Every one tagged and linked,
+the map explaining the order. That is a subject you can come back to in
+a year. Claude helps from =SPC a c=: search what you have, read a note
+and quiz you, draft a note on a topic; what it writes lands in the day
+or in =roam/drafts= tagged =:draft:=, and promoting a draft, read, fixed,
+linked, moved out of =drafts/=, is the part that stays yours.
+
+* On more than one machine
+The files are the notes. The org-roam database is a cache built from them,
+it lives outside =~/org= in Emacs' own cache directory, and it is rebuilt
+whenever a file changes. Nothing in it is worth carrying between machines,
+and it cannot be the thing that breaks when two of them write notes.
+
+So syncing is syncing text:
+
+1. =SPC n G= before you leave a machine and after you arrive at one. It
+   commits what is open, pulls with a rebase, rebuilds the database from
+   the files that arrived, and pushes.
+2. On the second machine, clone =~/org= and clone this Doom config, run
+   =doom sync=, then open Emacs. The first =SPC n r f= builds that
+   machine's database from the files, which takes a moment once.
+3. Never sync the database file itself, and never put it inside =~/org=.
+   Two machines writing one sqlite file through a file sync service is the
+   one way to lose notes here.
+
+Machine local things stay machine local by design: the database sits in
+=~/.config/emacs/.local/cache=, and =.orgids=, which maps ids to files, is
+in =.gitignore= and rebuilt on demand.
+
+If a pull stops on a conflict, org files are plain text and magit is one
+key away, =SPC n SPC H=. Conflicts are rare unless you edit the same daily
+note on two machines within the hour, which is what =SPC n G= on arrival
+and departure avoids.
+
+* Keeping it healthy
+=SPC n r v=, weekly, tells you three things:
+
+- *nothing links here*: either link it into a map, or accept that it was a
+  passing thought and delete it;
+- *no tags*: it will never appear in a map, one keystroke fixes it;
+- *started and left empty*: finish the sentence, or drop the note.
+
+Deleting notes is allowed and healthy. A graph is not an archive, and
+nothing is really lost: =~/org= is a git repository that commits itself
+after ten minutes of idle time and when Emacs exits. =SPC n g= commits on
+demand, =SPC n SPC H= shows what changed.
+
+If a note seems missing from searches, =SPC n r s= resyncs the database.
+
+* Working with Claude on top of this
+The notes are plain files under =~/org=, so an agent can read them the same
+way you do. What makes them useful to Claude is exactly what makes them
+useful to you six months later, which is convenient:
+
+- one idea per note, with a title that says what it is;
+- the =CREATED= date, so "what did I learn this month" is answerable;
+- tags, so a topic can be gathered without guessing;
+- explicit links, so the relations are in the text and not only in your
+  head;
+- sources in ref notes, so a claim can be traced back.
+
+Claude reaches the graph through Emacs, with these tools, wherever the
+session was started:
+
+| Tool               | What it does                          |
+|--------------------+---------------------------------------|
+| =emacs_notes_search= | grep the notes                        |
+| =emacs_notes_list=   | the notes, by tag or by date          |
+| =emacs_notes_read=   | one note, by title or id              |
+| =emacs_notes_links=  | what points here, what this points at |
+| =emacs_notes_append= | add to today's note, under a heading  |
+| =emacs_notes_draft=  | write a new note, tagged =:draft:=      |
+| =emacs_org_add_todo= | put a task in the inbox               |
+
+Reading is open; writing is deliberately narrow. It can add to the day and
+it can leave a draft in =roam/drafts=, and that is all: it never edits a
+note you wrote. =SPC n r m draft= maps what is waiting for you.
+
+Things worth asking for:
+
+- read today's note and turn it into drafts, saying which existing notes
+  each one should link to;
+- list the pairs of concept notes that clearly belong together but are not
+  linked;
+- draft the prose at the top of a map from the notes it lists;
+- what did I learn this month, from the notes and their dates;
+- quiz me on the notes tagged =cpp=, one question at a time.
+
+Two rules keep this from turning into a mess:
+
+- promoting a draft is your job. Read it, fix what is wrong, link it, tag
+  it, then move it out of =drafts/=. That reading is where the learning
+  happens, and it is also the only check on what was written;
+- a draft you have not read is not knowledge. Delete the ones you will not
+  get to.
+
+=SPC a L= logs what a session produced into =ai.org=, and the notes are
+committed to git while you are idle, so anything Claude wrote can be read
+as a diff and undone.
+
+* The keys
+** Every day
+| Key         | What it does                       |
+|-------------+------------------------------------|
+| ~SPC n r d n~ | capture into today's note          |
+| ~SPC n r n~   | a new note, one of the nine kinds  |
+| ~SPC n r f~   | find a note, or create it          |
+| ~SPC n r i~   | insert a link, creating on the fly |
+| ~SPC m m e~   | extract this heading into a note   |
+| ~SPC n r r~   | what links here                    |
+| ~SPC n G~     | sync with the other machine, the graph updated |
+
+** Shaping a note
+| Key         | What it does                 |
+|-------------+------------------------------|
+| ~SPC m m o t~ | add a tag, ~o T~ remove one    |
+| ~SPC m m o a~ | add an alias                 |
+| ~SPC m m o r~ | add a source ref             |
+| ~SPC m m r~   | refile it elsewhere          |
+| ~SPC m l c~   | paste a URL as a titled link |
+
+** The graph
+| Key       | What it does                 |
+|-----------+------------------------------|
+| ~SPC n r m~ | build or rebuild a map       |
+| ~SPC n r v~ | review what went nowhere     |
+| ~SPC n r h~ | which notes carry tasks      |
+| ~SPC n r u~ | the graph in the browser     |
+| ~SPC n r /~ | search the notes             |
+| ~SPC n r s~ | resync the database          |
+| ~SPC m N n~ | transclude the link at point |
+
+** Around it
+| Key       | What it does                              |
+|-----------+-------------------------------------------|
+| ~SPC n SPC~ | the notes menu, everything at once        |
+| ~SPC o a x~ | the agenda dashboard                      |
+| ~SPC n q~   | query the notes (org-ql)                  |
+| ~SPC m M M~ | mind map of this file                     |
+| ~SPC n p~   | review the cards due, ~P~ the dashboard     |
+| ~SPC m F n~ | make this heading a card                  |
+| ~SPC n B~   | the bibliography, ~b~ a paper's note        |
+| ~SPC n g~   | commit the notes                          |
+| ~SPC n d P~ | set up capture from the browser           |
+| ~SPC a c~   | start Claude here                         |

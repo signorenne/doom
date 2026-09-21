@@ -1,0 +1,166 @@
+#+title:    :private notes
+#+subtitle: documents, capture, agenda and roam
+
+* Description
+A GTD-style setup on Doom's =:lang org=:
+
+- fixed documents under =~/org=, created from =templates/org=: inbox, todo,
+  projects, snippets, ideas, reading, someday, habits, ai and a mind map.
+  See ~+notes-documents~. Notes and meetings are roam notes, below.
+- captures that write into them, including the region as a code snippet and
+  a bug report with a link back to the line,
+- an [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] dashboard and a weekly review, plus [[https://github.com/alphapapa/org-ql][org-ql]] queries,
+- org-roam for lasting notes, with dailies as the journal, [[https://github.com/jgru/consult-org-roam][consult-org-roam]]
+  for search and backlinks, and [[https://github.com/org-roam/org-roam-ui][org-roam-ui]] for the graph,
+- maps of content, a graph review and note tasks in the agenda, see
+  [[file:../../../docs/org-roam-guide.org][the roam guide]],
+- mind maps through graphviz, exports to GFM, Pandoc and LaTeX, and a
+  writing mode.
+
+* Keybindings
+Everything is in ~SPC n SPC~ (~+notes/menu~), which shows how many items are
+waiting in the inbox. Its keys are the leader's: ~d~ the documents as
+under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
+agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
+
+** Documents
+| Key       | What it opens                         |
+|-----------+---------------------------------------|
+| ~SPC n d b~ | create the documents that are missing |
+| ~SPC n d d~ | pick a document                       |
+| ~SPC n d i~ | inbox, ~t~ todo, ~p~ projects, ~n~ snippets |
+| ~SPC n d I~ | ideas, ~r~ reading, ~s~ someday, ~h~ habits |
+| ~SPC n d a~ | AI sessions, ~M~ maps                     |
+| ~SPC n r d t~ | today's daily note, Doom's key          |
+| ~SPC n d w~ | writing mode                          |
+
+** Capture, with ~SPC X~ or ~SPC n n~
+| Key | Template            | Goes to           |
+|-----+---------------------+-------------------|
+| ~t~   | todo, with a link back | inbox          |
+| ~T~   | todo with a date    | inbox             |
+| ~i~   | idea                | ideas             |
+| ~l~   | link from clipboard | reading           |
+| ~r~   | book or article     | reading           |
+| ~c~   | the region, as code | snippets          |
+| ~b~   | bug, with a link    | inbox             |
+| ~P~   | project skeleton    | projects          |
+| ~h~   | habit               | habits            |
+| ~a~   | AI session          | ai, by date       |
+
+** Agenda
+| Key       | View                                           |
+|-----------+------------------------------------------------|
+| ~SPC o a x~ | dashboard: today, habits, then everything open |
+| ~SPC o a w~ | weekly review                                  |
+| ~SPC o a n~ | next actions, ~p~ projects, ~i~ inbox              |
+| ~SPC n q~   | org-ql query, ~SPC n Q~ searches                 |
+| ~C-o~       | the agenda's own menu                          |
+
+** Roam
+[[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens it.
+A note is one of nine kinds, each a directory under =roam/= and a set of
+headings that say what to write: concept (in one sentence, how it works,
+example, where it bites), solution (symptom, cause, fix, how to verify,
+applies to), howto (when, steps, gotchas), hardware (a board or part:
+pinout, toolchain, gotchas), reference (a source: key points, quotes, my
+take), question, project (goal, status, decisions, log, with the
+repository and the kit in its head), person, meeting. The finder shows
+the kind beside the title. ~SPC n r n~ picks one; ~c n~ and ~c m~ in the
+menu make a concept and a meeting straight away.
+
+| Key         | What it does                                   |
+|-------------+------------------------------------------------|
+| ~SPC n r f~   | find or create a node, ~i~ links to one          |
+| ~SPC n r n~   | new note, one of nine templates                |
+| ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
+| ~SPC n r d n~ | write today's daily note                       |
+| ~SPC m m e~   | extract this heading into its own note         |
+| ~SPC n r m~   | build the map of a tag                         |
+| ~SPC n r v~   | review the notes that went nowhere             |
+| ~SPC n r h~   | which notes carry tasks                        |
+| ~SPC n r u~   | the graph in a browser                         |
+
+A task written inside a note reaches the agenda: before an agenda or a
+refile the notes are scanned for open keywords (the ones in
+~org-todo-keywords~) and those files join ~+notes-agenda-base-files~ in
+~org-agenda-files~; the dashboard's Tasks group shows them. A view that
+binds its own file list, the inbox, keeps it. Daily notes are agenda
+files but not refile targets.
+
+** Studying, sources and keeping it
+| Key         | What it does                                       |
+|-------------+----------------------------------------------------|
+| ~SPC n p~     | review the flashcards due, ~P~ the dashboard         |
+| ~SPC m F n~   | turn this heading into a card, ~c~ blanks out a part |
+| ~SPC n B~     | the bibliography, ~b~ the note on an entry           |
+| ~SPC n d P~   | register org-protocol, then use the bookmarklets   |
+| ~SPC m N n~   | transclude the link at point, ~A~ show them all      |
+| ~SPC n g~     | commit the notes, ~G~ syncs with the remote          |
+| ~SPC n SPC H~ | what changed in the notes, ~V~ makes them a repository |
+
+Cards are headings tagged =:fc:= in the notes themselves, scheduled through
+their own properties. The bibliography is =~/org/refs.bib= with the PDFs in
+=~/org/papers=; citar writes its notes into =roam/refs=, so a cited paper
+and the note about it are the same thing. =~/org= is a git repository and
+commits itself after ~+notes-commit-idle~ seconds of idle time and when
+Emacs exits, never while a rebase or merge is waiting, and says so when a
+commit fails. ~SPC n G~ pulls and pushes in the background; a conflict
+stops it with a message and magit finishes it. The org-roam database and
+the card review log are caches outside the repository, so only the files
+travel between machines; the database is rebuilt after the pull, so the
+finder knows the notes the other machine wrote.
+
+Maps live in =roam/maps/=. A map is a note of its own, so it shows in the
+graph; only the list between =# BEGIN MAP= and =# END MAP= is regenerated.
+
+** In an org buffer
+| Key       | What it does                   |
+|-----------+--------------------------------|
+| ~SPC m M M~ | mind map of the file           |
+| ~SPC m M t~ | of this tree, ~b~ of this branch |
+| ~SPC m W~   | writing mode                   |
+
+* Workflow
+1. Capture into the inbox, from anywhere.
+2. Empty it: refile with ~SPC m r r~, set NEXT, give it a date.
+3. Work from ~SPC o a x~, write the day down in the daily note.
+4. Review weekly with ~SPC o a w~.
+5. What you want to keep goes to roam: promote a heading with ~SPC m m e~,
+   link it with ~SPC n r i~, tag it, then rebuild its map with ~SPC n r m~.
+
+* Grammar
+~SPC n w c~ runs LanguageTool over the buffer, ~SPC n w w~ says what is
+wrong where the cursor is, ~SPC n w f~ walks the buffer correcting, and
+~SPC n w d~ clears the marks. ~langtool-default-language~ is ~auto~ here
+rather than Doom's "en-US", since the notes are written in two
+languages and the tool detects which; ~langtool-mother-tongue~ is "it",
+which is what turns on the false-friend rules.
+
+The classpath is this module's: Doom points it at
+=/usr/share/java/languagetool=, which on openSUSE holds three jars
+without the =libs/= beside them, so a check dies on a missing class. The
+module looks for the directory that holds the whole set and puts its
+=libs= on the classpath too. ~SPC h r d~ says so when the jars or the java
+that runs them are missing.
+
+* Configuration
+- ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~.
+- ~+notes-roam-head~, the header every roam note starts with;
+  ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
+  and first lines.
+- ~+notes-bibliography~ (=~/org/refs.bib=), ~+notes-commit-idle~ (600).
+- ~org-directory~ (=~/org=, from core's ~+core-notes-dir~) and
+  ~org-roam-directory~ (=~/org/roam=).
+- The files: =config.el= (documents, the workflow block, the commit
+  timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
+  (citar, org-fc, transclusion), =+export.el=.
+- TODO keywords: Doom's, plus NEXT. Tags: ~org-tag-alist~.
+
+* For other modules
+=autoload/write.el= writes into the notes without a capture, in the shape
+the templates give: ~+notes-daily-file~ (today's note, made when
+missing), ~+notes-append-daily~ (an entry under one of its headings),
+~+notes-add-inbox-todo~ (a task, with who wrote it), ~+notes-new-draft~
+(a note in waiting under =roam/drafts=, tagged =:draft:=). The ai module's
+tools go through these, so what Claude leaves looks like what you write.
