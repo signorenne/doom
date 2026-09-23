@@ -1,0 +1,86 @@
+#+title:    :private ai
+#+subtitle: Claude Code, agent shells and gptel
+
+* Description
+Three ways to work with an agent, all under =SPC l=:
+
+- [[https://github.com/manzaltu/claude-code-ide.el][claude-code-ide]]: the Claude Code CLI in a side window, connected to Emacs
+  over MCP. It sees the file and region you are on and the diagnostics, its
+  edits open in ediff, and it can call Emacs tools: xref, tree-sitter, imenu
+  and project from the package, plus ten from this module: the build
+  (=emacs_build_project=, through the C++ kit when that module is on, with
+  a short wait and =emacs_last_compilation= to poll a slow one),
+  =emacs_project_todos=, and with the notes module on, the notes
+  (=emacs_notes_search=, =_list=, =_read=, =_links= to read the graph,
+  =emacs_org_add_todo= into the inbox, =emacs_notes_append= into today's
+  daily note, =emacs_notes_draft= for a new note under =roam/drafts=; it
+  never rewrites an existing note, and what it writes goes through that
+  module's writers, so it has the shape of a capture).
+- [[https://github.com/xenodium/agent-shell][agent-shell]]: the same agent in a normal Emacs buffer, over ACP, with
+  permission buttons, diffs and @file context.
+- gptel (Doom's =:tools llm=): inline chat, rewrites and quick explanations
+  against the Claude API, with read-only Emacs tools that stay inside the
+  project: a buffer or a file outside it is refused.
+
+* Keybindings
+| Key         | Command                        | What it does                       |
+|-------------+--------------------------------+------------------------------------|
+| ~SPC l SPC~ | ~+ai/menu~                     | the hub, everything in one place   |
+| ~SPC l c~   | ~claude-code-ide~              | start or focus Claude here         |
+| ~SPC l C~   | ~claude-code-ide-continue~     | continue the last conversation     |
+| ~SPC l r~   | ~claude-code-ide-resume~       | pick an older session              |
+| ~SPC l p~   | ~claude-code-ide-send-prompt~  | prompt from the minibuffer         |
+| ~SPC l s~   | send region                    | as an @-mention                    |
+| ~SPC l t~   | toggle window                  | ~b~ buffer, ~l~ sessions, ~k~ stop |
+| ~SPC l M~   | ~claude-code-ide-menu~         | the package's own menu             |
+| ~SPC l T~   | ~+ai/claude-terminal~          | plain claude, no Emacs bridge      |
+| ~SPC l d~   | ~+ai/claude-doctor~            | claude doctor                      |
+| ~SPC l o~   | ~+ai/set-claude-model~         | model for new sessions             |
+| ~SPC l e~   | ~+ai/toggle-execute-code~      | let Claude eval elisp, off by default |
+| ~SPC l a~   | ~agent-shell~                  | ~A~ picks another agent            |
+| ~SPC l v~   | compose a prompt               | ~x~ sends the region               |
+| ~SPC o l l~ | ~gptel~                        | Doom's llm keys; the menu has them too |
+| ~SPC l f~   | ~+ai/open-claude-md~           | this project's CLAUDE.md           |
+| ~SPC l S~   | ~+ai/open-claude-settings~     | ~/.claude/settings.json            |
+| ~SPC l n~   | ~+ai/new-slash-command~        | new .claude/commands/NAME.md       |
+| ~SPC l h~   | ~+ai/install-claude-hooks~     | let Claude notify Emacs            |
+| ~SPC l L~   | ~+ai/log-session~              | write a note into ~/org/ai.org     |
+
+In a Claude buffer the keys go to Claude, so a second set goes through ~C-c~,
+which vterm leaves to Emacs (~M-SPC~, Doom's usual leader there, is KRunner's
+shortcut on KDE):
+
+| Key       | What it does                                   |
+|-----------+------------------------------------------------|
+| ~C-c C-o~ | back to the code, Claude stays open            |
+| ~C-c C-q~ | hide the window, Claude keeps running          |
+| ~C-c C-k~ | stop the session                               |
+| ~C-c SPC~ | the leader, so ~C-c SPC l t~ toggles           |
+| ~C-z~     | Doom's keys in this buffer, to scroll or copy; |
+|           | ~C-z~ again to type to Claude                  |
+| ~C-c C-t~ | vterm copy mode                                |
+
+Inside the TUI, =/exit= or ~C-c C-c~ twice quits Claude and closes the buffer.
+
+* Setup
+1. =claude= on PATH, signed in once.
+2. For agent-shell:
+   =npm install -g --prefix ~/.local @agentclientprotocol/claude-agent-acp=.
+3. For gptel: =ANTHROPIC_API_KEY=, or in =~/.authinfo.gpg=
+   =machine api.anthropic.com login apikey password KEY=.
+4. Optional: =SPC l h= makes Claude tell Emacs when it finishes or needs
+   input, so buffers reload and a notification appears.
+
+Inside Claude, =/ide= shows the Emacs connection and =/mcp= lists the tools.
+
+* Configuration
+- ~+ai-claude-model~, ~+ai-gptel-directives~.
+- ~claude-code-ide-window-side~, ~-window-width~ (72 columns, a readable
+  line of prose; below 64 the TUI wraps a lot), ~-use-ide-diff~,
+  ~-enable-execute-code~.
+- ~+ai-claude-resize-delay~: how long a resized window must hold still
+  before Claude redraws for it. Its terminal follows the window down to 40
+  columns, vterm's own floor is 80.
+- ~agent-shell-preferred-agent-config~, ~agent-shell-display-action~.
+- ~gptel-model~ (=claude-opus-5=), presets =deep= and =quick=.
+- For MCP servers in gptel: set ~mcp-hub-servers~, then =M-x gptel-mcp-connect=.
