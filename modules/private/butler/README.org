@@ -1,0 +1,164 @@
+#+title:    :private butler
+#+subtitle: Hudson, at your service
+
+* Description
+A butler who can be summoned with ~SPC h j~. He appears in a bubble beside
+your work, in a child frame in the GUI and a popup at the bottom in a
+terminal, and says something worth hearing:
+
+- a hint for the mode you are in, taken from the cheat sheet, so it is
+  always a key this config really has;
+- a hint from anywhere in the sheet;
+- an answer: ask him in your words (~a~ in his menu), he looks the words
+  up in the sheet and the READMEs and answers with the line that fits
+  best, the key when it is one, and where it says so; when the lines
+  beside it under the same section answer as well he gives them too, up
+  to three, so a question about dividing a frame comes back with both
+  of the keys that do it; when two sections fit as well he asks
+  which you meant; ~o~ opens the docs at the line. When the words leave
+  it open he says the best answer and offers the rest in a menu of his
+  own, numbered, each with where it comes from, so a question with
+  more than one reading is settled by pressing a number rather than by
+  him guessing; ~c~ there puts it to Claude instead. A key is an answer
+  one can act on, so lines of prose stand aside when two of the hits
+  carry one.
+  When the words alone do not settle it, or when asked with ~C-u~, or on
+  ~A~ for a question you know to be a hard one, he puts it to Claude
+  through gptel with the lines he found, so the answer is a sentence;
+  gptel wants a key for the Anthropic API, and when there is none he
+  goes through ~+butler-claude-program~, the Claude Code command line,
+  which is signed in already: no key to set up, and no tools, since he
+  wants an answer and not an errand. Asked about this configuration he
+  answers from its docs and may not invent a key; asked about anything
+  else he answers from what he knows, as a well read butler would. He is
+  told which part of the docs the buffer he was called from belongs to,
+  since a key means one thing in a C++ buffer and another in an Org
+  document, and he says where a key from elsewhere works;
+  ~r~ puts the last question to Claude when what the docs said was not
+  what you meant. The docs stay the source either way, so he cannot
+  make a key up. He calls you what ~+butler-address~ says and never a
+  name: not the login name, not the one on the commits, however he is
+  pressed for it;
+- a word of his own, from ~+butler-quips~;
+- the greeting of the hour, the same one the dashboard uses.
+
+He also stands on the dashboard, under the banner, holding the greeting of
+the hour in his bubble: his module sets ui's ~+ui-dashboard-greeting-function~
+and joins ~+ui-dashboard-tick-hook~, so the dashboard draws him without
+knowing him. There and when summoned he is alive, on three
+tracks at once: which way the head is turned, left, middle or right; what
+the face is doing, a blink, a wink, a smile, wide eyes, a sigh; and what
+the body is doing, straightening the tie or a shrug. Any face and any body
+move can happen in any head position, because the figure is composed from
+the three each time it is drawn. A turn stays until the next turn, so he
+will blink, smile and fix his tie looking to one side, then look about and
+carry on in the middle. Nothing moves up or down.
+
+The faces are ~+butler-faces~ and the bodies ~+butler-bodies~, rows of the
+art swapped in; the gestures ~+butler-gestures~, each a weight and a list
+of steps, a step being which track, which value, and how long to hold it
+in tenths of a second. He never makes the same gesture twice running,
+every hold is stretched a little at random, and ~+butler-idle-ticks~ is
+the range he keeps still in between.
+
+He stays once summoned, animated, while you work, and goes when told:
+~x~ in his menu, ~SPC h J~, or ~+butler/dismiss~. His menu opens with
+him and closes with ~q~ or ~ESC~, leaving him where he is; ~SPC h j~
+while he is there opens it again: ~h~ another hint for this mode, ~n~ one
+from anywhere, ~s~ a word of his own, ~g~ the greeting, ~c~ copy what he
+said.
+
+Where he stands is chosen from the same menu, laid out like a keypad: ~7~
+and ~9~ the top corners, ~1~ and ~3~ the bottom ones, ~5~ the middle, ~0~
+just below the cursor, ~m~ the next of ~+butler-positions~. The arrow keys
+move him ~+butler-nudge-step~ pixels from wherever he is, and the mouse
+drags him: press on him, move, let go; a press that does not move him
+changes nothing. A named corner keeps clear of his menu while it is up
+and is taken again once his own menu closes, another menu closing is none
+of his business; a spot he was nudged or dragged to is his own. He is
+kept inside the frame either way, placed again when the frame changes
+size, and the spot is remembered by savehist, so he is found where he was
+left next session.
+
+The child frame he floats in has its focus redirected to the frame he
+stands in; without that, a mouse press on him is an event from another
+frame, which Emacs turns into a switch-frame that selects his frame and
+suspends any menu. That was why dragging did nothing and closed the menu.
+
+A long answer does not make a long butler. The bubble says
+~+butler-bubble-max-lines~ at the most, and never more than the frame can
+hold; past that the last line reads =... (R reads it all)=, and ~R~ opens
+the whole of it in =*butler says*=, an ordinary buffer that scrolls and
+searches, while ~c~ copies it whole. What he said is kept entire either
+way; only the bubble is short.
+
+The bubble is as wide as what it holds, ~+butler-bubble-width~ at the
+widest and ~+butler-bubble-min-width~ at the narrowest, and no taller
+than what it holds either: a brief word leaves no empty room inside it,
+and a bubble shorter than he is stands against his middle. He keeps his
+own height whatever he says, so the block keeps its shape from one thing he says to the next
+and only grows for a long answer; where what he says came from, the
+section of the sheet or Claude, stands in its corner in the shadow. The
+child frame is snapped to its corner by what it actually measures, the
+size worked out in characters being a pixel or two out under a
+fractional scale, which at a corner shows as a gap between him and the
+edge. It is given that size in characters rather than asked for it:
+after a resize a child frame reports its old size for a while, and
+placing him by that left a gap under him or cut a corner off. The popup
+keeps ~+butler-margin~ of blank space round him and the bubble, the same
+on every side, and none by default: the drawing carries no spare column
+either, so in a corner he stands against the edge of it rather than a
+step inside.
+
+Where he stands is written down as soon as he stops moving: savehist
+keeps it, but Doom has savehist write only when Emacs is closed
+properly, and a session that ends any other way would lose the spot.
+
+On the dashboard he does not say the one thing all session: every
+~+butler-dashboard-say-ticks~ (250, so about twenty-five seconds) he says
+something else, the greeting of the hour, a word of his own or a hint
+from the sheet. Only what fits the bubble as it stands is taken, and
+the block is replaced in place, so the dashboard never shifts under it.
+Nil there and he says the one thing, as before.
+
+He is named after Angus Hudson of Upstairs, Downstairs. ~+butler-name~
+changes that; Carson, Jeeves and Brabinger have all served.
+
+* Keybindings
+| Key     | Command         | What it does                 |
+|---------+-----------------+------------------------------|
+| ~SPC h j~ | ~+butler/summon~  | he comes, and his menu opens |
+| ~a~       | ~+butler/ask~     | ask him, in your words; ~C-u~ asks Claude |
+| ~A~       | ~+butler/ask-claude~ | ask, and have Claude answer from the docs |
+| ~r~       | ~+butler/ask-again~ | the last question again, to Claude |
+| ~1~ .. ~5~  | ~+butler/choose~  | in his choice menu, the answer you meant |
+| ~R~       | ~+butler/read~    | the whole of what he said, in a buffer |
+| ~o~       | ~+butler/show-source~ | the docs where the answer came from |
+| ~q~       |                 | the menu closes, he stays; so does any command of it |
+| ~x~       | ~+butler/dismiss~ | he goes                      |
+| ~SPC h J~ | ~+butler/dismiss~ | he goes, without the menu    |
+| ~7 9 1 3~ |                 | a corner                     |
+| ~5~ ~0~     |                 | the middle, below the cursor |
+| arrows  |                 | a step; the menu stays open for the next |
+| mouse   | ~+butler/drag~    | drag him; dropped in a corner he takes it |
+
+* Configuration
+- ~+butler-name~, ~+butler-art~, ~+butler-quips~.
+- ~+butler-claude-program~ ("claude") and ~+butler-claude-seconds~ (120):
+  how he reaches Claude without a key, and how long he waits for it.
+- ~+butler-address~ (="sir"=): how he calls you, in the greeting, in
+  his quips and in every word he has for you. A form of address rather
+  than a name, since a butler does not use his employer's.
+- ~+butler-greetings~: what he says on the dashboard by the part of the
+  day; the first line of each takes ~+butler-address~.
+- ~+butler-bubble-width~ (44) and ~+butler-bubble-min-width~ (22), how wide
+  the bubble may be; ~+butler-bubble-max-lines~ (12), how much it says
+  before ~R~ takes over.
+- ~+butler-margin~ (0 . 0), ~+butler-positions~, ~+butler-nudge-step~ (60).
+- The hints come from the docs module, ~+docs-cheatsheet-tips~ and
+  ~+docs-cheatsheet-section-for~; =doom doctor= says so when docs or ui
+  is off, and =packages.el= declares posframe, the child frame.
+- The files: =autoload/butler.el= is what he knows, how he is drawn and
+  moved, and where he stands; =autoload/menu.el= the commands and his
+  menu; ~+butler--advance~ is the one clock, ticked by the dashboard's
+  hook there and by his own timer when summoned.
