@@ -1,0 +1,90 @@
+#+title:    :private uml
+#+subtitle: PlantUML: completion, a live preview, and a template per kind
+
+* Description
+Doom's =:lang plantuml= brings the mode and the syntax checker. This
+module adds the three things that make a diagram pleasant to write:
+
+- *Completion*: =plantuml-lsp= through eglot, for keywords, directives,
+  colours, skinparams and the C4 standard library, with hover and the
+  diagnostics =plantuml -syntax= reports.
+- *A preview beside the text*, which follows your typing.
+- *Templates*, one per kind of diagram, on ~SPC m n~.
+
+* The preview
+~SPC m p~ opens the diagram in a side window and keeps it up to date as
+you type. The refresh waits for a pause, so a burst of keys costs one
+drawing rather than one per key.
+
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC m p~   | open the preview, or close it         |
+| ~SPC m P r~ | draw it again now                     |
+| ~SPC m P f~ | follow my typing, or wait to be asked |
+| ~SPC m P F~ | draw as PNG instead of SVG            |
+| ~SPC m e~   | write the diagram to a file           |
+
+A diagram that does not parse leaves the last good drawing in place and
+says what PlantUML complained about, so the preview never goes blank
+while you are in the middle of a line.
+
+* Why there is a server
+PlantUML is a Java program. Rendering by running it costs about a second
+each time, which is far too slow to follow typing. PlantUML can instead
+serve its own =picoweb= HTTP server: the first drawing pays for the JVM,
+every one after it costs about 30 milliseconds.
+
+So this module starts =plantuml -picoweb= on the first preview and keeps
+it. Measured here: 1.7 s for the first, then 0.03 s and 0.02 s.
+
+| Key       | What it does                       |
+|-----------+------------------------------------|
+| ~SPC m s i~ | is it running, and on what port    |
+| ~SPC m s r~ | restart it                         |
+| ~SPC m s k~ | stop it; the next preview restarts it |
+
+The port is =+uml-server-port=, 8135, or the first free one above it, so
+two Emacs sessions do not fight over it.
+
+* Templates
+~SPC m n~ asks which kind and what to call it, copies the template and
+opens it with the title filled in.
+
+| Kind           | For                                          |
+|----------------+----------------------------------------------|
+| =sequence=       | who talks to whom, in order                  |
+| =state=          | a state machine and its transitions          |
+| =activity=       | a flow, with decisions and branches          |
+| =component=      | boxes and the links between them             |
+| =class=          | classes, fields and relationships            |
+| =er=             | entities and their keys                      |
+| =c4-context=     | C4 level 1: the system and who uses it       |
+| =c4-container=   | C4 level 2: the parts it is deployed as      |
+| =c4-component=   | C4 level 3: inside one part                  |
+| =timing=         | signals against time, for a bus or a protocol |
+| =bitfield=       | a register laid out bit by bit               |
+
+They carry no styling on purpose: a =.puml= file here renders anywhere,
+with no include and no shared theme to travel with it.
+
+* What has to be installed
+#+begin_src sh
+sudo zypper in plantuml graphviz          # the renderer and the layout engine
+go install github.com/ptdewey/plantuml-lsp@latest
+ln -sf ~/go/bin/plantuml-lsp ~/.local/bin/plantuml-lsp
+#+end_src
+
+=graphviz= lays out every kind except sequence and timing, so without it
+some diagrams work and others do not, which is a confusing way to be
+broken. ~SPC h r d~ says what is missing.
+
+The language server is optional. It is early software, so it is looked
+for by name and everything here works without it; plantuml-mode's own
+completion stays underneath.
+
+* Configuration
+- ~+uml-preview-format~ (=svg=), ~+uml-preview-side~, ~+uml-preview-width~.
+- ~+uml-preview-idle~ (0.4 s), the pause before a redraw.
+- ~+uml-preview-follow~, whether it follows typing at all.
+- ~+uml-server-port~ (8135), ~+uml-server-start-timeout~ (30 s).
+- ~+uml-templates-dir~, =$DOOMDIR/templates/uml/= by default.
