@@ -1,0 +1,114 @@
+#+title:    :private docs
+#+subtitle: the cheat sheet
+
+* Description
+=docs/cheatsheet.org= holds the workflows and keys for this config. It is
+folded by section, so you open the one you need and close it again.
+
+The sheet has three layers:
+
+- short sections written by hand, grouped by what you are doing: Doom,
+  editing, windows, files, search, git, code, C and C++, org, notes, AI,
+  glyphs, troubleshooting;
+- =Reference: leader keys=, one table per prefix, generated from the running
+  keymaps;
+- =Reference: this config's commands=, one list per module, generated from
+  the commands' docstrings and their bindings.
+
+The two reference sections are rebuilt from the config: the leader keys
+from what is bound under SPC, the commands from what this config
+defines, each with its key under the leader or in its own mode map.
+Nothing rebuilds them by itself, so they drift as soon as a key changes
+and =gr= has not been pressed; =bin/check-config= asks, and says "out of
+date" when the tables no longer say what the config binds. The hand
+written sections above them drift the same way, and =gr= is the moment to
+read them against the tables.
+
+Opening the sheet from a C++, CMake, QML, org, magit, dired, Claude Code
+or agent buffer jumps to the matching section. Each private module says
+which modes are its own and how its commands are listed, in a variable
+called after it, ~+cpp-docs~, ~+notes-docs~: the command groups (prefix,
+heading, the features and the maps or minor modes its keys live in) and
+the sections (mode to heading); ~+docs--module-docs~ gathers them in load
+order, so a new module needs nothing here, and a module that says nothing
+is listed under its own name. ~+docs-cheatsheet-sections~ holds the modes
+no private module owns, none at present.
+
+* Keybindings
+| Key                | Command                       | What it does                     |
+|--------------------+-------------------------------+----------------------------------|
+| ~F12~ or ~SPC h /~ | ~+docs/cheatsheet~            | open or close it; ~C-u~ picks a heading, ~C-u C-u~ searches the text |
+| ~SPC h M~          | ~+docs/module-readme~         | open a module's README           |
+| ~s~ or ~?~         | ~+docs/cheatsheet-search~     | jump to a heading                |
+| ~S~                | ~+docs/cheatsheet-find~       | search the text, words in any order |
+| ~gr~               | ~+docs/cheatsheet-regenerate~ | rebuild the references           |
+| ~q~                | ~+popup/close~                | close the sheet                  |
+| ~SPC h C~          | ~+docs/check-autoloads~       | is every function referred to callable |
+
+=F12= is bound globally, not under the leader, so it works in every state
+and every mode.
+
+* Maintenance
+Run ~gr~ in the sheet after changing keys or adding commands. Only the text
+between the =# BEGIN GENERATED-= and =# END GENERATED-= markers is rewritten;
+everything else is yours.
+
+Writing a new section: keep the tables small, two columns, one idea each.
+A section that needs more than about ten rows is two sections.
+
+* The autoload check
+A function defined in a module's =autoload/= directory exists only once
+its file has loaded, and the file loads through a =;;;###autoload= cookie.
+So a key, a hook, an advice or a menu in =config.el= that names such a
+function, and any other autoload file that does, needs the definition
+cookied, or the first use is a void function. =autoload/check.el= reads
+every private file for the definitions and the quoted references, under
+this config's own prefixes, and reports a name defined nowhere or used
+from another file without its cookie; a reference from the file that
+defines the name needs none. =doom doctor= runs that scan, =SPC h C= runs
+it and then asks the session whether each name is callable, and
+=bin/check-config= runs =SPC h C= in a fresh daemon.
+
+=autoload/keys.el= checks two more things the same script runs. Every
+private menu is set up under transient's conflict detection, which
+refuses a key bound twice or a suffix neither defined nor autoloaded,
+and its layout is read for a suffix on =q=, =Q= or =?=, which transient
+owns here and would move without a word, and for a command on two
+keys. Then every =SPC= key the sheet and the READMEs mention is looked
+up in the leader map, a menu key in that menu's layout, so a key that
+changed in the config cannot stay in the docs. The leader itself is
+read for one of our commands on two keys and for a Doom key rebound
+that =+docs-doom-keys-taken= does not name, the two dired keys.
+=+docs-binding-problems= takes the keys that are not the leader's, the
+motions and the mode keys and the function keys, and looks each one up
+in the place its section says it belongs to: a code buffer, an Org buffer,
+dired, the minibuffer. It is what catches a key the sheet names that
+nothing binds, =zM= when only =zm= is bound. It cannot catch a key bound
+to the wrong command, and it lets through what it cannot tell from a
+session that has not loaded something: a debug session's keys while
+none runs, and the completion popup's, which are bound per evil state
+in a map no plain lookup follows. =+docs-key-contexts= says which part
+of the sheet is looked up where, and marks as =skip= the keys that are
+not Emacs bindings at all: magit's transient suffixes, the CMake
+panel's, snippet abbreviations, and the keys of Claude's own terminal.
+=+docs/check-keys= does all of it from a session.
+
+=+docs-search= answers a question in words from the sheet and the
+READMEs: the lines holding the most of its words, a key row counting a
+little more, each with its section; the butler's =a= is built on it.
+The docs are written in their own words; a question comes in anyone's,
+so =+docs-synonyms= stands the words the docs use in for what a question
+is likely to call them (folder for dired, autocomplete for corfu, who
+for blame), and a plural is read as its singular, so "commits" finds
+"commit". A line with the very word beats one that only meant the same
+thing, a line that answers the whole question beats one that answers
+half of it twice over, and two words standing together in a line count
+for more than the same two far apart. A word that stands in for another
+word of the question is never counted twice over, so a question naming
+two things is not answered by a line that holds only one of them. The heading a line stands under answers for
+it, at half weight, so the row that reloads the config counts as an
+answer about Doom although it never says the word; and the sheet, which
+is written to be answered from, outranks a module README. Each hit
+carries =:coverage=, the share of the question it holds, which is how the
+butler knows whether the docs settled the matter or Claude should be
+asked.
