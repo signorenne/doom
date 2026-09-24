@@ -1,0 +1,3368 @@
+#+title: Doom cheat sheet
+#+author: Nicolò Plebani
+#+startup: overview
+#+generated: 2026-09-26 21:03
+#+options: toc:nil
+
+=F12= or =SPC h /= opens this sheet next to your buffer, at the section for
+the mode you are in; =C-u F12= jumps to a heading instead, =C-u C-u F12=
+searches the text. Inside the sheet: =TAB= unfold, =s= search the headings,
+=S= the text (words in any order, matches as you type), =gr= rebuild the
+generated tables, =q= close.
+
+* How to read this sheet
+Every section is folded. Open the one you need, read the small table, close
+it again. The two reference sections at the end are generated from the
+running config, so they are always true; everything above them is written by
+hand and explains the parts that keys alone do not.
+
+Three menus cover most of what this config adds. Each one shows the current
+state in its header.
+
+| Menu      | What it drives                   |
+|-----------+----------------------------------|
+| ~SPC k SPC~ | build, run and debug the project |
+| ~SPC n SPC~ | notes, tasks and the agenda      |
+| ~SPC l SPC~ | AI agents                        |
+| ~SPC s SPC~ | searching and replacing          |
+
+=SPC= is the leader, =SPC m= the localleader for the current mode, and
+=SPC m SPC= a menu of what the mode can do: dired, ibuffer, info, bookmarks,
+re-builder, the agenda; =C-o= in calc and isearch, which have no evil state.
+
+On the dashboard he talks to himself: the greeting, a word of his own
+or a hint from this sheet, a new one every twenty-five seconds or so.
+
+~SPC h j~ summons the butler: he comes with a hint for the mode you are
+in, taken from this sheet, and his menu opens. ~q~ closes the menu and he
+stays; ~SPC h j~ again brings the menu back; ~x~ in it, or ~SPC h J~, and
+he goes. The menu moves him: the corners on ~7 9 1 3~, the middle on ~5~,
+below the cursor on ~0~, a step with the arrow keys; or drag him with the
+mouse. He is found where he was left, next session as well. ~a~ in his
+menu asks him a question in your words, "change the date of a commit":
+he answers from this sheet and the READMEs with the key, the section it
+is under in the corner of the bubble; when the words leave it open he
+says the best answer and offers the rest in a numbered menu, ~1~ to ~5~,
+to choose between, ~c~ there asking Claude instead; and he puts it to
+Claude, through gptel or, with no API key set up, through the Claude
+Code command line, when the words do not settle it or when asked with
+~C-u~; ~A~
+asks Claude outright, for a hard question or one the sheet cannot
+answer at all, since Claude keeps to the docs only where the question
+is about this configuration; and ~r~
+puts the last question to Claude when what he said was not what you
+meant; ~o~ opens the docs at the line. He says twelve lines at the most,
+and ~R~ reads the whole of a long answer in a buffer, ~c~ copies it.
+
+Getting out is one rule everywhere: =q= closes a menu or a read-only buffer,
+=ESC= closes a popup or cancels a prompt, and =C-`= brings the last popup
+back. The window a program left behind takes either, =q= or =ESC=. In a menu
+that used =q= for a command of its own, that command is on =Q=: quit dired,
+quit calc, bury magit.
+
+Each module keeps its own notes, reachable with =SPC h M=:
+[[file:../modules/private/ai/README.org][ai]],
+[[file:../modules/private/butler/README.org][butler]],
+[[file:../modules/private/container/README.org][container]],
+[[file:../modules/private/core/README.org][core]],
+[[file:../modules/private/cpp/README.org][cpp]],
+[[file:../modules/private/device/README.org][device]],
+[[file:../modules/private/docs/README.org][docs]],
+[[file:../modules/private/git/README.org][git]],
+[[file:../modules/private/notes/README.org][notes]],
+[[file:../modules/private/qtcreator/README.org][qtcreator]],
+[[file:../modules/private/ui/README.org][ui]]
+
+* Doom
+** Config files
+| File                                 | What lives there       |
+|--------------------------------------+------------------------|
+| =init.el=                              | the module list        |
+| =config.el=                            | identity, fonts, theme |
+| =packages.el=                          | cross-cutting packages |
+| =modules/private/<name>/config.el=     | a module's settings    |
+| =modules/private/<name>/packages.el=   | its packages           |
+| =modules/private/<name>/autoload/*.el= | its commands           |
+| =docs/cheatsheet.org=                  | this sheet             |
+
+To add a package, put =(package! name)= in a module's =packages.el=, then
+=SPC h r s=. A package that is not on MELPA needs a recipe:
+=(package! name :recipe (:host github :repo "owner/name"))=.
+
+Every declaration carries a =:pin=, the commit installed here, so =doom
+sync= on another machine installs the same versions. =M-x
+doom/bump-package-at-point= on the line moves the pin to the newest
+commit (=doom/bump-packages-in-buffer= for the whole file), then =SPC h r
+s= installs it. =doom upgrade= leaves pinned packages where they are.
+
+To add a module, create =modules/private/<name>/= and add its name to the
+=:private= block in =init.el=.
+
+** Sync and reload
+| Key             | What it does                                |
+|-----------------+---------------------------------------------|
+| ~SPC h r s~       | sync after editing init.el or packages.el   |
+| ~SPC u SPC h r s~ | sync and rebuild everything                 |
+| ~SPC h r r~       | reload the config without restarting        |
+| ~SPC h r f~       | reload the fonts                            |
+| ~SPC h r t~       | reload the theme                            |
+| ~SPC h r e~       | reload the shell environment                |
+| ~SPC h r d~       | run doom doctor                             |
+| ~SPC h r u~       | run doom upgrade                            |
+| ~SPC q r~         | restart Emacs, ~SPC q R~ restores the session |
+
+** Leaving Emacs
+| Key     | What it does                                |
+|---------+---------------------------------------------|
+| ~SPC q q~ | quit Emacs, saving what is open             |
+| ~SPC q Q~ | quit without saving                         |
+| ~SPC q K~ | quit and stop the daemon with it            |
+| ~SPC q r~ | restart Emacs, ~SPC q R~ restores the session |
+| ~SPC q d~ | restart the server, the frames left alone   |
+
+A frame closes with ~SPC q f~ and the daemon lives on; closing the last
+frame of a daemon leaves Emacs running, which is the point of it.
+
+** Open the config
+| Key     | What it opens                |
+|---------+------------------------------|
+| ~SPC f p~ | a file of the private config |
+| ~SPC f P~ | the private config directory |
+| ~F12~     | this sheet                   |
+| ~SPC h M~ | a module README              |
+
+** Help
+| Key       | What it describes                           |
+|-----------+---------------------------------------------|
+| ~SPC h k~   | a key                                       |
+| ~SPC h f~   | a function                                  |
+| ~SPC h v~   | a variable                                  |
+| ~SPC h m~   | the current mode                            |
+| ~SPC h '~   | which font draws the character              |
+| ~SPC h b b~ | every binding, ~b t~ top level, ~b m~ this mode |
+| ~SPC h d m~ | a Doom module, ~d p~ a package                |
+| ~SPC h d h~ | Doom's own manual                           |
+| ~SPC h j~   | the butler, with a hint for this mode       |
+
+** Run something
+| Key   | What it does           |
+|-------+------------------------|
+| ~SPC :~ | M-x                    |
+| ~SPC ;~ | evaluate an expression |
+| ~SPC u~ | universal argument     |
+
+** The doom CLI
+| Command         | What it does                             |
+|-----------------+------------------------------------------|
+| =doom sync --aot= | install and compile ahead of time        |
+| =doom upgrade=    | update Doom; pinned packages stay        |
+| =doom doctor=     | check the setup                          |
+| =doom env=        | capture the shell PATH for the GUI       |
+| =doom gc=         | drop unused packages and build artefacts |
+
+* Editing
+** Motions
+| Key      | Where it goes             |
+|----------+---------------------------|
+| ~w b e ge~ | by word                   |
+| ~0 ^ $~    | start and end of the line |
+| ~gg G~     | start and end of the file |
+| ~H M L~    | top, middle, bottom       |
+| ~{ }~      | by paragraph              |
+| ~%~        | the matching bracket      |
+| ~C-d C-u~  | half a screen             |
+
+** Text objects
+| Key   | What it selects         |
+|-------+-------------------------|
+| ~iw aw~ | a word                  |
+| ~ip ap~ | a paragraph             |
+| ~i( a(~ | inside, around brackets |
+| ~i" a"~ | a string                |
+| ~ia aa~ | an argument             |
+| ~ii ai~ | an indented block       |
+| ~ig ag~ | the whole buffer        |
+| ~iu~    | a URL                   |
+
+** Operators
+| Key      | What it does           |
+|----------+------------------------|
+| ~d c y~    | delete, change, yank   |
+| ~> <~      | indent                 |
+| ~=~        | reindent               |
+| ~gc~       | comment                |
+| =gU gu g~= | case                   |
+| ~J~        | join lines             |
+| ~.~        | repeat the last change |
+
+** Surround
+| Key     | What it does           |
+|---------+------------------------|
+| ~ys iw "~ | surround a word        |
+| ~cs " '~  | change the surrounding |
+| ~ds "~    | delete it              |
+| ~S "~     | surround the selection |
+
+** Visual mode
+| Key     | What it does             |
+|---------+--------------------------|
+| ~v V C-v~ | char, line, block        |
+| ~o~       | swap to the other end    |
+| ~I A~     | insert down a block      |
+| ~gv~      | reselect the last region |
+| ~*~       | search for the selection |
+
+** Multiple cursors
+| Key     | What it does                |
+|---------+-----------------------------|
+| ~gzz~     | a cursor here               |
+| ~gzn gzp~ | at the next, previous match |
+| ~gzt~     | at every match              |
+| ~gzq~     | back to one cursor          |
+| ~R~       | multiedit the region        |
+
+** Search and replace
+| Key       | What it does                |
+|-----------+-----------------------------|
+| ~/ ?~       | search forwards, backwards  |
+| ~n N~       | next, previous match        |
+| ~* #~       | the word under the cursor   |
+| ~:%s/a/b/g~ | replace in the file         |
+| ~SPC s s~   | pick a line with completion |
+
+** Undo, registers, macros
+| Key       | What it does                   |
+|-----------+--------------------------------|
+| ~u C-r~     | undo, redo                     |
+| ~SPC s u~   | the undo tree                  |
+| ~"ay "ap~   | yank to, paste from a register |
+| ~q a ... q~ | record a macro into ~a~          |
+| ~@a~        | play it back                   |
+| ~SPC i y~   | the kill ring                  |
+
+** Folding
+| Key   | What it does                           |
+|-------+----------------------------------------|
+| ~za~    | toggle this fold                       |
+| ~zc zo~ | close, open                            |
+| ~zM zR~ | close, open everything; ~zm zr~ the same |
+| ~zj zk~ | next, previous fold                    |
+
+** Completion
+The popup comes by itself after two characters and a short pause, the
+first candidate already chosen, as in VS Code and Zed.
+
+| Key     | What it does                                             |
+|---------+----------------------------------------------------------|
+| ~RET~     | take the chosen candidate; ~TAB~ completes what they share |
+| ~C-n C-p~ | move in the popup, the arrows too; ~C-j C-k~ as well       |
+| ~ESC~     | close it and keep what you typed                         |
+| ~DEL~     | delete the last character, as always; the popup follows  |
+| ~C-SPC~   | open it now, without the pause                           |
+| ~C-h~     | documentation for the candidate, in a buffer             |
+| ~M-d~     | the same beside the list; ~M-n~ ~M-p~ read a long one        |
+| ~SPC t a~ | manual completion instead, ~C-SPC~ only                    |
+
+** Snippets
+| Key               | What it does                                  |
+|-------------------+-----------------------------------------------|
+| ~TAB~               | expand the key before the cursor              |
+| ~SPC i s~           | insert one by name                            |
+| =M-x +snippets/new= | write a new one, =+snippets/edit= to change one |
+
+** Spelling
+spell-fu marks a misspelt word as you write, through aspell, with
+English and Italian dictionaries installed. It is a word check, not a
+grammar one: for grammar see ~SPC n w c~, LanguageTool, under the notes.
+
+| Key     | What it does                                            |
+|---------+---------------------------------------------------------|
+| ~]s~ ~[s~   | the next, the previous misspelling                      |
+| ~z=~      | the corrections for the word at point, pick one         |
+| ~zg~      | add this word to your dictionary, it is right after all |
+| ~zw~      | the opposite: take a word back out                      |
+| ~SPC t s~ | the checker off and on for this buffer                  |
+
+** Formatting
+| Key     | What it does                                                    |
+|---------+-----------------------------------------------------------------|
+| ~SPC c f~ | format the buffer or region                                     |
+| ~SPC c w~ | drop trailing whitespace                                        |
+| ~TAB~     | indent the line; a C++ buffer indents as its =.clang-format= says |
+
+** Toggles
+| Key     | What it toggles                                                                               |
+|---------+-----------------------------------------------------------------------------------------------|
+| ~SPC t l~ | line numbers                                                                                  |
+| ~SPC t w~ | line wrapping                                                                                 |
+| ~SPC t z~ | zen mode, wide margins in the one font                                                        |
+| ~SPC t b~ | the big font                                                                                  |
+| ~SPC t r~ | read only                                                                                     |
+| ~SPC t T~ | transparency                                                                                  |
+| ~SPC t S~ | subword motion                                                                                |
+| ~SPC t m~ | the minimap on the right, off until asked: it costs a redisplay of the whole buffer per frame |
+| ~SPC t o~ | the symbol outline at the side, following the cursor                                          |
+| ~SPC t h~ | the header line: project path, symbol path, or the function you scrolled into                 |
+| ~SPC t i~ | indent guides, off until asked: they cost a redisplay per scroll step                         |
+| ~SPC t B~ | who wrote this line and when, at its end; on by itself under 100k                             |
+
+* Getting around
+Moving fast is three habits: search instead of scrolling, jump instead of
+searching when the target is on screen, and use =C-o= to come back. The
+tables are ordered by how far you are going.
+
+** On the screen
+| Key    | What it does                             |
+|--------+------------------------------------------|
+| ~s ab~   | to the next "ab", ~S ab~ backwards         |
+| ~f x~    | to the next x on this line, ~;~ again      |
+| ~gs s~   | type two letters, pick the label         |
+| ~gs SPC~ | type any prefix, pick the label          |
+| ~gs w~   | every word gets a label, ~gs j~ every line |
+| ~%~      | the matching bracket                     |
+| ~H M L~  | top, middle, bottom of the screen        |
+| ~zz zt~  | this line to the middle, to the top      |
+
+Anything after ~gs~ is an ordinary motion made visible: ~gs f x~, ~gs e~,
+~gs k~. When the target is in view, this is faster than any search.
+
+** In this file
+| Key     | What it does                              |
+|---------+-------------------------------------------|
+| ~/ ?~     | search forwards, backwards; ~n N~ again     |
+| ~* #~     | the word under the cursor, forwards, back |
+| ~SPC s s~ | pick a line, with a live preview          |
+| ~SPC s S~ | the same, starting from the word at point |
+| ~SPC s i~ | the functions or headings, by name        |
+| ~]] [[~   | next, previous function                   |
+| ~]a [a~   | next, previous argument                   |
+| ~]c [c~   | next, previous comment                    |
+| ~]t [t~   | next, previous TODO in the comments       |
+| ~]d [d~   | next, previous changed hunk               |
+| ~]e [e~   | next, previous error                      |
+| ~gg G~    | start, end of the file                    |
+
+** Coming back
+Every jump above leaves a trail, and this is how you walk it.
+
+| Key     | What it does                                        |
+|---------+-----------------------------------------------------|
+| ~C-o~     | back to where you jumped from                       |
+| ~C-i~     | forward again                                       |
+| ~g; g,~   | where you last changed something, and forward again |
+| ~SPC s j~ | the whole trail, pick a spot                        |
+| ~m a~     | drop mark a here, ~`a~ returns to it                  |
+| ~m A~     | the same, across files                              |
+| ~SPC s r~ | the marks, pick one                                 |
+| ~SPC RET~ | bookmarks, which survive a restart                  |
+| ~SPC s m~ | jump to a bookmark                                  |
+
+** Finding a file
+| Key     | What it does                                     |
+|---------+--------------------------------------------------|
+| ~SPC SPC~ | any file of the project, by fragments            |
+| ~SPC .~   | any file, from here                              |
+| ~SPC f r~ | a recent one                                     |
+| ~SPC s f~ | any file by name, here and below; ~C-u~ asks where |
+| ~SPC ,~   | an open buffer in this workspace                 |
+| ~SPC <~   | an open buffer anywhere                          |
+| ~F4~      | the header of this source, and back              |
+| ~gf~      | the file named under the cursor                  |
+
+Fragments in any order: =cou hpp= finds =include/demo/counter.hpp=.
+
+** Finding text
+| Key     | What it searches                          |
+|---------+-------------------------------------------|
+| ~SPC /~   | the whole project, live                   |
+| ~SPC *~   | the project for the word under the cursor |
+| ~SPC s d~ | this directory and below, ~C-u~ to pick one |
+| ~SPC s D~ | another directory, asked for              |
+| ~SPC s B~ | every open buffer                         |
+| ~SPC s I~ | the symbols of every open buffer          |
+| ~SPC s P~ | another project                           |
+
+In the results: ~C-j C-k~ move and the file shows behind, ~RET~ goes
+there, ~C-c C-e~ turns the list into a buffer you can edit; ~C-c C-c~
+writes the edits back to every file. That last pair is a rename across the
+project in three keys.
+
+*** The menu
+~SPC s SPC~ holds the same searches with the options in front of you, and
+the replaces with them. Press the letters for what you want, then the
+letter for where to look:
+
+| Set | What it means                              |
+|-----+--------------------------------------------|
+| ~F~   | a literal string, not a regular expression |
+| ~w~   | whole words only                           |
+| ~i~   | either case                                |
+| ~v~   | the lines that do not match                |
+| ~m~   | a match may cross line ends                |
+| ~g~ ~G~ | only the names matching, every name but    |
+| ~t~ ~T~ | only one kind of file, every kind but      |
+| ~u~   | the ignored and hidden files too           |
+| ~c~   | lines of context round each match          |
+
+| Then    | Where it looks                                  |
+|---------+-------------------------------------------------|
+| ~p d D P~ | the project, here, a directory, another project |
+| ~*~       | the word under the cursor                       |
+| ~b l~     | every open buffer, this buffer                  |
+| ~r~       | replace: the same places, in its own menu       |
+| ~R~       | replace in the project, without asking where    |
+
+~r~ opens the replace menu, which asks where with the same letters the
+search column uses: ~l~ this buffer, ~p~ the project, ~d~ this directory, ~D~
+one it asks for, ~P~ another project, ~f~ the files marked in dired. What
+you set above is carried into it and written at its top, so a replace
+is never wider than the search you were about to run.
+
+In the results of any of these: ~C-j C-k~ move, ~RET~ goes there, ~C-c C-e~
+turns them into a buffer you can edit and ~C-c C-c~ writes it back, and
+a second ~#~ filters them without asking ripgrep again.
+
+A replace never opens a file that does not hold the text: ripgrep is
+asked first, with those same options, and only what it names is
+visited. It asks at every match, ~y~ and ~n~ as always, ~!~ for the rest of
+a file, ~q~ to stop. The word under the cursor is offered as the thing
+to replace. ~f~, the files marked in dired, is the exception: that one is
+Emacs's own command, which asks for its own regexp and visits every
+file marked, flags or no flags.
+
+*** Narrowing it by hand
+What the menu sets can be typed instead, which is worth knowing when
+the search is already open.
+
+What you type after the ~#~ is a regular expression, given to ripgrep as
+it stands: =popup.*[Bb]ridge= is a search, and a literal =(= or =*= has to
+be escaped or searched for with =-F= below. A second ~#~ filters the
+results again inside Emacs, without asking ripgrep anything: =#bridge#.h=
+keeps the lines whose path or text holds =.h=.
+
+Anything after a lone =--= goes to ripgrep itself, which is how a search
+is narrowed to certain files:
+
+| After =--=       | What it does                                   |
+|----------------+------------------------------------------------|
+| =-g '*.h'=       | only files whose name matches                  |
+| =-g '!*.pc.cpp'= | every file but those                           |
+| =-tcpp=          | a language ripgrep knows, =--type-list= has them |
+| =-F=             | literal: no regexp, for =foo(= and =a*b=           |
+| =-w=             | whole words only                               |
+| =-i= =-s=          | ignore case, respect it                        |
+| =-A2 -B2=        | lines of context after, before                 |
+
+So =#PopupAudioBridge -- -g '*.h'= searches the headers alone. The same
+works for ~SPC s d~ and ~SPC s D~, which are the same search in a directory.
+
+** Replacing
+Five ways, by how far the change reaches and how much you want to see
+of it first.
+
+| Key         | What it changes                                                                    |
+|-------------+------------------------------------------------------------------------------------|
+| ~SPC c r~     | one symbol, everywhere: the language server renames                                |
+| ~:%s/a/b/g~   | this file, evil's own; ~:%s/a/b/gc~ asks at each match                               |
+| ~SPC s SPC r~ | the menu: this buffer, the project, a directory, another project, the marked files |
+| ~SPC s R~     | the project at once, the files that hold it                                        |
+
+~SPC c r~ is the one to reach for on a C++ name: the server knows which
+words are that symbol and which only look like it, and it follows the
+name into the header. Everything below it is text, and text does not
+know a comment from a declaration.
+
+~SPC s R~ asks ripgrep which files hold the text before it starts, so it
+opens those and no others; the options set in ~SPC s SPC~ narrow that
+list, and ~F~ there makes the text literal. It asks at every match: ~y~ and
+~n~ as always, ~!~ for the rest of a file, ~q~ to stop.
+
+When you want to see every change before any of it happens, go the long
+way: search with ~SPC /~, ~C-c C-e~ turns the results into an ordinary
+buffer, edit that buffer as text, and ~C-c C-c~ writes every file back.
+
+** Following code
+| Key     | Where it goes                                          |
+|---------+--------------------------------------------------------|
+| ~gd~      | the definition; from there, the declaration            |
+| ~S-F2~    | the declaration, from anywhere                         |
+| ~gD~      | every place it is used                                 |
+| ~SPC c i~ | the implementations of this interface                  |
+| ~SPC c t~ | the type of this thing                                 |
+| ~SPC c h~ | who calls this, and what it calls in turn              |
+| ~SPC c T~ | what this class derives from, and what derives from it |
+| ~SPC c j~ | any symbol in the project, by name                     |
+| ~K~       | its documentation, without leaving                     |
+| ~SPC c H~ | the same, in a window that follows                     |
+| ~SPC s k~ | the same, in the offline docsets                       |
+
+~SPC c h~ and ~SPC c T~ open a tree you can walk: ~TAB~ opens a branch, and
+each side is asked of the server as you go, so a call hierarchy of a
+large tree costs only the branches you look at. ~C-u~ before either asks
+which way to look rather than both.
+
+~F2~ is ~gd~ and ~F4~ the header, as in Qt Creator. When there is more
+than one place, they come up as a list in the minibuffer: ~C-j C-k~ move
+with the file shown behind, ~RET~ goes there, ~C-c C-e~ keeps the list in
+a buffer. ~C-o~ takes you back to where you started.
+
+If ~gd~ lands in the same file or says nothing: the server does not have
+the compilation database. ~SPC k I~ tells you, ~SPC k m z~ fixes it.
+
+** In a document
+| Key     | What it does                          |
+|---------+---------------------------------------|
+| ~SPC m .~ | any heading of this file, by name     |
+| ~SPC m /~ | any heading of the agenda files       |
+| ~]] [[~   | next, previous heading                |
+| ~]h [h~   | next, previous heading at this level  |
+| ~gh~      | up to the parent, ~gl~ down into it     |
+| ~gj gk~   | next, previous element                |
+| ~]l [l~   | next, previous link; ~RET~ follows it   |
+| ~]c [c~   | next, previous code block             |
+| ~TAB~     | fold or unfold here, ~S-TAB~ everything |
+| ~C-o~     | back after following a link           |
+
+** Recipes
+- *Where is this used?* cursor on it, ~gD~. Or ~SPC *~ for the plain
+  text, which also finds comments and strings.
+- *What does this call?* ~gd~ into it, read, ~C-o~ back. Chain it as deep
+  as you like; ~C-o~ unwinds one level at a time.
+- *Which file defines Y?* ~SPC c j~, type part of the name.
+- *Some function in this file* ~SPC s i~, type part of the name.
+- *Some file* ~SPC SPC~, fragments of its path.
+- *A word somewhere in the project* ~SPC /~, then ~C-c C-e~ if you want
+  the list to stay.
+- *Back where I was five jumps ago* ~SPC s j~.
+- *This spot, later today* ~m A~, then ~`A~. For tomorrow, ~SPC RET~.
+
+** The minibuffer, wherever a list appears
+| Key     | What it does             |
+|---------+--------------------------|
+| ~C-j C-k~ | move down, up            |
+| ~M-RET~   | take the input as it is  |
+| ~C-SPC~   | preview the candidate    |
+| ~C-x C-d~ | switch directory         |
+| ~TAB~     | complete the common part |
+| ~C-;~     | act on the candidate     |
+
+~C-;~ is embark: on a file it offers open, copy the path, delete; on a
+search hit, export the list. ~SPC a~ is the same from the leader.
+
+* Windows and buffers
+** Windows
+| Key         | What it does                        |
+|-------------+-------------------------------------|
+| ~C-w h j k l~ | move between splits                 |
+| ~C-w p~       | back to the one you came from       |
+| ~C-w 1~       | the first window, up to ~C-w 9~       |
+| ~C-w w~       | the next one, ~C-w W~ the one before  |
+| ~C-w C-w~     | pick one by number, shown over each |
+| ~C-w x~       | swap this one with the next         |
+| ~SPC w v~     | split to the right                  |
+| ~SPC w s~     | split below                         |
+| ~SPC w d~     | close this one                      |
+| ~SPC w m m~   | this one alone, again to restore    |
+| ~SPC w o~     | enlarge this one, again to restore  |
+| ~SPC w =~     | balance them                        |
+| ~SPC w u~     | undo the last change                |
+
+~C-w~ and ~SPC w~ are the same keys: ~C-w h~ is ~SPC w h~ two keystrokes
+sooner, so the moving about is better learnt on ~C-w~. New splits open
+below and to the right, and take focus.
+
+** Buffers
+| Key     | What it does                                |
+|---------+---------------------------------------------|
+| ~SPC ,~   | switch inside the workspace                 |
+| ~SPC <~   | switch across all of them                   |
+| ~SPC `~   | back to the last one                        |
+| ~]b [b~   | next, previous; ~SPC b n~ ~SPC b p~ do the same |
+| ~SPC b k~ | kill it                                     |
+| ~SPC b O~ | kill the others                             |
+| ~SPC b r~ | revert it from disk                         |
+| ~SPC b i~ | ibuffer                                     |
+| ~SPC x~   | the scratch buffer                          |
+
+** Workspaces
+| Key          | What it does     |
+|--------------+------------------|
+| ~SPC TAB n~    | new              |
+| ~SPC TAB d~    | delete           |
+| ~SPC TAB r~    | rename           |
+| ~SPC TAB .~    | switch by name   |
+| ~SPC TAB 1..9~ | switch by number |
+| ~SPC TAB [ ]~  | previous, next   |
+
+** Popups
+| Key   | What it does            |
+|-------+-------------------------|
+| =SPC ~= | toggle the last popup   |
+| ~C-`~   | the same, from anywhere |
+| ~q~     | close the popup         |
+
+* Files and projects
+** Files
+| Key     | What it does                                         |
+|---------+------------------------------------------------------|
+| ~SPC .~   | find a file                                          |
+| ~SPC f r~ | a recent file                                        |
+| ~SPC f s~ | save, ~SPC f S~ save as                                |
+| ~SPC f R~ | rename or move this file, ~SPC f C~ copy it            |
+| ~SPC f D~ | delete this file, into the trash                     |
+| ~SPC f t~ | the trash, what was deleted                          |
+| ~SPC f y~ | copy the path, ~SPC f Y~ the project path              |
+| ~SPC f n~ | copy the file name, ~SPC f N~ the directory            |
+| ~SPC f a~ | copy the absolute path                               |
+| ~SPC f L~ | copy path:line, or path:first-last with a region     |
+| ~SPC f k~ | the copy menu, every form with its value shown       |
+| ~SPC f u~ | open a file as root, ~SPC f U~ reopen this one as root |
+| ~SPC f x~ | open it in the desktop app                           |
+
+The file you are in is managed from its buffer: rename, copy, delete,
+reopen as root, with the open buffers following. The listing below is
+for the others.
+
+** Images
+An image file opens as the picture, drawn to the size of the window: a
+66 pixel icon fills it the way an image viewer would, and resizing the
+window redraws it. PNG, JPEG, GIF, WebP, TIFF and the rest go through
+ImageMagick, SVG through librsvg, which is the one that reads the size
+written into an SVG. =C-c C-c= turns the picture into its text and back,
+so an SVG is edited as the XML it is, in nxml-mode with its
+highlighting, and shows the drawing again when you press it a second
+time. The preview pane of the file manager fills the same way, and so
+does the preview beside the minibuffer while you are choosing a file.
+
+The buffer is a viewer: the picture sits in the middle of the window and
+there is no cursor on it. =+= and =-= zoom, =f= fills the window with it
+again and =1= shows it at the size it really is, =W= fits the width.
+Once it is larger than the window, =h j k l= pan it and =C-d= and =C-u=
+scroll; =f= puts it back and forgets where you had scrolled to. =n= and
+=p= step to the next and previous file in the directory, =q= closes it.
+
+** Projects
+| Key     | What it does                           |
+|---------+----------------------------------------|
+| ~SPC SPC~ | find a file in the project             |
+| ~SPC s F~ | any file, ignored ones included        |
+| ~SPC p p~ | switch project                         |
+| ~SPC p >~ | a file of another project              |
+| ~SPC p a~ | add one to the list                    |
+| ~SPC p k~ | kill its buffers                       |
+| ~SPC p o~ | the matching file, header or source    |
+| ~SPC /~   | search the project                     |
+| ~SPC *~   | search for the symbol at point         |
+| ~SPC p t~ | its TODO and FIXME comments            |
+
+~SPC SPC~ lists the project fresh every time, so a file added by hand or
+by another tool is there at once. It skips what .gitignore skips; ~SPC s F~
+does not, for build output and generated files.
+
+** Dired and the file tree
+| Key       | What it opens                         |
+|-----------+---------------------------------------|
+| ~SPC o p~   | the project tree (treemacs)           |
+| ~SPC o P~   | find a file in the tree               |
+| ~SPC o -~   | the file manager, cursor on this file |
+| ~SPC f d~   | the same on a directory you name      |
+| ~SPC m SPC~ | the dired menu                        |
+
+** Terminals
+| Key     | What it opens        |
+|---------+----------------------|
+| ~SPC o t~ | vterm in a popup     |
+| ~SPC o T~ | vterm in this window |
+| ~SPC o e~ | eshell               |
+
+Inside vterm: =C-c C-t= copy mode, =C-q= sends the next key through raw,
+=C-z= switches between evil and emacs state.
+
+* Dired, the file manager
+~SPC o -~ opens it on the file you are in: the listing on the left with
+icons, sizes and git state, and on the right a preview of whatever the
+cursor is on, text, image, PDF, video frame, archive contents, audio
+details. Move, and the preview follows. Every dired buffer is dirvish
+underneath, so these are the keys you actually have; ~SPC m SPC~ opens a
+menu of all of it when one slips your mind.
+
+** Opening it
+| Key     | What it opens                                                  |
+|---------+----------------------------------------------------------------|
+| ~SPC o -~ | this file's directory, cursor on it                            |
+| ~SPC f d~ | the same on a directory you name                               |
+| ~b~       | a place you go to often, by letter                             |
+| ~SPC m b~ | add this directory to those, under a letter; ~SPC m B~ drops one |
+| ~z~       | a directory you were in earlier                                |
+| ~[h ]h~   | back, forward through that history                             |
+| ~F~       | hide the preview pane, show it again                           |
+| ~SPC m 2~ | a second listing beside this one, the other pane               |
+| ~?~       | every command, as a menu                                       |
+| ~q~       | close                                                          |
+
+~b~ then ~h~ home, ~/~ the root of the filesystem, ~o~ notes, ~p~
+projects, ~d~ doom, ~g~ downloads, ~D~ documents, ~m~ media, ~t~
+scratch; what ~SPC m b~ adds is kept for the next session. The same
+preview appears beside the minibuffer while you pick a file with ~SPC .~
+or ~SPC SPC~.
+
+** Moving
+| Key   | What it does                                                |
+|-------+-------------------------------------------------------------|
+| ~j k~   | down, up; the preview follows                               |
+| ~h l~   | the parent, into the thing under point; ~^~ and ~-~ go up too   |
+| ~RET~   | open it                                                     |
+| ~TAB~   | this directory: open it, again all the way down, again shut |
+| ~S-TAB~ | the whole listing, the same three steps                     |
+| ~gh~    | back out of an unfolded tree                                |
+| ~gj gk~ | next, previous directory line                               |
+| ~J~     | jump to a file here, by name                                |
+
+** Finding a file
+| Key         | What it does                                           |
+|-------------+--------------------------------------------------------|
+| ~M-n~         | narrow this listing: type words, it keeps the matches  |
+| ~SPC m f~     | search below here, all subdirectories, by words        |
+| ~SPC m f RET~ | list everything below here, then ~M-n~ to narrow it live |
+| ~SPC f F~     | find a file below here as you type, and open it        |
+| ~/~ ~C-s~       | search the listing as you type, evil's and isearch's   |
+| ~SPC s d~     | the words inside the files, this directory and below   |
+| ~SPC s SPC~   | the same with the options in front of you              |
+| ~gr~          | back to the full listing                               |
+
+~M-n~ works on what is listed, this directory. ~SPC m f~ goes down the
+tree from the directory the cursor is in, every subdirectory included:
+it asks for words and lists every file whose path has all of them, in
+any order, a listing like any other, so ~M-n~ narrows it, ~RET~ opens,
+marks and ~p~ copy from it, ~q~ leaves. With no words it lists the whole
+tree, which with ~M-n~ is a live search of everything below. Those are
+names; for what is written inside the files, ~SPC s d~ searches this
+directory and everything under it, and ~SPC s SPC~ is the same with the
+options set by name first, a kind of file or a glob among them. ~A~ on
+marked files greps those and no others. ~SPC f F~ is
+the same search in the minibuffer, ~RET~ opens the file. In ~M-n~, ~RET~
+keeps the narrowed listing and ~C-g~ throws it away.
+
+** Looking without opening
+| Key     | What it does                               |
+|---------+--------------------------------------------|
+| ~go~      | view it read only, ~q~ comes back            |
+| ~gO~      | open it in the other window                |
+| ~SPC m o~ | open every marked file                     |
+| ~M-RET~   | show it, stay here                         |
+| ~f~       | its details: size, mode, and copy its path |
+| ~gy~      | what kind of file it is                    |
+| ~(~       | show or hide the size and date columns     |
+| ~=~       | diff it against another file               |
+| ~E~       | open it with the desktop application       |
+| ~W~       | open it in the browser                     |
+
+** Marking
+| Key     | What it marks                                |
+|---------+----------------------------------------------|
+| ~m~       | this one, ~u~ unmarks it, ~U~ unmarks all        |
+| ~t~       | flips every mark                             |
+| ~* .~     | by extension                                 |
+| ~* /~     | the directories, ~* @~ links, ~* *~ executables  |
+| ~% m~     | by name pattern                              |
+| ~% g~     | the files whose text matches a pattern       |
+| ~M-{ M-}~ | previous, next marked file                   |
+| ~d~       | flags it for deletion, ~x~ deletes the flagged |
+
+Every command below works on the marked files, or on the one under the
+cursor when nothing is marked.
+
+** Copying and moving
+| Key     | What it does                                |
+|---------+---------------------------------------------|
+| ~p~       | paste the marked files here (a copy)        |
+| ~SPC m m~ | move the marked files here                  |
+| ~C-u p~   | paste them somewhere else, asked            |
+| ~M-y~     | the paste menu: copy, move, links, relative |
+| ~C~       | copy to a directory you name                |
+| ~R~       | rename, or move to a directory you name     |
+| ~yd~      | duplicate beside the original, NAME copy    |
+| ~SPC m r~ | copy with rsync                             |
+
+The way to move things: mark them with ~m~, go where they belong with
+~h l~, ~b~ or ~z~, press ~SPC m m~. Or ~p~ for a copy. Both run in the
+background and say when they are done. ~C~ and ~R~ ask for the
+destination instead, and when a second listing is open they offer its
+directory first: ~SPC m 2~ opens one beside this, the two pane file
+manager, and ~F~ brings the preview back afterwards. A file dragged out
+of the listing with the mouse lands in Dolphin, a browser's upload box
+or a chat; files dropped in are copied here; a right click is a menu.
+
+** Other apps, and what to copy
+| Key     | What it does                                           |
+|---------+--------------------------------------------------------|
+| ~yc~      | the files themselves to the system clipboard           |
+| ~yv~      | paste the files on the system clipboard here           |
+| ~yp~      | copy the path, ~yn~ the name, ~yl~ where a link points     |
+| ~yt~      | copy the whole text of the file, without opening it    |
+| ~SPC f k~ | the copy menu, every form with its value shown         |
+| ~f~       | its details: size, type, the size of a directory (~f s~) |
+| ~E~       | open it with the desktop app; on a directory, Dolphin  |
+| ~SPC o T~ | a terminal in this directory                           |
+
+~yc~ then ~Ctrl-V~ in Dolphin, a mail or a chat pastes the files; inside
+Emacs, ~p~ pastes their paths. The other way round, files copied in
+Dolphin land here with ~yv~; so do paths copied as text, one per line.
+
+** Making, deleting, changing
+| Key      | What it does                                     |
+|----------+--------------------------------------------------|
+| ~SPC m n~  | a new file, or a new directory when it ends in / |
+| ~+~        | a new directory                                  |
+| ~D~        | delete, into the trash                           |
+| ~SPC m t~  | in the trash listing: put the marked back        |
+| ~Z~        | compress or uncompress, ~c~ into an archive        |
+| ~M O gG T~ | chmod, chown, chgrp, touch                       |
+| ~SPC m s~  | symlink here, ~SPC m S~ a relative one             |
+| ~! &~      | run a shell command on them, ~&~ in the background |
+| ~A~        | grep inside them, ~Q~ find and replace inside them |
+| ~SPC f x~  | open with the desktop app, ~SPC f n~ copy the name |
+
+** Renaming in place
+| Key | What it does                          |
+|-----+---------------------------------------|
+| ~i~   | the listing becomes text you can edit |
+| ~ZZ~  | apply the renames, ~ZQ~ throw them away |
+
+Ten files renamed with one =:%s/old/new/=, undo included. The permission
+bits are text too: change =rw-r--r--= to =rwxr-xr-x= and ~ZZ~. A tracked
+file renamed here is a git mv, so its history follows it.
+
+** Order and depth
+| Key     | What it does                                                             |
+|---------+--------------------------------------------------------------------------|
+| ~S~       | sort by name, size, time or extension                                    |
+| ~o~       | flip the order                                                           |
+| ~M-e~     | group the listing: by type, size, date, marks; ~[e ]e~ jump between groups |
+| ~M-m~     | the marks menu, ~M-s~ the setup menu: attributes, layout                   |
+| ~I~       | list a subdirectory below, ~g $~ hides it                                  |
+| ~SPC m h~ | hide dotfiles and backups, again to show                                 |
+| ~r~ ~gr~    | refresh the listing; never touches a file                                |
+
+** How to, step by step
+- Look at a file without opening it: put the cursor on it. The pane on
+  the right shows it. ~F~ if the pane is in the way, ~F~ again for it back.
+- Find a file whose name you half remember, anywhere below here:
+  ~SPC m f~, type a word or two of it, ~RET~. Every file below with those
+  words in its path is listed; ~M-n~ narrows that further, ~RET~ opens
+  one, ~q~ leaves. Or ~SPC f F~, type, ~RET~, when you only want to open it.
+- Search the whole tree as you type: ~SPC m f RET~ lists everything
+  below, then ~M-n~ and type.
+- Find it in this directory only: ~M-n~, type, watch the list shrink.
+- Copy a file into another directory: ~m~ on it (or nothing, for the one
+  under the cursor), go to the directory with ~h l~, ~b~ or ~z~, ~p~.
+- Move it instead: the same, ~SPC m m~ at the end.
+- Move files between two places you keep going back to: ~SPC m 2~, the
+  other pane; ~b~ or ~h l~ in it to where they go; ~C-w h~ back, ~m~ the
+  files, ~R~: the other pane is the offered destination, ~RET~.
+- Hand a file to another program: drag it out of the listing with the
+  mouse and drop it in the window, or ~yc~ and paste there.
+- Copy or move to a directory you would rather type: ~C~ or ~R~, then
+  the path, with completion.
+- Rename one file: ~R~, type the new name. Rename many: ~i~, edit the
+  names as text (=:%s/old/new/= works), ~ZZ~; ~ZQ~ if it went wrong.
+- Make a file here: ~a~, its name. A directory: ~a~, its name ending
+  in =/=.
+- Delete: ~d~ on each, then ~x~; or ~D~ for the marked ones at once.
+  Both ask first, and the files go to the trash, the same one Dolphin
+  shows. Deleted the wrong thing: ~SPC f t~ opens the trash, newest
+  first, ~m~ on it, ~SPC m t~ puts it back where it was.
+- A copy beside the original, to try something on: ~yd~.
+- Send a file to another app: ~yc~, then paste there. Bring one in: copy
+  it in Dolphin, ~yv~ here.
+- Copy the path for a terminal or a chat: ~SPC f k~, pick the form.
+- See how big a directory is: cursor on it, ~f s~.
+- Open it in the desktop app, or the directory in Dolphin: ~E~.
+- Open a terminal here: ~SPC o T~.
+- Two directories side by side: ~SPC w v~, ~SPC f d~ in the new window,
+  navigate; ~C~ and ~R~ now offer the other side as the destination.
+
+* Git
+~SPC g g~ is the status buffer, and everything starts there: a key is a
+menu of what you can do with the thing under the cursor, ~?~ shows them
+all. The keys below are the ones evil leaves you, which differ from
+magit's manual in a few places: ~x~ discards, ~o O~ reset, ~p~ pushes,
+~Z~ is the stash menu and ~%~ the worktrees, ~z~ folds. ~SPC g SPC~ is a
+hub of the everyday commands in plain words, ~SPC g h~ everything that
+rewrites history, ~SPC g n~ everything about branches. Every magit
+buffer opens this chapter with ~F12~.
+
+The log prints a commit's refs after its summary, so every summary starts at
+the same column and the eye runs down them; the graph's lines carry the
+theme's colours, one per branch, which takes both =log.graphColors= in
+=~/.gitconfig= and =--color= among the log's arguments: magit leaves that
+switch off, so the config turns it on. ~l~ then ~-c~ toggles it for one log.
+A diff takes its tab width from the file's own mode, flags a line indented
+with the wrong character, hides the =^M= of a CRLF file, and runs the hunks
+through =delta=, which colours the code inside them as the language it is
+rather than all green or all red. delta must not be given =--line-numbers=
+or =--hunk-header-style omit=: magit re-reads the diff it printed, and
+either one makes it unreadable. The status buffer carries a TODOs section,
+grouped by directory, from the same scan ~SPC p t~ uses.
+
+** From any buffer
+| Key       | What it does                                             |
+|-----------+----------------------------------------------------------|
+| ~SPC g g~   | the status buffer; ~SPC g G~ with this file's diff         |
+| ~SPC g SPC~ | the hub: every day, menus, repositories, tools           |
+| ~SPC g h~   | the history menu: rewrite commits                        |
+| ~SPC g n~   | the branches menu                                        |
+| ~SPC g .~   | this file: stage, diff, log, blame, trace                |
+| ~SPC g s~   | stage the hunk here, ~SPC g r~ revert it, ~SPC g R~ the file |
+| ~SPC g [ ]~ | previous, next changed hunk; ~[d~ and ~]d~ do it too         |
+| ~SPC g p~   | what the line under the cursor was, in a popup           |
+| ~SPC g B~   | blame this file                                          |
+| ~SPC g L~   | this file's history                                      |
+| ~SPC g t~   | the time machine: this file at every revision            |
+| ~SPC g b~   | switch branch, ~SPC g C~ clone, ~SPC g F~ fetch              |
+| ~SPC g f f~ | open a file as it was at a revision                      |
+| ~SPC g l r~ | every repository under ~/projects, with its state        |
+| ~SPC g o o~ | this file or region on the forge, ~SPC g y~ copy the link  |
+
+** Seeing what you changed, without opening magit
+The fringe marks every line you have touched since the last commit.
+From there, in the file itself:
+
+| Key       | What it does                                              |
+|-----------+-----------------------------------------------------------|
+| ~]d~ ~[d~     | jump to the next, previous change                         |
+| ~SPC g p~   | a popup of what those lines were before                   |
+| ~n~ ~p~ ~c~ ~q~ | inside that popup: next change, previous, copy the old text, close |
+| ~SPC g s~   | stage this one change                                     |
+| ~SPC g r~   | revert this one change, ~SPC g R~ the whole file            |
+| ~SPC g .~   | this file in magit: diff, log, blame, stage               |
+
+The popup is the quickest answer to "what did I just change here": it
+shows the old lines in place, and ~c~ puts them in the kill ring if you
+want the original back by hand.
+
+** The status buffer
+| Key         | What it does                                          |
+|-------------+-------------------------------------------------------|
+| ~j k~         | move; ~C-j C-k~ next, previous section                  |
+| ~gj gk~       | next, previous section at the same level              |
+| ~gh~          | up to the parent section                              |
+| ~TAB~         | fold or unfold this section, ~za~ the same              |
+| ~z1 z2 z3 z4~ | fold everything to that depth, ~zr~ unfold all          |
+| ~RET~         | visit: the file at this hunk, the commit under point  |
+| ~S-SPC~       | show the commit or diff under point, then scroll it   |
+| ~gs gu gn gt~ | jump to staged, unstaged, untracked, tracked          |
+| ~gpu gfu~     | jump to the unpushed, the unpulled commits            |
+| ~gr~          | refresh (~gz~ too); ~gR~ every magit buffer               |
+| ~yy ys yb~    | copy the line, the value under point, the revision    |
+| ~`~           | the process log: every git command run and its output |
+| ~q~           | bury the buffer; ~Q~ closes every magit buffer          |
+| ~?~           | every command, as a menu                              |
+
+** Staging and discarding
+| Key | What it does                                                  |
+|-----+---------------------------------------------------------------|
+| ~s~   | stage: this file, this hunk, or the selected lines            |
+| ~u~   | unstage the same                                              |
+| ~S U~ | stage everything, unstage everything, no question asked       |
+| ~V~   | select lines, then ~s~ stages only those, ~x~ discards them       |
+| ~x~   | discard: the hunk, the lines, or the file's changes           |
+| ~X~   | untrack the file, keep it on disk                             |
+| ~i~   | ignore: ~i t~ in .gitignore, ~i p~ privately in .git/info/exclude |
+| ~+ =~ | more, less context round the hunks; the tilde key resets it   |
+| ~D~   | the diff arguments: whitespace, function context, stats       |
+| ~e~   | ediff this file's changes                                     |
+
+A hunk too big to be one change: ~V~, ~j~ down to where the first change
+ends, ~s~. What is staged is what the commit will hold, whatever the
+buffer says; the status buffer saves the file buffers first.
+
+** Committing
+| Key | What it does                                                |
+|-----+-------------------------------------------------------------|
+| ~c c~ | commit what is staged                                       |
+| ~c a~ | amend the last commit with what is staged, edit its message |
+| ~c e~ | extend: add what is staged to the last commit, same message |
+| ~c w~ | reword the last message, nothing else                       |
+| ~c f~ | fixup: what is staged belongs to an older commit, pick it   |
+| ~c F~ | instant fixup: the same, and the rebase that folds it in    |
+| ~c s~ | squash into an older commit, with a note; ~c S~ instantly     |
+| ~c n~ | augment: squash into an older commit and edit its message   |
+| ~c R~ | reword an older commit, folded in by the next ~r f~           |
+
+In the commit buffer: the first line is the subject, a blank line,
+then why. ~C-c C-t~ writes =type(scope): = with the
+type asked and the scope read off the staged files. ~M-p M-n~ bring
+back an earlier message. ~M-g~ has gptel draft it from the diff. ~ZZ~
+commits, ~ZQ~ throws it away. =bin/check-commit-msg=, linked as the
+commit-msg hook in the config repository, refuses a subject that is not
+=type(scope): what=. The scope is not optional, the what is in the
+imperative, and there is no length limit.
+
+** Branches
+| Key | What it does                                                         |
+|-----+----------------------------------------------------------------------|
+| ~b b~ | switch to a branch; a remote one gets a local tracking branch        |
+| ~b c~ | new branch from here, or from what you name, and switch to it        |
+| ~b n~ | new branch, stay where you are                                       |
+| ~b s~ | spin off: the commits you made on the wrong branch move to a new one |
+| ~b m~ | rename; ~b k~ delete; ~b x~ reset a branch to a commit                   |
+| ~b C~ | configure: the upstream, the push target, the description            |
+| ~b o~ | an orphan branch, no history                                         |
+| ~yr~  | every branch and tag with its state, the refs buffer                 |
+| ~Y~   | cherries: what this branch has that the upstream does not            |
+
+~SPC g n~ adds what magit has no key for: a new branch from main fetched
+first, wherever you are (~m~), delete every branch already merged (~K~),
+what this branch changes against main (~d~) and the commits it adds
+(~l~), and push with the upstream set (~p~).
+
+** History: rewriting commits
+~SPC g h~ names every move; the magit keys behind it:
+
+| Key       | What it does                                                    |
+|-----------+-----------------------------------------------------------------|
+| ~r w~       | reword the message of the commit under point                    |
+| ~r m~       | edit that commit: the rebase stops there, amend, ~r r~ goes on    |
+| ~r k~       | drop that commit                                                |
+| ~r i~       | interactive rebase from that commit: reorder, squash, edit      |
+| ~r f~       | fold the fixup! and squash! commits into their targets          |
+| ~r e~       | rebase this branch onto what you name; ~r u~ onto its upstream    |
+| ~r r~       | continue a stopped rebase; ~r s~ skip the commit; ~r a~ abort       |
+| ~SPC g h d~ | change the date of the commit under point, author and committer |
+| ~SPC g h a~ | change its author                                               |
+| ~SPC g h s~ | split it: its changes come back unstaged, commit them in pieces |
+| ~SPC g h u~ | uncommit the last commit, its changes stay staged               |
+
+The rebase menu squashes fixup! commits and stashes round the rebase by
+default. Dates and authors of a commit that is not HEAD go through a
+rebase that stops at it, which rewrites the commits after it, as any
+rebase does.
+
+In the sequence buffer ~r i~ opens, one line per commit, oldest first:
+| Key     | What it does                                     |
+|---------+--------------------------------------------------|
+| ~p~       | pick, keep as is                                 |
+| ~r~       | reword, stop to edit the message                 |
+| ~e~       | edit, stop to change the commit                  |
+| ~s~       | squash into the one above, messages merged       |
+| ~f~       | fixup into the one above, this message dropped   |
+| ~d~       | drop                                             |
+| ~x~       | run a shell command at this point                |
+| ~M-k M-j~ | move the line up, down: the order of the commits |
+| ~u~       | undo the last change to the list                 |
+| ~ZZ~      | run it; ~ZQ~ change your mind                      |
+
+** Cherry-pick, revert, reset
+| Key | What it does                                                    |
+|-----+-----------------------------------------------------------------|
+| ~A A~ | cherry-pick the commit under point onto this branch             |
+| ~A a~ | apply it without committing; ~A h~ harvest it from another branch |
+| ~A d~ | donate it to another branch; ~A n~ spin it out onto a new one     |
+| ~A A~ | while one is in progress: continue; ~A s~ skip, ~A a~ abort         |
+| ~_ V~ | revert the commit under point with a new commit; ~-~ without      |
+| ~O s~ | reset soft: HEAD moves, the changes stay staged                 |
+| ~O m~ | reset mixed: the changes stay, unstaged                         |
+| ~O h~ | reset hard: the changes go, the WIP log still has them          |
+| ~O k~ | reset keep: like hard, but uncommitted work is kept             |
+| ~o~   | reset this branch to the commit under point, mixed              |
+| ~O f~ | reset one file to a revision                                    |
+
+** Stashes
+| Key | What it does                                              |
+|-----+-----------------------------------------------------------|
+| ~Z z~ | stash the index and the worktree, with a message          |
+| ~Z i~ | the index only; ~Z w~ the worktree only; ~Z x~ keep the index |
+| ~Z Z~ | snapshot: stash and keep working, nothing is removed      |
+| ~Z p~ | pop the stash under point; ~Z a~ apply and keep it          |
+| ~Z k~ | drop it; ~Z v~ show it; ~Z l~ list them                       |
+| ~Z b~ | a branch from it, for a stash that turned into work       |
+| ~-u~  | in the menu: include untracked files                      |
+
+** Log and search
+| Key      | What it does                                                 |
+|----------+--------------------------------------------------------------|
+| ~l l~      | the log of this branch; ~l o~ of what you name, ~main..HEAD~ too |
+| ~l b~      | every branch; ~l a~ every ref; ~l L~ the local branches          |
+| ~l r~      | the reflog: where HEAD has been, resets included             |
+| ~=~        | in the log: more commits; ~RET~ show one, ~S-SPC~ scroll it      |
+| ~-n~       | in the menu: how many; ~--graph~ ~--decorate~ what it looks like |
+| ~--grep~   | messages matching a pattern                                  |
+| ~-S~       | commits that added or removed a string in the code           |
+| ~-G~       | commits whose diff matches a regexp                          |
+| ~--author~ | by author; ~--since~ ~--until~ by date                           |
+| ~--follow~ | one file's history across renames (~SPC g L~ sets it)          |
+
+The pickaxe: ~l l~, then ~-S~, type =functionName=, ~RET~, and the log
+holds only the commits that introduced or removed it. ~-G~ takes a
+regexp and matches the whole diff, so a moved line shows too.
+
+The author and date down the right of a log live in the window's
+margin. ~L~ opens its menu: ~L~ again hides the margin, ~l~ cycles the style
+between the date and an age, ~d~ drops the author column. In a repository
+where every commit is yours, ~L d~ takes the same name off every row.
+
+** Diff and blame
+| Key     | What it does                                                               |
+|---------+----------------------------------------------------------------------------|
+| ~d d~     | diff of what is under point: a file, a commit, a range                     |
+| ~d s~     | staged; ~d u~ unstaged; ~d w~ worktree against HEAD                            |
+| ~d r~     | a range, =main...HEAD= for what the branch changes                           |
+| ~d c~     | a commit; ~d p~ one file's changes                                           |
+| ~d t~     | a stash                                                                    |
+| ~e~       | ediff what is under point; ~E~ the ediff menu                                |
+| ~SPC g B~ | blame this file, in the buffer itself                                      |
+| ~RET~     | in blame: the commit of this line; ~gj gk~ next, previous chunk              |
+| ~c~       | in blame: cycle the style, margin, heading, full                           |
+| ~q~       | leave blame                                                                |
+| ~SPC g t~ | the time machine: ~C-k~ an older revision, ~C-j~ a newer, ~gtb~ blame it, ~q~ back |
+
+Word diffs are on in every hunk: what changed inside a line is
+highlighted, not the whole line. Where delta is drawing, delta draws
+them too, so magit's own refinement stands down rather than painting
+over it twice.
+
+** Conflicts
+A merge, rebase or pull that stops on a conflict shows the files under
+"Unmerged" in status; ~RET~ opens one and smerge is on. Upper and lower
+are what git calls ours and theirs: in a merge, upper is this branch
+and lower what comes in; in a rebase it is the other way round, upper
+is the branch you rebase onto and lower your own commit being replayed.
+
+| Key       | What it does                                        |
+|-----------+-----------------------------------------------------|
+| ~SPC m n p~ | next, previous conflict                             |
+| ~SPC m u~   | keep upper: ours, this branch                       |
+| ~SPC m l~   | keep lower: theirs, what is coming in               |
+| ~SPC m a~   | keep both                                           |
+| ~SPC m b~   | keep the base, before either change                 |
+| ~SPC m E~   | resolve this conflict in ediff, three panes         |
+| ~SPC m r~   | resolve automatically what can be                   |
+| ~e~         | in status, on the unmerged file: ediff the merge    |
+| ~s~         | in status, once the file is right: mark it resolved |
+| ~r r~ ~m m~   | then continue the rebase, or ~m m~ finish the merge   |
+
+** Remotes: fetch, pull, push
+| Key | What it does                                                              |
+|-----+---------------------------------------------------------------------------|
+| ~f a~ | fetch every remote; ~f u~ the upstream; ~-p~ prune, ~-t~ the tags               |
+| ~F u~ | pull from the upstream; ~-r~ rebase instead of merge, ~-a~ autostash          |
+| ~p u~ | push to the upstream; ~p p~ to the push remote; ~p e~ elsewhere               |
+| ~p o~ | push another branch; ~p t~ every tag; ~p T~ one tag                           |
+| ~-f~  | force with lease: the rewrite after a rebase, refused if the remote moved |
+| ~-u~  | set the upstream while pushing a new branch                               |
+| ~M a~ | add a remote; ~M r~ rename; ~M k~ remove; ~M C~ its URL and refspecs            |
+
+After ~r i~ or an amend on a branch that was pushed, ~p -f u~ is the
+push: with lease, so a colleague's commit on the same branch stops it.
+
+** Tags, worktrees, submodules, bisect, patches
+| Key     | What it does                                                       |
+|---------+--------------------------------------------------------------------|
+| ~t t~     | tag the commit under point; ~-a~ annotated; ~t k~ delete; ~t p~ prune    |
+| ~% c~     | a new branch in a new worktree, another checkout beside this one   |
+| ~% b~     | an existing branch in a new worktree; ~% g~ visit one; ~% k~ delete it |
+| ~' a~     | add a submodule; ~' u~ update; ~' s~ sync URLs; ~' l~ list them          |
+| ~B B~     | bisect: start with a bad and a good commit                         |
+| ~B b~ ~B g~ | mark the checked-out commit bad, good; ~B k~ skip it; ~B r~ done       |
+| ~B s~     | bisect with a script that says good or bad                         |
+| ~W c~     | write the commits since main as patch files                        |
+| ~w w~     | apply patch files, or a mailbox of them                            |
+| ~T~       | notes on a commit                                                  |
+
+** Repositories, running git
+| Key         | What it does                                                |
+|-------------+-------------------------------------------------------------|
+| ~SPC g l r~   | every repository under ~/projects with its branch and state |
+| ~SPC g C~     | clone, into ~/projects                                      |
+| ~SPC g c r~   | init here                                                   |
+| ~! !~         | run any git command in the repository root, with completion |
+| ~! g~         | git gui; ~! k~ gitk; the vertical bar key runs a command here |
+| ~`~           | the process log: what magit ran and what git said           |
+| ~SPC n SPC H~ | the notes repository's own status                           |
+
+** Recover
+| Key       | What it does                                                                                           |
+|-----------+--------------------------------------------------------------------------------------------------------|
+| ~l r~       | the reflog: every place HEAD was, ~RET~ shows one, ~O h~ goes back                                         |
+| ~SPC g h L~ | the WIP log: a ref written before every commit, checkout, reset and after every save of a tracked file |
+| ~Z Z~       | a snapshot before anything risky                                                                       |
+| ~o~         | in a log: reset this branch to the commit under point                                                  |
+
+Nothing committed is lost for two weeks, whatever a reset did: ~l r~,
+the commit, ~o~. Work that was never committed is in the WIP log the
+moment the file was saved.
+
+** How to
+- Fix the last commit: stage the fix, ~c e~ (same message) or ~c a~
+  (edit it). Only the message: ~c w~.
+- Fix an older commit: stage the fix, ~c F~, pick the commit; it is
+  folded in and the commits after it replayed.
+- Reword or redate an older commit: put the cursor on it in ~l l~,
+  ~SPC g h w~ or ~SPC g h d~.
+- Split a commit: cursor on it, ~SPC g h s~; its changes are back and
+  unstaged; ~V~ and ~s~ a piece, ~c c~, again; ~r r~ finishes when it
+  was not the last one.
+- Reorder or squash several: cursor on the oldest to touch, ~r i~,
+  move lines with ~M-k M-j~, mark ~s~ ~f~ ~r~ ~d~, ~ZZ~.
+- Rebase onto main: ~SPC g n m~ made the branch from main; later,
+  ~f a~ then ~r e~, =origin/main=; a conflict stops it, resolve, ~s~,
+  ~r r~. Then ~p -f u~.
+- Move commits to a new branch, made on the wrong one: ~b s~, name it;
+  the current branch goes back to where it was.
+- Resolve a conflict: ~RET~ on the unmerged file, ~SPC m n~, keep ~u~
+  or ~l~ or edit by hand, ~SPC m n~ again, save, ~s~ in status, ~r r~.
+- Recover after a bad reset: ~l r~, find the line before the reset,
+  ~o~ on it.
+- Who changed this line and why: ~SPC g B~, ~RET~ on the line; or
+  ~SPC g L~ for the file's history, ~-S~ with the text for its origin.
+
+** Not wired yet
+forge, which would bring issues and pull requests into magit, waits for
+a GitHub token in =~/.authinfo.gpg=. Everything else the git module
+mentions is live: magit-todos lists the TODO markers at the bottom of
+status (~SPC p t~ does the same outside magit), and magit-delta colours
+the hunks now that =git-delta= is installed.
+
+** When a merge or rebase conflicts
+The file opens with the markers in it and smerge is already on, so the
+conflicts are marked up rather than raw text.
+
+| Key     | What it does                                   |
+|---------+------------------------------------------------|
+| ~]n [n~   | the next conflict, and the one before          |
+| ~SPC g x~ | the menu: which side to keep, and what differs |
+| ~u~       | in that menu, keep mine, the upper one         |
+| ~l~       | keep theirs, the lower one                     |
+| ~b~       | keep the base, as it was before either         |
+| ~a~       | keep both, one after the other                 |
+| ~c~       | keep the one the cursor is in                  |
+| ~e~       | ediff this one, when the two are close         |
+| ~R~       | refine: what differs inside the conflict       |
+| ~r~       | resolve it, when it is obvious                 |
+
+~]n~ goes on to the next file that conflicts once this one is clean, so a
+whole rebase is walked with ~]n~ and one letter at each stop. When every
+conflict in a file is settled, stage it the ordinary way, ~SPC g g~ then
+~s~, and carry on with ~SPC g r~ for the rebase.
+
+* Code and language servers
+** Change the code
+| Key     | What it does      |
+|---------+-------------------|
+| ~SPC c a~ | code actions      |
+| ~SPC c r~ | rename the symbol |
+| ~SPC c f~ | format            |
+
+** Read the code
+| Key     | What it shows                         |
+|---------+---------------------------------------|
+| ~K~       | documentation at point                |
+| ~SPC c H~ | the same in a childframe              |
+| ~SPC c x~ | the list of errors                    |
+| ~]e [e~   | next, previous error                  |
+| ~SPC t o~ | the outline of the buffer at the side |
+
+The header line of a code buffer says where you are, the project path
+and the symbol path, file > class > function; scroll into a long
+function and it turns into that function's first line, pinned, until
+its start is back on screen. In the right fringe of every buffer, a
+thumb: as long a part of the edge as the window is of the buffer, and
+sitting where you are in it. A buffer that fits its window has none.
+The most severe problem of a line shows at its end, all of them in the
+popup at point, and the commit behind the line, who and when, at its
+end after a moment of rest.
+
+** Errors as you type
+flymake checks the buffer while you write it, and under a language
+server the errors are the server's own, so a C++ buffer is told what
+clangd would tell a build. The most severe problem on a line is printed
+at the end of that line; the rest are in a popup where the cursor is.
+
+| Key     | What it does                                              |
+|---------+-----------------------------------------------------------|
+| ~]e~ ~[e~   | the next, the previous problem                            |
+| ~SPC c x~ | every problem, as a list; with a server, the whole project |
+| ~SPC t f~ | flymake off and on for this buffer                        |
+
+A problem that will not go away after the code is right usually means
+the server has stale state: ~SPC k l r~ restarts it.
+
+** The server
+| Key       | What it does                   |
+|-----------+--------------------------------|
+| ~SPC k l r~ | restart it                     |
+| ~SPC k l s~ | switch between clangd and ccls |
+| ~SPC k l i~ | inlay hints on, off            |
+
+=M-x eglot-events-buffer= shows what the server and Emacs said to each
+other, which is the place to look when a server misbehaves; Doom keeps
+that log empty unless =doom-debug-mode= is on (=SPC h d d=).
+
+* C and C++
+The [[file:../modules/private/cpp/README.org][cpp README]] explains how the pieces fit together; this is the key list.
+
+** The two menus
+| Key       | What it opens                                                             |
+|-----------+---------------------------------------------------------------------------|
+| ~SPC k SPC~ | the menu: what you do, build, run, fix, the tools                         |
+| ~SPC k m~   | the CMake panel: what you set, the kit, the cache, the targets, the files |
+
+One rule: a key means the same thing on the leader, in the menu and
+in the panel, ~b~ builds and ~K~ picks the kit wherever you press it.
+Both headers show the state, the kit and how it was chosen, the types
+of its family, the default target, the server, so you see what you are
+about to act on; the panel adds the generator, the jobs, the overrides
+and the run line, and a setter keeps it open so you watch the line
+change. In either, ~q~ closes it and ~?~ then a key explains the key.
+
+** The kit: where a build happens
+| Key     | What it does                                                                 |
+|---------+------------------------------------------------------------------------------|
+| ~SPC k ?~ | which kit is in use, and why                                                 |
+| ~SPC k K~ | pick another: a preset, a directory, a Qt Creator configuration built or not |
+| ~SPC k y~ | build Debug, Release, RelWithDebInfo, MinSizeRel, Profile from now on        |
+| ~SPC k Y~ | switch the family, the SDK kit against the PC kit, same type                 |
+| ~SPC k c~ | configure it, ~SPC k b~ build it, ~SPC k t~ test it                              |
+| ~SPC k B~ | build any target, the packaging ones included                                |
+| ~SPC k r~ | run the executable, ~SPC k d~ debug it                                         |
+| ~SPC k R~ | run it with arguments, asked now; ~SPC k m a~ keeps them for the project       |
+| ~SPC k P~ | package: the hpkg, cpack, the project's own target                           |
+| ~SPC k S~ | run one of the project's scripts, deploy and the like                        |
+| ~SPC k I~ | the project status: what is set up and what is missing                       |
+| ~SPC k w~ | write the whole setup to .dir-locals.el, every kit whole                     |
+| ~SPC k G~ | generate the presets from it: cmake --preset does what Qt Creator does       |
+| ~SPC k U~ | deploy to the device, then ~SPC k r~ runs there                                |
+
+The kit is read from the project, never asked: the one chosen for this
+project if you have chosen one, else Qt Creator's active configuration
+when it has one, else the newest configured build directory, else a
+preset, else =build=. A kit you pick by hand therefore wins over
+everything the disk suggests, and keeps winning until you pick another. A kit whose compiler lives in a distrobox
+runs every command there, with the SDK environment sourced: build, run,
+gdb, clangd, clang-tidy. Buffers are saved before every build, run and
+debug. Qt Creator's run configuration gives the executable, its arguments
+and its working directory.
+
+~SPC k y~ is the Debug and Release switch: it goes to the kit of that
+type in the current kit's family, the other Qt Creator configuration,
+the other preset, the other directory. One that was never built is
+configured first, from the current kit's own settings, compilers,
+generator, toolchain, Qt; one that does not exist is made, =build/Release=
+beside a plain =build=. Then ~SPC k b~ builds it and ~SPC k y~ Debug
+brings you back. A preset project uses its presets: =release= with
+RelWithDebInfo answers RelWithDebInfo, and a type no preset declares is
+made beside them. A configuration Qt Creator planned but never built,
+=horizon-sdk-RelWithDebInfo=, is a kit too, and configuring it takes the
+arguments Qt Creator gave it, sysroot, toolchain file, host path; a
+toolchain file among them is a whole tool set, so a fresh clone with
+nothing built configures from Qt Creator's file alone, in the container
+that has the SDK.
+
+A family is a Qt Creator kit or the plain directory: fdc-mule has
+=KIT - HORIZON ARM64=, =KIT - HORIZON PC=, =horizon-pc= and =local-pc=.
+~SPC k Y~ moves between them keeping the type; a family with no built
+kit and no Qt Creator kit of its own cannot lend a tool set, so build
+one there once.
+
+Qt Creator's settings are read whole, on the host or in the container
+whose home holds them: the kit behind each configuration brings its
+compilers, Qt, environment and device, so a configuration never built
+configures the way Qt Creator would, and a kit defined in a container
+runs there without a probe. ~SPC k w~ writes every kit down in
+=.dir-locals.el= and ~SPC k G~ as presets, after which
+=cmake --preset horizon-sdk-Release= in the container, or ~SPC k K~
+here, does the same with no Qt Creator around. A Ninja Multi-Config
+kit lists its configurations instead of types: ~SPC k y~ picks the one
+every build passes as =--config=.
+
+** Packaging and scripts
+| Key     | What it does                                                       |
+|---------+--------------------------------------------------------------------|
+| ~SPC k P~ | build the packaging target: =fdc.hpkg=, =package=, ~C-u~ to pick another |
+| ~SPC k o~ | copy the newest package out, where this project's packages go      |
+| ~SPC k S~ | run a script of the project: =scripts/deployment.sh=, =build_arm.sh=   |
+| ~SPC k B~ | any target, =fdc.hpkglite= and =fdc.debug.hpkg= among them             |
+
+All of it runs where the kit runs: the hpkg of fdc-mule is made in the
+container with the ARM SDK sourced, from =build/horizon-sdk-Release=,
+and the packages it wrote are named when it ends. The target and the
+destination are kept in =.dir-locals.el= after the first time; the
+arguments a script was run with are offered again.
+
+** CMake panel: the kit
+| Key | What it does                                                                               |
+|-----+--------------------------------------------------------------------------------------------|
+| ~K~   | pick the kit: a preset, a directory, a Qt Creator configuration, a stale directory         |
+| ~y~   | the build type: switch, configure if new                                                   |
+| ~Y~   | the kit family, same type                                                                  |
+| ~Z~   | forget the kits and read the disk again, after a container started or an SDK was installed |
+
+** CMake panel: settings
+| Key | What it does                                                               |
+|-----+----------------------------------------------------------------------------|
+| ~-D~  | set a cache variable, ~-U~ clear one; =CMAKE_PREFIX_PATH= offers the Qts found |
+| ~-L~  | the log level of a configure                                               |
+| ~-j~  | how many parallel jobs, ~-v~ verbose build on, off                           |
+| ~s~   | the default target ~b~ builds                                                |
+| ~A~   | which executable ~r~ runs, ~a~ the arguments it gets                           |
+
+The keys are CMake's own flags. A preset is a kit with its own build
+directory, build type and cache variables, so =dev= and =release= never
+overwrite each other. Variables you set with ~-D~ are kept in the
+project's =.dir-locals.el= and passed to every configure. An old project
+whose dependency says a CMake older than 3.5: ~-D~,
+=CMAKE_POLICY_VERSION_MINIMUM= =3.5=, then ~c~.
+
+** CMake panel: configure and build
+| Key | What it does                                        |
+|-----+-----------------------------------------------------|
+| ~c~   | configure, ~F~ configure fresh with the cache dropped |
+| ~z~   | configure, relink the index and restart the server  |
+| ~b~   | build, ~C~ clean, ~W~ clean and build                   |
+
+~z~ is the usual repair for "it builds but clangd is lost"; ~F~ is for a
+changed compiler, generator or Qt, when a plain configure keeps the
+stale value, and for a directory configured before the project moved.
+
+** CMake panel: files and status
+| Key | What it shows                                                           |
+|-----+-------------------------------------------------------------------------|
+| ~I~   | the project status buffer                                               |
+| ~v c~ | CMakeCache.txt, ~v p~ CMakePresets.json                                   |
+| ~v j~ | compile_commands.json, ~v d~ .dir-locals.el                               |
+| ~w~   | write the whole setup to .dir-locals.el, ~G~ generate the presets from it |
+
+~I~ is the first thing to try when a build, an index or the debugger
+misbehaves: it prints the build directory, the build type, the generator,
+the compiler, the Qt version, your cache overrides, the run arguments, where
+the compilation database is and the versions of the tools.
+
+** Function keys, as in Qt Creator
+| Key  | What it does             |
+|------+--------------------------|
+| ~F2~   | go to the definition     |
+| ~F4~   | switch header and source |
+| ~F5~   | debug, or continue       |
+| ~S-F5~ | stop debugging           |
+| ~F6~   | run                      |
+| ~F7~   | build                    |
+| ~F8~   | configure                |
+| ~F9~   | toggle a breakpoint      |
+| ~F10~  | step over                |
+| ~F11~  | step into, ~S-F11~ out     |
+
+~F2~, ~F4~ to ~F9~ work wherever you are. ~F10~, ~F11~, ~S-F11~ and ~S-F5~
+belong to a running debug session and do nothing outside one, where ~F10~
+opens the menu bar and ~F11~ makes the frame full screen.
+
+** The same from the leader
+| Key     | What it does                                                            |
+|---------+-------------------------------------------------------------------------|
+| ~SPC k c~ | configure, ~b~ build, ~r~ run; Doom's ~SPC c C~ recompiles                    |
+| ~SPC k R~ | run with arguments, asked now; ~SPC k x~ builds first, then runs          |
+| ~SPC k t~ | test, ~T~ only the test at point, ~u~ a test executable whole               |
+| ~SPC k d~ | debug; Doom's ~SPC d d~ picks a debug configuration                       |
+| ~SPC k B~ | build a target, ~s~ set the default                                       |
+| ~SPC k K~ | pick a kit, ~y~ the type, ~Y~ the family, ~?~ which and why                   |
+| ~SPC k H~ | any file of the project; Doom's ~SPC p o~ and ~F4~ switch header and source |
+| ~SPC k m~ | the panel for anything else you set                                     |
+
+** Debugger
+| Key     | What it does                                  |
+|---------+-----------------------------------------------|
+| ~SPC k d~ | debug what the kit builds, where the kit runs |
+| ~SPC k D~ | debug it on the device, over gdbserver        |
+| ~SPC k j~ | attach to a gdb server already listening      |
+| ~SPC d d~ | start a session, picking the configuration    |
+| ~SPC d i~ | the info windows                              |
+| ~SPC d R~ | the repl                                      |
+| ~SPC d w~ | watch an expression                           |
+| ~SPC d x~ | evaluate one                                  |
+| ~SPC d q~ | quit the session                              |
+
+~SPC k d~ covers the two ordinary cases on its own: a program built for
+this machine is debugged here, and one built by a kit that lives in a
+container is debugged in that container, with the kit's own gdb.
+
+~SPC k D~ is for the board. It starts =gdbserver= there over ssh on the
+binary that was deployed, and attaches the cross gdb from here, with
+the SDK's sysroot set so the libraries it reads are the board's and the
+symbols the ones built here. Deploy first, ~SPC k U~, or the two are not
+the same program. ~SPC d q~ ends the session, and the gdbserver on the
+board goes with it.
+
+~SPC k j~ attaches to anything already serving the gdb protocol on a
+port: a gdbserver started by hand, the debug server a PlatformIO board
+is flashed through (start it with =pio debug --interface=gdb=, or what
+=debug_server= in =platformio.ini= names, then attach to its port, 3333 for
+openocd), qemu started with ~-g~. The symbols come from the executable as
+it was built here.
+
+** Problems, and fixing them
+| Key       | What it does                                          |
+|-----------+-------------------------------------------------------|
+| ~SPC k e~   | the next problem in the buffer, ~SPC k E~ the previous  |
+| ~SPC c x~   | every problem, pick one to jump to                    |
+| ~SPC k .~   | fix the one at point, the server's quickfix           |
+| ~SPC c a~   | every action the server offers here                   |
+| ~SPC k g t~ | clang-tidy this file, ~SPC k g T~ applies its fixes too |
+| ~SPC k g p~ | clang-tidy the project, through the kit               |
+| ~SPC k f~   | clang-format this buffer, ~SPC k g F~ the project       |
+| ~SPC c r~   | rename the symbol everywhere                          |
+
+A fix available at point shows as a mark in the margin. ~SPC k .~ applies
+it when there is one, offers a choice when there are several. In the
+menu these are the Fix column: ~e~ ~E~ ~L~ ~.~, ~f~ and ~g~ for the clang
+tools, the same keys; ~q~ there closes the menu.
+
+** Assembly
+| Key     | What it does                                          |
+|---------+-------------------------------------------------------|
+| ~SPC k a~ | the assembly of this file beside it, live; again, off |
+| ~SPC k A~ | disassemble the function at point, once               |
+
+~SPC k a~ compiles the file with the flags the compilation database
+records, in the kit's container when that is where the compiler is, and
+shows the assembly in the other window. The lines that come from the
+line the cursor is on are highlighted, and it recompiles as you edit.
+Rust and Python work the same way with their own compiler. rmsbolt, which
+draws it, also knows Go, Zig and Java, but those modules are not enabled
+here, so nothing opens such a file in a mode it would recognise.
+
+** Other languages
+The kit menu ~SPC k SPC~ is for any project: a =Cargo.toml=, =meson.build=,
+=build.gradle=, =pom.xml=, =package.json=, =Makefile= or =pyproject.toml=
+gives it build, run and test through projection, and the Fix, Server and
+Tools columns are the same everywhere. Rust, Python, JavaScript,
+TypeScript, HTML, CSS and Pascal open in their own modes and get a server
+when one is on PATH; =doom doctor= names any that are missing with the line
+that installs it. Go, Java, Kotlin and Zig were dropped from =init.el=,
+since nothing here is written in them; adding the module back is one line
+if that changes. Rust debugs with codelldb (~+cpp/install-codelldb~
+fetches it), C and C++ with gdb.
+
+** New files
+New headers, sources, mains, tests and =CMakeLists.txt= open from a template
+in the house style, so the include guard, the namespace and the Doxygen
+header are already there.
+
+| Key   | What it expands                 |
+|-------+---------------------------------|
+| ~doxy~  | a Doxygen block                 |
+| ~tc~    | a doctest case, ~sc~ a subcase    |
+| ~qprop~ | a Q_PROPERTY with its accessors |
+| ~qobj~  | a QObject class                 |
+
+Type the key and press =TAB=.
+
+** New projects
+| Key       | What it creates                                  |
+|-----------+--------------------------------------------------|
+| ~SPC k n~   | a project from a template, PlatformIO among them |
+| ~SPC k N~   | a Qt Quick application in MVVM                   |
+| ~SPC k p n~ | a PlatformIO project                             |
+
+| Template   | What you get                                          |
+|------------+-------------------------------------------------------|
+| =lib=        | header-only C++23 library, doctest, install rules     |
+| =app=        | a program whose logic sits in headers the tests link  |
+| =qt=         | Qt Quick in MVVM, the view model under QtTest         |
+| =platformio= | pio's own init, asked for the board and the framework |
+
+The first three carry =.clang-format=, =.clang-tidy=, the warnings target, the
+=dev=, =release=, =asan= and =ci= presets, and an =AGENTS.md= stating the
+rules so an agent writes the same style you do.
+
+** PlatformIO
+| Key       | What it does                     |
+|-----------+----------------------------------|
+| ~SPC k p e~ | pick the environment             |
+| ~SPC k p b~ | build, ~u~ upload                  |
+| ~SPC k p m~ | the serial monitor in a terminal |
+| ~SPC k p t~ | test, ~d~ debug                    |
+| ~SPC k p i~ | regenerate compile_commands.json |
+| ~SPC k p B~ | the board catalogue              |
+
+Run ~SPC k p i~ once per project so clangd knows the cross compiler flags.
+
+** A session, start to finish
+1. ~SPC k n~ for a new project, or open one.
+2. ~SPC k K~ to pick the =dev= preset, when the detected kit is not it.
+3. ~F8~ configure, ~F7~ build, ~F6~ run.
+4. ~F9~ on a line, then ~F5~, to debug.
+5. ~SPC k T~ while writing a test, ~SPC k t~ for the whole suite.
+6. ~SPC k g F~ and ~SPC k g p~ before finishing, then the =ci= and =asan=
+   presets.
+
+* Rust
+The [[file:../modules/private/rust/README.org][rust README]] has the whole of it. The build keys are the ones C
+and C++ use: they ask what kind of project this is, so in a tree with a
+=Cargo.toml= they mean cargo.
+
+** Building and running
+| Key       | What it does                                      |
+|-----------+---------------------------------------------------|
+| ~F7~        | build, with the profile and features that are set |
+| ~F6~        | run it, with the arguments that are set           |
+| ~SPC k b~   | build, ~SPC k t~ test, ~SPC k i~ install              |
+| ~SPC k r~   | run, ~SPC k R~ with arguments asked now             |
+| ~SPC k d~   | debug with codelldb                               |
+| ~SPC k m~   | the panel: what is set, and everything cargo does |
+| ~SPC k n~   | a new project: bin, lib or workspace              |
+| ~SPC m k c~ | check, the fast one                               |
+| ~SPC m k l~ | clippy, ~SPC m k L~ fixing what it is sure of       |
+| ~SPC m k u~ | the test the cursor is in, alone                  |
+| ~SPC m k e~ | the file with its macros expanded                 |
+| ~SPC m k d~ | the documentation, built and opened               |
+
+** What a build depends on
+~SPC k m~ sets it and writes it to =.dir-locals.el=, so it belongs to the
+project and not to the session: =y= the profile, =Y= dev against release,
+=f= the features, =F= no default features, =p= the workspace member, =T= the
+target triple, =a= the arguments the program is run with. The header
+shows the command line those add up to before you press anything.
+
+** What is installed
+rust-analyzer is not in the repos; rustup carries it.
+
+#+begin_src sh
+sudo zypper in rustup
+rustup default stable
+rustup component add rust-analyzer rust-src clippy rustfmt
+#+end_src
+
+~SPC h r d~ says what is still missing, and ~SPC k m I~ says it for the
+project in front of you. codelldb, which ~SPC k d~ needs, comes from
+=M-x +cpp/install-codelldb=.
+
+A crate made with ~SPC k n~ carries a =[lints]= table: clippy's =all= and
+=pedantic=, no =unwrap=, no =expect=. The editor, the command line and CI
+then judge the code the same way.
+
+* Pascal
+The [[file:../modules/private/pascal/README.org][pascal README]] has the whole of it. Free Pascal and Lazarus build,
+run and debug here; a Delphi project is read and edited here and built
+in the IDE, because its compiler is Windows software and this machine
+has none.
+
+** Building and running
+| Key       | What it does                                  |
+|-----------+-----------------------------------------------|
+| ~F7~        | build: lazbuild for a =.lpi=, fpc for a =.lpr=     |
+| ~F6~        | run it                                        |
+| ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug with gdb     |
+| ~SPC k m~   | the panel: what is set, and everything else   |
+| ~SPC k n~   | a new project: console or lcl                 |
+| ~SPC m k x~ | build, then run                               |
+| ~SPC m k y~ | the Lazarus build mode, ~SPC m k w~ the widget set |
+| ~SPC m k s~ | which program, when the project holds several |
+| ~SPC m k C~ | clean                                         |
+| ~SPC m k I~ | what is installed, and what this project is   |
+
+** The files
+=.pas=, =.pp=, =.lpr=, =.dpr=, =.dpk= and =.inc= open in ~opascal-mode~,
+which is Emacs's own and speaks Delphi's dialect. =.lfm= and =.dfm= open in
+~conf-mode~: a form is a property list Lazarus and Delphi write, not code,
+and reading it as Pascal colours the wrong words.
+
+** What is installed
+#+begin_src sh
+sudo zypper in fpc fpc-src lazarus
+#+end_src
+
+=fpc-src= is what lets go-to-definition reach the runtime library.
+=lazbuild=, which comes with lazarus, builds a =.lpi= without opening the
+IDE.
+
+The language server, =pasls=, is nobody's package: the module README has
+the four lines that build it from source. Until it is there a Pascal
+buffer has the mode's navigation and no completion.
+
+* The web: Svelte, TypeScript, node
+The [[file:../modules/private/web/README.org][web README]] has the whole of it. The build keys are the ones C++
+and Rust use: in a tree with a =package.json= they mean the project's own
+package manager, read from its lock file.
+
+** Running a project
+| Key       | What it does                                    |
+|-----------+-------------------------------------------------|
+| ~SPC k r~   | the dev server, left running and able to listen |
+| ~SPC k b~   | build, ~SPC k t~ test                             |
+| ~SPC k d~   | debug node, or Electron's main process          |
+| ~SPC k m~   | the panel: everything the project can be told   |
+| ~SPC k n~   | a new project                                   |
+| ~SPC m k v~ | preview what the build made                     |
+| ~SPC m k s~ | any script out of package.json                  |
+| ~SPC m k l~ | lint, ~SPC m k c~ the types without building      |
+| ~SPC m k i~ | install, ~SPC m k p~ open package.json            |
+
+** Starting one
+~SPC k n~ offers =sveltekit= (SvelteKit, Vite, TypeScript, Tailwind,
+prettier, eslint, vitest), =electron= (the same behind a desktop window),
+=library=, =static= (one page and Tailwind) and =node= (a TypeScript program).
+Each is installed with yarn and runs as soon as it is made.
+
+** What is installed
+The servers are npm packages, looked for on =PATH= wherever they are:
+
+#+begin_src sh
+npm i -g --prefix ~/.local typescript typescript-language-server \
+  svelte-language-server vscode-langservers-extracted \
+  @tailwindcss/language-server prettier eslint
+#+end_src
+
+A project's own =node_modules/.bin= comes first, so the prettier that
+formats a file here is the one that project pins.
+
+One limit worth knowing: Tailwind class completion works in CSS files
+and not in markup. eglot lets one server manage a buffer, and in a
+=.svelte= file that is the Svelte server.
+
+* Org
+The [[file:../modules/private/notes/README.org][org README]] describes the workflow these keys drive. ~SPC n SPC~ opens
+the notes menu, which gathers all of it in one place under the same
+keys: ~d~ the documents, ~c~ the captures, ~a~ the agenda views, ~r~ roam.
+
+** Capture
+| Key       | What it captures                                                                                       |
+|-----------+--------------------------------------------------------------------------------------------------------|
+| ~SPC X~     | the quickest note                                                                                      |
+| ~SPC n n t~ | a todo, ~T~ a dated one, with a link back                                                                |
+| ~SPC n n i~ | an idea                                                                                                |
+| ~SPC n n l~ | a link                                                                                                 |
+| ~SPC n n r~ | something to read                                                                                      |
+| ~SPC n n c~ | the selected code                                                                                      |
+| ~SPC n n b~ | a bug, with a link back to the line                                                                    |
+| ~SPC n n P~ | a project skeleton                                                                                     |
+| ~SPC n n a~ | an AI session log                                                                                      |
+| ~SPC n r n~ | a note in the graph: concept, solution, howto, hardware, reference, question, project, person, meeting |
+
+A note and a meeting are roam notes, not documents: ~SPC n r n~ then
+the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
+projects and each other, which a heading in a file cannot.
+
+** Documents
+| Key       | What it opens           |
+|-----------+-------------------------|
+| ~SPC n d i~ | inbox                   |
+| ~SPC n d t~ | todo                    |
+| ~SPC n d p~ | projects                |
+| ~SPC n d n~ | snippets                |
+| ~SPC n d I~ | ideas                   |
+| ~SPC n d r~ | reading                 |
+| ~SPC n d s~ | someday                 |
+| ~SPC n d h~ | habits                  |
+| ~SPC n d a~ | AI sessions             |
+| ~SPC n d d~ | pick one                |
+| ~SPC n d b~ | create the missing ones |
+
+** Agenda
+| Key       | What it shows         |
+|-----------+-----------------------|
+| ~SPC o a x~ | the dashboard         |
+| ~SPC o a w~ | the weekly review     |
+| ~SPC o a n~ | next actions          |
+| ~SPC o a p~ | projects, ~i~ the inbox |
+| ~SPC o a a~ | the plain agenda      |
+| ~SPC n t~   | the todo list         |
+
+Inside the agenda: =t= change the state, =s= schedule, =d= deadline, =r=
+refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= quit.
+
+** Structure
+| Key       | What it does                     |
+|-----------+----------------------------------|
+| ~TAB~       | fold, ~S-TAB~ cycle the whole file |
+| ~M-RET~     | a new heading                    |
+| ~C-RET~     | a heading below this subtree     |
+| ~M-h M-l~   | promote, demote                  |
+| ~M-j M-k~   | move the subtree down, up        |
+| ~SPC m s r~ | refile it somewhere else         |
+
+** Todo states and dates
+| Key       | What it sets                      |
+|-----------+-----------------------------------|
+| ~SPC m t~   | the state, =t= TODO, =n= NEXT, =d= DONE |
+| ~SPC m d s~ | a schedule date                   |
+| ~SPC m d d~ | a deadline                        |
+| ~SPC m p~   | the priority                      |
+| ~SPC m q~   | the tags                          |
+| ~SPC m c i~ | clock in, ~c o~ clock out           |
+| ~SPC t t~   | the pomodoro on this heading      |
+
+** Links and attachments
+| Key       | What it does           |
+|-----------+------------------------|
+| ~SPC n l~   | store a link to here   |
+| ~SPC m l l~ | insert a stored link   |
+| ~C-c C-o~   | open the link at point |
+| ~SPC m a a~ | attach a file          |
+
+Images dropped on a buffer are downloaded and attached.
+
+** Export and babel
+| Key         | What it does                  |
+|-------------+-------------------------------|
+| ~SPC m e~     | the export menu               |
+| ~SPC m e h h~ | HTML                          |
+| ~SPC m e l p~ | PDF through LaTeX             |
+| ~SPC m e g g~ | GitHub flavoured markdown     |
+| ~C-c C-c~     | run the source block at point |
+| ~<s TAB~      | insert a source block         |
+
+** Writing and presenting
+| Key       | What it does                                 |
+|-----------+----------------------------------------------|
+| ~SPC n d w~ | writing mode: zen, no clutter, lines wrapped |
+| ~SPC t z~   | zen mode, wide margins in the one font       |
+| ~SPC t p~   | present the file as slides                   |
+
+* Notes and roam
+Roam is the note graph in =~/org/roam=; the dailies are the journal.
+[[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says how to work with it day to day.
+
+** The loop
+| Key         | What it does                        |
+|-------------+-------------------------------------|
+| ~SPC n r d n~ | write into today's note             |
+| ~SPC m m e~   | extract a heading into its own note |
+| ~SPC n r i~   | link it to an existing note         |
+| ~SPC m m o t~ | tag it, ~o a~ alias, ~o r~ source ref   |
+| ~SPC n r v~   | weekly, review what went nowhere    |
+
+** Find and link
+| Key       | What it does              |
+|-----------+---------------------------|
+| ~SPC n r f~ | find a note, or create it |
+| ~SPC n r i~ | insert a link to one      |
+| ~SPC n r n~ | capture a new one         |
+| ~SPC n r r~ | the backlinks buffer      |
+| ~SPC n r B~ | backlinks with a preview  |
+| ~SPC n r L~ | forward links             |
+| ~SPC n r u~ | the graph in the browser  |
+| ~SPC n r s~ | rebuild the database      |
+
+** Dailies
+| Key         | What it opens      |
+|-------------+--------------------|
+| ~SPC n r d n~ | capture into today |
+| ~SPC n r d t~ | today              |
+| ~SPC n r d y~ | yesterday          |
+| ~SPC n r d d~ | a date you pick    |
+
+** Search the notes
+| Key       | What it searches              |
+|-----------+-------------------------------|
+| ~SPC n s~   | the text of every note        |
+| ~SPC n S~   | the headings                  |
+| ~SPC n q~   | find by query (org-ql)        |
+| ~SPC n Q~   | search by query               |
+| ~SPC n r /~ | the roam notes with a preview |
+
+** Maps
+| Key       | What it does                       |
+|-----------+------------------------------------|
+| ~SPC n r m~ | build the map of a tag             |
+| ~SPC n r u~ | the whole graph in the browser     |
+| ~SPC m M M~ | mind map of this file              |
+| ~SPC m M t~ | of the tree at point, ~b~ the branch |
+
+A map is a note in =roam/maps/=; only the list between =# BEGIN MAP= and
+=# END MAP= is rewritten, so your own text around it stays. Mind maps are
+rendered with graphviz into =~/org/maps=.
+
+** Cards and sources
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC n p~   | review the cards due, ~P~ the dashboard |
+| ~SPC m F n~ | make this heading a card, ~c~ a cloze   |
+| ~SPC n B~   | the bibliography, ~b~ a paper's note    |
+| ~SPC m @~   | insert a citation                     |
+| ~SPC n d P~ | set up capture from the browser       |
+| ~SPC m N n~ | transclude the link at point, ~A~ all   |
+
+A paper's note is made from a template of its own, not the one ~SPC n r n~
+offers under "reference": citar has just handed over the citation key, so
+that template takes it rather than asking you to type it again. The note
+lands in =refs/= named for the key, with =#+source: [cite:@key]= in its head,
+which is how citar finds it again later. The "reference" kind you pick by
+hand still asks, because there is nothing to ask instead.
+
+** Keeping the graph healthy
+| Key       | What it shows                         |
+|-----------+---------------------------------------|
+| ~SPC n r v~ | notes with no links, no tags, no body |
+| ~SPC n r h~ | which notes carry tasks               |
+| ~SPC n r s~ | resync the database                   |
+
+A task written inside a note reaches the agenda by itself. =~/org= is a git
+repository: it commits itself after ten minutes idle and on exit, ~SPC n g~
+commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows what
+changed.
+
+* AI
+The [[file:../modules/private/ai/README.org][ai README]] explains the three tools and when each one fits. ~SPC l SPC~
+opens the hub with all of it.
+
+** Claude Code in Emacs
+Claude runs in a side window and sees this Emacs as its IDE.
+
+| Key     | What it does                      |
+|---------+-----------------------------------|
+| ~SPC l c~ | start it, or focus it             |
+| ~SPC l C~ | continue the last session         |
+| ~SPC l r~ | resume a session you pick         |
+| ~SPC l p~ | send a prompt from the minibuffer |
+| ~SPC l s~ | send the selection                |
+| ~SPC l t~ | show, hide the window             |
+| ~SPC l b~ | switch to its buffer              |
+| ~SPC l l~ | list the sessions                 |
+| ~SPC l k~ | stop it                           |
+
+** Inside the Claude buffer
+Keys go to Claude, because the buffer is in emacs state. The way out is
+~C-c~, which vterm leaves to Emacs. ~M-SPC~ would be the leader here, but KDE
+takes it for KRunner.
+
+| Key     | What it does                                  |
+|---------+-----------------------------------------------|
+| ~C-c C-o~ | back to the code, Claude stays open           |
+| ~C-c C-q~ | hide the window, Claude keeps running         |
+| ~C-c C-k~ | stop the session                              |
+| ~C-c SPC~ | the leader, so ~C-c SPC l t~ toggles            |
+| ~C-z~     | Doom's keys here, to scroll or copy; again to |
+|         | type to Claude                                |
+| ~C-c C-t~ | vterm copy mode                               |
+
+Typing =/exit=, or ~C-c C-c~ twice, quits Claude and closes the buffer.
+
+** Claude TUI keys
+| Key       | What it does                        |
+|-----------+-------------------------------------|
+| ~Esc~       | interrupt                           |
+| ~Esc Esc~   | edit the previous message           |
+| ~Shift-TAB~ | cycle the permission and plan modes |
+| ~C-r~       | the history                         |
+| ~@file~     | mention a file                      |
+| =!cmd=      | run a shell command                 |
+| ~#~         | add a line to the memory file       |
+
+** Claude slash commands
+| Command  | What it does                      |
+|----------+-----------------------------------|
+| =/ide=     | shows the Emacs connection        |
+| =/mcp=     | lists the tools Emacs exposes     |
+| =/model=   | change the model                  |
+| =/compact= | shorten the context               |
+| =/clear=   | start over                        |
+| =/resume=  | pick an earlier session           |
+| =/cost=    | what this session has cost        |
+| =/memory=  | edit CLAUDE.md                    |
+| =/init=    | write a CLAUDE.md for the project |
+| =/doctor=  | check the CLI installation        |
+
+** Emacs tools Claude can call
+These are the ones this config adds, on top of Doom's xref, treesit, imenu
+and project tools. =/mcp= lists them all.
+
+| Tool                   | What Claude gets                   |
+|------------------------+------------------------------------|
+| =emacs_build_project=    | runs the build, returns the errors |
+| =emacs_last_compilation= | the output of the last build       |
+| =emacs_project_todos=    | the TODO comments                  |
+| =emacs_org_add_todo=     | writes a todo into the inbox       |
+| =emacs_notes_search=     | greps the notes                    |
+| =emacs_notes_list=       | the notes, by tag or by date       |
+| =emacs_notes_read=       | one note, by title or id           |
+| =emacs_notes_links=      | what points at a note              |
+| =emacs_notes_append=     | adds to today's note               |
+| =emacs_notes_draft=      | leaves a draft in roam/drafts      |
+
+It reads the graph freely and writes only into the day or into
+=roam/drafts=; promoting a draft is yours. See [[file:org-roam-guide.org][the roam guide]].
+
+** Agent shell
+A plain Emacs buffer that talks to an agent over ACP, with native diffs and
+permission buttons.
+
+| Key     | What it does             |
+|---------+--------------------------|
+| ~SPC l a~ | Claude in an agent shell |
+| ~SPC l A~ | pick another agent       |
+| ~SPC l v~ | compose a long message   |
+| ~SPC l x~ | send the selection       |
+
+In the shell: =RET= send, =C-c C-c= interrupt, =C-c C-m= mode, =C-c C-v=
+model, =C-c C-t= how much thinking to show.
+
+** gptel
+For small edits in place, without leaving the buffer.
+
+| Key       | What it does                   |
+|-----------+--------------------------------|
+| ~SPC o l l~ | a chat buffer                  |
+| ~SPC o l m~ | the menu: model, preset, tools |
+| ~SPC o l e~ | explain the selection quickly  |
+| ~SPC o l r~ | rewrite the selection          |
+| ~SPC o l a~ | add the region to the context  |
+| ~SPC o l f~ | add a file to the context      |
+
+These are Doom's llm keys; the AI menu, ~SPC l SPC~, gathers them with
+the agents: ~g~ chat, ~G~ menu, ~E~ explain, ~w~ rewrite, ~+~ and ~F~ context.
+
+In a chat buffer =C-c RET= sends. Writing =@deep= or =@quick= in the prompt
+picks a preset.
+
+** Files and settings
+| Key     | What it opens                       |
+|---------+-------------------------------------|
+| ~SPC l f~ | the project CLAUDE.md               |
+| ~SPC l S~ | the Claude settings file            |
+| ~SPC l n~ | a new slash command                 |
+| ~SPC l h~ | install the hooks that notify Emacs |
+| ~SPC l o~ | choose the model                    |
+| ~SPC l e~ | let Claude evaluate elisp, or not   |
+| ~SPC l d~ | claude doctor                       |
+| ~SPC l L~ | log this session into ai.org        |
+
+** The claude CLI
+| Command             | What it does              |
+|---------------------+---------------------------|
+| =claude=              | start it in a terminal    |
+| =claude -c=           | continue the last session |
+| =claude -r=           | resume one                |
+| =claude --model opus= | pick the model            |
+| =claude mcp list=     | the MCP servers it knows  |
+
+** Grammar, and reading a PDF
+LanguageTool reads a buffer and says what is clumsy in it, not only
+what is misspelt. The language is detected per buffer, so a note in
+Italian is read as Italian and one in English as English, and Italian
+is named as the mother tongue, which is how it catches the words that
+look like the English ones and are not.
+
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC n w c~ | check this buffer                     |
+| ~SPC n w w~ | what is wrong at the cursor           |
+| ~SPC n w f~ | walk the buffer, correcting as you go |
+| ~SPC n w d~ | done: clear the marks                 |
+
+A PDF opens in ~pdf-view-mode~: ~j k~ scroll, ~n p~ turn the page, ~/~ searches
+the text, ~o~ shows the outline, ~SPC m~ has the rest. Org can link into
+one at a page, and ~SPC n d r~ with org-noter keeps notes beside it.
+
+Both want something installed first, once:
+=sudo zypper in languagetool libpoppler-glib-devel=. PDFs also need
+=epdfinfo=, which no package ships: ~M-x pdf-tools-install~ builds it in a
+minute. Put it in =~/.local/bin= and a =doom sync= cannot lose it again.
+
+* Glyphs, emoji and fonts
+** Insert
+| Key     | What it inserts                      |
+|---------+--------------------------------------|
+| ~SPC i g~ | a Nerd Font glyph                    |
+| ~SPC i G~ | the elisp form for one, for a config |
+| ~SPC i e~ | an emoji                             |
+| ~SPC i u~ | a character by its unicode name      |
+
+** Check the rendering
+| Key       | What it shows                           |
+|-----------+-----------------------------------------|
+| ~SPC t G~   | a buffer of icons, emoji and operators  |
+| ~SPC h '~   | which font draws the character at point |
+| ~SPC h r f~ | reload the fonts                        |
+
+Icons come from Symbols Nerd Font Mono and emoji from Noto Color Emoji.
+Boxes instead of glyphs mean one of the two is missing.
+
+* Troubleshooting
+** C and C++
+| Symptom                         | What to try                                |
+|---------------------------------+--------------------------------------------|
+| the server does not start       | ~SPC k l r~, then ~SPC k I~                    |
+| no completion, no diagnostics   | ~SPC k c~, then ~SPC k l l~                    |
+| embedded headers not found      | ~SPC k p i~                                  |
+| Qt types not found, no database | ~SPC k l c~, then ~SPC k l r~                  |
+| the SDK is in a distrobox       | ~SPC k ?~ shows the kit found; ~SPC k K~ picks |
+| it builds in the wrong place    | ~SPC k K~, the kit is the directory          |
+| the build ignores a setting     | ~SPC k I~                                    |
+| a preset change does nothing    | ~SPC k m F~                                  |
+
+~SPC k I~ prints what is actually set, which answers most of these.
+~SPC k l l~ relinks compile_commands.json into the project root and
+~SPC k p i~ regenerates it for PlatformIO. ~SPC k m F~ configures from
+scratch, which is what a changed preset needs.
+
+** Emacs and packages
+| Symptom                         | What to try                              |
+|---------------------------------+------------------------------------------|
+| a command is missing in the GUI | =doom env=, then restart                   |
+| odd errors after an upgrade     | ~SPC h r s~, then =doom doctor=              |
+| a tree-sitter mode looks plain  | =M-x treesit-install-language-grammar=     |
+| the native-comp warnings buffer | harmless, close it                       |
+| vterm is missing                | =M-x vterm-module-compile=                 |
+| Emacs is slow or busy           | =M-x profiler-start=, then =profiler-report= |
+
+Grammars install themselves the first time you open such a file, so a plain
+looking buffer usually means the install failed; the command above says why.
+
+The profiler names what is burning time; =C-c C-c= on a line opens it. The
+usual suspects here are a repeating timer (every tick is a redisplay),
+something on ~post-command-hook~, or a preview of a huge file. What is known
+to be fast: a 47 MB log opens in 0.2 s, a 2 MB C++ file in 1.3 s, a C++
+buffer of the fdc project comes back in 0.3 s with its server attached half
+a second later, and a cursor move in dired costs 2 to 6 ms.
+
+** Org and roam
+| Symptom                          | What to try                     |
+|----------------------------------+---------------------------------|
+| a note is missing from the graph | ~SPC n r s~ to sync               |
+| the agenda is empty              | ~SPC n d b~ creates the documents |
+
+** AI
+| Symptom                        | What to try                            |
+|--------------------------------+----------------------------------------|
+| =/ide= shows no connection       | ~SPC a d~, then ~SPC a k~ and ~SPC a c~      |
+| the agent shell will not start | is =claude-agent-acp= on PATH?           |
+| gptel returns an error         | the API key belongs in =~/.authinfo.gpg= |
+
+* Reference: leader keys
+Generated from the running config. Rebuild it with ~gr~ in this buffer.
+# BEGIN GENERATED-KEYS
+** Top level (SPC)
+| Key                | What it does                 |
+|--------------------+------------------------------|
+| ~SPC '~              | Resume last search           |
+| ~SPC *~              | Search for symbol in project |
+| ~SPC ,~              | Switch workspace buffer      |
+| ~SPC .~              | Find file                    |
+| ~SPC /~              | Search project               |
+| ~SPC :~              | M-x                          |
+| ~SPC ;~              | Eval expression              |
+| ~SPC <~              | Switch buffer                |
+| ~SPC RET~            | Jump to bookmark             |
+| ~SPC SPC~            | Find file in project         |
+| ~SPC X~              | Org Capture                  |
+| ~SPC `~              | Switch to last buffer        |
+| ~SPC a~              | Actions                      |
+| ~SPC override-state~ | all                          |
+| ~SPC u~              | Universal argument           |
+| ~SPC x~              | Pop up scratch buffer        |
+| ~SPC ~~              | Toggle last popup            |
+
+** SPC TAB: workspace
+| Key         | What it does              |
+|-------------+---------------------------|
+| ~SPC TAB .~   | Switch workspace          |
+| ~SPC TAB 0~   | Switch to final workspace |
+| ~SPC TAB 1~   | Switch to 1st workspace   |
+| ~SPC TAB 2~   | Switch to 2nd workspace   |
+| ~SPC TAB 3~   | Switch to 3rd workspace   |
+| ~SPC TAB 4~   | Switch to 4th workspace   |
+| ~SPC TAB 5~   | Switch to 5th workspace   |
+| ~SPC TAB 6~   | Switch to 6th workspace   |
+| ~SPC TAB 7~   | Switch to 7th workspace   |
+| ~SPC TAB 8~   | Switch to 8th workspace   |
+| ~SPC TAB 9~   | Switch to 9th workspace   |
+| ~SPC TAB D~   | Delete saved workspace    |
+| ~SPC TAB N~   | New named workspace       |
+| ~SPC TAB R~   | Restore last session      |
+| ~SPC TAB TAB~ | Display tab bar           |
+| ~SPC TAB [~   | Previous workspace        |
+| ~SPC TAB ]~   | Next workspace            |
+| ~SPC TAB `~   | Switch to last workspace  |
+| ~SPC TAB d~   | Kill this workspace       |
+| ~SPC TAB l~   | Load workspace from file  |
+| ~SPC TAB n~   | New workspace             |
+| ~SPC TAB r~   | Rename workspace          |
+| ~SPC TAB s~   | Save workspace to file    |
+| ~SPC TAB x~   | Kill session              |
+
+** SPC b: buffer
+| Key     | What it does              |
+|---------+---------------------------|
+| ~SPC b -~ | Toggle narrowing          |
+| ~SPC b B~ | Switch buffer             |
+| ~SPC b C~ | Clone buffer other window |
+| ~SPC b I~ | ibuffer workspace         |
+| ~SPC b K~ | Kill all buffers          |
+| ~SPC b M~ | Delete bookmark           |
+| ~SPC b N~ | New empty buffer          |
+| ~SPC b O~ | Kill other buffers        |
+| ~SPC b R~ | Rename buffer             |
+| ~SPC b S~ | Save all buffers          |
+| ~SPC b X~ | Switch to scratch buffer  |
+| ~SPC b Z~ | Kill buried buffers       |
+| ~SPC b [~ | Previous buffer           |
+| ~SPC b ]~ | Next buffer               |
+| ~SPC b b~ | Switch workspace buffer   |
+| ~SPC b c~ | Clone buffer              |
+| ~SPC b d~ | Kill buffer               |
+| ~SPC b i~ | ibuffer                   |
+| ~SPC b k~ | Kill buffer               |
+| ~SPC b l~ | Switch to last buffer     |
+| ~SPC b m~ | Set bookmark              |
+| ~SPC b n~ | Next buffer               |
+| ~SPC b p~ | Previous buffer           |
+| ~SPC b r~ | Revert buffer             |
+| ~SPC b s~ | Save buffer               |
+| ~SPC b u~ | Save buffer as root       |
+| ~SPC b x~ | Pop up scratch buffer     |
+| ~SPC b y~ | Yank buffer               |
+| ~SPC b z~ | Bury buffer               |
+
+** SPC c: code
+| Key     | What it does                        |
+|---------+-------------------------------------|
+| ~SPC c C~ | Recompile                           |
+| ~SPC c D~ | Jump to references                  |
+| ~SPC c E~ | Evaluate & replace region           |
+| ~SPC c H~ | Docs at point (popup)               |
+| ~SPC c W~ | Delete trailing newlines            |
+| ~SPC c a~ | LSP Execute code action             |
+| ~SPC c c~ | Compile                             |
+| ~SPC c d~ | Jump to definition                  |
+| ~SPC c e~ | Evaluate buffer/region              |
+| ~SPC c f~ | Format buffer/region                |
+| ~SPC c i~ | Find implementations                |
+| ~SPC c j~ | Jump to symbol in current workspace |
+| ~SPC c k~ | Jump to documentation               |
+| ~SPC c r~ | LSP Rename                          |
+| ~SPC c s~ | Send to repl                        |
+| ~SPC c t~ | Find type definition                |
+| ~SPC c w~ | Delete trailing whitespace          |
+| ~SPC c x~ | List errors                         |
+
+** SPC d: debugger
+| Key     | What it does               |
+|---------+----------------------------|
+| ~SPC d <~ | dape-stack-select-up       |
+| ~SPC d >~ | dape-stack-select-down     |
+| ~SPC d B~ | dape-breakpoint-remove-all |
+| ~SPC d D~ | dape-disconnect-quit       |
+| ~SPC d M~ | dape-disassemble           |
+| ~SPC d R~ | dape-repl                  |
+| ~SPC d S~ | dape-select-stack          |
+| ~SPC d b~ | dape-breakpoint-toggle     |
+| ~SPC d c~ | dape-continue              |
+| ~SPC d d~ | dape                       |
+| ~SPC d e~ | dape-breakpoint-expression |
+| ~SPC d h~ | dape-breakpoint-hits       |
+| ~SPC d i~ | dape-info                  |
+| ~SPC d l~ | dape-breakpoint-log        |
+| ~SPC d m~ | dape-memory                |
+| ~SPC d n~ | dape-next                  |
+| ~SPC d o~ | dape-step-out              |
+| ~SPC d p~ | dape-pause                 |
+| ~SPC d q~ | dape-quit                  |
+| ~SPC d r~ | dape-restart               |
+| ~SPC d s~ | dape-step-in               |
+| ~SPC d t~ | dape-select-thread         |
+| ~SPC d w~ | dape-watch-dwim            |
+| ~SPC d x~ | dape-evaluate-expression   |
+
+** SPC e: explorer
+| Key     | What it does    |
+|---------+-----------------|
+| ~SPC e t~ | Toggle Treemacs |
+
+** SPC f: file
+| Key     | What it does                        |
+|---------+-------------------------------------|
+| ~SPC f C~ | Copy this file                      |
+| ~SPC f D~ | Delete this file                    |
+| ~SPC f E~ | Browse emacs.d                      |
+| ~SPC f F~ | Find file from here                 |
+| ~SPC f L~ | Copy path:line                      |
+| ~SPC f N~ | Copy directory                      |
+| ~SPC f P~ | Browse private config               |
+| ~SPC f R~ | Rename/move file                    |
+| ~SPC f S~ | Save file as...                     |
+| ~SPC f U~ | Sudo this file                      |
+| ~SPC f Y~ | Yank file path from project         |
+| ~SPC f a~ | Copy absolute path                  |
+| ~SPC f c~ | Open project editorconfig           |
+| ~SPC f d~ | Dired, a directory                  |
+| ~SPC f e~ | Find file in emacs.d                |
+| ~SPC f f~ | Find file                           |
+| ~SPC f k~ | Copy menu                           |
+| ~SPC f l~ | Find a file by name, here and below |
+| ~SPC f n~ | Copy file name                      |
+| ~SPC f p~ | Find file in private config         |
+| ~SPC f r~ | Recent files                        |
+| ~SPC f s~ | Save file                           |
+| ~SPC f t~ | The trash                           |
+| ~SPC f u~ | Sudo find file                      |
+| ~SPC f x~ | Open externally                     |
+| ~SPC f y~ | Yank file path                      |
+
+** SPC g: git
+| Key       | What it does          |
+|-----------+-----------------------|
+| ~SPC g '~   | Forge dispatch        |
+| ~SPC g .~   | Magit file dispatch   |
+| ~SPC g /~   | Magit dispatch        |
+| ~SPC g B~   | Magit blame           |
+| ~SPC g C~   | Magit clone           |
+| ~SPC g D~   | Magit file delete     |
+| ~SPC g F~   | Magit fetch           |
+| ~SPC g G~   | Magit status here     |
+| ~SPC g L~   | Magit buffer log      |
+| ~SPC g R~   | Revert file           |
+| ~SPC g S~   | Git stage this file   |
+| ~SPC g SPC~ | Git menu              |
+| ~SPC g U~   | Git unstage this file |
+| ~SPC g Y~   | Copy link to homepage |
+| ~SPC g [~   | Jump to previous hunk |
+| ~SPC g ]~   | Jump to next hunk     |
+| ~SPC g b~   | Magit switch branch   |
+| ~SPC g c R~ | Clone repo            |
+| ~SPC g c b~ | Branch                |
+| ~SPC g c c~ | Commit                |
+| ~SPC g c f~ | Fixup                 |
+| ~SPC g c i~ | Issue                 |
+| ~SPC g c p~ | Pull request          |
+| ~SPC g c r~ | Initialize repo       |
+| ~SPC g f c~ | Find commit           |
+| ~SPC g f f~ | Find file             |
+| ~SPC g f g~ | Find gitconfig file   |
+| ~SPC g f i~ | Find issue            |
+| ~SPC g f p~ | Find pull request     |
+| ~SPC g g~   | Magit status          |
+| ~SPC g h~   | History menu          |
+| ~SPC g l i~ | List issues           |
+| ~SPC g l n~ | List notifications    |
+| ~SPC g l p~ | List pull requests    |
+| ~SPC g l r~ | List repositories     |
+| ~SPC g l s~ | List submodules       |
+| ~SPC g n~   | Branches menu         |
+| ~SPC g o I~ | Browse issues         |
+| ~SPC g o P~ | Browse pull requests  |
+| ~SPC g o c~ | Browse commit         |
+| ~SPC g o h~ | Browse homepage       |
+| ~SPC g o i~ | Browse an issue       |
+| ~SPC g o o~ | Browse file or region |
+| ~SPC g o p~ | Browse a pull request |
+| ~SPC g o r~ | Browse remote         |
+| ~SPC g p~   | Show the change here  |
+| ~SPC g r~   | Revert hunk at point  |
+| ~SPC g s~   | Stage hunk at point   |
+| ~SPC g t~   | Git time machine      |
+| ~SPC g x~   | Conflicts             |
+| ~SPC g y~   | Copy link to remote   |
+
+** SPC h: help
+| Key         | What it does                     |
+|-------------+----------------------------------|
+| ~SPC h '~     | doom/describe-char               |
+| ~SPC h .~     | display-local-help               |
+| ~SPC h /~     | Cheat sheet                      |
+| ~SPC h 4 i~   | info-other-window                |
+| ~SPC h 4 s~   | help-find-source                 |
+| ~SPC h ?~     | help-for-help                    |
+| ~SPC h A~     | apropos-documentation            |
+| ~SPC h C~     | Check the config's commands      |
+| ~SPC h C-\~   | describe-input-method            |
+| ~SPC h C-a~   | about-emacs                      |
+| ~SPC h C-c~   | describe-coding-system           |
+| ~SPC h C-d~   | view-emacs-debugging             |
+| ~SPC h C-e~   | view-external-packages           |
+| ~SPC h C-f~   | view-emacs-FAQ                   |
+| ~SPC h C-k~   | describe-key-briefly             |
+| ~SPC h C-l~   | describe-language-environment    |
+| ~SPC h C-n~   | view-emacs-news                  |
+| ~SPC h C-o~   | describe-distribution            |
+| ~SPC h C-p~   | view-emacs-problems              |
+| ~SPC h C-q~   | help-quick-toggle                |
+| ~SPC h C-s~   | search-forward-help-for-help     |
+| ~SPC h C-t~   | view-emacs-todo                  |
+| ~SPC h C-w~   | describe-no-warranty             |
+| ~SPC h E~     | doom/sandbox                     |
+| ~SPC h F~     | describe-face                    |
+| ~SPC h I~     | describe-input-method            |
+| ~SPC h J~     | Dismiss the butler               |
+| ~SPC h K~     | Info-goto-emacs-key-command-node |
+| ~SPC h L~     | describe-language-environment    |
+| ~SPC h M~     | Private module README            |
+| ~SPC h O~     | +lookup/online                   |
+| ~SPC h P~     | find-library                     |
+| ~SPC h R~     | info-display-manual              |
+| ~SPC h RET~   | info-emacs-manual                |
+| ~SPC h S~     | info-lookup-symbol               |
+| ~SPC h T~     | doom/toggle-profiler             |
+| ~SPC h V~     | doom/help-custom-variable        |
+| ~SPC h W~     | +default/man-or-woman            |
+| ~SPC h a~     | apropos                          |
+| ~SPC h b b~   | describe-bindings                |
+| ~SPC h b f~   | which-key-show-full-keymap       |
+| ~SPC h b i~   | which-key-show-minor-mode-keymap |
+| ~SPC h b k~   | which-key-show-keymap            |
+| ~SPC h b m~   | which-key-show-major-mode        |
+| ~SPC h b t~   | which-key-show-top-level         |
+| ~SPC h c~     | describe-key-briefly             |
+| ~SPC h d L~   | doom/help-search-loaded-files    |
+| ~SPC h d N~   | doom/help-search-news            |
+| ~SPC h d S~   | doom/help-search                 |
+| ~SPC h d b~   | doom/report-bug                  |
+| ~SPC h d c~   | doom/open-private-config         |
+| ~SPC h d d~   | doom-debug-mode                  |
+| ~SPC h d f~   | doom/help-faq                    |
+| ~SPC h d h~   | doom/help                        |
+| ~SPC h d l~   | doom/help-search-load-path       |
+| ~SPC h d m~   | doom/help-modules                |
+| ~SPC h d n~   | doom/help-news                   |
+| ~SPC h d p c~ | doom/help-package-config         |
+| ~SPC h d p h~ | doom/help-package-homepage       |
+| ~SPC h d p p~ | doom/help-packages               |
+| ~SPC h d s~   | doom/help-search-headings        |
+| ~SPC h d t~   | doom/toggle-profiler             |
+| ~SPC h d u~   | doom/help-autodefs               |
+| ~SPC h d v~   | doom/version                     |
+| ~SPC h d x~   | doom/sandbox                     |
+| ~SPC h e~     | view-echo-area-messages          |
+| ~SPC h f~     | describe-function                |
+| ~SPC h f1~    | help-for-help                    |
+| ~SPC h g~     | describe-gnu-project             |
+| ~SPC h help~  | help-for-help                    |
+| ~SPC h i~     | info                             |
+| ~SPC h j~     | Summon the butler                |
+| ~SPC h k~     | describe-key                     |
+| ~SPC h l~     | view-lossage                     |
+| ~SPC h m~     | describe-mode                    |
+| ~SPC h n~     | doom/help-news                   |
+| ~SPC h o~     | describe-symbol                  |
+| ~SPC h p~     | doom/help-packages               |
+| ~SPC h q~     | help-quit                        |
+| ~SPC h r d~   | Doom doctor                      |
+| ~SPC h r e~   | doom/reload-env                  |
+| ~SPC h r f~   | doom/reload-font                 |
+| ~SPC h r p~   | doom/reload-packages             |
+| ~SPC h r r~   | doom/reload                      |
+| ~SPC h r s~   | Doom sync                        |
+| ~SPC h r t~   | doom/reload-theme                |
+| ~SPC h r u~   | Doom upgrade                     |
+| ~SPC h s~     | describe-syntax                  |
+| ~SPC h t~     | load-theme                       |
+| ~SPC h u~     | doom/help-autodefs               |
+| ~SPC h v~     | describe-variable                |
+| ~SPC h w~     | where-is                         |
+| ~SPC h x~     | describe-command                 |
+
+** SPC i: insert
+| Key     | What it does        |
+|---------+---------------------|
+| ~SPC i F~ | Current file path   |
+| ~SPC i G~ | Glyph as elisp form |
+| ~SPC i e~ | Emoji               |
+| ~SPC i f~ | Current file name   |
+| ~SPC i g~ | Nerd Font glyph     |
+| ~SPC i p~ | Evil ex path        |
+| ~SPC i r~ | From evil register  |
+| ~SPC i s~ | Snippet             |
+| ~SPC i u~ | Unicode             |
+| ~SPC i y~ | From clipboard      |
+
+** SPC k: kit: build, run, fix
+| Key       | What it does                             |
+|-----------+------------------------------------------|
+| ~SPC k .~   | Fix it: the quickfix at point            |
+| ~SPC k ?~   | Which kit, and why                       |
+| ~SPC k A~   | Disassemble at point                     |
+| ~SPC k B~   | Build a target                           |
+| ~SPC k D~   | Debug on the device                      |
+| ~SPC k E~   | Previous problem                         |
+| ~SPC k G~   | Generate the presets                     |
+| ~SPC k H~   | Other file of the project                |
+| ~SPC k I~   | Project status                           |
+| ~SPC k K~   | Pick the kit                             |
+| ~SPC k N~   | New Qt MVVM app                          |
+| ~SPC k P~   | Package                                  |
+| ~SPC k R~   | Run with arguments                       |
+| ~SPC k S~   | Run a project script                     |
+| ~SPC k SPC~ | Kit menu: what you do                    |
+| ~SPC k T~   | Test at point                            |
+| ~SPC k U~   | Deploy to the device                     |
+| ~SPC k Y~   | Kit family                               |
+| ~SPC k a~   | Assembly, live                           |
+| ~SPC k b~   | Build                                    |
+| ~SPC k c~   | Configure                                |
+| ~SPC k d~   | Debug                                    |
+| ~SPC k e~   | Next problem                             |
+| ~SPC k f~   | clang-format this buffer                 |
+| ~SPC k g F~ | clang-format the project                 |
+| ~SPC k g T~ | clang-tidy this file, apply the fixes    |
+| ~SPC k g p~ | clang-tidy the project                   |
+| ~SPC k g t~ | clang-tidy this file                     |
+| ~SPC k i~   | Install                                  |
+| ~SPC k j~   | Attach to a gdb server                   |
+| ~SPC k l b~ | Run the kit in a container               |
+| ~SPC k l c~ | Write .clangd                            |
+| ~SPC k l e~ | The server's log                         |
+| ~SPC k l i~ | Inlay hints                              |
+| ~SPC k l l~ | Link compile_commands.json into the root |
+| ~SPC k l r~ | Restart it                               |
+| ~SPC k l s~ | Switch server: clangd, ccls              |
+| ~SPC k m~   | The project's panel                      |
+| ~SPC k n~   | New project                              |
+| ~SPC k o~   | Copy the package out                     |
+| ~SPC k p B~ | Boards                                   |
+| ~SPC k p H~ | PlatformIO Home                          |
+| ~SPC k p L~ | Install a library                        |
+| ~SPC k p U~ | Update the packages                      |
+| ~SPC k p b~ | Build                                    |
+| ~SPC k p c~ | Clean                                    |
+| ~SPC k p d~ | Debug (gdb)                              |
+| ~SPC k p e~ | Environment                              |
+| ~SPC k p i~ | compile_commands.json                    |
+| ~SPC k p l~ | Devices                                  |
+| ~SPC k p m~ | Serial monitor                           |
+| ~SPC k p n~ | New project                              |
+| ~SPC k p t~ | Test                                     |
+| ~SPC k p u~ | Upload                                   |
+| ~SPC k r~   | Run                                      |
+| ~SPC k s~   | Default target                           |
+| ~SPC k t~   | Test                                     |
+| ~SPC k u~   | A test executable                        |
+| ~SPC k w~   | Write the setup to .dir-locals.el        |
+| ~SPC k x~   | Build, then run                          |
+| ~SPC k y~   | Build type                               |
+
+** SPC l: LLM: Claude, agents, gptel
+| Key       | What it does             |
+|-----------+--------------------------|
+| ~SPC l A~   | Agent shell: new/choose  |
+| ~SPC l C~   | Claude: continue         |
+| ~SPC l L~   | Log session to org       |
+| ~SPC l M~   | Claude: IDE menu         |
+| ~SPC l S~   | Claude settings.json     |
+| ~SPC l SPC~ | AI menu                  |
+| ~SPC l T~   | Claude: plain terminal   |
+| ~SPC l a~   | Agent shell (ACP)        |
+| ~SPC l b~   | Claude: switch buffer    |
+| ~SPC l c~   | Claude: start or focus   |
+| ~SPC l d~   | Claude: doctor           |
+| ~SPC l e~   | Claude: elisp tool       |
+| ~SPC l f~   | CLAUDE.md (project)      |
+| ~SPC l h~   | Install Emacs hooks      |
+| ~SPC l k~   | Claude: stop             |
+| ~SPC l l~   | Claude: sessions         |
+| ~SPC l n~   | New slash command        |
+| ~SPC l o~   | Claude: set model        |
+| ~SPC l p~   | Claude: prompt           |
+| ~SPC l r~   | Claude: resume session   |
+| ~SPC l s~   | Claude: send region      |
+| ~SPC l t~   | Claude: toggle window    |
+| ~SPC l v~   | Agent shell: compose     |
+| ~SPC l x~   | Agent shell: send region |
+
+** SPC n: notes
+| Key         | What it does                   |
+|-------------+--------------------------------|
+| ~SPC n *~     | Search notes for symbol        |
+| ~SPC n B~     | The bibliography               |
+| ~SPC n C~     | Cancel current org-clock       |
+| ~SPC n F~     | Browse notes                   |
+| ~SPC n G~     | Sync with the remote           |
+| ~SPC n N~     | Goto capture                   |
+| ~SPC n P~     | Card dashboard                 |
+| ~SPC n Q~     | org-ql search                  |
+| ~SPC n S~     | Search org agenda headlines    |
+| ~SPC n SPC~   | Notes menu                     |
+| ~SPC n Y~     | Org export to clipboard as RTF |
+| ~SPC n a~     | Org agenda                     |
+| ~SPC n b~     | Bibliographic notes            |
+| ~SPC n c~     | Toggle last org-clock          |
+| ~SPC n d I~   | Ideas                          |
+| ~SPC n d M~   | Maps (dired)                   |
+| ~SPC n d P~   | Browser capture setup          |
+| ~SPC n d a~   | AI sessions                    |
+| ~SPC n d b~   | Bootstrap ~/org                |
+| ~SPC n d d~   | Choose document                |
+| ~SPC n d h~   | Habits                         |
+| ~SPC n d i~   | Inbox                          |
+| ~SPC n d n~   | Snippets                       |
+| ~SPC n d p~   | Projects                       |
+| ~SPC n d r~   | Reading                        |
+| ~SPC n d s~   | Someday                        |
+| ~SPC n d t~   | Todo                           |
+| ~SPC n d w~   | Writing mode                   |
+| ~SPC n e~     | Org noter                      |
+| ~SPC n f~     | Find file in notes             |
+| ~SPC n g~     | Commit the notes               |
+| ~SPC n l~     | Org store link                 |
+| ~SPC n m~     | Tags search                    |
+| ~SPC n n~     | Org capture                    |
+| ~SPC n o~     | Active org-clock               |
+| ~SPC n p~     | Review the cards due           |
+| ~SPC n q~     | org-ql find                    |
+| ~SPC n r /~   | Search notes (consult)         |
+| ~SPC n r ?~   | How to work with roam          |
+| ~SPC n r B~   | Backlinks                      |
+| ~SPC n r F~   | Find ref                       |
+| ~SPC n r L~   | Forward links                  |
+| ~SPC n r R~   | Launch roam buffer             |
+| ~SPC n r U~   | Graph UI mode                  |
+| ~SPC n r a~   | Open random node               |
+| ~SPC n r d -~ | Find directory                 |
+| ~SPC n r d D~ | Capture date                   |
+| ~SPC n r d M~ | Capture tomorrow               |
+| ~SPC n r d T~ | Capture today                  |
+| ~SPC n r d Y~ | Capture yesterday              |
+| ~SPC n r d b~ | Goto previous note             |
+| ~SPC n r d d~ | Goto date                      |
+| ~SPC n r d f~ | Goto next note                 |
+| ~SPC n r d m~ | Goto tomorrow                  |
+| ~SPC n r d n~ | Capture today                  |
+| ~SPC n r d t~ | Goto today                     |
+| ~SPC n r d y~ | Goto yesterday                 |
+| ~SPC n r f~   | Find node                      |
+| ~SPC n r g~   | Show graph                     |
+| ~SPC n r h~   | Tasks hidden in notes          |
+| ~SPC n r i~   | Insert node                    |
+| ~SPC n r m~   | Map of a tag                   |
+| ~SPC n r n~   | Capture to node                |
+| ~SPC n r r~   | Toggle roam buffer             |
+| ~SPC n r s~   | Sync database                  |
+| ~SPC n r u~   | Graph UI (browser)             |
+| ~SPC n r v~   | Review the graph               |
+| ~SPC n s~     | Search notes                   |
+| ~SPC n t~     | Todo list                      |
+| ~SPC n v~     | View search                    |
+| ~SPC n w c~   | Check the grammar              |
+| ~SPC n w d~   | Done checking                  |
+| ~SPC n w f~   | Correct what it found          |
+| ~SPC n w w~   | What is wrong here             |
+| ~SPC n y~     | Org export to clipboard        |
+
+** SPC o: open
+| Key       | What it does                 |
+|-----------+------------------------------|
+| ~SPC o -~   | Dired, this file's directory |
+| ~SPC o A~   | Org agenda                   |
+| ~SPC o E~   | Open eshell here             |
+| ~SPC o F~   | Select frame                 |
+| ~SPC o P~   | Find file in project sidebar |
+| ~SPC o R~   | REPL (same window)           |
+| ~SPC o T~   | Open vterm here              |
+| ~SPC o a a~ | Agenda                       |
+| ~SPC o a i~ | Inbox                        |
+| ~SPC o a m~ | Tags search                  |
+| ~SPC o a n~ | Next actions                 |
+| ~SPC o a p~ | Projects                     |
+| ~SPC o a t~ | Todo list                    |
+| ~SPC o a v~ | View search                  |
+| ~SPC o a w~ | Weekly review                |
+| ~SPC o a x~ | Dashboard                    |
+| ~SPC o b~   | Default browser              |
+| ~SPC o d~   | Start a debugger             |
+| ~SPC o e~   | Toggle eshell popup          |
+| ~SPC o f~   | New frame                    |
+| ~SPC o l O~ | Org: set properties          |
+| ~SPC o l a~ | Add text to context          |
+| ~SPC o l e~ | Explain                      |
+| ~SPC o l f~ | Add file to context          |
+| ~SPC o l l~ | Open gptel                   |
+| ~SPC o l m~ | Open gptel menu              |
+| ~SPC o l o~ | Org: set topic               |
+| ~SPC o l r~ | Rewrite                      |
+| ~SPC o l s~ | Send to gptel                |
+| ~SPC o p~   | Project sidebar              |
+| ~SPC o r~   | REPL                         |
+| ~SPC o t~   | Toggle vterm popup           |
+
+** SPC p: project
+| Key     | What it does                |
+|---------+-----------------------------|
+| ~SPC p !~ | Run cmd in project root     |
+| ~SPC p &~ | Async cmd in project root   |
+| ~SPC p .~ | Browse project              |
+| ~SPC p >~ | A file of another project   |
+| ~SPC p C~ | Repeat last command         |
+| ~SPC p D~ | Discover projects in folder |
+| ~SPC p F~ | Find file in other project  |
+| ~SPC p R~ | Run project                 |
+| ~SPC p T~ | Test project                |
+| ~SPC p X~ | Switch to scratch buffer    |
+| ~SPC p a~ | Add new project             |
+| ~SPC p b~ | Switch to project buffer    |
+| ~SPC p c~ | Compile in project          |
+| ~SPC p d~ | Remove known project        |
+| ~SPC p e~ | Edit project .dir-locals    |
+| ~SPC p f~ | Find file in project        |
+| ~SPC p g~ | Configure project           |
+| ~SPC p i~ | Invalidate project cache    |
+| ~SPC p k~ | Kill project buffers        |
+| ~SPC p o~ | Find sibling file           |
+| ~SPC p p~ | Switch project              |
+| ~SPC p r~ | Find recent project files   |
+| ~SPC p s~ | Save project files          |
+| ~SPC p t~ | Project TODOs               |
+| ~SPC p x~ | Pop up scratch buffer       |
+
+** SPC q: quit/session
+| Key     | What it does               |
+|---------+----------------------------|
+| ~SPC q F~ | Clear current frame        |
+| ~SPC q K~ | Kill Emacs (and daemon)    |
+| ~SPC q L~ | Restore session from file  |
+| ~SPC q Q~ | Quit Emacs without saving  |
+| ~SPC q R~ | Restart Emacs              |
+| ~SPC q S~ | Save session to file       |
+| ~SPC q d~ | Restart emacs server       |
+| ~SPC q f~ | Delete frame               |
+| ~SPC q l~ | Restore last session       |
+| ~SPC q q~ | Quit Emacs                 |
+| ~SPC q r~ | Restart & restore Emacs    |
+| ~SPC q s~ | Quick save current session |
+
+** SPC s: search
+| Key       | What it does                        |
+|-----------+-------------------------------------|
+| ~SPC s B~   | Search all open buffers             |
+| ~SPC s D~   | Search other directory              |
+| ~SPC s F~   | Find any file in project            |
+| ~SPC s I~   | Jump to symbol in open buffers      |
+| ~SPC s K~   | Look up in all docsets              |
+| ~SPC s L~   | Jump to link                        |
+| ~SPC s O~   | Look up online (w/ prompt)          |
+| ~SPC s P~   | Search other project                |
+| ~SPC s R~   | Replace in the project              |
+| ~SPC s S~   | Search buffer for thing at point    |
+| ~SPC s SPC~ | Search and replace menu             |
+| ~SPC s T~   | Thesaurus                           |
+| ~SPC s b~   | Search buffer                       |
+| ~SPC s d~   | Search current directory            |
+| ~SPC s e~   | Search .emacs.d                     |
+| ~SPC s f~   | Find a file by name, here and below |
+| ~SPC s i~   | Jump to symbol                      |
+| ~SPC s j~   | Jump list                           |
+| ~SPC s k~   | Look up in local docsets            |
+| ~SPC s l~   | Jump to visible link                |
+| ~SPC s m~   | Jump to bookmark                    |
+| ~SPC s o~   | Look up online                      |
+| ~SPC s p~   | Search project                      |
+| ~SPC s r~   | Jump to mark                        |
+| ~SPC s s~   | Search buffer                       |
+| ~SPC s t~   | Dictionary                          |
+| ~SPC s u~   | Undo history                        |
+
+** SPC t: toggle
+| Key     | What it does                 |
+|---------+------------------------------|
+| ~SPC t B~ | Who and when, on this line   |
+| ~SPC t F~ | Frame fullscreen             |
+| ~SPC t G~ | Glyph test buffer            |
+| ~SPC t I~ | Indent style                 |
+| ~SPC t S~ | Subword (camelCase)          |
+| ~SPC t T~ | Transparency                 |
+| ~SPC t Z~ | Zen mode (fullscreen)        |
+| ~SPC t a~ | Corfu auto-complete          |
+| ~SPC t b~ | Big mode                     |
+| ~SPC t c~ | Fill Column Indicator        |
+| ~SPC t d~ | Diff Highlights (Git Gutter) |
+| ~SPC t f~ | Flymake                      |
+| ~SPC t g~ | Evil goggles                 |
+| ~SPC t h~ | Where you are, in the header |
+| ~SPC t i~ | Indent guides                |
+| ~SPC t l~ | Line numbers                 |
+| ~SPC t m~ | Minimap                      |
+| ~SPC t o~ | The outline of this buffer   |
+| ~SPC t p~ | org-tree-slide mode          |
+| ~SPC t r~ | Read-only mode               |
+| ~SPC t s~ | Spell checker                |
+| ~SPC t t~ | Pomodoro timer               |
+| ~SPC t v~ | Visible mode                 |
+| ~SPC t w~ | Soft line wrapping           |
+| ~SPC t z~ | Zen mode                     |
+
+** SPC w: window
+| Key           | What it does                      |
+|---------------+-----------------------------------|
+| ~SPC w +~       | evil-window-increase-height       |
+| ~SPC w -~       | evil-window-decrease-height       |
+| ~SPC w 0~       | winum-select-window-0-or-10       |
+| ~SPC w 1~       | winum-select-window-1             |
+| ~SPC w 2~       | winum-select-window-2             |
+| ~SPC w 3~       | winum-select-window-3             |
+| ~SPC w 4~       | winum-select-window-4             |
+| ~SPC w 5~       | winum-select-window-5             |
+| ~SPC w 6~       | winum-select-window-6             |
+| ~SPC w 7~       | winum-select-window-7             |
+| ~SPC w 8~       | winum-select-window-8             |
+| ~SPC w 9~       | winum-select-window-9             |
+| ~SPC w :~       | evil-ex                           |
+| ~SPC w <~       | evil-window-decrease-width        |
+| ~SPC w =~       | balance-windows                   |
+| ~SPC w >~       | evil-window-increase-width        |
+| ~SPC w C-=~     | balance-windows                   |
+| ~SPC w C-S-h~   | evil-window-move-far-left         |
+| ~SPC w C-S-j~   | evil-window-move-very-bottom      |
+| ~SPC w C-S-k~   | evil-window-move-very-top         |
+| ~SPC w C-S-l~   | evil-window-move-far-right        |
+| ~SPC w C-S-r~   | evil-window-rotate-upwards        |
+| ~SPC w C-S-s~   | evil-window-split                 |
+| ~SPC w C-S-w~   | ace-swap-window                   |
+| ~SPC w C-_~     | evil-window-set-height            |
+| ~SPC w C-b~     | evil-window-bottom-right          |
+| ~SPC w C-c~     | ace-delete-window                 |
+| ~SPC w C-down~  | evil-window-down                  |
+| ~SPC w C-f~     | ffap-other-window                 |
+| ~SPC w C-h~     | evil-window-left                  |
+| ~SPC w C-j~     | evil-window-down                  |
+| ~SPC w C-k~     | evil-window-up                    |
+| ~SPC w C-l~     | evil-window-right                 |
+| ~SPC w C-left~  | evil-window-left                  |
+| ~SPC w C-n~     | evil-window-new                   |
+| ~SPC w C-o~     | delete-other-windows              |
+| ~SPC w C-p~     | evil-window-mru                   |
+| ~SPC w C-q~     | evil-quit                         |
+| ~SPC w C-r~     | winner-redo                       |
+| ~SPC w C-right~ | evil-window-right                 |
+| ~SPC w C-s~     | evil-window-split                 |
+| ~SPC w C-t~     | evil-window-top-left              |
+| ~SPC w C-u~     | winner-undo                       |
+| ~SPC w C-up~    | evil-window-up                    |
+| ~SPC w C-v~     | evil-window-vsplit                |
+| ~SPC w C-w~     | other-window                      |
+| ~SPC w C-x~     | evil-window-exchange              |
+| ~SPC w H~       | +evil/window-move-left            |
+| ~SPC w J~       | +evil/window-move-down            |
+| ~SPC w K~       | +evil/window-move-up              |
+| ~SPC w L~       | +evil/window-move-right           |
+| ~SPC w R~       | evil-window-rotate-upwards        |
+| ~SPC w S~       | +evil/window-split-and-follow     |
+| ~SPC w T~       | tear-off-window                   |
+| ~SPC w V~       | +evil/window-vsplit-and-follow    |
+| ~SPC w W~       | evil-window-prev                  |
+| ~SPC w _~       | evil-window-set-height            |
+| ~SPC w b~       | evil-window-bottom-right          |
+| ~SPC w c~       | evil-window-delete                |
+| ~SPC w d~       | evil-window-delete                |
+| ~SPC w down~    | evil-window-down                  |
+| ~SPC w f~       | ffap-other-window                 |
+| ~SPC w g T~     | tab-bar-switch-to-prev-tab        |
+| ~SPC w g t~     | evil-tab-next                     |
+| ~SPC w h~       | evil-window-left                  |
+| ~SPC w j~       | evil-window-down                  |
+| ~SPC w k~       | evil-window-up                    |
+| ~SPC w l~       | evil-window-right                 |
+| ~SPC w left~    | evil-window-left                  |
+| ~SPC w m m~     | doom/window-maximize-buffer       |
+| ~SPC w m s~     | doom/window-maximize-horizontally |
+| ~SPC w m v~     | doom/window-maximize-vertically   |
+| ~SPC w n~       | evil-window-new                   |
+| ~SPC w o~       | doom/window-enlargen              |
+| ~SPC w p~       | evil-window-mru                   |
+| ~SPC w q~       | evil-quit                         |
+| ~SPC w r~       | evil-window-rotate-downwards      |
+| ~SPC w right~   | evil-window-right                 |
+| ~SPC w s~       | evil-window-split                 |
+| ~SPC w t~       | evil-window-top-left              |
+| ~SPC w u~       | winner-undo                       |
+| ~SPC w up~      | evil-window-up                    |
+| ~SPC w v~       | evil-window-vsplit                |
+| ~SPC w w~       | evil-window-next                  |
+| ~SPC w x~       | evil-window-exchange              |
+| ~SPC w /~       | evil-window-set-width             |
+# END GENERATED-KEYS
+
+* Reference: this config's commands
+Everything this config adds, with what its docstring says and where it is
+bound.
+# BEGIN GENERATED-COMMANDS
+
+** Core
+- ~+core/build-panel~ (~SPC k m~) :: The panel of what this project's build
+  depends on.
+- ~+core/copy-file-contents~ (~y t~) :: Copy the whole text of this file to
+  the kill ring, without opening it.
+- ~+core/copy-menu~ (~SPC f k~) :: Copy something about this file; each line
+  shows what you would get.
+- ~+core/debug~ (~SPC k d~) :: Debug what this project builds.
+- ~+core/dired-create~ (~SPC m n~) :: Make NAME here: a directory when it
+  ends in a slash, else an empty file.
+- ~+core/dired-duplicate~ (~y d~) :: Make a copy of the marked files beside
+  them, named NAME copy.EXT.
+- ~+core/dired-fold-cycle~ (~S-TAB~) :: Open every directory in this listing
+  one level, then all of them all the way down, then shut them all: the
+  three steps S-TAB takes in an Org document.
+- ~+core/dired-open-marked~ (~SPC m o~) :: Open every marked file, or the
+  one under the cursor, each in a buffer.
+- ~+core/dired-search~ (~SPC m f~) :: Find files below the cursor's
+  directory, every one of WORDS in their path.
+- ~+core/dired-subtree-cycle~ (~TAB~) :: Open the directory under the
+  cursor, then all the way down, then shut it: the three steps TAB takes on
+  a heading in an Org document.
+- ~+core/dirvish-directory~ (~SPC f d~) :: The file manager on DIR, asked,
+  with the preview pane: Doom's find directory key, on dirvish.
+- ~+core/dirvish-here~ (~SPC o -~) :: The file manager on this file's
+  directory, cursor on the file, with the preview pane.
+- ~+core/dirvish-other-pane~ (~SPC m 2~) :: A second listing beside this
+  one, on DIR or the same directory: the two panes of a file manager.
+- ~+core/doom-doctor~ (~SPC h r d~) :: Run 'doom doctor' in a compilation
+  buffer.
+- ~+core/doom-sync~ (~SPC h r s~) :: Run 'doom sync --aot' in a compilation
+  buffer, then offer to restart.
+- ~+core/doom-upgrade~ (~SPC h r u~) :: Update Doom and its packages, then
+  rebuild them.
+- ~+core/files-from-clipboard~ (~y v~) :: Copy the files on the system
+  clipboard into this directory.
+- ~+core/files-to-clipboard~ (~y c~) :: Put the marked files, or this file,
+  on the system clipboard as files.
+- ~+core/find-any-file~ (~SPC s F~) :: Find a file anywhere under the
+  project, ignored ones included: build output, generated files, untracked
+  assets.
+- ~+core/find-file-in-other-project~ (~SPC p >~) :: Choose another project,
+  then a file in it.
+- ~+core/image-fit~ (~f~) :: Fill the window with the picture, the size it
+  opens at.
+- ~+core/image-original~ (~1~) :: The picture at the size it really is.
+- ~+core/image-pan-down~ (~j~) :: Move the picture up under the window.
+- ~+core/image-pan-left~ (~h~) :: Move the picture right under the window.
+- ~+core/image-pan-right~ (~l~) :: Move the picture left under the window,
+  '+core-image-pan-step' at a time.
+- ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
+- ~+core/new-project~ (~SPC k n~) :: Start a project, of any kind a module
+  here can make.
+- ~+core/open-externally~ (~SPC f x~) :: Open FILE with the desktop's
+  default application.
+- ~+core/project-todos~ (~SPC p t~) :: Search the project for TODO, FIXME,
+  HACK, NOTE, REVIEW, BUG and XXX.
+- ~+core/quick-access-add~ (~SPC m b~) :: Add the directory here to the b
+  menu, under KEY, described as DESC, for this session and the next ones.
+- ~+core/quick-access-remove~ (~SPC m B~) :: Drop an entry added with
+  '+core/quick-access-add' from the b menu.
+- ~+core/replace-in-buffer~ :: Replace through this buffer, with the menu's
+  options: a literal string with F, whole words with w, either case with i.
+- ~+core/replace-in-cwd~ :: Replace through this directory and below.
+- ~+core/replace-in-other-cwd~ :: Replace through a directory you pick.
+- ~+core/replace-in-other-project~ :: Replace through another project.
+- ~+core/replace-in-project~ (~SPC s R~) :: Replace through the project, in
+  the files that hold the text.
+- ~+core/replace-menu~ :: Replace, in the same places the search menu looks.
+- ~+core/restore-from-trash~ (~SPC m t~) :: Put the marked files, deleted
+  earlier, back where they came from.
+- ~+core/run~ (~SPC k r~) :: Run what this project builds, however this kind
+  of project is run.
+- ~+core/search-menu~ (~SPC s SPC~) :: Find text, and change it, with what
+  to look for set before you look.
+- ~+core/toggle-transparency~ (~SPC t T~) :: Toggle background transparency
+  of this frame.
+- ~+core/trash~ (~SPC f t~) :: The trash, in the file manager: what was
+  deleted, newest first.
+- ~+core/yank-code-block~ :: Copy the region, or the whole buffer, as a
+  fenced code block.
+- ~+core/yank-file-directory~ (~SPC f N~) :: Copy the absolute directory
+  this file is in.
+- ~+core/yank-file-line~ (~SPC f L~) :: Copy path:line, or path:first-last
+  with a region, relative to the project.
+- ~+core/yank-file-name~ (~SPC f n~) :: Copy the name of this file, without
+  its directory.
+- ~+core/yank-file-path~ (~SPC f a~) :: Copy the absolute path of this file,
+  with ~ expanded.
+- ~+core/yank-project-path~ :: Copy the path of this file relative to the
+  project root.
+- ~+core/yank-symbol~ :: Copy the symbol under the cursor.
+
+** Container
+- ~+container/forget~ :: Forget what was found about the containers and look
+  again.
+
+** Interface
+- ~+ui/glyph-test~ (~SPC t G~) :: Open a buffer that renders icons, emoji,
+  symbols and operators.
+- ~+ui/insert-glyph~ (~SPC i g~) :: Insert a Nerd Font glyph chosen with
+  completion across all icon sets.
+- ~+ui/insert-glyph-form~ (~SPC i G~) :: Insert a form like
+  (nerd-icons-mdicon "nf-md-robot") for a chosen glyph.
+
+** C and C++
+- ~+cpp/assembly~ (~SPC k a~) :: Show the assembly this file compiles to,
+  beside it, and keep it fresh.
+- ~+cpp/build-and-run~ (~SPC k x~) :: Build the project and run it when the
+  build succeeded.
+- ~+cpp/build-type~ (~SPC k y~) :: Build as TYPE from now on: Debug,
+  Release, RelWithDebInfo or MinSizeRel.
+- ~+cpp/cmake-clean~ :: Build the clean target.
+- ~+cpp/cmake-clear-variable~ :: Drop the override on cache variable NAME.
+- ~+cpp/cmake-configure-fresh~ :: Configure from scratch, dropping the
+  existing CMake cache.
+- ~+cpp/cmake-list-variables~ :: Show the cache variables this project
+  overrides.
+- ~+cpp/cmake-menu~ :: The settings a CMake build depends on, and the files
+  behind them.
+- ~+cpp/cmake-rebuild~ :: Clean the build directory, then build it again.
+- ~+cpp/cmake-set-variable~ :: Set cache variable NAME to VALUE for the next
+  configure.
+- ~+cpp/debug~ (~SPC m d~) :: Debug the project's executable where the kit
+  runs.
+- ~+cpp/debug-on-device~ (~SPC k D~) :: Debug the project's executable on
+  the kit's device.
+- ~+cpp/debug-or-continue~ (~<f5>~) :: Continue the running debug session,
+  or start one.
+- ~+cpp/debug-remote~ (~SPC k j~) :: Attach to a gdb server already
+  listening at TARGET, "host:port": gdbserver on a board, the server a
+  PlatformIO board is debugged through, qemu started with -g.
+- ~+cpp/debug-stop-device~ :: Stop the gdbserver started on the device, and
+  the session with it.
+- ~+cpp/deploy~ (~SPC k U~) :: Deploy the build to the kit's device the way
+  Qt Creator's steps do: the app is stopped there, the build is installed
+  into a staging directory under the build directory with the prefix it is
+  configured for, and that prefix is synced to the device with rsync.
+- ~+cpp/find-declaration~ (~SPC m D~) :: Jump to the declaration of the
+  symbol at point.
+- ~+cpp/forget-kits~ :: Read the kits again from the disk on the next
+  command, and drop what projection cached for the project.
+- ~+cpp/format-buffer~ (~SPC k f~) :: Run clang-format on the buffer, or on
+  BEG to END.
+- ~+cpp/format-project~ (~SPC k g F~) :: Run clang-format over every tracked
+  C and C++ file in the project.
+- ~+cpp/install-codelldb~ :: Download codelldb, the debugger for Rust, into
+  Doom's debug-adapters.
+- ~+cpp/kit-family~ (~SPC k Y~) :: Build with FAMILY from now on, keeping
+  the build type: the other Qt Creator kit of the project, the SDK one
+  against the PC one, or a plain directory against the presets.
+- ~+cpp/link-compile-commands~ (~SPC k l l~) :: Link the kit's
+  compile_commands.json into the project root.
+- ~+cpp/menu~ (~SPC k SPC~) :: What the project can do: build, run, fix, and
+  the tools.
+- ~+cpp/new-project~ :: Create project NAME from template KIND in DIR, then
+  open it.
+- ~+cpp/new-qt-project~ (~SPC k N~) :: Create the Qt Quick MVVM project NAME
+  in DIR.
+- ~+cpp/next-problem~ (~SPC k e~) :: Go to the next problem in the buffer
+  and show it; round at the end.
+- ~+cpp/open-cmake-cache~ :: Open the project's CMakeCache.txt.
+- ~+cpp/open-compile-commands~ :: Open the compilation database the language
+  server reads.
+- ~+cpp/open-dir-locals~ :: Open the project's .dir-locals.el, the setup as
+  it was written.
+- ~+cpp/open-presets~ :: Open CMakePresets.json, or CMakeUserPresets.json
+  with a prefix argument.
+- ~+cpp/package~ (~SPC k P~) :: Build TARGET, the one that packages this
+  project, where the kit runs: an hpkg target of the Horizon SDK, CMake's
+  own package, or whatever the project calls it.
+- ~+cpp/package-copy~ (~SPC k o~) :: Copy FILE, the newest package the kit's
+  build directory holds unless another is chosen, into DIR, where this
+  project's packages go, asked the first time and kept in .dir-locals.el.
+- ~+cpp/previous-problem~ (~SPC k E~) :: Go to the previous problem in the
+  buffer and show it; round at the start.
+- ~+cpp/project-status~ (~SPC k I~) :: Report how this project is set up and
+  what is missing.
+- ~+cpp/quickfix~ (~SPC k .~) :: Apply the server's quick fix for the
+  problem at point.
+- ~+cpp/reconfigure-and-reindex~ :: Configure, then point the language
+  server at the fresh index.
+- ~+cpp/restart-lsp~ (~SPC k l r~) :: Restart this buffer's language server
+  afresh, or start one.
+- ~+cpp/run~ (~SPC m r~) :: Run one of the project's executables, passing it
+  ARGS.
+- ~+cpp/run-on-device~ :: Run the project's executable on the kit's device,
+  over ssh, with ARGS: the installed one, at the path the build's install
+  step puts it, as Qt Creator's remote run does.
+- ~+cpp/run-script~ (~SPC k S~) :: Run SCRIPT, one of the project's own,
+  with ARGS, where the kit runs and with its SDK environment: a deploy
+  script, a build_arm.sh, a tester.
+- ~+cpp/run-with-args~ (~SPC k R~) :: Run a project executable with ARGS.
+- ~+cpp/set-build-target~ (~SPC k s~) :: Build TARGET by default from now
+  on.
+- ~+cpp/set-container~ (~SPC k l b~) :: Run this project's kit inside the
+  distrobox NAME, from now on.
+- ~+cpp/set-jobs~ :: Build with JOBS parallel jobs.
+- ~+cpp/set-kit~ (~SPC k K~) :: Build this project with the kit called NAME,
+  from now on.
+- ~+cpp/set-lsp-server~ (~SPC k l s~) :: Switch this buffer to SERVER,
+  clangd or ccls, and reconnect.
+- ~+cpp/set-run-args~ :: Set the ARGS every run of this project passes to
+  the executable.
+- ~+cpp/set-run-target~ :: Run the executable target NAME with SPC k r, from
+  now on.
+- ~+cpp/show-kit~ (~SPC k ?~) :: Say which kit is in use and why.
+- ~+cpp/test-at-point~ (~SPC k T~) :: Run only the test point is inside.
+- ~+cpp/test-binary~ (~SPC k u~) :: Run a whole test executable, choosing it
+  when there are several.
+- ~+cpp/tidy-file~ (~SPC k g t~) :: Run clang-tidy on this buffer's file,
+  where the kit runs.
+- ~+cpp/tidy-project~ (~SPC k g p~) :: Run clang-tidy over the project
+  through run-clang-tidy, where the kit runs, on the kit's compilation
+  database.
+- ~+cpp/write-clangd-config~ (~SPC k l c~) :: Write a .clangd file that
+  points clangd at DB-DIR.
+- ~+cpp/write-dir-locals~ (~SPC k w~) :: Write the project's setup as it
+  stands into .dir-locals.el and open the file: every kit, written down
+  whole ('+cpp-kits'), then the kit in use, where it runs, the language
+  server, the build target and configuration, the run target and its
+  arguments, the cache overrides, the package target and where packages go,
+  the PlatformIO environment.
+- ~+cpp/write-presets~ (~SPC k G~) :: Write the project's kits as CMake
+  presets into FILE, by default CMakeUserPresets.json, since the tool sets
+  are this machine's, and open it: a configure preset per kit, its
+  directory, generator, cache variables (the tool set as -D arguments, Qt
+  Creator's when it has them, else read off the cache) and environment, a
+  build preset with the targets the kit builds, a test preset.
+
+** PlatformIO
+- ~+pio/boards~ (~SPC k p B~) :: Look up a BOARD and insert or copy its id.
+- ~+pio/build~ (~SPC k p b~) :: Build the firmware.
+- ~+pio/clean~ (~SPC k p c~) :: Delete the build output.
+- ~+pio/compiledb~ (~SPC k p i~) :: Write compile_commands.json so the
+  language server sees the flags.
+- ~+pio/debug~ (~SPC k p d~) :: Debug the firmware with gdb, through
+  PlatformIO.
+- ~+pio/device-list~ (~SPC k p l~) :: List the serial devices that are
+  plugged in.
+- ~+pio/home~ (~SPC k p H~) :: Start PlatformIO Home and open it in the
+  browser.
+- ~+pio/lib-install~ (~SPC k p L~) :: Install library SPEC into the project.
+- ~+pio/monitor~ (~SPC k p m~) :: Open the serial monitor.
+- ~+pio/new-project~ (~SPC k p n~) :: Start a PlatformIO project in DIR for
+  BOARD, using FRAMEWORK.
+- ~+pio/set-env~ (~SPC k p e~) :: Build for environment ENV, or the project
+  default when it is empty.
+- ~+pio/test~ (~SPC k p t~) :: Run the project's tests on the board.
+- ~+pio/update~ (~SPC k p U~) :: Update this project's platforms, tools and
+  libraries.
+- ~+pio/upload~ (~SPC k p u~) :: Build the firmware and flash it to the
+  board.
+
+** Rust
+- ~+rust/bench~ :: Run the project's benchmarks.
+- ~+rust/build~ :: Build the project with the flags it is set to.
+- ~+rust/check~ (~SPC m k c~) :: Check the project without building it,
+  which is the fast one.
+- ~+rust/clean~ :: Remove what the build made.
+- ~+rust/clippy~ (~SPC m k l~) :: Run clippy over the project.
+- ~+rust/clippy-fix~ (~SPC m k L~) :: Run clippy and apply the fixes it is
+  sure of.
+- ~+rust/debug~ :: Debug what this project builds, with codelldb.
+- ~+rust/doc~ (~SPC m k d~) :: Build the project's documentation and open
+  it.
+- ~+rust/expand~ (~SPC m k e~) :: Show the file with its macros expanded, if
+  cargo-expand is installed.
+- ~+rust/menu~ :: What a cargo build depends on, and the files behind it.
+- ~+rust/new-project~ :: Start cargo project NAME of KIND in DIR, and open
+  it.
+- ~+rust/open-cargo-toml~ (~SPC m k v~) :: Open the project's Cargo.toml.
+- ~+rust/project-status~ :: Say what is set up here and what is missing.
+- ~+rust/run~ :: Run what the project builds, with the arguments it is set
+  to.
+- ~+rust/run-with-args~ :: Run the project once with ARGS, without writing
+  them down.
+- ~+rust/set-features~ :: Choose the features to build with, kept in
+  .dir-locals.el.
+- ~+rust/set-member~ :: Build only workspace member MEMBER, or the whole
+  workspace.
+- ~+rust/set-no-default-features~ :: Build with no default features, or back
+  to the defaults.
+- ~+rust/set-profile~ :: Build with PROFILE from now on, kept in
+  .dir-locals.el.
+- ~+rust/set-run-args~ :: Keep ARGS for the program, so SPC k r passes them
+  every time.
+- ~+rust/set-target~ :: Build for TARGET from now on.
+- ~+rust/test~ :: Run the project's tests with the flags it is set to.
+- ~+rust/test-at-point~ (~SPC m k u~) :: Run the test the cursor is in, and
+  no other.
+- ~+rust/toggle-profile~ :: Swap between dev and release, the two anyone
+  switches between.
+- ~+rust/update~ :: Update the locked dependencies.
+
+** Pascal
+- ~+pascal/build~ :: Build the project with what it is set to.
+- ~+pascal/build-and-run~ (~SPC m k x~) :: Build, and run it when the build
+  worked.
+- ~+pascal/clean~ (~SPC m k C~) :: Remove what the build made.
+- ~+pascal/debug~ :: Debug what this project builds, with gdb.
+- ~+pascal/menu~ :: What a Pascal build depends on, and the files behind it.
+- ~+pascal/new-project~ :: Start Pascal project NAME of KIND in DIR, and
+  open it.
+- ~+pascal/open-project-file~ (~SPC m k v~) :: Open the .lpi, .lpr or .dproj
+  this project is built from.
+- ~+pascal/project-status~ (~SPC m k I~) :: Say what is set up here and what
+  is missing.
+- ~+pascal/run~ :: Run what the project builds, with the arguments it is set
+  to.
+- ~+pascal/run-with-args~ :: Run the program once with ARGS, without writing
+  them down.
+- ~+pascal/set-build-mode~ (~SPC m k y~) :: Build with MODE from now on,
+  kept in .dir-locals.el.
+- ~+pascal/set-main~ (~SPC m k s~) :: Build FILE from now on, for a project
+  that holds more than one program.
+- ~+pascal/set-run-args~ :: Keep ARGS for the program, so SPC k r passes
+  them every time.
+- ~+pascal/set-target~ :: Build for TARGET, written CPU-OS.
+- ~+pascal/set-widgetset~ (~SPC m k w~) :: Build the LCL against WIDGETSET.
+
+** Web
+- ~+web/build~ :: Build the project.
+- ~+web/check~ (~SPC m k c~) :: Check the types without building:
+  svelte-check, or tsc.
+- ~+web/debug~ :: Debug the project: the Electron main process, or node.
+- ~+web/dev~ (~SPC m k r~) :: Start the project's dev server, and leave it
+  running.
+- ~+web/install~ (~SPC m k i~) :: Install what the manifest asks for.
+- ~+web/lint~ (~SPC m k l~) :: Run the project's linter.
+- ~+web/menu~ :: What this node project is built with, and what it can be
+  told to do.
+- ~+web/new-project~ :: Start node project NAME of KIND in DIR, and open it.
+- ~+web/open-manifest~ (~SPC m k p~) :: Open the project's package.json.
+- ~+web/outdated~ :: Say which dependencies have moved on.
+- ~+web/package~ :: Package the Electron application for TARGET.
+- ~+web/preview~ (~SPC m k v~) :: Serve what the build made, as it will be
+  served for real.
+- ~+web/project-status~ :: Say what is installed and what this project is.
+- ~+web/run-script~ (~SPC m k s~) :: Run any SCRIPT the manifest defines.
+- ~+web/set-manager~ :: Build with MANAGER from now on, kept in
+  .dir-locals.el.
+- ~+web/test~ :: Run the project's tests.
+- ~+web/test-watch~ :: Run the tests and keep running them as the files
+  change.
+
+** Git
+- ~+git/branch-from-main~ :: Create the branch NAME from the main branch and
+  switch to it.
+- ~+git/branches~ (~SPC g n~) :: Branches: make one, work with one, compare
+  it with main.
+- ~+git/commit-conventional~ (~C-c C-t~) :: Start the commit subject with
+  TYPE(SCOPE): the shape the house rule and bin/check-commit-msg want.
+- ~+git/commit-set-author~ :: Give COMMIT, at point or asked, the AUTHOR, as
+  Name <email>.
+- ~+git/commit-set-date~ :: Give COMMIT, at point or asked, the author and
+  committer DATE.
+- ~+git/commit-split~ :: Take COMMIT, at point or asked, apart: its changes
+  come back unstaged, to be staged and committed in pieces.
+- ~+git/conflicts~ (~SPC g x~) :: What to do with a conflict: which side to
+  keep, and where the next one is.
+- ~+git/delete-merged~ :: Delete every local branch already merged into
+  main, after showing the list.
+- ~+git/diff-main~ :: The diff between main and this branch: what this
+  branch changes.
+- ~+git/history~ (~SPC g h~) :: Rewrite history: the commit at point, or
+  HEAD, or a range.
+- ~+git/log-since-main~ :: The commits of this branch that main does not
+  have.
+- ~+git/menu~ (~SPC g SPC~) :: Git: every day, the menus, the repositories,
+  the tools.
+- ~+git/next-conflict~ :: The next conflict in this file, or the next file
+  that has one.
+- ~+git/previous-conflict~ :: The conflict before this one.
+- ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
+  commit again differently.
+
+** Notes
+- ~+notes/align-tables~ (~SPC m b A~) :: Widen every table in this buffer
+  until each column holds its text.
+- ~+notes/bootstrap~ (~SPC n d b~) :: Create 'org-directory', its
+  subdirectories, any missing document and the bibliography.
+- ~+notes/commit~ (~SPC n g~) :: Commit the notes with MESSAGE, or a
+  timestamp when none is given.
+- ~+notes/dashboard~ (~SPC o a x~) :: Today, habits and every open task
+  grouped by state.
+- ~+notes/inbox~ (~SPC o a i~) :: Tasks still sitting in the inbox.
+- ~+notes/init-repo~ :: Turn the notes into a git repository and commit what
+  is there.
+- ~+notes/install-protocol-handler~ (~SPC n d P~) :: Register
+  org-protocol:// with the desktop, so the browser can capture.
+- ~+notes/log~ :: Show what changed in the notes lately.
+- ~+notes/menu~ (~SPC n SPC~) :: Notes and tasks: documents, capture,
+  agenda, roam, the same keys as SPC n.
+- ~+notes/next-actions~ (~SPC o a n~) :: Every NEXT task.
+- ~+notes/open-document~ (~SPC n d d~) :: Open document NAME, creating it
+  from its template when missing.
+- ~+notes/projects~ (~SPC o a p~) :: Every PROJ task.
+- ~+notes/protocol-bookmarklets~ :: Show the bookmarklets that send the
+  current page to Emacs.
+- ~+notes/roam-extract~ (~SPC m m e~) :: Move the subtree at point into its
+  own note and leave a link where it was.
+- ~+notes/roam-guide~ (~SPC n r ?~) :: Open the guide: how to work with the
+  note graph on purpose.
+- ~+notes/roam-map-of-content~ (~SPC n r m~) :: Write a map of the notes
+  tagged TAG, then open it.
+- ~+notes/roam-review~ (~SPC n r v~) :: Show the notes that need attention:
+  no links, no tags, barely written.
+- ~+notes/roam-todo-files~ (~SPC n r h~) :: List the roam notes that hold a
+  task.
+- ~+notes/sync~ (~SPC n G~) :: Commit the notes, then pull and push them, in
+  the background.
+- ~+notes/weekly-review~ (~SPC o a w~) :: The week, plus waiting, projects
+  and unscheduled tasks.
+- ~+notes/writing-mode~ (~SPC n d w~) :: Toggle prose editing: zen mode and
+  soft wrapping.
+
+** AI
+- ~+ai/claude-doctor~ (~SPC l d~) :: Run 'claude doctor' in a vterm.
+- ~+ai/claude-leave~ (~C-c C-o~) :: Go back to the window you came from;
+  Claude keeps its window.
+- ~+ai/claude-mcp-list~ :: List the MCP servers the claude CLI knows about.
+- ~+ai/claude-terminal~ (~SPC l T~) :: Run claude in a terminal, without the
+  Emacs bridge.
+- ~+ai/install-claude-hooks~ (~SPC l h~) :: Tell Claude Code to notify Emacs
+  when it stops or needs input.
+- ~+ai/log-session~ (~SPC l L~) :: Write a session note into ~/org/ai.org.
+- ~+ai/menu~ (~SPC l SPC~) :: AI hub: Claude Code IDE, agent shells, gptel
+  and agent management.
+- ~+ai/new-slash-command~ (~SPC l n~) :: Create the slash command NAME
+  (.claude/commands/NAME.md) with DESCRIPTION.
+- ~+ai/open-claude-md~ (~SPC l f~) :: Open this project's CLAUDE.md,
+  offering to create one.
+- ~+ai/open-claude-settings~ (~SPC l S~) :: Open ~/.claude/settings.json;
+  with prefix PROJECT, the project's own file.
+- ~+ai/set-claude-model~ (~SPC l o~) :: Use MODEL for new Claude sessions.
+- ~+ai/toggle-execute-code~ (~SPC l e~) :: Allow or forbid Claude to
+  evaluate Emacs Lisp.
+
+** Docs
+- ~+docs/cheatsheet~ (~SPC h /~) :: Open the cheat sheet beside the current
+  buffer, or close it again.
+- ~+docs/cheatsheet-find~ (~S~) :: Search the sheet's text and land on the
+  line: words in any order, the matches shown as you type.
+- ~+docs/cheatsheet-regenerate~ (~g r~) :: Rebuild the key and command
+  tables in the cheat sheet.
+- ~+docs/cheatsheet-search~ (~?~) :: Jump to a cheat sheet heading.
+- ~+docs/check-autoloads~ (~SPC h C~) :: Check that every function the
+  config refers to is callable now.
+- ~+docs/check-keys~ :: Check that every private menu holds up, the leader
+  has no double and no unmeant shadow, and every documented key is bound,
+  the leader's and the rest; see '+docs-menu-problems',
+  '+docs-leader-problems', '+docs-key-problems' and
+  '+docs-binding-problems'.
+- ~+docs/module-readme~ (~SPC h M~) :: Open the README of the private
+  MODULE.
+
+** Butler
+- ~+butler/ask~ :: Ask him QUESTION, in your words.
+- ~+butler/ask-again~ :: Put the last question to Claude: what the docs said
+  of it was not what you meant.
+- ~+butler/ask-claude~ :: Ask him QUESTION and have him put it to Claude at
+  once, with the lines the docs give him: the hard question, without the
+  prefix argument.
+- ~+butler/choices~ :: The answers that fit the question, to choose between.
+- ~+butler/choose~ :: Say the answer the number just pressed stands for.
+- ~+butler/copy~ :: Copy what he last said.
+- ~+butler/dismiss~ (~SPC h J~) :: That will be all.
+- ~+butler/drag~ (~<down-mouse-1>~) :: Move him with the mouse: press on
+  him, drag, let go.
+- ~+butler/greet~ :: The greeting of the hour, the one the dashboard uses.
+- ~+butler/hint~ :: A hint for the buffer you are in, from the cheat sheet.
+- ~+butler/menu~ :: What the butler can do while he is here.
+- ~+butler/move~ :: Stand at the next of '+butler-positions'.
+- ~+butler/nudge-down~ :: A step down.
+- ~+butler/nudge-left~ :: A step left.
+- ~+butler/nudge-right~ :: A step right.
+- ~+butler/nudge-up~ :: A step up.
+- ~+butler/quip~ :: A word of his own.
+- ~+butler/read~ :: Read the whole of what he last said, in a buffer that
+  scrolls: the bubble says his piece and stops, this holds all of it.
+- ~+butler/show-source~ :: Open the docs where his last answer came from,
+  the sheet at that line, or the README.
+- ~+butler/stand-bottom-left~ :: Stand in the bottom left corner.
+- ~+butler/stand-bottom-right~ :: Stand in the bottom right corner.
+- ~+butler/stand-centre~ :: Stand in the middle of the frame.
+- ~+butler/stand-here~ :: Stand just below the cursor.
+- ~+butler/stand-top-left~ :: Stand in the top left corner.
+- ~+butler/stand-top-right~ :: Stand in the top right corner.
+- ~+butler/summon~ (~SPC h j~) :: Call the butler: he comes with a hint for
+  this mode, and his menu opens.
+- ~+butler/tip~ :: A hint from anywhere in the cheat sheet.
+# END GENERATED-COMMANDS
