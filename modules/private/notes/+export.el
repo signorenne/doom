@@ -7,6 +7,28 @@
 (use-package! org-modern-indent
   :hook (org-mode . org-modern-indent-mode))
 
+;; Turning `org-indent-mode' on does not indent anything: it puts the
+;; buffer on a queue and an idle timer a fifth of a second later indents
+;; it in slices. So a note opens flat and then visibly reflows under the
+;; cursor, which is worst where you meet many notes quickly, stepping
+;; through `SPC n r f'.
+;;
+;; Doing it at once costs 0.5 ms for a note and 90 ms for the cheat
+;; sheet, so it is done at once up to a size and left to the agent past
+;; it. The largest note here is 4 KB; the only org files over the limit
+;; are the sheet and the audits.
+(defvar +notes-indent-at-once-max (* 40 1024)
+  "The largest buffer indented as soon as it opens, in characters.
+Past this `org-indent-mode' is left to its idle agent, which reflows
+visibly but does not hold up the window.")
+
+(add-hook! 'org-mode-hook :append
+  (defun +notes--indent-at-once-h ()
+    "Indent the buffer now rather than a fifth of a second from now."
+    (when (and (bound-and-true-p org-indent-mode)
+               (< (buffer-size) +notes-indent-at-once-max))
+      (org-indent-indent-buffer))))
+
 (use-package! org-fragtog
   :hook (org-mode . org-fragtog-mode))
 
