@@ -27,6 +27,21 @@
   (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane")
   (explain! "openSUSE: zypper in vips-tools, or ImageMagick"))
 
+;; The data formats. A language server validates as you type where one
+;; is running; these are what `SPC m v' shells out to, and what the
+;; prettify and compact keys use. A missing one is not fatal: the
+;; format keeps its mode and loses its checking.
+(dolist (tool '(("jq" . "JSON: validate, prettify and compact")
+                ("taplo" . "TOML: validate and format, and the server")
+                ("xmllint" . "XML: check it is well formed, and format it")
+                ("yaml-language-server" . "YAML: validation as you type, with schemas")
+                ("vscode-json-language-server" . "JSON: validation as you type, with schemas")))
+  (unless (executable-find (car tool))
+    (warn! "Couldn't find %s: no %s" (car tool) (cdr tool))))
+(unless (zerop (call-process "python3" nil nil nil "-c" "import yaml"))
+  (warn! "python3 has no yaml module: SPC m v cannot check a YAML file")
+  (explain! "openSUSE: zypper in python3-PyYAML"))
+
 ;; The fonts config.el asks for; a missing one falls back silently to
 ;; whatever fontconfig picks, which is how a wrong glyph or width shows up.
 (when (display-graphic-p)
