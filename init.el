@@ -152,6 +152,7 @@
  rust              ; cargo on the same keys, rust-analyzer, codelldb
  pascal            ; Free Pascal and Lazarus; Delphi sources read
  web               ; Svelte, TypeScript, Tailwind, node and Electron
+ uml               ; PlantUML: completion, live preview, templates
  git               ; magit tuned, the history and branch menus
  notes             ; documents, capture, agenda, roam
  ai                ; Claude Code, agent shells, gptel
