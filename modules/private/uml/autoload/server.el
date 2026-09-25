@@ -92,8 +92,10 @@ Waits for it to answer, since the first start has a JVM to load."
   (message "PlantUML server on port %d" (+uml-server-ensure)))
 
 ;;;###autoload
-(defun +uml-render (source format)
+(defun +uml-render (source format &optional options)
   "Render SOURCE, PlantUML text, as FORMAT (a symbol, `svg' or `png').
+OPTIONS are extra PlantUML flags, a list of strings; the preview uses
+them to colour the diagram for the theme without touching the file.
 Returns the bytes, or signals with what PlantUML said."
   (let* ((port (+uml-server-ensure))
          (url-request-method "POST")
@@ -101,7 +103,8 @@ Returns the bytes, or signals with what PlantUML said."
          (url-request-data
           (encode-coding-string
            (json-encode `((source . ,source)
-                          (options . [,(format "-t%s" format)])))
+                          (options . ,(vconcat (list (format "-t%s" format))
+                                               options))))
            'utf-8)))
     (with-current-buffer
         (url-retrieve-synchronously (format "http://127.0.0.1:%d/render" port)

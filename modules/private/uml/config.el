@@ -49,6 +49,13 @@ A diagram is something you look at while you write it, so the window
 comes by itself rather than waiting to be asked for. Set this to nil
 and `SPC m p' opens it when you want it.")
 
+(defvar +uml-preview-theme 'auto
+  "How the preview is coloured, so a diagram is readable against the theme.
+`auto' follows the frame: dark theme, dark diagram with light text.
+`light' leaves PlantUML's own colours, `dark' forces the dark palette,
+and a string names a PlantUML theme, such as \"cyborg\" or \"carbon-gray\".
+The file is never touched by this, and neither is what `SPC m e' writes.")
+
 (defvar +uml-preview-buffer-name "*UML preview*"
   "The buffer the diagram is drawn in.")
 

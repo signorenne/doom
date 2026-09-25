@@ -23,6 +23,25 @@
 (defvar +uml--preview-showing nil
   "The buffer the preview is currently drawn from.")
 
+(defun +uml--preview-options ()
+  "The PlantUML flags that make a diagram readable against this theme.
+
+PlantUML writes its background as a CSS style on the SVG root, and the
+renderer here ignores that, so the image arrives transparent over the
+Emacs background. On a dark theme that leaves PlantUML's dark text on a
+dark background, which is why a diagram looked unreadable rather than
+merely unstyled. `-darkmode' switches the diagram's own palette to light
+strokes and text, which reads correctly against it.
+
+None of this touches the file: the source stays as you wrote it, and
+`+uml/export' writes it without these."
+  (pcase +uml-preview-theme
+    ('light nil)
+    ('dark '("-darkmode"))
+    ((and (pred stringp) name) (list "-theme" name))
+    (_ (and (eq (frame-parameter nil 'background-mode) 'dark)
+            '("-darkmode")))))
+
 (defun +uml--preview-buffer ()
   "The buffer the diagram is drawn in."
   (get-buffer-create +uml-preview-buffer-name))
@@ -77,7 +96,8 @@ Does nothing when the text has not changed since the last render."
         (unless (equal source +uml--preview-last)
           (setq +uml--preview-last source)
           (condition-case err
-              (+uml--show (+uml-render source +uml-preview-format))
+              (+uml--show (+uml-render source +uml-preview-format
+                                       (+uml--preview-options)))
             (error (+uml--show-error (error-message-string err)))))))))
 
 (defun +uml--preview-schedule (&rest _)
