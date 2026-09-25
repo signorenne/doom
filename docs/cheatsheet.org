@@ -1736,6 +1736,12 @@ The redraw waits for a pause in the typing, so a burst of keys costs one
 drawing rather than one per key. A diagram opened in the background, by
 a search or an export, opens no window and starts no server.
 
+The drawing is coloured for your theme, not for paper: PlantUML puts its
+background in a CSS style that Emacs's renderer ignores, so on a dark
+theme an unadjusted diagram is dark text on a dark background.
+~+uml-preview-theme~ is =auto= and passes =-darkmode= when the frame is
+dark. What ~SPC m e~ writes out is unaffected.
+
 | Key       | What it does                          |
 |-----------+---------------------------------------|
 | ~SPC m p~   | the preview, on or off                |
