@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+title TITLE
+
+Container_Boundary(fw, "Firmware") {
+  Component(ble,    "BLE stack",     "C++", "Advertising, GATT, pairing")
+  Component(ctrl,   "Controller",    "C++", "Decides what the device does")
+  Component(driver, "Device driver", "C++", "Talks to the hardware")
+  Component(store,  "Settings",      "C++", "Persists configuration")
+}
+
+ComponentDb(flash, "Flash", "NVS")
+
+Rel(ble, ctrl, "Delivers commands")
+Rel(ctrl, driver, "Drives")
+Rel(ctrl, store, "Reads and writes")
+Rel(store, flash, "Persists to")
+
+SHOW_LEGEND()
+@enduml

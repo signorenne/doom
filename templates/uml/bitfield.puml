@@ -1,0 +1,18 @@
+@startuml
+title TITLE
+
+' A register laid out field by field. salt draws the table;
+' the comment column says what each field means.
+salt
+{#
+  . | Bits  | Field     | Access | Meaning
+  . | 31:16 | RESERVED  | ro     | Reads as zero
+  . | 15:12 | MODE      | rw     | Operating mode, 0 to 15
+  . | 11:8  | PRESCALER | rw     | Clock divider
+  . | 7     | IRQ_EN    | rw     | Interrupt enable
+  . | 6     | OVERFLOW  | rc     | Set on overflow, cleared on read
+  . | 5:1   | COUNT     | ro     | Current count
+  . | 0     | ENABLE    | rw     | Enable the peripheral
+}
+
+@enduml

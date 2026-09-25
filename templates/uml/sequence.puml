@@ -1,0 +1,28 @@
+@startuml
+title TITLE
+
+actor       "User"        as User
+participant "Device"      as Device
+participant "Peripheral"  as Peripheral
+
+User -> Device : request
+activate Device
+
+Device -> Peripheral : command
+activate Peripheral
+Peripheral --> Device : response
+deactivate Peripheral
+
+alt success
+  Device --> User : result
+else failure
+  Device --> User : error
+end
+deactivate Device
+
+note over Device, Peripheral
+  A note spanning both, for the detail
+  that does not fit on an arrow.
+end note
+
+@enduml

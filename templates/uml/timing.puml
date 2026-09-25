@@ -1,0 +1,33 @@
+@startuml
+title TITLE
+
+robust  "Bus state"  as BUS
+concise "Transfer"   as TX
+binary  "Interrupt"  as IRQ
+
+@0
+BUS is Idle
+TX  is {-}
+IRQ is low
+
+@100
+BUS is Arbitration
+TX  is "Frame"
+IRQ is high
+
+@200
+BUS is Data
+IRQ is low
+
+@400
+BUS is Ack
+
+@450
+BUS is Idle
+TX  is {-}
+
+@500
+
+highlight 100 to 200 #LightBlue : arbitration window
+
+@enduml

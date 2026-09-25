@@ -1,0 +1,36 @@
+@startuml
+title TITLE
+
+interface Drawable {
+  + draw() : void
+}
+
+abstract class Shape {
+  # x : int
+  # y : int
+  + move(dx : int, dy : int) : void
+  + {abstract} area() : double
+}
+
+class Rectangle {
+  - width  : double
+  - height : double
+  + area() : double
+}
+
+class Circle {
+  - radius : double
+  + area() : double
+}
+
+Drawable <|.. Shape
+Shape    <|-- Rectangle
+Shape    <|-- Circle
+Rectangle "1" *-- "4" Point : corners
+
+class Point {
+  + x : int
+  + y : int
+}
+
+@enduml

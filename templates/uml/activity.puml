@@ -1,0 +1,27 @@
+@startuml
+title TITLE
+
+start
+
+:read the input;
+
+if (valid?) then (yes)
+  :handle it;
+  repeat
+    :process one item;
+  repeat while (more items?) is (yes)
+else (no)
+  :report the error;
+  stop
+endif
+
+fork
+  :write the log;
+fork again
+  :notify the caller;
+end fork
+
+:done;
+stop
+
+@enduml

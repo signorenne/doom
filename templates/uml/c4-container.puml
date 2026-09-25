@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Container>
+title TITLE
+
+Person(user, "Operator")
+
+System_Boundary(system, "The System") {
+  Container(fw,    "Firmware",    "C++",        "Runs on the device")
+  Container(app,   "Mobile app",  "SvelteKit",  "Configures and monitors")
+  ContainerDb(db,  "Local store", "flash",      "Settings and logs")
+}
+
+System_Ext(cloud, "Backend")
+
+Rel(user, app, "Uses")
+Rel(app, fw, "Configures", "BLE GATT")
+Rel(fw, db, "Reads and writes")
+Rel(fw, cloud, "Reports to", "HTTPS")
+
+SHOW_LEGEND()
+@enduml

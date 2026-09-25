@@ -1,0 +1,24 @@
+@startuml
+title TITLE
+
+[*] --> Idle
+
+state Idle
+state Connecting
+state Connected {
+  [*] --> Authenticating
+  Authenticating --> Ready : keys exchanged
+  Ready --> Authenticating : re-key
+}
+state Error
+
+Idle        --> Connecting : connect requested
+Connecting  --> Connected  : link established
+Connecting  --> Error      : timeout
+Connected   --> Idle       : disconnect
+Error       --> Idle       : reset
+
+Error : entry / log the cause
+Error : exit  / clear the flag
+
+@enduml

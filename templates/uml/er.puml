@@ -1,0 +1,30 @@
+@startuml
+title TITLE
+
+entity "Device" as device {
+  * id : uuid <<PK>>
+  --
+  * serial      : text
+  * model       : text
+    commissioned : date
+}
+
+entity "Reading" as reading {
+  * id : uuid <<PK>>
+  --
+  * device_id : uuid <<FK>>
+  * taken_at  : timestamp
+  * value     : double
+}
+
+entity "Firmware" as firmware {
+  * id : uuid <<PK>>
+  --
+  * version : text
+  * built_at : timestamp
+}
+
+device ||--o{ reading  : produces
+device }o--|| firmware : runs
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title TITLE
+
+package "Application" {
+  component [UI]        as UI
+  component [Core]      as Core
+}
+
+package "Platform" {
+  component [Driver]    as Driver
+  database  "Storage"   as Storage
+  queue     "Events"    as Events
+}
+
+interface "API" as API
+
+UI     --> API
+API    --> Core
+Core   --> Driver  : read and write
+Core   --> Storage : persist
+Driver --> Events  : publish
+Events --> Core    : deliver
+
+note right of Driver
+  Where the hardware actually is.
+end note
+
+@enduml

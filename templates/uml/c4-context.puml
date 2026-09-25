@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Context>
+title TITLE
+
+Person(user, "Operator", "Uses the system day to day")
+Person_Ext(installer, "Installer", "Commissions it on site")
+
+System(system, "The System", "What this diagram is about")
+
+System_Ext(cloud, "Backend", "Where telemetry is sent")
+System_Ext(phone, "Mobile app", "Configures the device over BLE")
+
+Rel(user, system, "Operates")
+Rel(installer, system, "Commissions")
+Rel(system, cloud, "Reports to", "HTTPS")
+Rel(phone, system, "Configures", "BLE")
+
+SHOW_LEGEND()
+@enduml
