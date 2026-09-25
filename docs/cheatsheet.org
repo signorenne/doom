@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-26 21:03
+#+generated: 2026-09-27 18:27
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -1719,6 +1719,82 @@ One limit worth knowing: Tailwind class completion works in CSS files
 and not in markup. eglot lets one server manage a buffer, and in a
 =.svelte= file that is the Svelte server.
 
+* Diagrams
+The [[file:../modules/private/uml/README.org][uml README]] has the whole of it. A =.puml=, =.plantuml=, =.pu= or
+=.iuml= file opens in ~plantuml-mode~ with completion from =plantuml-lsp=,
+which knows the keywords, the directives, the colours, the skinparams
+and the C4 library. Without that server the mode's own completion stays,
+so nothing here depends on it.
+
+** The preview
+Opening a diagram opens its preview beside it; you do not ask for it.
+The window appears at once saying it is drawing, and the diagram
+replaces that when it arrives, because the first drawing of a session
+has a JVM to start. Move to another diagram and the preview follows.
+
+The redraw waits for a pause in the typing, so a burst of keys costs one
+drawing rather than one per key. A diagram opened in the background, by
+a search or an export, opens no window and starts no server.
+
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC m p~   | the preview, on or off                |
+| ~SPC m P O~ | open it with every diagram, or not    |
+| ~SPC m P r~ | draw it again now                     |
+| ~SPC m P f~ | follow my typing, or wait to be asked |
+| ~SPC m P F~ | draw as PNG instead of SVG            |
+| ~SPC m e~   | write the diagram out to a file       |
+
+A diagram that does not parse keeps the last good drawing and says what
+PlantUML complained about, so the window never goes blank while you are
+in the middle of a line.
+
+** Why a server is running
+PlantUML is a Java program: rendering by running it costs about a second
+each time, far too slow to follow typing. It can serve its own picoweb
+server instead, where the first drawing pays for the JVM and every one
+after it costs about 30 milliseconds. Measured here: 1.7 s, then 0.03 s.
+
+So the first preview starts =plantuml -picoweb= and it stays. It listens
+on 8135, or the first free port above it, so two Emacs sessions do not
+fight over one.
+
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC m s i~ | is it running, and on which port      |
+| ~SPC m s r~ | restart it                            |
+| ~SPC m s k~ | stop it; the next preview starts it again |
+
+** Starting a diagram
+~SPC m n~ asks which kind and what to call it, then opens it with the
+title already filled in.
+
+| Kind           | For                                           |
+|----------------+-----------------------------------------------|
+| =sequence=       | who talks to whom, in order                   |
+| =state=          | a state machine and its transitions           |
+| =activity=       | a flow, with decisions and branches           |
+| =component=      | boxes and the links between them              |
+| =class=          | classes, fields and relationships             |
+| =er=             | entities and their keys                       |
+| =c4-context=     | C4 level 1: the system and who uses it        |
+| =c4-container=   | C4 level 2: the parts it is deployed as       |
+| =c4-component=   | C4 level 3: inside one part                   |
+| =timing=         | signals against time, for a bus or a protocol |
+| =bitfield=       | a register laid out bit by bit                |
+
+They carry no styling on purpose, so a =.puml= file renders anywhere with
+nothing to travel alongside it.
+
+** What is installed
+=sudo zypper in plantuml graphviz=, then the server:
+=go install github.com/ptdewey/plantuml-lsp@latest= and link
+=~/go/bin/plantuml-lsp= into =~/.local/bin=.
+
+graphviz lays out every kind except sequence and timing, so without it
+some diagrams draw and others do not, which is a confusing way to be
+broken. ~SPC h r d~ names whatever is missing.
+
 * Org
 The [[file:../modules/private/notes/README.org][org README]] describes the workflow these keys drive. ~SPC n SPC~ opens
 the notes menu, which gathers all of it in one place under the same
@@ -3218,6 +3294,27 @@ bound.
 - ~+web/test~ :: Run the project's tests.
 - ~+web/test-watch~ :: Run the tests and keep running them as the files
   change.
+
+** UML
+- ~+uml/export~ (~SPC m e~) :: Write this diagram to FILE as FORMAT.
+- ~+uml/new-diagram~ (~SPC m n~) :: Start a new diagram of KIND called NAME,
+  from the template for it.
+- ~+uml/preview~ (~SPC m P p~) :: Show this diagram beside the text, and
+  keep it up to date.
+- ~+uml/preview-follow-toggle~ (~SPC m P f~) :: Follow what you type, or
+  wait to be asked.
+- ~+uml/preview-format-toggle~ (~SPC m P F~) :: Draw the preview as SVG or
+  as PNG.
+- ~+uml/preview-on-open-toggle~ (~SPC m O~) :: Open the preview with every
+  diagram, or wait to be asked.
+- ~+uml/preview-refresh~ (~SPC m P r~) :: Draw the diagram again now.
+- ~+uml/preview-toggle~ (~SPC m p~) :: Open the preview beside the text, or
+  close it.
+- ~+uml/server-restart~ (~SPC m s r~) :: Stop the PlantUML server and start
+  it again.
+- ~+uml/server-status~ (~SPC m s i~) :: Say whether the PlantUML server is
+  up, and on which port.
+- ~+uml/server-stop~ (~SPC m s k~) :: Stop the PlantUML server.
 
 ** Git
 - ~+git/branch-from-main~ :: Create the branch NAME from the main branch and
