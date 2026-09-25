@@ -28,6 +28,17 @@ A diagram that does not parse leaves the last good drawing in place and
 says what PlantUML complained about, so the preview never goes blank
 while you are in the middle of a line.
 
+The preview is coloured for the theme. PlantUML writes its background as
+a CSS style on the SVG root and Emacs's renderer ignores that, so the
+image arrives transparent over the Emacs background; on a dark theme
+that would leave dark text on a dark background. ~+uml-preview-theme~ is
+=auto=, which passes =-darkmode= when the frame is dark, so the diagram
+comes back with light strokes and text. Set it to =light= to keep
+PlantUML's own colours, or to the name of a PlantUML theme such as
+="cyborg"=.
+
+None of that touches the file, and ~SPC m e~ writes what you wrote.
+
 * Why there is a server
 PlantUML is a Java program. Rendering by running it costs about a second
 each time, which is far too slow to follow typing. PlantUML can instead
@@ -84,6 +95,7 @@ completion stays underneath.
 
 * Configuration
 - ~+uml-preview-format~ (=svg=), ~+uml-preview-side~, ~+uml-preview-width~.
+- ~+uml-preview-theme~ (=auto=), how the preview is coloured.
 - ~+uml-preview-idle~ (0.4 s), the pause before a redraw.
 - ~+uml-preview-follow~, whether it follows typing at all.
 - ~+uml-server-port~ (8135), ~+uml-server-start-timeout~ (30 s).
