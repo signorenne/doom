@@ -190,6 +190,7 @@
 
 (load! "+dired")                        ; the file manager
 (load! "+images")                       ; the image viewer
+(load! "+data")                         ; JSON, YAML, TOML, XML and friends
 
 
 ;;

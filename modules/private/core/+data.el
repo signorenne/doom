@@ -1,0 +1,134 @@
+;;; private/core/+data.el -*- lexical-binding: t; -*-
+;;
+;; The data and configuration formats: JSON, YAML, TOML, XML and the
+;; plainer ones. Doom's :lang json, :lang yaml and :lang data bring the
+;; modes; what is added here is the part that says whether a file is
+;; actually valid, and the two shapes you usually want it in.
+;;
+;; Validation comes from a language server where one exists, so it is
+;; live rather than a command you remember to run: a bad comma is
+;; underlined as you type. The servers also know SchemaStore, so a file
+;; they recognise, package.json, tsconfig.json, a compose file, a GitHub
+;; workflow, is checked against its real schema and a misspelt key is an
+;; error rather than a mystery.
+
+(defvar +data-modes
+  '(json-mode json-ts-mode jsonc-mode
+    yaml-mode yaml-ts-mode
+    conf-toml-mode toml-ts-mode
+    nxml-mode xml-mode
+    csv-mode conf-mode conf-unix-mode conf-space-mode conf-windows-mode)
+  "Every mode these commands answer for.")
+
+(defvar +data-jq-indent 2
+  "How far jq indents when it prettifies JSON.")
+
+
+;;
+;;; TOML
+
+;; Doom has no :lang toml. Emacs 29 brought `toml-ts-mode' and has long
+;; had `conf-toml-mode', so the mode is here already; what is missing is
+;; the association and a server.
+(add-to-list 'auto-mode-alist
+             `("\\.toml\\'" . ,(if (fboundp 'toml-ts-mode)
+                                  'toml-ts-mode
+                                'conf-toml-mode)))
+(add-to-list 'auto-mode-alist '("Cargo\\.lock\\'" . conf-toml-mode))
+
+
+;;
+;;; The servers
+
+;; taplo for TOML, and the JSON and YAML servers Doom starts through
+;; :lang json +lsp and :lang yaml +lsp. Each is asked for by name, so a
+;; missing one leaves the mode working without validation rather than
+;; erroring on every file.
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '((conf-toml-mode toml-ts-mode) . ("taplo" "lsp" "stdio")))
+
+  ;; The YAML server validates nothing until it is told it may fetch
+  ;; schemas; this is the setting that turns SchemaStore on.
+  (setq-default eglot-workspace-configuration
+                (append
+                 '((:yaml . (:schemaStore (:enable t)
+                             :validate t
+                             :hover t
+                             :completion t))
+                   (:json . (:schemas [] :validate (:enable t))))
+                 (bound-and-true-p eglot-workspace-configuration))))
+
+(when (modulep! :tools lsp)
+  (add-hook! '(conf-toml-mode-hook toml-ts-mode-hook)
+    (defun +data--toml-lsp-h ()
+      "Start taplo when there is one to start."
+      (when (executable-find "taplo") (lsp!)))))
+
+
+;;
+;;; Keybindings
+
+;; One set of keys across every format, so validating a YAML file is the
+;; same gesture as validating a JSON one. Each waits for its own mode,
+;; since none of these keymaps exists when this file is read.
+(map! (:after json-mode
+       :map json-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "Compact"            "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after json-ts-mode
+       :map json-ts-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "Compact"            "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after yaml-mode
+       :map yaml-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "Compact"            "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after yaml-ts-mode
+       :map yaml-ts-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "Compact"            "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after toml-ts-mode
+       :map toml-ts-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after nxml-mode
+       :map nxml-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Prettify"           "=" #'+data/prettify
+       :desc "Compact"            "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after csv-mode
+       :map csv-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "Align the columns"  "=" #'+data/prettify
+       :desc "Unalign them"       "-" #'+data/compact
+       :desc "What is this"       "?" #'+data/what-is-this)
+
+      (:after conf-mode
+       :map conf-mode-map
+       :localleader
+       :desc "Validate this file" "v" #'+data/validate
+       :desc "What is this"       "?" #'+data/what-is-this))
