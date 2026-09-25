@@ -114,8 +114,9 @@
  :lang
  (cc +lsp +tree-sitter)   ; C, C++, CMake, GLSL; see :private cpp
  emacs-lisp               ; Emacs Lisp
+ data                     ; XML, plist, CSV and the rest
  graphviz                 ; dot files, used by the mind maps
- (json +tree-sitter)
+ (json +lsp +tree-sitter)
  markdown
  (python +lsp +tree-sitter) ; pyright, basedpyright or pylsp when installed
  (rust +lsp +tree-sitter) ; rust-analyzer when installed; cargo through SPC k
@@ -125,7 +126,7 @@
  (sh +lsp)                ; shell scripts, bash-ts-mode set up in :private core
  (web +lsp +tree-sitter)  ; HTML, CSS; typescript-language-server when installed
  (javascript +lsp +tree-sitter) ; JS, TS
- (yaml +tree-sitter)
+ (yaml +lsp +tree-sitter)
 
  ;; Email
  :email
