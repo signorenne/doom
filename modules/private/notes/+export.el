@@ -27,7 +27,14 @@ visibly but does not hold up the window.")
     "Indent the buffer now rather than a fifth of a second from now."
     (when (and (bound-and-true-p org-indent-mode)
                (< (buffer-size) +notes-indent-at-once-max))
-      (org-indent-indent-buffer))))
+      ;; Not `org-indent-indent-buffer', which says "Setting buffer
+      ;; indentation" and then "Indentation of buffer set" every time,
+      ;; so every note opened would flash two messages. And the buffer
+      ;; comes off the agent's queue, or it is indented again a moment
+      ;; later for nothing.
+      (org-indent-add-properties (point-min) (point-max))
+      (setq org-indent-agentized-buffers
+            (delq (current-buffer) org-indent-agentized-buffers)))))
 
 (use-package! org-fragtog
   :hook (org-mode . org-fragtog-mode))
