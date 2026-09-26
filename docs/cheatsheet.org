@@ -1719,6 +1719,50 @@ One limit worth knowing: Tailwind class completion works in CSS files
 and not in markup. eglot lets one server manage a buffer, and in a
 =.svelte= file that is the Svelte server.
 
+* Data files: JSON, YAML, TOML, XML, CSV
+Validation is the point. JSON, YAML and TOML each have a language
+server, so a file is checked while you write it: a bad comma is
+underlined where it is, not reported when you try to use the file. The
+JSON and YAML servers also know SchemaStore, so a file they recognise,
+=package.json=, =tsconfig.json=, a compose file, a GitHub workflow, is
+checked against its real schema and a misspelt key is an error rather
+than something that quietly does nothing.
+
+The same four keys work in every one of these formats.
+
+| Key       | What it does                                     |
+|-----------+--------------------------------------------------|
+| ~SPC m v~   | say whether this file is valid, and where it is not |
+| ~SPC m =~   | prettify: indented, one thing to a line          |
+| ~SPC m -~   | compact: as few lines as it will take            |
+| ~SPC m ?~   | what this file is taken for, and what is checking it |
+
+** What checks what
+| Format | Live, as you type            | On ~SPC m v~        |
+|--------+------------------------------+-------------------|
+| JSON   | vscode-json-language-server  | =jq=, else Emacs    |
+| YAML   | yaml-language-server         | python's yaml     |
+| TOML   | taplo                        | =taplo check=       |
+| XML    | nxml, against a schema it names | =xmllint=         |
+| CSV    | nothing                      | every row has as many fields as the header |
+| INI    | nothing                      | no key set twice  |
+
+CSV and INI have no schema to check against, so those two are structure
+checks rather than validation: a ragged row and a key set twice are the
+mistakes that actually happen in them.
+
+** Reshaping a file
+~SPC m =~ and ~SPC m -~ replace the buffer, and refuse to when the tool
+cannot read the file, so a broken file is never made worse by
+formatting it. In a CSV the same keys align and unalign the columns.
+TOML has no compact form and says so.
+
+** What is installed
+=sudo zypper in jq libxml2-tools python3-PyYAML=, then the servers:
+=npm i -g --prefix ~/.local yaml-language-server vscode-langservers-extracted=
+and =cargo install taplo-cli --locked --features lsp=. ~SPC h r d~ names
+whatever is missing.
+
 * Diagrams
 The [[file:../modules/private/uml/README.org][uml README]] has the whole of it. A =.puml=, =.plantuml=, =.pu= or
 =.iuml= file opens in ~plantuml-mode~ with completion from =plantuml-lsp=,
