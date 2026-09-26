@@ -93,10 +93,31 @@ has no cursor."
       (cl-letf (((symbol-function 'current-message) #'ignore))
         (apply fn args)))))
 
+;; An SVG is a text file you write and a picture you look at, and
+;; changing one means watching the other. So it opens as its XML, with
+;; the drawing beside it in core's view, drawn again after each pause.
+;; `auto-mode-alist' sends .svg to `image-mode' first; this entry goes in
+;; front of that one.
+(add-to-list 'auto-mode-alist '("\\.svg\\'" . nxml-mode))
+(add-hook 'nxml-mode-hook #'+core--svg-view-h)
+;; An SVG exported by a tool is often one line of thousands of
+;; characters, and `so-long-mode' takes it over from nxml-mode for
+;; speed; it keeps its drawing there too.
+(add-hook 'so-long-mode-hook #'+core--svg-view-h)
+
 ;; The viewer's own keys: evil-collection already pans with hjkl, zooms
 ;; on + and -, and scrolls with C-d and C-u. What it leaves out is the
 ;; whole picture at once, the picture at its true size, and stepping to
 ;; the next file in the directory.
+(map! :after nxml-mode
+      :map nxml-mode-map
+      :localleader
+      :desc "Drawing, beside the source" "p" #'+core/view-toggle
+      (:prefix ("P" . "drawing")
+       :desc "Draw it again now"    "r" #'+core/view-refresh
+       :desc "Follow my typing"     "f" #'+core/view-follow-toggle
+       :desc "Open it with the file, or not" "O" #'+core/view-on-open-toggle))
+
 (map! :after image-mode
       :map image-mode-map
       :n "f" #'+core/image-fit

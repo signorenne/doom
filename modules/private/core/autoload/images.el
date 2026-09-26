@@ -143,3 +143,69 @@ This many at a time crosses it in a dozen.")
   "Move the picture down under the window."
   (interactive "p" image-mode)
   (image-previous-line (* (or n 1) +core-image-pan-step)))
+
+
+;;
+;;; The picture beside the source
+
+(declare-function +core-view-enable "view")
+
+(defun +core--svg-on-checker (svg)
+  "SVG, a unibyte string, laid over a checkerboard, as a new SVG.
+A drawing is often transparent: an icon for a light interface is dark
+strokes on nothing and vanishes on a dark theme, one for a dark display
+is white strokes and vanishes on a light one. The checkerboard is mid
+grey, not the usual white and light grey, because the usual one hides a
+white icon wherever it crosses a white square, and the icons here are
+often white."
+  (pcase-let ((`(,w . ,h) (image-size (create-image svg 'svg t) t)))
+    (let* ((w (max 1 (round w))) (h (max 1 (round h)))
+           ;; The view scales the drawing to fit, and the squares with it,
+           ;; so they are sized from the drawing: about two dozen across,
+           ;; whether it is a 16 pixel icon or a 2000 pixel poster.
+           (square (max 2 (/ (max w h) 24.0)))
+           (cell (* 2 square)))
+      (encode-coding-string
+       (format (concat
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+                "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
+                "width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\">"
+                "<defs><pattern id=\"c\" width=\"%g\" height=\"%g\" "
+                "patternUnits=\"userSpaceOnUse\">"
+                "<rect width=\"%g\" height=\"%g\" fill=\"#707070\"/>"
+                "<rect width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
+                "<rect x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
+                "</pattern></defs>"
+                "<rect width=\"%d\" height=\"%d\" fill=\"url(#c)\"/>"
+                "<image width=\"%d\" height=\"%d\" "
+                "xlink:href=\"data:image/svg+xml;base64,%s\"/></svg>")
+               w h w h cell cell cell cell square square square square square square
+               w h w h (base64-encode-string svg t))
+       'utf-8))))
+
+(defun +core--svg-draw ()
+  "This SVG for core's view, once its XML parses.
+Halfway through typing a tag it does not, and librsvg would draw
+nothing; the view then keeps the last good drawing and says where the
+XML breaks, which `bin/check-data' can tell to the column."
+  (let ((xml (buffer-substring-no-properties (point-min) (point-max))))
+    (unless (with-temp-buffer
+              (insert xml)
+              (ignore-errors (libxml-parse-xml-region (point-min) (point-max))))
+      (let ((said (with-temp-buffer
+                    (insert xml)
+                    (call-process-region (point-min) (point-max)
+                                         (file-name-concat doom-user-dir "bin/check-data")
+                                         t t nil "xml")
+                    (string-trim (buffer-string)))))
+        (error "%s" (if (string-match "\\`\\([0-9]+\\):[0-9]+: \\(.*\\)" said)
+                        (format "line %s: %s" (match-string 1 said) (match-string 2 said))
+                      "not well-formed XML yet"))))
+    (list 'image (+core--svg-on-checker (encode-coding-string xml 'utf-8)) 'svg)))
+
+;;;###autoload
+(defun +core--svg-view-h ()
+  "Give an SVG file its drawing beside it, drawn again as you type."
+  (when (and buffer-file-name (string-match-p "\\.svg\\'" buffer-file-name))
+    (+core-view-enable #'+core--svg-draw t)))
+
