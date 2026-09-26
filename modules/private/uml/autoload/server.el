@@ -110,8 +110,23 @@ Returns the bytes, or signals with what PlantUML said."
         (url-retrieve-synchronously (format "http://127.0.0.1:%d/render" port)
                                     t t +uml-render-timeout)
       (goto-char (point-min))
-      (let ((status (and (re-search-forward "^HTTP/[0-9.]+ \\([0-9]+\\)" nil t)
-                         (string-to-number (match-string 1)))))
+      (let* ((case-fold-search t)
+             (status (and (re-search-forward "^HTTP/[0-9.]+ \\([0-9]+\\)" nil t)
+                          (string-to-number (match-string 1))))
+             (end (save-excursion (and (re-search-forward "^\r?$" nil t) (point))))
+             ;; A diagram that does not parse still comes back 200, as a
+             ;; picture of the words "Syntax Error". The headers say so;
+             ;; read them, so the caller can keep the last good drawing
+             ;; and an export never writes the error picture to disk.
+             (problem (save-excursion
+                        (and (re-search-forward "^X-PlantUML-Diagram-Error: *\\(.*?\\)\r?$" end t)
+                             (match-string 1))))
+             (line (save-excursion
+                     (and (re-search-forward "^X-PlantUML-Diagram-Error-Line: *\\([0-9]+\\)" end t)
+                          (match-string 1)))))
+        (when problem
+          (kill-buffer)
+          (error "%s" (if line (format "line %s: %s" line problem) problem)))
         (unless (search-forward "\n\n" nil t)
           (error "PlantUML sent no body"))
         (let ((body (buffer-substring-no-properties (point) (point-max))))
