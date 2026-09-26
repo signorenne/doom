@@ -12,18 +12,6 @@
 ;; workflow, is checked against its real schema and a misspelt key is an
 ;; error rather than a mystery.
 
-(defvar +data-modes
-  '(json-mode json-ts-mode jsonc-mode
-    yaml-mode yaml-ts-mode
-    conf-toml-mode toml-ts-mode
-    nxml-mode xml-mode
-    csv-mode conf-mode conf-unix-mode conf-space-mode conf-windows-mode)
-  "Every mode these commands answer for.")
-
-(defvar +data-jq-indent 2
-  "How far jq indents when it prettifies JSON.")
-
-
 ;;
 ;;; TOML
 
