@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""Describe an image file from the inside: what it is, how it is built,
+what it says about itself, and its first bytes.
+
+    inspect-image FILE
+
+Four sections, each title at the margin and its lines indented under it:
+the picture, its structure (the format's own chunks or markers, with
+offsets and lengths), its metadata, and the first 256 bytes in hex. A
+file that is cut off or damaged is described as far as it goes, and the
+place it stops is said, rather than the whole report failing.
+
+Emacs shows this beside an image; it is run over every image on the
+machine to catch a file it cannot describe before it reaches the editor.
+"""
+
+import os
+import struct
+import subprocess
+import sys
+import warnings
+import zlib
+
+# PIL warns on stderr about oddities it then reads past, an icon of an
+# unexpected size; in the editor that would print into the report.
+warnings.simplefilter("ignore")
+
+W = 8  # width of the offset column
+
+
+def human(n):
+    return f"{n:,}".replace(",", " ")
+
+
+def row(offset, length, name, detail=""):
+    off = "" if offset is None else str(offset)
+    ln = "" if length is None else human(length)
+    return f"  {off:>{W}}  {ln:>9}  {name:<6} {detail}".rstrip()
+
+
+def header():
+    return f"  {'offset':>{W}}  {'length':>9}  {'part':<6} what it holds"
+
+
+# PNG
+
+PNG_COLOUR = {0: "grey", 2: "RGB", 3: "palette", 4: "grey with alpha", 6: "RGBA"}
+
+
+def png(data):
+    out = [header(), row(0, 8, "sig", "89 50 4E 47 0D 0A 1A 0A, the PNG signature")]
+    i, n = 8, len(data)
+    idat_count = idat_bytes = 0
+    idat_first = None
+    while i + 8 <= n:
+        length, kind = struct.unpack(">I4s", data[i:i + 8])
+        kind = kind.decode("latin-1")
+        body = data[i + 8:i + 8 + length]
+        if len(body) < length:
+            out.append(row(i, length, kind, f"cut off: {len(body)} of {human(length)} bytes present"))
+            return out
+        crc_ok = len(data) >= i + 12 + length and \
+            struct.unpack(">I", data[i + 8 + length:i + 12 + length])[0] == zlib.crc32(data[i + 4:i + 8 + length]) & 0xFFFFFFFF
+        bad = "" if crc_ok else ", CRC does not match"
+        if kind == "IDAT":
+            idat_count += 1
+            idat_bytes += length
+            idat_first = i if idat_first is None else idat_first
+        else:
+            if idat_count:
+                out.append(row(idat_first, idat_bytes, "IDAT",
+                               f"{idat_count} chunk{'s' * (idat_count > 1)} of compressed pixels"))
+                idat_count = idat_bytes = 0
+                idat_first = None
+            out.append(row(i, length, kind, png_detail(kind, body) + bad))
+        i += 12 + length
+        if kind == "IEND":
+            if i < n:
+                out.append(row(i, n - i, "extra", "bytes after IEND, which no reader looks at"))
+            return out
+    if idat_count:
+        out.append(row(idat_first, idat_bytes, "IDAT", f"{idat_count} chunks of compressed pixels"))
+    out.append(row(i, None, "", "no IEND: the file stops before its end marker"))
+    return out
+
+
+def png_detail(kind, body):
+    try:
+        if kind == "IHDR":
+            w, h, depth, colour, comp, filt, lace = struct.unpack(">IIBBBBB", body[:13])
+            return (f"{w} x {h}, {depth}-bit {PNG_COLOUR.get(colour, f'colour type {colour}')}, "
+                    f"{'Adam7 interlaced' if lace else 'not interlaced'}")
+        if kind == "pHYs":
+            x, y, unit = struct.unpack(">IIB", body[:9])
+            return f"{x} x {y} per metre, {round(x * 0.0254)} dpi" if unit == 1 else f"{x}:{y} aspect"
+        if kind in ("tEXt", "zTXt", "iTXt"):
+            key = body.split(b"\0", 1)[0].decode("latin-1")
+            return f"text: {key}"
+        if kind == "iCCP":
+            return "colour profile: " + body.split(b"\0", 1)[0].decode("latin-1")
+        if kind == "gAMA":
+            return f"gamma {struct.unpack('>I', body[:4])[0] / 100000:.5f}"
+        if kind == "sRGB":
+            return "sRGB colour space"
+        if kind == "PLTE":
+            return f"palette of {len(body) // 3} colours"
+        if kind == "tRNS":
+            return "transparency"
+        if kind == "tIME":
+            y, mo, d, hh, mi, ss = struct.unpack(">HBBBBB", body[:7])
+            return f"last changed {y:04}-{mo:02}-{d:02} {hh:02}:{mi:02}:{ss:02}"
+        if kind == "eXIf":
+            return "EXIF metadata"
+        if kind == "acTL":
+            frames, plays = struct.unpack(">II", body[:8])
+            return f"animated: {frames} frames, {'looping' if plays == 0 else f'{plays} plays'}"
+    except struct.error:
+        return "too short to read"
+    return ""
+
+
+# JPEG
+
+JPEG_MARKERS = {0xD8: "SOI", 0xD9: "EOI", 0xDA: "SOS", 0xDB: "DQT", 0xC4: "DHT",
+                0xDD: "DRI", 0xFE: "COM"}
+SOF = {0xC0: "baseline", 0xC1: "extended", 0xC2: "progressive", 0xC3: "lossless"}
+
+
+def jpeg(data):
+    out = [header(), row(0, 2, "SOI", "FF D8, start of image")]
+    i, n = 2, len(data)
+    # Two bytes are enough to read a marker; EOI is exactly two, and the
+    # last two in the file, so asking for four here skips it every time.
+    while i + 2 <= n:
+        if data[i] != 0xFF:
+            out.append(row(i, None, "", f"expected a marker, found {data[i]:02X}: the structure breaks here"))
+            return out
+        m = data[i + 1]
+        if m == 0xFF:  # fill byte
+            i += 1
+            continue
+        if m == 0xD9:
+            out.append(row(i, 2, "EOI", "FF D9, end of image"))
+            if i + 2 < n:
+                out.append(row(i + 2, n - i - 2, "extra", "bytes after the end, which no reader looks at"))
+            return out
+        if 0xD0 <= m <= 0xD7:
+            i += 2
+            continue
+        if i + 4 > n:
+            out.append(row(i, None, f"FF{m:02X}", "cut off before its length"))
+            return out
+        length = struct.unpack(">H", data[i + 2:i + 4])[0]
+        body = data[i + 4:i + 2 + length]
+        name = JPEG_MARKERS.get(m, f"APP{m - 0xE0}" if 0xE0 <= m <= 0xEF else
+                                f"SOF{m - 0xC0}" if 0xC0 <= m <= 0xCF else f"FF{m:02X}")
+        out.append(row(i, length + 2, name, jpeg_detail(m, body)))
+        i += 2 + length
+        if m == 0xDA:  # scan data runs to the next marker that is not a restart
+            start = i
+            while i + 1 < n and not (data[i] == 0xFF and data[i + 1] not in (0x00, *range(0xD0, 0xD8))):
+                i += 1
+            out.append(row(start, i - start, "scan", "compressed pixels"))
+    out.append(row(i, None, "", "no EOI: the file stops before its end marker"))
+    return out
+
+
+def jpeg_detail(m, body):
+    try:
+        if 0xE0 <= m <= 0xEF:
+            ident = body.split(b"\0", 1)[0][:30].decode("latin-1", "replace")
+            known = {"JFIF": "JFIF header", "Exif": "EXIF metadata", "http://ns.adobe.com/xap/1.0/": "XMP metadata",
+                     "ICC_PROFILE": "colour profile", "Adobe": "Adobe colour transform",
+                     "MPF": "multi-picture index", "Photoshop 3.0": "Photoshop resources"}
+            return known.get(ident, ident or "application data")
+        if m in SOF or 0xC0 <= m <= 0xCF and m not in (0xC4, 0xC8, 0xCC):
+            prec, h, w, comps = struct.unpack(">BHHB", body[:6])
+            return (f"{w} x {h}, {SOF.get(m, 'frame')}, {prec}-bit, "
+                    f"{comps} component{'s' * (comps != 1)}")
+        if m == 0xDB:
+            return "quantisation tables"
+        if m == 0xC4:
+            return "Huffman tables"
+        if m == 0xDA:
+            return f"start of scan, {body[0]} component{'s' * (body[0] != 1)}"
+        if m == 0xDD:
+            return f"restart every {struct.unpack('>H', body[:2])[0]} blocks"
+        if m == 0xFE:
+            return "comment: " + body[:40].decode("latin-1", "replace")
+    except (struct.error, IndexError):
+        return "too short to read"
+    return ""
+
+
+# GIF
+
+def gif(data):
+    out = [header()]
+    version = data[:6].decode("latin-1")
+    w, h, flags = struct.unpack("<HHB", data[6:11])
+    out.append(row(0, 6, "sig", f"{version}"))
+    table = 3 * (2 << (flags & 7)) if flags & 0x80 else 0
+    out.append(row(6, 7, "screen", f"{w} x {h}" + (f", global palette of {table // 3} colours" if table else "")))
+    i = 13 + table
+    frames = 0
+    n = len(data)
+    while i < n:
+        b = data[i]
+        if b == 0x3B:
+            out.append(row(i, 1, "end", "trailer"))
+            break
+        if b == 0x21:
+            label = data[i + 1]
+            j = i + 2
+            while j < n and data[j]:
+                j += data[j] + 1
+            name = {0xF9: "graphic control", 0xFF: "application", 0xFE: "comment", 0x01: "plain text"}.get(label, "extension")
+            if label == 0xFF:
+                name += ": " + data[i + 3:i + 14].decode("latin-1", "replace")
+            out.append(row(i, j + 1 - i, "ext", name))
+            i = j + 1
+        elif b == 0x2C:
+            fw, fh, fflags = struct.unpack("<4xHHB", data[i + 1:i + 10])
+            local = 3 * (2 << (fflags & 7)) if fflags & 0x80 else 0
+            j = i + 10 + local + 1
+            while j < n and data[j]:
+                j += data[j] + 1
+            frames += 1
+            if frames <= 8:
+                out.append(row(i, j + 1 - i, "frame", f"{fw} x {fh}" + (", own palette" if local else "")))
+            i = j + 1
+        else:
+            out.append(row(i, None, "", f"unexpected byte {b:02X}: the structure breaks here"))
+            break
+    if frames > 8:
+        out.append(row(None, None, "", f"... {frames} frames in all"))
+    return out
+
+
+# WebP
+
+def webp(data):
+    out = [header(), row(0, 12, "RIFF", f"WebP, {human(struct.unpack('<I', data[4:8])[0])} bytes declared")]
+    i, n = 12, len(data)
+    while i + 8 <= n:
+        kind = data[i:i + 4].decode("latin-1")
+        length = struct.unpack("<I", data[i + 4:i + 8])[0]
+        detail = {"VP8 ": "lossy pixels", "VP8L": "lossless pixels", "ALPH": "alpha channel",
+                  "ANIM": "animation", "ANMF": "animation frame", "ICCP": "colour profile",
+                  "EXIF": "EXIF metadata", "XMP ": "XMP metadata"}.get(kind, "")
+        if kind == "VP8X":
+            flags = data[i + 8]
+            w = int.from_bytes(data[i + 12:i + 15], "little") + 1
+            h = int.from_bytes(data[i + 15:i + 18], "little") + 1
+            parts = [p for bit, p in ((0x10, "alpha"), (0x02, "animation"), (0x20, "colour profile"),
+                                      (0x08, "EXIF"), (0x04, "XMP")) if flags & bit]
+            detail = f"{w} x {h}" + (", " + ", ".join(parts) if parts else "")
+        out.append(row(i, length + 8, kind.strip(), detail))
+        i += 8 + length + (length & 1)
+    return out
+
+
+# BMP and ICO
+
+def bmp(data):
+    size, offset, dib = struct.unpack("<2xI4xII", data[:18])
+    out = [header(), row(0, 14, "file", f"{human(size)} bytes declared, pixels start at {offset}")]
+    if dib >= 40:
+        w, h, planes, bpp, comp = struct.unpack("<iiHHI", data[18:34])
+        kinds = {0: "uncompressed", 1: "RLE 8", 2: "RLE 4", 3: "bit fields", 4: "JPEG", 5: "PNG"}
+        out.append(row(14, dib, "DIB", f"{w} x {abs(h)}, {bpp}-bit, {kinds.get(comp, comp)}"
+                                        + (", stored top down" if h < 0 else "")))
+    else:
+        out.append(row(14, dib, "DIB", "an old header"))
+    out.append(row(offset, len(data) - offset, "pixels", ""))
+    return out
+
+
+def ico(data):
+    count = struct.unpack("<H", data[4:6])[0]
+    out = [header(), row(0, 6, "head", f"{count} image{'s' * (count != 1)}")]
+    for k in range(count):
+        e = data[6 + 16 * k:22 + 16 * k]
+        w, h, _, _, _, bpp, size, off = struct.unpack("<BBBBHHII", e)
+        inner = "PNG" if data[off:off + 4] == b"\x89PNG" else "BMP"
+        out.append(row(off, size, "image", f"{w or 256} x {h or 256}, {bpp}-bit, {inner}"))
+    return out
+
+
+def structure(data):
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return png(data)
+    if data.startswith(b"\xff\xd8"):
+        return jpeg(data)
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return gif(data)
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return webp(data)
+    if data[:2] == b"BM":
+        return bmp(data)
+    if data[:4] == b"\0\0\1\0":
+        return ico(data)
+    return ["  no walk for this format; the metadata and the bytes below still apply"]
+
+
+def picture(path, data):
+    lines = [f"  file      {os.path.basename(path)}, {human(len(data))} bytes"]
+    try:
+        from PIL import Image
+        with Image.open(path) as im:
+            lines.append(f"  format    {im.format}, {im.width} x {im.height}")
+            lines.append(f"  pixels    {im.mode}" + (", with alpha" if "A" in im.mode or "transparency" in im.info else ""))
+            frames = getattr(im, "n_frames", 1)
+            if frames > 1:
+                lines.append(f"  frames    {frames}")
+            dpi = im.info.get("dpi")
+            if dpi:
+                lines.append(f"  density   {round(dpi[0])} x {round(dpi[1])} dpi")
+            if im.info.get("icc_profile"):
+                lines.append("  colour    carries an ICC profile")
+    except Exception as e:  # noqa: BLE001 (describe, never fail)
+        lines.append(f"  format    not readable as a picture: {e}")
+    return lines
+
+
+def metadata(path):
+    try:
+        out = subprocess.run(["exiftool", "-G1", "-s", "-a", path],
+                             capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ["  exiftool is not installed; openSUSE: zypper in exiftool"]
+    lines = []
+    for line in out.splitlines():
+        # The file system's own facts, permissions and dates, are not the
+        # image's; leave them out.
+        if line.startswith(("[System]", "[ExifTool]")):
+            continue
+        group, _, rest = line.partition("]")
+        lines.append(f"  {group[1:]:<13} {rest.strip()}")
+    return lines or ["  nothing"]
+
+
+def hexdump(data, count=256):
+    lines = []
+    for off in range(0, min(count, len(data)), 16):
+        chunk = data[off:off + 16]
+        hx = " ".join(f"{b:02x}" for b in chunk[:8]) + "  " + " ".join(f"{b:02x}" for b in chunk[8:])
+        text = "".join(chr(b) if 32 <= b < 127 else "." for b in chunk)
+        lines.append(f"  {off:08x}  {hx:<49} |{text}|")
+    return lines
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("usage: inspect-image FILE")
+        sys.exit(1)
+    path = sys.argv[1]
+    try:
+        with open(path, "rb") as fh:
+            data = fh.read()
+    except OSError as e:
+        print(f"cannot read {path}: {e.strerror}")
+        sys.exit(1)
+    sections = [("The picture", picture(path, data))]
+    try:
+        sections.append(("Structure", structure(data)))
+    except Exception as e:  # noqa: BLE001 (a damaged file is described, not fatal)
+        sections.append(("Structure", [f"  the structure could not be walked: {e}"]))
+    sections.append(("Metadata", metadata(path)))
+    sections.append((f"The first {min(256, len(data))} bytes", hexdump(data)))
+    print("\n\n".join(title + "\n" + "\n".join(lines) for title, lines in sections))
+
+
+if __name__ == "__main__":
+    main()
