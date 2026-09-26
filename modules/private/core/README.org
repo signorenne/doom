@@ -149,7 +149,12 @@ whichever such buffer you are in.
 - When the drawing fails, halfway through a line, the view keeps what it
   showed and says why in its header, so it never goes blank.
 - It follows you between buffers that have one, and steps aside for a
-  buffer that has none.
+  buffer that has none. A buffer says which side its view takes: right
+  for a drawing beside its source, left for an image's insides, so the
+  picture is on the right either way.
+- It is a window you can move into, to scroll a report or zoom a
+  drawing; ~q~ in it closes it, and that buffer's view stays closed
+  until you open it again, ~+core-view-on-open~ or not.
 - The hooks that follow you are on only while some buffer has a view, so
   a session that never opens one pays nothing.
 
@@ -158,11 +163,17 @@ Settings: ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~,
 use it; so do SVG files and images, below.
 
 * Pictures
-An SVG opens as its XML with its drawing beside it, over a checkerboard
-so a transparent icon shows on a dark theme. Any other image opens as the
-picture with =bin/inspect-image='s report beside it: the picture, its
-structure chunk by chunk or marker by marker, exiftool's metadata, and
-the first bytes in hex. The cheat sheet's Images section has the keys.
+An SVG opens as its XML with its drawing on the right, over a mid-grey
+checkerboard so a transparent icon shows on any theme, a white one
+included. Any other image opens as the picture on the right with
+=bin/inspect-image='s report on the left: the picture's size, shape and
+compression, its colours, its structure chunk by chunk or marker by
+marker, exiftool's metadata, and its bytes in hex. The cheat sheet's
+Images section has the keys.
+
+A drawing made in memory is handed to Emacs's own SVG renderer, not
+ImageMagick's: image-mode picks by file name, and a buffer with no file
+went to ImageMagick in the build here, which draws an SVG as a sliver.
 
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid
