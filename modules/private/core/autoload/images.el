@@ -223,7 +223,8 @@ which runs in the background so a large file never holds up the editor."
 
 ;;;###autoload
 (defun +core--image-inspector-h ()
-  "Give an image file its inspector beside it."
+  "Give an image file its insides beside it, on the left, so the picture
+sits on the right the way an SVG's drawing does."
   (when (and buffer-file-name
              (string-match-p +core-image-inspected (downcase buffer-file-name)))
-    (+core-view-enable #'+core--image-inspect)))
+    (+core-view-enable #'+core--image-inspect nil 'left)))
