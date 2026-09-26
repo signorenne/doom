@@ -7,6 +7,3 @@
 ;; symbol outline at the side.
 (package! breadcrumb :pin "2a2b02e357509856e0fbf83e2da25aad90cf45a3")
 (package! imenu-list :pin "76f2335ee6f2f066d87fe4e4729219d70c9bc70d")
-;; A thumb in the right fringe: where you are in the buffer, and how
-;; much of it is on screen.
-(package! yascroll :pin "b6d7c792a01411401a34ca61c82ebfb4d9fc1d04")

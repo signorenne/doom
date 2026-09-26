@@ -308,76 +308,39 @@ ends: hold the minimap still meanwhile, then let it catch up."
 ;;
 ;;; Where you are in the buffer
 
-;; The modeline says a percentage and the file's size, two numbers to
-;; read. A thumb in the right fringe says the same at a glance: as long
-;; a part of the window's edge as the window is of the buffer, sitting
-;; where you are in it. Emacs draws it, in the theme's own colours, so
-;; none of the desktop's widgets come in; it takes no column from the
-;; text, and a buffer that fits its window has no thumb at all, there
-;; being nowhere in it to be. It counts the buffer's lines as it draws,
-;; a fifth of a millisecond over fifty thousand of them.
-(declare-function yascroll:compute-thumb-size "yascroll")
-(declare-function yascroll:safe-show-scroll-bar "yascroll")
+;; In the modeline, where the eye already goes for a buffer's facts: the
+;; line and column, a rail lit from the top of the buffer to where you
+;; are, and how far through it that is as a number. It is drawn from four
+;; numbers Emacs knows anyway, so it costs a redisplay nothing more, and
+;; it takes no column from the text and no pixel from the fringe, which
+;; carries the git gutter and the diagnostics.
 
-(defvar +ui--thumb-timer nil
-  "The one-shot that draws the thumb once an edit has settled.")
+(defvar +ui-position-width 12
+  "How many cells the position rail takes in the modeline.")
 
-(defun +ui--thumb-now (buffer)
-  "Draw BUFFER's thumb, wherever the timer happens to leave us."
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (when (bound-and-true-p yascroll-bar-mode)
-        (yascroll:safe-show-scroll-bar)))))
+(defface +ui-position-done '((t :inherit font-lock-keyword-face))
+  "The part of the rail from the top of the buffer to where you are."
+  :group 'mode-line)
 
-(use-package! yascroll
-  :hook (doom-first-buffer . global-yascroll-bar-mode)
-  :config
-  ;; It is there to be glanced at, so it does not fade.
-  (setq yascroll:delay-to-hide nil
-        ;; The right fringe: the left carries the git gutter and the
-        ;; diagnostics, and the text area is for text.
-        yascroll:scroll-bar '(right-fringe))
+(defface +ui-position-rest '((t :inherit shadow))
+  "The part of the rail still ahead of you."
+  :group 'mode-line)
 
-  ;; Furniture rather than text: the dashboard is a page and treemacs is
-  ;; a map of somewhere else. Images are yascroll's own exception, having
-  ;; no lines to count. Added one by one, so a reload does not lengthen
-  ;; the list.
-  (dolist (mode '(+doom-dashboard-mode treemacs-mode))
-    (cl-pushnew mode yascroll:disabled-modes))
+(defun +ui--position ()
+  "The rail and the percentage, for the modeline."
+  (let* ((span (max 1 (- (point-max) (point-min))))
+         (done (/ (float (- (point) (point-min))) span))
+         (lit (min +ui-position-width (round (* done +ui-position-width)))))
+    (concat (propertize (make-string lit ?\u2501) 'face '+ui-position-done)
+            (propertize (make-string (- +ui-position-width lit) ?\u2500)
+                        'face '+ui-position-rest)
+            ;; %%%% here is %% after `format', which the modeline then
+            ;; shows as one %: a lone % would be read as one of its codes.
+            (format " %3d%%%%" (round (* 100 done))))))
 
-  ;; The minimap is a map of the buffer already. Its own buffer has no
-  ;; major mode to speak of, so the list above cannot name it.
-  (defadvice! +ui--no-thumb-in-minimap-a (fn buffer)
-    "Leave the minimap's own buffer without a thumb."
-    :around #'yascroll:enabled-buffer-p
-    (and (not (and (fboundp 'demap-buffer-minimap)
-                   (demap-buffer-minimap buffer)))
-         (funcall fn buffer)))
-
-  ;; Not fading means yascroll redraws the thumb on every change to the
-  ;; buffer, which is every keystroke: a fifth of a millisecond each,
-  ;; measured, in a config that keeps the indent guides off for four.
-  ;; Nothing typed inside a line moves the thumb anyway, so the redraw
-  ;; waits for a pause; scrolling and resizing still draw it at once,
-  ;; through yascroll's own hooks.
-  (defadvice! +ui--thumb-after-a-pause-a (&rest _)
-    "Draw the thumb when the typing stops, not on every change."
-    :override #'yascroll:after-change
-    (when (timerp +ui--thumb-timer) (cancel-timer +ui--thumb-timer))
-    (setq +ui--thumb-timer
-          (run-with-idle-timer 0.2 nil #'+ui--thumb-now (current-buffer))))
-
-  ;; True to proportion, a window of forty lines on a file of fifty
-  ;; thousand earns a thumb one line tall: a dot, and a dot in a fringe
-  ;; is something to hunt for. Two lines is still small and can be seen.
-  (defadvice! +ui--thumb-worth-seeing-a (fn &rest args)
-    "Never draw the thumb shorter than two lines."
-    :around #'yascroll:compute-thumb-size
-    (max 2 (apply fn args)))
-
-  (custom-set-faces!
-    `(yascroll:thumb-fringe :foreground ,(doom-color 'base6)
-                            :background ,(doom-color 'base6))))
+;; Doom's light modeline says "30:12 Bot"; this keeps the line and
+;; column and puts the rail and the number where the word was.
+(setq-default +modeline-position '("  %l:%C  " (:eval (+ui--position)) "  "))
 
 
 ;;
