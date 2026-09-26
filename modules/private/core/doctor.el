@@ -31,16 +31,29 @@
 ;; is running; these are what `SPC m v' shells out to, and what the
 ;; prettify and compact keys use. A missing one is not fatal: the
 ;; format keeps its mode and loses its checking.
-(dolist (tool '(("jq" . "JSON: validate, prettify and compact")
-                ("taplo" . "TOML: validate and format, and the server")
-                ("xmllint" . "XML: check it is well formed, and format it")
+(dolist (tool '(("jq" . "JSON: prettify and compact")
+                ("prettier" . "YAML and JSON with comments: prettify, keeping the comments")
+                ("taplo" . "TOML: format, and the server")
+                ("xmllint" . "XML: format it")
                 ("yaml-language-server" . "YAML: validation as you type, with schemas")
                 ("vscode-json-language-server" . "JSON: validation as you type, with schemas")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: no %s" (car tool) (cdr tool))))
-(unless (zerop (call-process "python3" nil nil nil "-c" "import yaml"))
-  (warn! "python3 has no yaml module: SPC m v cannot check a YAML file")
-  (explain! "openSUSE: zypper in python3-PyYAML"))
+
+;; bin/check-data and bin/inspect-image are python3. check-data reads
+;; YAML with PyYAML; inspect-image reads the picture with PIL and the
+;; metadata with exiftool, and says so in its report when one is missing.
+(if (not (executable-find "python3"))
+    (warn! "No python3: SPC m v cannot check data files, and images open without their inspector")
+  (unless (zerop (call-process "python3" nil nil nil "-c" "import yaml"))
+    (warn! "python3 has no yaml module: SPC m v cannot check a YAML file")
+    (explain! "openSUSE: zypper in python3-PyYAML"))
+  (unless (zerop (call-process "python3" nil nil nil "-c" "import PIL"))
+    (warn! "python3 has no PIL: the image inspector cannot describe the picture")
+    (explain! "openSUSE: zypper in python3-Pillow")))
+(unless (executable-find "exiftool")
+  (warn! "Couldn't find exiftool: the image inspector shows no metadata")
+  (explain! "openSUSE: zypper in exiftool"))
 
 ;; The fonts config.el asks for; a missing one falls back silently to
 ;; whatever fontconfig picks, which is how a wrong glyph or width shows up.
