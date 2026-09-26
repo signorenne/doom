@@ -12,10 +12,10 @@
 - where you are, in code buffers: a header line with the project path
   and the symbol path, file > class > function, replaced by the first
   line of the enclosing function while that is scrolled off the top;
-  the symbol outline at the side on ~SPC t o~; a thumb in the right
-  fringe, as long a part of the edge as the window is of the buffer and
-  sitting where you are in it, drawn by Emacs in the theme's colours
-  rather than by the desktop; the minimap on the right
+  the symbol outline at the side on ~SPC t o~; in the modeline, after
+  the line and column, a rail lit from the top of the buffer to where
+  you are and the percentage that is, so the fringe is left to the git
+  gutter and the diagnostics; the minimap on the right
   on ~SPC t m~, off until asked since its window lays out the whole
   buffer on every redisplay, eight milliseconds a frame for a thousand
   lines on a big frame, its marks held still while the wheel turns;
@@ -107,8 +107,7 @@ should say so oneself, so a buffer flymake checks gets a
 
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
-- The thumb in the fringe is the face ~yascroll:thumb-fringe~, the theme's
-  ~base6~; it is never drawn shorter than two lines, which a window of
-  forty on a file of fifty thousand would otherwise earn.
+- ~+ui-position-width~, how many cells the modeline's rail takes, 12 by
+  default; its faces are ~+ui-position-done~ and ~+ui-position-rest~.
 - The fonts themselves are in =$DOOMDIR/config.el=; ~SPC h r f~ reloads them.
 - Dashboard entries: ~+doom-dashboard-menu-sections~.
