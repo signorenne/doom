@@ -11,8 +11,6 @@
 (require 'url)
 (require 'json)
 
-(declare-function +uml--preview-refresh "preview")
-
 (defvar +uml--server-process nil
   "The running picoweb process, or nil.")
 

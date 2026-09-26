@@ -5,8 +5,10 @@
 ;; diagram this machine actually draws.
 ;;
 ;; Doom's :lang plantuml brings the mode and the flycheck checker. What
-;; this adds is the rendering path, the preview, the server and the
-;; templates.
+;; this adds is the rendering path, the server and the templates. The
+;; window beside the text, redrawing as you type and following you from
+;; diagram to diagram, is core's view (`+core-view-enable'), shared with
+;; SVG files and images; this module only says how a diagram is drawn.
 
 (defvar +uml-docs
   '(:groups (("uml" "UML" (plantuml-mode) plantuml-mode-map)))
@@ -28,27 +30,6 @@
   "`svg' or `png'. SVG carries its own size and this Emacs reads it
 through librsvg, so it stays sharp when the window changes.")
 
-(defvar +uml-preview-scale 1.0
-  "How large the diagram is drawn in the preview.")
-
-(defvar +uml-preview-side 'right
-  "Which side the preview window takes.")
-
-(defvar +uml-preview-width 0.5
-  "How much of the frame the preview takes.")
-
-(defvar +uml-preview-idle 0.4
-  "Seconds of quiet before the preview is drawn again.")
-
-(defvar +uml-preview-follow t
-  "Whether the preview follows your typing. `SPC m p f' turns it off.")
-
-(defvar +uml-preview-on-open t
-  "Whether opening a diagram opens the preview beside it.
-A diagram is something you look at while you write it, so the window
-comes by itself rather than waiting to be asked for. Set this to nil
-and `SPC m p' opens it when you want it.")
-
 (defvar +uml-preview-theme 'auto
   "How the preview is coloured, so a diagram is readable against the theme.
 `auto' follows the frame: dark theme, dark diagram with light text.
@@ -56,16 +37,11 @@ and `SPC m p' opens it when you want it.")
 and a string names a PlantUML theme, such as \"cyborg\" or \"carbon-gray\".
 The file is never touched by this, and neither is what `SPC m e' writes.")
 
-(defvar +uml-preview-buffer-name "*UML preview*"
-  "The buffer the diagram is drawn in.")
-
 (defvar +uml-templates-dir
   (file-name-concat doom-user-dir "templates/uml/")
   "One file per kind of diagram; see `+uml-diagram-kinds'.")
 
-(declare-function +uml--preview-setup-h "preview")
-(declare-function +uml--preview-open-h "preview")
-(declare-function +uml--preview-follow-h "preview")
+(declare-function +uml--view-h "preview")
 
 
 ;;
@@ -88,8 +64,7 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 (add-to-list 'auto-mode-alist
              '("\\.\\(puml\\|iuml\\|wsd\\)\\'" . plantuml-mode))
 
-(add-hook 'plantuml-mode-hook #'+uml--preview-setup-h)
-(add-hook 'plantuml-mode-hook #'+uml--preview-open-h)
+(add-hook 'plantuml-mode-hook #'+uml--view-h)
 
 
 ;;
@@ -120,12 +95,11 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 (map! :after plantuml-mode
       :map plantuml-mode-map
       :localleader
-      :desc "Preview, beside the text" "p" #'+uml/preview-toggle
-      :desc "Open it with the file, or not" "O" #'+uml/preview-on-open-toggle
+      :desc "Preview, beside the text" "p" #'+core/view-toggle
       (:prefix ("P" . "preview")
-       :desc "Open it"              "p" #'+uml/preview
-       :desc "Draw it again now"    "r" #'+uml/preview-refresh
-       :desc "Follow my typing"     "f" #'+uml/preview-follow-toggle
+       :desc "Draw it again now"    "r" #'+core/view-refresh
+       :desc "Follow my typing"     "f" #'+core/view-follow-toggle
+       :desc "Open it with the file, or not" "O" #'+core/view-on-open-toggle
        :desc "PNG or SVG"           "F" #'+uml/preview-format-toggle)
       :desc "New diagram"           "n" #'+uml/new-diagram
       :desc "Export to a file"      "e" #'+uml/export

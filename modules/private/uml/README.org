@@ -94,9 +94,11 @@ for by name and everything here works without it; plantuml-mode's own
 completion stays underneath.
 
 * Configuration
-- ~+uml-preview-format~ (=svg=), ~+uml-preview-side~, ~+uml-preview-width~.
-- ~+uml-preview-theme~ (=auto=), how the preview is coloured.
-- ~+uml-preview-idle~ (0.4 s), the pause before a redraw.
-- ~+uml-preview-follow~, whether it follows typing at all.
+- ~+uml-preview-format~ (=svg=), and ~+uml-preview-theme~ (=auto=), how the
+  preview is coloured.
+- The window, the pause before a redraw and whether it follows your
+  typing are core's view, shared with SVG files and images:
+  ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~ (0.4 s),
+  ~+core-view-follow~ and ~+core-view-on-open~.
 - ~+uml-server-port~ (8135), ~+uml-server-start-timeout~ (30 s).
 - ~+uml-templates-dir~, =$DOOMDIR/templates/uml/= by default.
