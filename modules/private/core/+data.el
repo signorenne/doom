@@ -12,6 +12,7 @@
 ;; workflow, is checked against its real schema and a misspelt key is an
 ;; error rather than a mystery.
 
+
 ;;
 ;;; TOML
 
@@ -36,16 +37,24 @@
   (add-to-list 'eglot-server-programs
                '((conf-toml-mode toml-ts-mode) . ("taplo" "lsp" "stdio")))
 
-  ;; The YAML server validates nothing until it is told it may fetch
-  ;; schemas; this is the setting that turns SchemaStore on.
+  ;; The YAML server fetches SchemaStore's catalog itself once told it
+  ;; may. The JSON server does not: `+data-schemas-setup-h' keeps a
+  ;; cached copy fresh and `+data--json-schemas-h' hands it over, since
+  ;; without it a JSON file is only checked for syntax and "name": 123 in
+  ;; a package.json passes. Only small settings go in here: every server
+  ;; is sent all of this when it starts.
   (setq-default eglot-workspace-configuration
-                (append
-                 '((:yaml . (:schemaStore (:enable t)
-                             :validate t
-                             :hover t
-                             :completion t))
-                   (:json . (:schemas [] :validate (:enable t))))
-                 (bound-and-true-p eglot-workspace-configuration))))
+                (append '((:yaml . (:schemaStore (:enable t)
+                                    :validate t
+                                    :hover t
+                                    :completion t))
+                          (:json . (:validate (:enable t))))
+                        (assq-delete-all
+                         :json (assq-delete-all
+                                :yaml (copy-alist
+                                       (bound-and-true-p eglot-workspace-configuration))))))
+  (add-hook 'eglot-managed-mode-hook #'+data--json-schemas-h)
+  (+data-schemas-setup-h))
 
 (when (modulep! :tools lsp)
   (add-hook! '(conf-toml-mode-hook toml-ts-mode-hook)

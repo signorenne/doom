@@ -159,3 +159,119 @@ Only where that loses nothing: JSON without comments, XML and CSV."
                    ((+data--checker-format kind) "checked on SPC m v")
                    (t "nothing checks this kind of file")))))
 
+
+;;
+;;; Schemas for JSON
+
+;; The YAML server fetches SchemaStore's catalog itself; the JSON one
+;; does not, and without it only checks that a file parses: "name": 123
+;; in a package.json passes. So the catalog is fetched here, cached, and
+;; handed to the JSON server alone, in the notification VS Code uses for
+;; it. Not in `eglot-workspace-configuration': eglot sends all of that
+;; to every server it starts, 180 KB of it with the catalog in, and
+;; plantuml-lsp reads at most 64 KB in one message and quits.
+
+(defun +data--schemastore-file ()
+  "Where the catalog is kept between sessions."
+  (file-name-concat doom-cache-dir "schemastore-catalog.json"))
+
+(defun +data--schemastore-stale-p ()
+  "Non-nil when the cached catalog is missing or old."
+  (let ((file (+data--schemastore-file)))
+    (or (not (file-exists-p file))
+        (> (float-time (time-since (file-attribute-modification-time
+                                    (file-attributes file))))
+           +data-schemastore-max-age))))
+
+(defvar +data--json-schemas nil
+  "The cached catalog as the JSON server takes it, read once.")
+
+(defvar +data--json-servers (make-hash-table :test #'eq :weakness 'key)
+  "The JSON servers that have the catalog, so each is sent it once:
+the server forgets every schema it had fetched when it is sent again.")
+
+;;;###autoload
+(defun +data-schemastore-associations ()
+  "SchemaStore's catalog as the JSON server's schema associations, a
+vector of (:uri URL :fileMatch [PATTERN...]), or nil."
+  (let ((file (+data--schemastore-file)))
+    (when (file-exists-p file)
+      (condition-case nil
+          (with-temp-buffer
+            (insert-file-contents file)
+            (let ((catalog (json-parse-buffer :object-type 'plist :array-type 'list)))
+              (vconcat
+               (cl-loop for schema in (plist-get catalog :schemas)
+                        for match = (plist-get schema :fileMatch)
+                        when (and match (plist-get schema :url))
+                        collect (list :uri (plist-get schema :url)
+                                      :fileMatch (vconcat match))))))
+        (error nil)))))
+
+(defun +data--json-schemas-send (server)
+  "Give SERVER, a JSON server, the catalog."
+  (unless +data--json-schemas
+    (setq +data--json-schemas (or (+data-schemastore-associations) [])))
+  (when (and (length> +data--json-schemas 0) (jsonrpc-running-p server))
+    ;; Params that are an array are the arguments, one by one; the one
+    ;; argument here is itself an array, so it goes in one of its own.
+    (jsonrpc-notify server "json/schemaAssociations" (vector +data--json-schemas))
+    (puthash server t +data--json-servers)))
+
+;;;###autoload
+(defun +data--json-schemas-h ()
+  "Give the server of this JSON buffer the catalog, once."
+  (when (and (eglot-managed-p) (eq (+data--kind) 'json))
+    (when-let* ((server (eglot-current-server)))
+      (unless (gethash server +data--json-servers)
+        (+data--json-schemas-send server)))))
+
+;;;###autoload
+(defun +data-apply-json-schemas ()
+  "Read the cached catalog again and give it to every JSON server
+running. Returns how many file patterns it covers."
+  (setq +data--json-schemas nil)
+  (when (featurep 'eglot)
+    (let (servers)
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (when (and (eglot-managed-p) (eq (+data--kind) 'json))
+            (cl-pushnew (eglot-current-server) servers))))
+      (mapc #'+data--json-schemas-send (delq nil servers))))
+  (length +data--json-schemas))
+
+;;;###autoload
+(defun +data/refresh-schemas (&optional quietly)
+  "Fetch SchemaStore's catalog again, in the background.
+QUIETLY says nothing unless something went wrong."
+  (interactive)
+  (let ((file (+data--schemastore-file)))
+    (url-retrieve
+     +data-schemastore-url
+     (lambda (status)
+       (unwind-protect
+           (if-let* ((err (plist-get status :error)))
+               (message "SchemaStore catalog not fetched: %s" (cdr err))
+             (goto-char (point-min))
+             (when (re-search-forward "\r?\n\r?\n" nil t)
+               (let ((body (buffer-substring-no-properties (point) (point-max))))
+                 ;; Only a catalog replaces the cache, never an error page.
+                 (when (ignore-errors
+                         (plist-get (json-parse-string (decode-coding-string body 'utf-8)
+                                                       :object-type 'plist)
+                                    :schemas))
+                   (make-directory (file-name-directory file) t)
+                   (let ((coding-system-for-write 'binary))
+                     (write-region body nil file nil 'silent))
+                   (let ((n (+data-apply-json-schemas)))
+                     (unless quietly
+                       (message "SchemaStore: %d file patterns now have a schema" n)))))))
+         (kill-buffer)))
+     nil t t)))
+
+;;;###autoload
+(defun +data-schemas-setup-h ()
+  "Refresh the cached catalog in the background when it is missing or
+old. A JSON server is given it when it takes on its first buffer."
+  (when (+data--schemastore-stale-p)
+    (run-with-idle-timer 2 nil #'+data/refresh-schemas t)))
