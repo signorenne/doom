@@ -43,6 +43,11 @@ line never blanks it.")
 (defvar-local +core-view-live nil
   "Non-nil when this buffer's view is drawn again as the buffer changes.")
 
+(defvar-local +core-view-side-here nil
+  "Which side this buffer's view takes, or nil for `+core-view-side'.
+A picture beside its source goes right; an image's insides go left, so
+the picture itself sits on the right the same way.")
+
 (defvar +core-view--showing nil
   "The buffer whose view is on show.")
 
@@ -171,15 +176,20 @@ margin is a title, and what is indented under it belongs to it."
                (+core-view--put-problem source message)
                (setq +core-view--showing source)))))))))
 
-(defun +core-view--display ()
-  "Put the view in its side window, leaving the cursor where it is."
-  (display-buffer (+core-view--buffer)
-                  `(display-buffer-in-side-window
-                    (side . ,+core-view-side)
-                    (window-width . ,+core-view-width)
-                    (slot . 0)
-                    (window-parameters . ((no-other-window . t)
-                                          (no-delete-other-windows . t))))))
+(defun +core-view--display (source)
+  "Put the view in its side window, on SOURCE's side, leaving the cursor
+where it is."
+  (let ((side (or (buffer-local-value '+core-view-side-here source) +core-view-side))
+        (window (+core-view--window)))
+    (when (and window (not (eq (window-parameter window 'window-side) side)))
+      (delete-window window))
+    (display-buffer (+core-view--buffer)
+                    `(display-buffer-in-side-window
+                      (side . ,side)
+                      (window-width . ,+core-view-width)
+                      (slot . 0)
+                      (window-parameters . ((no-other-window . t)
+                                            (no-delete-other-windows . t)))))))
 
 (defun +core-view--close ()
   "Close the view's window and stop anything it was doing."
@@ -205,8 +215,9 @@ has none."
       (let ((buffer (window-buffer window)))
         (cond
          ((buffer-local-value '+core-view-draw buffer)
-          (cond ((+core-view--window) (+core-view--draw buffer))
-                (+core-view-on-open (+core-view--display) (+core-view--draw buffer))))
+          (when (or (+core-view--window) +core-view-on-open)
+            (+core-view--display buffer)
+            (+core-view--draw buffer)))
          ((+core-view--window) (+core-view--close)))))))
 
 (defun +core-view--schedule (&rest _)
@@ -234,9 +245,10 @@ wants a view gives it one again from its own hook."
   (+core-view--disable-h))
 
 ;;;###autoload
-(defun +core-view-enable (draw &optional live)
+(defun +core-view-enable (draw &optional live side)
   "Give this buffer a view drawn by DRAW, beside it. LIVE draws it again
-as the buffer changes. See `+core-view-draw' for what DRAW returns."
+as the buffer changes; SIDE is `left' or `right', `+core-view-side' when
+nil. See `+core-view-draw' for what DRAW returns."
   (unless +core-view-draw
     (setq +core-view--buffers (1+ +core-view--buffers))
     (add-hook 'change-major-mode-hook #'+core-view--disable-h nil t)
@@ -247,7 +259,8 @@ as the buffer changes. See `+core-view-draw' for what DRAW returns."
     (add-hook 'window-buffer-change-functions #'+core-view--follow-h)
     (add-hook 'kill-buffer-hook #'+core-view--forget-h nil t))
   (setq-local +core-view-draw draw
-              +core-view-live live)
+              +core-view-live live
+              +core-view-side-here side)
   (when live
     (add-hook 'after-change-functions #'+core-view--schedule nil t))
   ;; Opened in a window: show the view once the command that opened it
@@ -260,7 +273,7 @@ as the buffer changes. See `+core-view-draw' for what DRAW returns."
        (lambda ()
          (when (and (buffer-live-p buffer)
                     (eq buffer (window-buffer (selected-window))))
-           (+core-view--display)
+           (+core-view--display buffer)
            (+core-view--draw buffer t)))))))
 
 ;;;###autoload
@@ -270,7 +283,7 @@ as the buffer changes. See `+core-view-draw' for what DRAW returns."
   (unless +core-view-draw (user-error "This buffer has no view"))
   (if (+core-view--window)
       (progn (+core-view--close) (message "View closed"))
-    (+core-view--display)
+    (+core-view--display (current-buffer))
     (+core-view--draw (current-buffer) t)))
 
 ;;;###autoload
@@ -278,7 +291,7 @@ as the buffer changes. See `+core-view-draw' for what DRAW returns."
   "Draw this buffer's view again now."
   (interactive)
   (unless +core-view-draw (user-error "This buffer has no view"))
-  (unless (+core-view--window) (+core-view--display))
+  (unless (+core-view--window) (+core-view--display (current-buffer)))
   (+core-view--draw (current-buffer) t))
 
 ;;;###autoload
