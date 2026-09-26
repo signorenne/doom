@@ -48,6 +48,10 @@ line never blanks it.")
 A picture beside its source goes right; an image's insides go left, so
 the picture itself sits on the right the same way.")
 
+(defvar-local +core-view-closed nil
+  "Non-nil once you closed this buffer's view. It stays closed for this
+buffer, `+core-view-on-open' or not, until you open it again.")
+
 (defvar +core-view--showing nil
   "The buffer whose view is on show.")
 
@@ -63,6 +67,33 @@ the picture itself sits on the right the same way.")
 (defvar +core-view--buffers 0
   "How many live buffers have a view. The selection hook is on only while
 this is above zero: a session that never opens one pays nothing.")
+
+;;;###autoload
+(defun +core/view-close ()
+  "Close the view, from wherever you are, the view itself included. The
+buffer it showed keeps it closed until you open it again."
+  (interactive)
+  (when (buffer-live-p +core-view--showing)
+    (with-current-buffer +core-view--showing
+      (setq +core-view-closed t)))
+  (+core-view--close))
+
+(defvar +core-view-panel-mode-map (make-sparse-keymap)
+  "Keys in the view itself.")
+
+(define-minor-mode +core-view-panel-mode
+  "The view beside a buffer: q closes it rather than burying it, which
+would leave some other buffer in the side window."
+  :keymap +core-view-panel-mode-map
+  ;; evil gathers a buffer's state keys when its major mode starts, and
+  ;; this comes on after that; without asking again, q stays the major
+  ;; mode's `quit-window'.
+  (when (fboundp 'evil-normalize-keymaps)
+    (evil-normalize-keymaps)))
+
+(with-eval-after-load 'evil
+  (evil-define-key* 'normal +core-view-panel-mode-map "q" #'+core/view-close))
+(define-key +core-view-panel-mode-map "q" #'+core/view-close)
 
 (defun +core-view--buffer ()
   (get-buffer-create +core-view-buffer-name))
@@ -95,7 +126,8 @@ says what it made."
       ;; image-mode, so what `+images.el' does for a picture, fitting it
       ;; to the window and keeping it there as the window changes, is
       ;; done for the view too.
-      (image-mode)))
+      (image-mode)
+      (+core-view-panel-mode 1)))
   (+core-view--header source))
 
 (defun +core-view--put-text (source text)
@@ -107,7 +139,8 @@ says what it made."
       (erase-buffer)
       (insert text)
       (goto-char (point-min))
-      (setq-local truncate-lines t)))
+      (setq-local truncate-lines t)
+      (+core-view-panel-mode 1)))
   (+core-view--header source))
 
 (defun +core-view--put-problem (source problem)
@@ -178,7 +211,8 @@ margin is a title, and what is indented under it belongs to it."
 
 (defun +core-view--display (source)
   "Put the view in its side window, on SOURCE's side, leaving the cursor
-where it is."
+where it is. A view you can move into: to scroll and search an image's
+report, or to zoom a diagram with the picture's own keys."
   (let ((side (or (buffer-local-value '+core-view-side-here source) +core-view-side))
         (window (+core-view--window)))
     (when (and window (not (eq (window-parameter window 'window-side) side)))
@@ -188,8 +222,7 @@ where it is."
                       (side . ,side)
                       (window-width . ,+core-view-width)
                       (slot . 0)
-                      (window-parameters . ((no-other-window . t)
-                                            (no-delete-other-windows . t)))))))
+                      (window-parameters . ((no-delete-other-windows . t)))))))
 
 (defun +core-view--close ()
   "Close the view's window and stop anything it was doing."
@@ -214,7 +247,8 @@ has none."
     (when (+core-view--eligible-window-p window)
       (let ((buffer (window-buffer window)))
         (cond
-         ((buffer-local-value '+core-view-draw buffer)
+         ((and (buffer-local-value '+core-view-draw buffer)
+               (not (buffer-local-value '+core-view-closed buffer)))
           (when (or (+core-view--window) +core-view-on-open)
             (+core-view--display buffer)
             (+core-view--draw buffer)))
@@ -278,11 +312,14 @@ nil. See `+core-view-draw' for what DRAW returns."
 
 ;;;###autoload
 (defun +core/view-toggle ()
-  "Show this buffer's view beside it, or close it."
+  "Show this buffer's view beside it, or close it. In the view itself,
+close it."
   (interactive)
-  (unless +core-view-draw (user-error "This buffer has no view"))
+  (unless (or +core-view-draw (eq (current-buffer) (get-buffer +core-view-buffer-name)))
+    (user-error "This buffer has no view"))
   (if (+core-view--window)
-      (progn (+core-view--close) (message "View closed"))
+      (progn (+core/view-close) (message "View closed"))
+    (setq +core-view-closed nil)
     (+core-view--display (current-buffer))
     (+core-view--draw (current-buffer) t)))
 
@@ -291,6 +328,7 @@ nil. See `+core-view-draw' for what DRAW returns."
   "Draw this buffer's view again now."
   (interactive)
   (unless +core-view-draw (user-error "This buffer has no view"))
+  (setq +core-view-closed nil)
   (unless (+core-view--window) (+core-view--display (current-buffer)))
   (+core-view--draw (current-buffer) t))
 
