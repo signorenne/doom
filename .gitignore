@@ -8,3 +8,6 @@ custom.el
 .local/
 eln-cache/
 debug-adapters/
+
+# Python leaves these beside a script it imports, as the bin/ checks can be.
+__pycache__/
