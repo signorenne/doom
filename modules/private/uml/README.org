@@ -12,13 +12,20 @@ module adds the three things that make a diagram pleasant to write:
 - *Templates*, one per kind of diagram, on ~SPC m n~.
 
 * The preview
-~SPC m p~ opens the diagram in a side window and keeps it up to date as
-you type. The refresh waits for a pause, so a burst of keys costs one
-drawing rather than one per key.
+Opening a diagram opens its drawing in a window on the right, which
+keeps up as you type. The redraw waits for a pause, so a burst of keys
+costs one drawing rather than one per key. A diagram opened in the
+background, by a search or an export, opens no window and starts no
+server.
+
+The window is one you can move into, ~C-w l~, to zoom a large diagram
+with =+= and =-= or pan it with =h j k l=; ~q~ there closes it, and it
+stays closed for that diagram until ~SPC m p~.
 
 | Key       | What it does                          |
 |-----------+---------------------------------------|
-| ~SPC m p~   | open the preview, or close it         |
+| ~SPC m p~   | the preview, on or off                |
+| ~SPC m P O~ | open it with every diagram, or not    |
 | ~SPC m P r~ | draw it again now                     |
 | ~SPC m P f~ | follow my typing, or wait to be asked |
 | ~SPC m P F~ | draw as PNG instead of SVG            |
