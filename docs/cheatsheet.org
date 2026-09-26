@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-27 20:41
+#+generated: 2026-09-27 21:37
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -624,32 +624,38 @@ reopen as root, with the open buffers following. The listing below is
 for the others.
 
 ** Images
-A raster image, PNG, JPEG, GIF, WebP, BMP or an icon, opens as the
-picture, and beside it what is inside it:
+A raster image, PNG, JPEG, GIF, WebP, BMP or an icon, opens the way an
+SVG does: what is inside it on the left, the picture on the right.
 
-- *The picture*: format, size, pixel type, density, whether it carries a
-  colour profile.
+- *The picture*: format, size, shape and megapixels, pixel type, bits a
+  pixel and how far the file compresses the raw pixels, density, frames
+  and duration when it is animated, and whether it carries a colour
+  profile. A file named =.png= that is really a JPEG says so.
+- *Colours*: how many distinct colours, how much is transparent or partly
+  so, or that an alpha channel carries nothing, the mean colour, the
+  dominant ones, and each channel's range, mean and histogram.
 - *Structure*: the format's own parts, each with its offset and length.
   A PNG's chunks, =IHDR= with the size and bit depth, =pHYs=, =iCCP=, the
   =IDAT= pixels, =IEND=; a JPEG's markers, =APP1= with its EXIF, =SOF= with
-  its dimensions and whether it is progressive, each scan; a GIF's frames;
-  a WebP's RIFF chunks.
+  its dimensions and whether it is progressive, each scan; a GIF's
+  frames; a WebP's RIFF chunks.
 - *Metadata*: what exiftool reads, camera, date, software, GPS, grouped.
-- *The first 256 bytes* in hex, where the chunk names from the structure
-  above can be seen at the offsets it gives.
+- *Bytes*: all of a small file in hex, the first kilobyte of a large one,
+  where the chunk names above can be seen at the offsets they give.
 
 A file that is cut off or damaged is described as far as it goes, and
-the place it stops is said. One named =.png= that is really a JPEG says
-JPEG. The report is =bin/inspect-image=, which runs in the background, so
-a large file never holds up the editor; it was run over every image on
-this machine, 9 700 of them, without a failure.
+the place it stops is said. The report is =bin/inspect-image=, which runs
+in the background, so a large file never holds up the editor; it was run
+over every image on this machine, 9 700 of them, without a failure.
 
-An SVG opens as its XML, with the drawing beside it, drawn again after
-each pause in the typing. It is drawn over a checkerboard, the way
-every image editor shows transparency: an icon drawn for a light
+An SVG opens as its XML, with the drawing on the right, drawn again
+after each pause in the typing. It is drawn over a checkerboard, the
+way every image editor shows transparency: an icon drawn for a light
 interface is dark strokes on nothing, and would vanish on a dark theme.
+The squares are mid-grey rather than white, so a white icon shows too.
 Halfway through a tag the XML does not parse, so the drawing stays as it
-was and its header says which line is broken.
+was and its header says which line is broken. One exported as a single
+long line is taken over by ~so-long-mode~ and keeps its drawing.
 
 | Key       | What it does                                   |
 |-----------+------------------------------------------------|
@@ -659,9 +665,14 @@ was and its header says which line is broken.
 | ~SPC m P f~ | draw it as you type, or only when asked        |
 | ~SPC m P O~ | open it with every file, or wait to be asked   |
 
-The view steps aside when you move to a buffer that has none, and comes
-back when you return, so a glance at a photo does not leave half the
-screen taken. It is one piece of machinery, shared with the diagrams.
+The view is a window you can move into, with ~C-w h~ or ~C-w l~: to scroll
+and search an image's report, whose sections fold with ~TAB~ on their
+title and all at once with ~S-TAB~, or to zoom a drawing with the
+picture's own keys. ~q~ in it closes it, and it stays closed for that
+file until ~SPC m p~ opens it again; other files still open theirs. It
+steps aside when you move to a buffer that has none and comes back when
+you return, so a glance at a photo does not leave half the screen
+taken. It is one piece of machinery, shared with the diagrams.
 
 The picture itself sits in the middle of its window and there is no
 cursor on it. =+= and =-= zoom, =f= fills the window with it again and =1=
@@ -1297,9 +1308,9 @@ conflict in a file is settled, stage it the ordinary way, ~SPC g g~ then
 The header line of a code buffer says where you are, the project path
 and the symbol path, file > class > function; scroll into a long
 function and it turns into that function's first line, pinned, until
-its start is back on screen. In the right fringe of every buffer, a
-thumb: as long a part of the edge as the window is of the buffer, and
-sitting where you are in it. A buffer that fits its window has none.
+its start is back on screen. The modeline says where you are in the
+buffer: the line and column, then a rail lit from the top to where you
+are, then how far through that is as a percentage.
 The most severe problem of a line shows at its end, all of them in the
 popup at point, and the commit behind the line, who and when, at its
 end after a moment of rest.
@@ -1837,7 +1848,10 @@ has a JVM to start. Move to another diagram and the preview follows.
 
 The redraw waits for a pause in the typing, so a burst of keys costs one
 drawing rather than one per key. A diagram opened in the background, by
-a search or an export, opens no window and starts no server.
+a search or an export, opens no window and starts no server. The
+preview is a window you can move into, ~C-w l~, to zoom a large diagram
+with =+= and =-= and pan it with =h j k l=; ~q~ there closes it until
+~SPC m p~.
 
 The drawing is coloured for your theme, not for paper: PlantUML puts its
 background in a CSS style that Emacs's renderer ignores, so on a dark
@@ -3137,6 +3151,8 @@ bound.
   of this frame.
 - ~+core/trash~ (~SPC f t~) :: The trash, in the file manager: what was
   deleted, newest first.
+- ~+core/view-close~ :: Close the view, from wherever you are, the view
+  itself included.
 - ~+core/view-follow-toggle~ :: Draw a live view again as you type, or only
   when asked.
 - ~+core/view-on-open-toggle~ :: Open a view with every buffer that has one,
