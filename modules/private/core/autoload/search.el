@@ -11,6 +11,10 @@
 
 (require 'transient)
 
+;; `fileloop-initialize-replace' is autoloaded and loads the library, so
+;; this exists by the time it is called; the compiler cannot know that.
+(declare-function fileloop-continue "fileloop")
+
 (declare-function +default/search-buffer "search")
 (declare-function +vertico-file-search "vertico")
 (declare-function projectile-relevant-known-projects "projectile")
