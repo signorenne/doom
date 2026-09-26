@@ -133,6 +133,47 @@ makes the text literal by quoting it into the regexp, ~w~ replaces whole
 words only, ~i~ ignores case, and the word under the cursor is offered
 as the thing to replace. ~SPC s R~ is the project one without the menu.
 
+* The view beside a buffer
+A diagram's picture beside its source, an SVG's drawing beside its XML,
+an image's structure beside the picture: one piece of machinery, in
+=autoload/view.el=. A buffer says how its view is drawn with
+~+core-view-enable~ and a function returning an image, text, or a command
+whose output to show; core keeps a side window showing the view of
+whichever such buffer you are in.
+
+- It opens with the buffer, once the command that opened it is done. A
+  buffer visited in the background, by a search or an export, opens no
+  window.
+- A live view is drawn again after a pause in the typing, once per pause
+  rather than once per key.
+- When the drawing fails, halfway through a line, the view keeps what it
+  showed and says why in its header, so it never goes blank.
+- It follows you between buffers that have one, and steps aside for a
+  buffer that has none.
+- The hooks that follow you are on only while some buffer has a view, so
+  a session that never opens one pays nothing.
+
+Settings: ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~,
+~+core-view-follow~, ~+core-view-on-open~. The diagrams of =:private uml=
+use it; so do SVG files and images, below.
+
+* Pictures
+An SVG opens as its XML with its drawing beside it, over a checkerboard
+so a transparent icon shows on a dark theme. Any other image opens as the
+picture with =bin/inspect-image='s report beside it: the picture, its
+structure chunk by chunk or marker by marker, exiftool's metadata, and
+the first bytes in hex. The cheat sheet's Images section has the keys.
+
+* Data files
+~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid
+and takes you to where it is not; ~SPC m =~ and ~SPC m -~ reshape it,
+keeping its comments. Validation is =bin/check-data=, one program that
+reads each format with its own parser, kept outside Emacs so it can be
+run over every data file on the machine. The language servers check as
+you type, against SchemaStore; the JSON one is handed the catalog here,
+since unlike the YAML one it does not fetch it. The cheat sheet's Data
+files section has the detail.
+
 * Configuration
 - ~+core-transparency-alpha~, 85 by default.
 - ~corfu-auto~ is on, 0.15 s after two characters, ~corfu-preselect~ is
