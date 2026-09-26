@@ -63,6 +63,19 @@ has no cursor."
                          (ignore-errors (+core-image-center)))))))))))
 
 (after! image-mode
+  ;; `imagemagick-types-inhibit' is checked against the file's extension
+  ;; only. A buffer with no file, such as the view beside a diagram or an
+  ;; SVG, skips the check, so in a build with ImageMagick every image in
+  ;; it goes through ImageMagick, which draws an SVG as a 30 pixel sliver.
+  ;; With no file name, decide by the data instead: ImageMagick only for a
+  ;; type Emacs cannot read itself.
+  (defadvice! +core--image-native-first-a (fn filename)
+    :around #'image--imagemagick-wanted-p
+    (and (funcall fn filename)
+         (not (and (null filename)
+                   (when-let* ((type (image-type-from-buffer)))
+                     (image-type-available-p type))))))
+
   (defadvice! +core--image-uncenter-a (&rest _)
     :before #'image-toggle-display
     (ignore-errors (+core-image-uncenter)))
