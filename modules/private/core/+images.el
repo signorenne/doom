@@ -105,10 +105,22 @@ has no cursor."
 ;; speed; it keeps its drawing there too.
 (add-hook 'so-long-mode-hook #'+core--svg-view-h)
 
+;; Any other image opens as the picture, with what is inside it beside:
+;; its structure, chunk by chunk or marker by marker, its metadata, and
+;; its first bytes. The view steps aside when you leave for a buffer that
+;; has none, so a glance at a photo does not leave half the screen taken.
+(add-hook 'image-mode-hook #'+core--image-inspector-h)
+
 ;; The viewer's own keys: evil-collection already pans with hjkl, zooms
 ;; on + and -, and scrolls with C-d and C-u. What it leaves out is the
 ;; whole picture at once, the picture at its true size, and stepping to
 ;; the next file in the directory.
+(map! :after image-mode
+      :map image-mode-map
+      :localleader
+      :desc "What is inside, beside it" "p" #'+core/view-toggle
+      :desc "Read it again"             "r" #'+core/view-refresh)
+
 (map! :after nxml-mode
       :map nxml-mode-map
       :localleader

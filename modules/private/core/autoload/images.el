@@ -146,9 +146,16 @@ This many at a time crosses it in a dozen.")
 
 
 ;;
-;;; The picture beside the source
+;;; The picture beside the source, and what is inside a picture
 
 (declare-function +core-view-enable "view")
+
+(defvar +core-image-inspector (file-name-concat doom-user-dir "bin/inspect-image")
+  "The program that describes an image from the inside.")
+
+(defvar +core-image-inspected
+  (rx "." (or "png" "jpg" "jpeg" "gif" "webp" "bmp" "ico" "tif" "tiff") eos)
+  "The image files that open with their inspector beside them.")
 
 (defun +core--svg-on-checker (svg)
   "SVG, a unibyte string, laid over a checkerboard, as a new SVG.
@@ -209,3 +216,14 @@ XML breaks, which `bin/check-data' can tell to the column."
   (when (and buffer-file-name (string-match-p "\\.svg\\'" buffer-file-name))
     (+core-view-enable #'+core--svg-draw t)))
 
+(defun +core--image-inspect ()
+  "What is inside this image, for core's view: `bin/inspect-image',
+which runs in the background so a large file never holds up the editor."
+  (list 'process (list +core-image-inspector buffer-file-name)))
+
+;;;###autoload
+(defun +core--image-inspector-h ()
+  "Give an image file its inspector beside it."
+  (when (and buffer-file-name
+             (string-match-p +core-image-inspected (downcase buffer-file-name)))
+    (+core-view-enable #'+core--image-inspect)))
