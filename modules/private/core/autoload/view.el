@@ -140,6 +140,11 @@ says what it made."
       (insert text)
       (goto-char (point-min))
       (setq-local truncate-lines t)
+      ;; A line at the margin is a section's title: fold them like an
+      ;; outline, TAB or za on the title, S-TAB for all of them.
+      (setq-local outline-regexp "[^ \t\n]"
+                  outline-minor-mode-cycle t)
+      (outline-minor-mode 1)
       (+core-view-panel-mode 1)))
   (+core-view--header source))
 
