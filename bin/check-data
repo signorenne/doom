@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""Say whether a data file is valid, reading it from standard input.
+
+    check-data FORMAT [NAME] < FILE
+
+FORMAT is json, yaml, toml, csv, ini, xml or plist. NAME is the file's
+name, used only to word the answer. The exit status is the verdict:
+
+    0  valid; one line says what was found
+    1  invalid; one line says where, as LINE:COLUMN: what is wrong
+    2  cannot be checked; one line says why
+
+Each format is read by its own real parser rather than by a pattern, so
+the answer is the one the tools that consume the file would give. Emacs
+calls this for SPC m v; it is also run over every data file on this
+machine to catch a false verdict before it reaches the editor.
+"""
+
+import configparser
+import csv
+import io
+import json
+import plistlib
+import re
+import sys
+
+
+def ok(message):
+    print(message)
+    sys.exit(0)
+
+
+def invalid(line, column, message):
+    print(f"{line}:{column}: {message}")
+    sys.exit(1)
+
+
+def cannot(message):
+    print(message)
+    sys.exit(2)
+
+
+def as_text(data):
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError as e:
+        line = data[: e.start].count(b"\n") + 1
+        invalid(line, 1, "not UTF-8 text")
+
+
+# JSON, and JSON with comments
+
+def blank_jsonc(text):
+    """TEXT with // and /* */ comments and trailing commas replaced by
+    spaces, and how many of each there were. Replaced, not removed, so
+    every line and column still points at the same place in the file."""
+    out, i, n = list(text), 0, len(text)
+    comments = commas = 0
+    first = None  # offset of the first comment or trailing comma
+    in_string = False
+    while i < n:
+        c = text[i]
+        if in_string:
+            if c == "\\":
+                i += 2
+                continue
+            if c == '"':
+                in_string = False
+            i += 1
+            continue
+        if c == '"':
+            in_string = True
+        elif text.startswith("//", i):
+            end = text.find("\n", i)
+            end = n if end < 0 else end
+            for j in range(i, end):
+                out[j] = " "
+            comments += 1
+            first = i if first is None else min(first, i)
+            i = end
+            continue
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end < 0:
+                invalid(text.count("\n", 0, i) + 1, i - text.rfind("\n", 0, i),
+                        "a /* comment is never closed")
+            for j in range(i, end + 2):
+                if out[j] != "\n":
+                    out[j] = " "
+            comments += 1
+            first = i if first is None else min(first, i)
+            i = end + 2
+            continue
+        i += 1
+    # Trailing commas, now that comments are out of the way: a comma whose
+    # next non-blank character closes the object or array.
+    blanked = "".join(out)
+    in_string = False
+    i = 0
+    while i < n:
+        c = blanked[i]
+        if in_string:
+            if c == "\\":
+                i += 2
+                continue
+            if c == '"':
+                in_string = False
+        elif c == '"':
+            in_string = True
+        elif c == ",":
+            j = i + 1
+            while j < n and blanked[j] in " \t\r\n":
+                j += 1
+            if j < n and blanked[j] in "}]":
+                out[i] = " "
+                commas += 1
+                first = i if first is None else min(first, i)
+        i += 1
+    return "".join(out), comments, commas, first
+
+
+# Which files are JSON with comments is decided by name, the way VS Code
+# decides it: its own settings, dev containers, the TypeScript and Babel
+# configs. Anywhere else a comment or a trailing comma is an error, since
+# npm, node and every strict reader refuse it.
+JSONC_NAMES = {
+    "devcontainer.json", ".devcontainer.json", "tsconfig.json", "jsconfig.json",
+    "babel.config.json", ".babelrc.json", "typedoc.json", "api-extractor.json",
+    ".eslintrc.json", "language-configuration.json",
+    ".eslintrc", ".babelrc", ".jshintrc", ".swcrc", ".hintrc", ".jsfmtrc",
+}
+
+
+def is_jsonc(name):
+    path = name.replace("\\", "/")
+    base = path.rsplit("/", 1)[-1]
+    return ("/.vscode/" in "/" + path
+            or base in JSONC_NAMES
+            or base.endswith((".jsonc", ".code-workspace"))
+            or re.match(r"^(ts|js)config[.-].*\.json$", base) is not None)
+
+
+def position(text, offset):
+    """LINE and COLUMN, both from 1, of OFFSET in TEXT."""
+    line = text.count("\n", 0, offset) + 1
+    return line, offset - text.rfind("\n", 0, offset)
+
+
+def check_json(text, name):
+    if not text.strip():
+        invalid(1, 1, "empty file; JSON needs at least one value, even if only {}")
+    try:
+        json.loads(text)
+        ok("Valid JSON")
+    except json.JSONDecodeError as strict:
+        blanked, comments, commas, first = blank_jsonc(text)
+        if not (comments or commas):
+            invalid(strict.lineno, strict.colno, strict.msg)
+        try:
+            json.loads(blanked)
+        except json.JSONDecodeError as e:
+            invalid(e.lineno, e.colno, e.msg)
+        if not is_jsonc(name):
+            line, column = position(text, first)
+            what = "a comment" if text.startswith(("//", "/*"), first) else "a trailing comma"
+            invalid(line, column, f"{what}, which JSON does not allow; only JSON-with-"
+                    "comments files such as tsconfig.json and .vscode/*.json may have them")
+        what = []
+        if comments:
+            what.append(f"{comments} comment{'s' * (comments > 1)}")
+        if commas:
+            what.append(f"{commas} trailing comma{'s' * (commas > 1)}")
+        ok("Valid JSON with comments (JSONC): " + " and ".join(what))
+
+
+# YAML
+
+def check_yaml(text, name):
+    try:
+        import yaml
+    except ImportError:
+        cannot("python3 has no yaml module; openSUSE: zypper in python3-PyYAML")
+
+    class Loader(yaml.SafeLoader):
+        pass
+
+    # A tag the safe loader does not know, !Ref or !reference, is still
+    # valid YAML: the tool that reads the file gives it meaning. Accept it
+    # as plain data rather than calling the file broken.
+    def any_tag(loader, _suffix, node):
+        if isinstance(node, yaml.ScalarNode):
+            return loader.construct_scalar(node)
+        if isinstance(node, yaml.SequenceNode):
+            return loader.construct_sequence(node)
+        return loader.construct_mapping(node)
+
+    Loader.add_multi_constructor("!", any_tag)
+    Loader.add_multi_constructor("tag:", any_tag)
+    try:
+        docs = list(yaml.load_all(text, Loader=Loader))
+    except yaml.MarkedYAMLError as e:
+        mark = e.problem_mark or e.context_mark
+        line, column = (mark.line + 1, mark.column + 1) if mark else (1, 1)
+        invalid(line, column, " ".join(filter(None, [e.context, e.problem])))
+    except yaml.YAMLError as e:
+        invalid(1, 1, str(e).splitlines()[0])
+    count = len(docs)
+    ok("Valid YAML" + (f", {count} documents" if count > 1 else ""))
+
+
+# TOML
+
+def line_in_multiline_inline_table(text, line):
+    """Whether LINE (1-based) falls inside a { } table that spans lines.
+
+    Every { outside a string or a comment opens an inline table in TOML,
+    whether it is a key's value or an element of an array, so all of them
+    are matched. Multi-line strings are skipped whole: a naive quote scan
+    loses its place on the first \'\'\'.
+    """
+    stack, spans = [], []
+    i, n, current = 0, len(text), 1
+    while i < n:
+        if text.startswith('"""', i) or text.startswith("'''", i):
+            quote = text[i:i + 3]
+            j = text.find(quote, i + 3)
+            j = n if j < 0 else j + 3
+            current += text.count("\n", i, j)
+            i = j
+            continue
+        c = text[i]
+        if c in "\"'":
+            j = i + 1
+            while j < n and text[j] not in (c, "\n"):
+                j += 2 if (c == '"' and text[j] == "\\") else 1
+            i = j + 1
+            continue
+        if c == "#":
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+            continue
+        if c == "\n":
+            current += 1
+        elif c == "{":
+            stack.append(current)
+        elif c == "}" and stack:
+            opened = stack.pop()
+            if current > opened:
+                spans.append((opened, current))
+        i += 1
+    return any(first <= line <= last for first, last in spans)
+
+
+def check_toml(text, name):
+    import tomllib
+    try:
+        tomllib.loads(text)
+    except tomllib.TOMLDecodeError as e:
+        message = str(e)
+        m = re.search(r"\(at line (\d+), column (\d+)\)", message)
+        line, column = (int(m.group(1)), int(m.group(2))) if m else (1, 1)
+        reason = re.sub(r"\s*\(at line \d+, column \d+\)", "", message)
+        # Newlines inside an inline table are TOML 1.1, which neither
+        # Python nor taplo reads yet. When the error sits inside such a
+        # table, say so: the file may be fine for the tool it was written
+        # for, and "invalid initial character" would not tell you why.
+        if line_in_multiline_inline_table(text, line):
+            reason += "; this is inside an inline table that spans lines, which is TOML 1.1 and most tools read only 1.0"
+        invalid(line, column, reason)
+    ok("Valid TOML")
+
+
+# CSV
+
+def check_csv(text, name):
+    if not text.strip():
+        cannot("Empty file")
+    try:
+        dialect = csv.Sniffer().sniff(text[:8192], delimiters=",;\t|")
+        delimiter = dialect.delimiter
+    except csv.Error:
+        delimiter = ","
+    reader = csv.reader(io.StringIO(text), delimiter=delimiter, strict=True)
+    rows = []
+    try:
+        for row in reader:
+            rows.append(row)
+    except csv.Error as e:
+        invalid(reader.line_num, 1, f"malformed quoting: {e}")
+    # A row starting with # is a comment in the formats that allow them,
+    # ESP-IDF's partition tables among them; leave those out of the count.
+    body = [r for r in rows if r and not r[0].lstrip().startswith("#")]
+    widths = {}
+    for r in body:
+        widths[len(r)] = widths.get(len(r), 0) + 1
+    shown = {"\t": "tab"}.get(delimiter, delimiter)
+    if len(widths) <= 1:
+        width = next(iter(widths), 0)
+        ok(f"Valid CSV, separated by {shown}: {len(body)} rows of {width} fields")
+    # Rows of different widths are allowed: many real formats leave off
+    # an optional last column. Said as a fact, not as an error.
+    spread = ", ".join(f"{n} with {w}" for w, n in sorted(widths.items(), key=lambda kv: -kv[1]))
+    ok(f"Valid CSV, separated by {shown}: {len(body)} rows, not all the same width ({spread})")
+
+
+# INI
+
+def check_ini(text, name):
+    parser = configparser.ConfigParser(strict=True, interpolation=None,
+                                       allow_no_value=True)
+    try:
+        parser.read_string(text)
+    except configparser.MissingSectionHeaderError:
+        cannot("Not an INI file: it has no [section], so there is nothing to check it against")
+    except configparser.DuplicateOptionError as e:
+        invalid(e.lineno or 1, 1, f"{e.option} is set twice in [{e.section}]")
+    except configparser.DuplicateSectionError as e:
+        invalid(e.lineno or 1, 1, f"[{e.section}] appears twice")
+    except configparser.ParsingError as e:
+        line = e.errors[0][0] if e.errors else 1
+        invalid(line, 1, "a line that is neither a section, a key nor a comment")
+    sections = len(parser.sections())
+    ok(f"Valid INI, {sections} section{'s' * (sections != 1)}")
+
+
+# XML and property lists
+
+def check_xml(text, name):
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(text.encode("utf-8"))
+    except ET.ParseError as e:
+        line, column = e.position
+        invalid(line, column + 1, re.sub(r":\s*line \d+, column \d+", "", str(e)))
+    tag = re.sub(r"^\{.*\}", "", root.tag)
+    ok(f"Well-formed XML, root <{tag}> (well-formedness only, not checked against a schema)")
+
+
+def check_plist(data, name):
+    try:
+        plistlib.loads(data)
+    except Exception as e:
+        if data.startswith(b"bplist"):
+            invalid(1, 1, f"a binary property list that does not parse: {e}")
+        check_xml(as_text(data), name)  # say where the XML is broken
+    ok("Valid property list, " + ("binary" if data.startswith(b"bplist") else "XML"))
+
+
+def main():
+    if len(sys.argv) < 2:
+        cannot(__doc__.strip().splitlines()[2].strip())
+    kind = sys.argv[1]
+    name = sys.argv[2] if len(sys.argv) > 2 else ""
+    data = sys.stdin.buffer.read()
+    if kind == "plist":
+        check_plist(data, name)
+    checks = {"json": check_json, "yaml": check_yaml, "toml": check_toml,
+              "csv": check_csv, "ini": check_ini, "xml": check_xml}
+    if kind not in checks:
+        cannot(f"No check for {kind}")
+    checks[kind](as_text(data), name)
+
+
+if __name__ == "__main__":
+    main()
