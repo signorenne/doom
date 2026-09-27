@@ -162,6 +162,12 @@ clangd runs there too, so every Qt type resolves; a jump into an SDK
 header opens through TRAMP, =/podman:<name>:/opt/...=, read only, from
 any buffer of the project.
 
+Of the environment a Qt Creator kit sets, the loader's variables,
+=LD_LIBRARY_PATH= and =LD_PRELOAD=, are left out of every command. The
+PC target's kits put the target's libraries there, and a program of the
+container's own that starts with them loads the target's C library and
+crashes before it does anything: clangd did, on every C++ file.
+
 When a compiler exists on the host and in a container both, detection
 picks the host; =SPC k l b= names the container instead, written to
 =.dir-locals.el= as =+cpp-container=, and everything moves there: builds,
