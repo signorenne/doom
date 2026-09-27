@@ -245,51 +245,27 @@ paints it the plain way instead."
 ;;; Who wrote this line, and when
 
 ;; The commit behind the current line at its end, author and date and
-;; the summary, after a moment of rest, in every code buffer that is not
-;; a large one; SPC t B turns it off and on anywhere.  SPC g B is still
-;; the whole-buffer blame.
-(defvar +git-blamer-max-size (* 100 1024)
+;; the summary, after a moment of rest, in every code buffer under git
+;; that is not a very large one; SPC t B turns it off and on anywhere.
+;; SPC g B is still the whole-buffer blame. autoload/blame.el has how.
+(defvar +git-blame-max-size (* 1024 1024)
   "The largest buffer the blame turns itself on in, in characters.
-blamer counts the lines from the top of the buffer twice on every
-command, so what it costs grows with the file: measured, seven
-hundredths of a millisecond a keystroke in a thirty kilobyte file and
-two thirds of a millisecond in a five hundred kilobyte one, against a
-frame of eight.  Past this size it waits to be asked with SPC t B.")
+One `git blame' of the whole file answers for every line, so moving and
+typing cost nothing more in a large file; what grows is the reading of
+git's answer, once after an edit.")
 
-(defun +git--blamer-unless-large-h ()
-  "Turn the blame on in a buffer small enough to afford it."
-  (when (< (buffer-size) +git-blamer-max-size)
-    (blamer-mode 1)))
+(defun +git--blame-on-h ()
+  "Turn the blame on in a file under git that is not too large."
+  (when (and buffer-file-name
+             (< (buffer-size) +git-blame-max-size)
+             (not (file-remote-p buffer-file-name))
+             (locate-dominating-file buffer-file-name ".git"))
+    (+git-blame-line-mode 1)))
 
-(use-package! blamer
-  :defer t
-  :init (add-hook 'prog-mode-hook #'+git--blamer-unless-large-h)
-  :config
-  (setq blamer-idle-time 0.5
-        blamer-min-offset 40
-        blamer-type 'visual              ; the current line only
-        blamer-max-commit-message-length 50
-        blamer-author-formatter "%s, "
-        blamer-datetime-formatter "%s: "
-        blamer-commit-formatter "%s"
-        blamer-show-avatar-p nil)
-
-  ;; flymake draws its diagnostic at the end of the line and so does
-  ;; this, and the two of them there is one too many to read: the
-  ;; diagnostic is the one wanted, so the blame keeps off a line that
-  ;; has one and comes back when it is fixed.
-  (defun +git--line-has-diagnostic-p ()
-    "Non-nil when flymake has something to say about the line point is on."
-    (and (bound-and-true-p flymake-mode)
-         (fboundp 'flymake-diagnostics)
-         (flymake-diagnostics (line-beginning-position) (line-end-position))
-         t))
-
-  (defadvice! +git--blame-yields-to-diagnostics-a (fn &rest args)
-    :around #'blamer--try-render
-    (if (+git--line-has-diagnostic-p)
-        (when (fboundp 'blamer--clear-overlay) (blamer--clear-overlay))
-      (apply fn args))))
+(add-hook 'prog-mode-hook #'+git--blame-on-h)
+;; A commit turns "not committed yet" into a commit, with no edit to
+;; the buffer that would say so.
+(add-hook 'git-commit-post-finish-hook #'+git--blame-forget-all-h)
 
 
 ;;
@@ -305,7 +281,7 @@ frame of eight.  Past this size it waits to be asked with SPC t B.")
        ;; it. The fringe says a line changed; this says what it was.
        :desc "Show the change here" "p" #'diff-hl-show-hunk)
       (:prefix "t"
-       :desc "Who and when, on this line" "B" #'blamer-mode))
+       :desc "Who and when, on this line" "B" #'+git-blame-line-mode))
 
 ;; A conflict is worked through where it is: the two motions vim uses,
 ;; and the menu for which side to keep. Doom turns smerge-mode on by
