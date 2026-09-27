@@ -101,6 +101,37 @@
 (after! eglot
   (add-to-list 'eglot-stay-out-of 'imenu))
 
+;; eglot finds each position a server sends by counting lines from the
+;; top of the buffer, so a list of them, diagnostics or symbols, costs
+;; the square of the file's length. Counted from the last one found, a
+;; list in file order costs its length.
+(defvar-local +core--lsp-line nil
+  "(TICK LINE . POS): where the last position a server sent was found.")
+
+(after! eglot
+  (defadvice! +core--lsp-position-from-last-a (pos-plist &optional marker)
+    "The point of POS-PLIST, an LSP position, counted from the last found."
+    :override #'eglot--lsp-position-to-point
+    (save-excursion
+      (save-restriction
+        (widen)
+        (let* ((line (min most-positive-fixnum (plist-get pos-plist :line)))
+               (tick (buffer-chars-modified-tick))
+               (from (if (eq (car +core--lsp-line) tick)
+                         (cdr +core--lsp-line)
+                       (cons 0 (point-min)))))
+          (goto-char (cdr from))
+          (when (and (zerop (forward-line (- line (car from)))) (bolp))
+            (setq +core--lsp-line (cons tick (cons line (point)))))
+          ;; A line past the end leaves point at the end, as eglot does.
+          (unless (eobp)
+            (let ((col (plist-get pos-plist :character)))
+              (unless (wholenump col)
+                (eglot--warn "Caution: LSP server sent invalid character position %s. Using 0 instead." col)
+                (setq col 0))
+              (funcall eglot-move-to-linepos-function col)))
+          (if marker (copy-marker (point-marker)) (point)))))))
+
 ;; The echo area takes up to three lines for what is under the cursor.
 ;; One line cut every diagnostic that did not fit, which is most of the
 ;; ones worth reading; three holds nearly all of them and still does not
