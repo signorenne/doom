@@ -18,9 +18,11 @@ costs one drawing rather than one per key. A diagram opened in the
 background, by a search or an export, opens no window and starts no
 server.
 
-The window is one you can move into, ~C-w l~, to zoom a large diagram
-with =+= and =-= or pan it with =h j k l=; ~q~ there closes it, and it
-stays closed for that diagram until ~SPC m p~.
+The diagram is fitted to the window and centred in it, and fitted again
+when the window changes size. The window is one you can move into,
+~C-w l~, to zoom a large diagram with =+= and =-= or pan it with
+=h j k l=; ~q~ there closes it, and it stays closed for that diagram
+until ~SPC m p~.
 
 | Key       | What it does                          |
 |-----------+---------------------------------------|
