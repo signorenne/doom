@@ -101,6 +101,13 @@
 (after! eglot
   (add-to-list 'eglot-stay-out-of 'imenu))
 
+;; A server that formats as you type is asked, and waited for, at each
+;; newline: clangd did it on every RET, a round trip a busy server makes
+;; long. The mode indents the new line already, and the file is
+;; formatted when it is saved.
+(after! eglot
+  (add-to-list 'eglot-ignored-server-capabilities :documentOnTypeFormattingProvider))
+
 ;; eglot finds each position a server sends by counting lines from the
 ;; top of the buffer, so a list of them, diagnostics or symbols, costs
 ;; the square of the file's length. Counted from the last one found, a
