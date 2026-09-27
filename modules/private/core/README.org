@@ -261,6 +261,12 @@ tree-sitter's C++ grammar cannot parse, nlohmann's 24 765 line
 at every keystroke, 43 ms; cc-mode is slower still there, so that one
 stays as it is.
 
+The same day, across the modes with their servers attached, a keystroke
+before and after the eglot, snippet and diagnostics changes below: an
+11 529 line JSON file 2 777 ms to 13, a TypeScript file 143 to 20, a
+Python file with 2 896 diagnostics 135 to 24, a 17 018 line C data array
+337 to 87; Enter in C++ 27 to 9.5.
+
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
   redisplay, and with dirvish on screen a redisplay costs some 20 ms. The
@@ -282,6 +288,24 @@ What keeps it that way:
 - The blame at the end of the line is one =git blame= of the whole file,
   kept, not a second Emacs started for every line the cursor rests on;
   that was a third of the editor's time while moving through a file.
+- eglot stays out of imenu: the header line's breadcrumbs asked the
+  server for every symbol of the file after each edit, a five second
+  freeze at every pause in a large JSON file; tree-sitter's index is
+  local. It finds the positions a server sends by counting from the last
+  one found rather than from line 1, which made a long list cost the
+  square of the file's length. Its "a fix is available" mark asks about
+  the symbol at point, where it walked every sibling in the syntax tree
+  to find the expression around it. And no server formats as you type:
+  that was a round trip waited for at every newline.
+- The header line finds the function around the window's top in the
+  syntax tree, as many steps as the tree is deep, not by moving to the
+  start and end of a defun past every sibling.
+- The snippet completion looks eighty characters around point for a key,
+  not from the top of the buffer at each attempt.
+- Past 300 diagnostics in a report none is written at the end of its
+  line; rewriting 1 607 of them at each report doubled a key's cost.
+- The minimap is a copy of the buffer, not demap's indirect buffer, which
+  every overlay the file moved redrew: 8 ms a key with it open, 0 now.
 - Completion runs after a pause of 0.15 s, not on every keystroke.
 - Backspace in the popup deletes a character. Doom makes it reset the
   popup whenever a candidate is chosen, for the preview it inserts;
@@ -292,6 +316,11 @@ Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
 busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native
 compilation of every package ahead of time, so-long and fundamental mode
 for huge files, ~redisplay-skip-fontification-on-input~.
+
+When something pauses now and then: ~SPC t W~ watches, writing down every
+key, timer and garbage collection that takes over
+~+core-latency-threshold~ (50 ms), with the buffer and mode; ~SPC h D~
+shows what it caught.
 
 When something is slow: =M-x profiler-start=, do the slow thing, =M-x
 profiler-report=. In a running session, =emacsclient -s server -e= can run
