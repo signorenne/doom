@@ -315,11 +315,10 @@ or the enclosing function's first line while it is scrolled off the top."
 ;;; Where you are in the buffer
 
 ;; In the modeline, where the eye already goes for a buffer's facts: the
-;; line and column, then how far through the buffer point is, as a
-;; percentage. It is worked out from three numbers Emacs knows anyway,
-;; so it costs a redisplay nothing more, and it takes no column from the
-;; text and no pixel from the fringe, which carries the git gutter and
-;; the diagnostics.
+;; line out of how many the buffer has, the column, and how far through
+;; the buffer point is as a percentage, 228/1009:7  23%. They take no
+;; column from the text and no pixel from the fringe, which carries the
+;; git gutter and the diagnostics.
 (defun +ui--position ()
   "How far through the buffer point is, for the modeline."
   ;; %%%% here is %% after `format', which the modeline then shows as
@@ -327,9 +326,53 @@ or the enclosing function's first line while it is scrolled off the top."
   (format "%3d%%%%" (round (* 100 (/ (float (- (point) (point-min)))
                                      (max 1 (- (point-max) (point-min))))))))
 
+;; Counting the lines reads the whole text, so the count is kept and done
+;; again only when the buffer has changed, and in a buffer of megabytes
+;; only once the typing stops.
+(defvar +ui-line-count-idle-size (* 2 1024 1024)
+  "Past this many characters, the line count waits for a pause to be redone.")
+
+(defvar-local +ui--line-count nil
+  "(TICK START END . LINES): the buffer's lines when they were last counted.")
+
+(defvar-local +ui--line-count-timer nil
+  "The pending recount of a large buffer.")
+
+(defun +ui--count-lines ()
+  "Count the lines of the accessible part of the buffer, and keep it."
+  (let ((lines (line-number-at-pos (point-max))))
+    (setq +ui--line-count (cons (buffer-chars-modified-tick)
+                                (cons (point-min) (cons (point-max) lines))))
+    lines))
+
+(defun +ui--line-total ()
+  "How many lines the buffer has, for the modeline."
+  (pcase-let ((`(,tick ,start ,end . ,lines) +ui--line-count))
+    (number-to-string
+     (cond ((and lines (eq tick (buffer-chars-modified-tick))
+                 (eq start (point-min)) (eq end (point-max)))
+            lines)
+           ((or (null lines) (< (buffer-size) +ui-line-count-idle-size))
+            (+ui--count-lines))
+           (t
+            (unless (timerp +ui--line-count-timer)
+              (let ((buffer (current-buffer)))
+                (setq +ui--line-count-timer
+                      (run-with-idle-timer
+                       0.5 nil
+                       (lambda ()
+                         (when (buffer-live-p buffer)
+                           (with-current-buffer buffer
+                             (setq +ui--line-count-timer nil)
+                             (+ui--count-lines)
+                             (force-mode-line-update))))))))
+            lines)))))
+
 ;; Doom's light modeline says "30:12 Bot"; this keeps the line and
-;; column and puts the percentage where the word was.
-(setq-default +modeline-position '("  %l:%C  " (:eval (+ui--position)) "  "))
+;; column, adds how many lines there are, and puts the percentage where
+;; the word was.
+(setq-default +modeline-position
+              '("  %l/" (:eval (+ui--line-total)) ":%C  " (:eval (+ui--position)) "  "))
 
 
 ;;
