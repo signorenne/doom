@@ -665,14 +665,16 @@ long line is taken over by ~so-long-mode~ and keeps its drawing.
 | ~SPC m P f~ | draw it as you type, or only when asked        |
 | ~SPC m P O~ | open it with every file, or wait to be asked   |
 
-The view is a window you can move into, with ~C-w h~ or ~C-w l~: to scroll
-and search an image's report, whose sections fold with ~TAB~ on their
-title and all at once with ~S-TAB~, or to zoom a drawing with the
-picture's own keys. ~q~ in it closes it, and it stays closed for that
-file until ~SPC m p~ opens it again; other files still open theirs. It
-steps aside when you move to a buffer that has none and comes back when
-you return, so a glance at a photo does not leave half the screen
-taken. It is one piece of machinery, shared with the diagrams.
+A drawing in the view is fitted to it and sits in its middle, both ways,
+and is fitted and centred again when the window changes size. The view
+is a window you can move into, with ~C-w h~ or ~C-w l~: to scroll and
+search an image's report, whose sections fold with ~TAB~ on their title
+and all at once with ~S-TAB~, or to zoom a drawing with the picture's
+own keys. ~q~ in it closes it, and it stays closed for that file until
+~SPC m p~ opens it again; other files still open theirs. It steps aside
+when you move to a buffer that has none and comes back when you return,
+so a glance at a photo does not leave half the screen taken. It is one
+piece of machinery, shared with the diagrams.
 
 The picture itself sits in the middle of its window and there is no
 cursor on it. =+= and =-= zoom, =f= fills the window with it again and =1=
