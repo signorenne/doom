@@ -252,6 +252,15 @@ files list in 92 ms; a C++ buffer of that project comes back in 338 ms and
 its server, started in the container, attaches within half a second; a
 cursor move in dired costs 2 to 6 ms.
 
+Measured again on 2026-09-27, in a 1 547 line C++ file of the fdc
+project with clangd attached, key and redisplay together: a line move
+9 ms, a half page 13 ms, a keystroke 14 ms, where they were 28, 35 and
+37 before the two changes at the end of the list below. A header that
+tree-sitter's C++ grammar cannot parse, nlohmann's 24 765 line
+=json.hpp= with its whole text inside one error node, reparses all of it
+at every keystroke, 43 ms; cc-mode is slower still there, so that one
+stays as it is.
+
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
   redisplay, and with dirvish on screen a redisplay costs some 20 ms. The
@@ -266,14 +275,21 @@ What keeps it that way:
   so no first open compiles one; ~treesit-auto-install-grammar~ stays
   ~always~ for the next language. (Not listed here: the list rots.)
 - Projectile has no cache; fd lists a project in milliseconds.
+- gcmh collects after four seconds of rest. Doom's setting waits ten
+  times the last collection, under half a second here, so every pause to
+  read a line ended in a collection of 40 to 150 ms that the next key
+  waited for.
+- The blame at the end of the line is one =git blame= of the whole file,
+  kept, not a second Emacs started for every line the cursor rests on;
+  that was a third of the editor's time while moving through a file.
 - Completion runs after a pause of 0.15 s, not on every keystroke.
 - Backspace in the popup deletes a character. Doom makes it reset the
   popup whenever a candidate is chosen, for the preview it inserts;
   with the first chosen from the start that was every backspace.
 - ~large-file-warning-threshold~ is 64 MB; below that, files just open.
 
-Doom's own part, left as it is: gcmh (16 MB idle, 64 MB busy, 128 MB with
-a language server), ~read-process-output-max~ 1 MB under eglot, native
+Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
+busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native
 compilation of every package ahead of time, so-long and fundamental mode
 for huge files, ~redisplay-skip-fontification-on-input~.
 
