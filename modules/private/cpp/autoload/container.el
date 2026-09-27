@@ -63,6 +63,24 @@ themselves, for a container started or an SDK installed since."
 ;;
 ;;; A command, where the kit runs
 
+;; Qt Creator's kits for the PC target put the target's libraries on the
+;; loader's path. Nothing started here survives that: a program of the
+;; container's own loads the target's C library into its loader and
+;; crashes, as clangd did on opening a file, and one built for the
+;; target has no interpreter in the container to start with. So those
+;; variables stay out of every command a kit runs.
+(defconst +cpp--loader-variables '("LD_LIBRARY_PATH" "LD_PRELOAD" "LD_AUDIT")
+  "What changes which libraries the dynamic loader loads.")
+
+;;;###autoload
+(defun +cpp--kit-environment (kit)
+  "KIT's environment, Qt Creator's NAME=VALUE and NAME+=VALUE lines,
+without `+cpp--loader-variables'."
+  (seq-remove (lambda (entry)
+                (and (string-match "\\`\\([A-Za-z_][A-Za-z0-9_]*\\)\\+?=" entry)
+                     (member (match-string 1 entry) +cpp--loader-variables)))
+              (+cpp-kit-env kit)))
+
 ;; Both forms are built from the same two pieces: the host-side prefix
 ;; that enters the container, which the container module gives, and the
 ;; inner bash line that sets the environment up.
@@ -94,8 +112,8 @@ else the SDK script sourced, then BODY."
   (concat (if directory
               (format "cd %s && " (shell-quote-argument (expand-file-name directory)))
             "")
-          (cond ((+cpp-kit-env kit)
-                 (concat (+cpp--env-exports (+cpp-kit-env kit)) "; "))
+          (cond ((+cpp--kit-environment kit)
+                 (concat (+cpp--env-exports (+cpp--kit-environment kit)) "; "))
                 ((+cpp-kit-env-script kit)
                  (format "source %s && " (shell-quote-argument (+cpp-kit-env-script kit))))
                 (t ""))
@@ -108,7 +126,7 @@ DIRECTORY (default `default-directory'), with the SDK environment sourced,
 when the kit has them; as it is otherwise.  The container sees the home
 directory under its own path as well as the host's, and a cache holds the
 host's, so the command is run from that one."
-  (if (not (or (+cpp-kit-env kit) (+cpp-kit-env-script kit) (+cpp-kit-container kit)))
+  (if (not (or (+cpp--kit-environment kit) (+cpp-kit-env-script kit) (+cpp-kit-container kit)))
       command
     (let ((inner (+cpp--kit-inner kit command
                                   (and (+cpp-kit-container kit)
@@ -123,7 +141,7 @@ host's, so the command is run from that one."
   "Program and arguments ARGV as a process must be started for KIT.
 The list form of `+cpp--kit-shell', for eglot and dape: the process
 starts in `default-directory', which the container shares."
-  (if (not (or (+cpp-kit-env kit) (+cpp-kit-env-script kit) (+cpp-kit-container kit)))
+  (if (not (or (+cpp--kit-environment kit) (+cpp-kit-env-script kit) (+cpp-kit-container kit)))
       argv
     (append (+cpp--kit-prefix kit)
             (list "bash" "-c"
