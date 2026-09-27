@@ -69,6 +69,13 @@
 ;; setup without gcmh.
 (setq gcmh-low-cons-threshold (* 16 1024 1024))
 
+;; And it collects once Emacs has rested ten times as long as the last
+;; collection took, Doom's setting: here that came to under half a
+;; second, so a pause to read a line ended in a collection of 40 to 150
+;; ms, and the key that ended the pause waited for it. Four seconds is a
+;; rest, not a glance.
+(setq gcmh-idle-delay 4)
+
 
 ;; A 47 MB log opens in a fifth of a second here, in fundamental mode as
 ;; Doom arranges for big files, so the "really open?" question can wait
