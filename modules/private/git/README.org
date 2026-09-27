@@ -36,7 +36,7 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 | ~SPC g h~   | ~+git/history~         | rewrite: reword, edit, date, author, split, drop, fixup, rebase |
 | ~SPC g n~   | ~+git/branches~        | make, switch, rename, delete, compare with main |
 | ~C-c C-t~   | ~+git/commit-conventional~ | in the commit buffer: type(scope):  |
-| ~SPC t B~   | ~blamer-mode~          | the commit behind the current line at its end, on in code buffers under 100k |
+| ~SPC t B~   | ~+git-blame-line-mode~ | the commit behind the current line at its end, on in code buffers under 1M |
 
 Everything else is magit's own, under the keys evil gives it: =SPC g g=
 status, then =s u= stage and unstage, =c= commit, =p= push, =F= pull,
@@ -69,7 +69,11 @@ keep, with ediff and refine for the ones that are not obvious.
 - ~+git-delta-max-size~, 400k: past that a diff is painted the plain way,
   since delta is a process per diff and a release-sized one is not worth
   the wait.
-- ~+git-blamer-max-size~, 100k: the blame turns itself on below it.
+- ~+git-blame-max-size~, 1M: the blame turns itself on below it. It is
+  one =git blame= of the whole buffer, taken in the background when the
+  buffer has changed and the cursor rests, and read line by line from
+  there; ~+git-blame-idle~ (0.5 s), ~+git-blame-column~ (40) and
+  ~+git-blame-summary-length~ (50) shape it.
 - The graph's colours are git's, not Emacs's: =log.graphColors= in
   =~/.gitconfig=, set to the theme's blue, violet, cyan, green, magenta,
   grey, orange and red.
