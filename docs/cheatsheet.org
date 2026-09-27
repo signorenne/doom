@@ -1380,11 +1380,14 @@ The kit is read from the project, never asked: the one chosen for this
 project if you have chosen one, else Qt Creator's active configuration
 when it has one, else the newest configured build directory, else a
 preset, else =build=. A kit you pick by hand therefore wins over
-everything the disk suggests, and keeps winning until you pick another. A kit whose compiler lives in a distrobox
-runs every command there, with the SDK environment sourced: build, run,
-gdb, clangd, clang-tidy. Buffers are saved before every build, run and
-debug. Qt Creator's run configuration gives the executable, its arguments
-and its working directory.
+everything the disk suggests, and keeps winning until you pick another.
+A kit whose compiler lives in a distrobox runs every command there, with
+the SDK environment sourced: build, run, gdb, clangd, clang-tidy. Its
+=LD_LIBRARY_PATH= is left out: the PC target's kits point it at the
+target's libraries, and the container's own programs, clangd first,
+crash on them. Buffers are saved before every build, run and debug. Qt
+Creator's run configuration gives the executable, its arguments and its
+working directory.
 
 ~SPC k y~ is the Debug and Release switch: it goes to the kit of that
 type in the current kit's family, the other Qt Creator configuration,
