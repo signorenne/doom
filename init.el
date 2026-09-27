@@ -27,7 +27,6 @@
  hl-todo           ; highlight TODO/FIXME/NOTE/...
  indent-guides     ; indent-bars, SPC t i
  ;;ligatures       ; off on purpose: -> and |= stay as typed
- minimap           ; demap on the right, on SPC t m and not before
  (modeline +light) ; light status line, not doom-modeline
  nav-flash         ; flash the line you jumped to
  ;;neotree           ; simple file tree

@@ -303,45 +303,13 @@ or the enclosing function's first line while it is scrolled off the top."
                 (setq-local next-error-function #'+ui--flymake-next-error)
               (kill-local-variable 'next-error-function))))
 
-;; While the wheel turns, ultra-scroll switches off what costs a
-;; redisplay per step, hl-line and jit-lock among them, and back on when
-;; it stops.  The minimap joins: its marks follow the window on every
-;; step, each move a redraw of its whole window, so they hold still
-;; while the wheel turns and catch up once after.  The indent guides
-;; would be the next to hide, four milliseconds a step on a big frame,
-;; but switching them off refontifies the buffer, which costs more; so
-;; they are off unless asked for, SPC t i.
-(defvar +ui--scrolling nil
-  "Non-nil while the wheel turns.")
-
-(defun +ui--scroll-hide (arg)
-  "Called by ultra-scroll with ARG -1 as a scroll starts and 1 as it
-ends: hold the minimap still meanwhile, then let it catch up."
-  (if (< arg 0)
-      (setq +ui--scrolling t)
-    (setq +ui--scrolling nil)
-    (when (fboundp 'demap-buffer-minimap)
-      (dolist (buffer (buffer-list))
-        (when-let* ((minimap (and (buffer-local-value 'demap-visible-region-mode buffer)
-                                  (with-current-buffer buffer (demap-buffer-minimap)))))
-          (ignore-errors (demap--visible-region-mode-update-if minimap))
-          (ignore-errors (demap-current-line-mode-update minimap)))))))
-
-(after! ultra-scroll
-  (add-hook 'ultra-scroll-hide-functions #'+ui--scroll-hide))
-
+;; The indent guides would cost four milliseconds a scroll step on a big
+;; frame, but switching them off while the wheel turns refontifies the
+;; buffer, which costs more; so they are off unless asked for, SPC t i.
 (defun +ui--no-guides-by-default-h ()
   "Keep Doom's indent guides off until asked for."
   t)
 (add-hook '+indent-guides-inhibit-functions #'+ui--no-guides-by-default-h)
-
-(after! demap
-  ;; Its marks follow the window on every scroll step; not while the
-  ;; wheel turns, once when it stops.
-  (advice-add 'demap--visible-region-mode-update-if :before-while
-              (lambda (&rest _) (not +ui--scrolling)))
-  (advice-add 'demap-current-line-mode-update :before-while
-              (lambda (&rest _) (not +ui--scrolling))))
 
 ;;
 ;;; Where you are in the buffer
@@ -367,14 +335,9 @@ ends: hold the minimap still meanwhile, then let it catch up."
 ;;
 ;;; Minimap
 
-;; The minimap, Doom's :ui minimap on demap, on the right, SPC t m: its
-;; window lays out the whole buffer in a tiny font on every redisplay
-;; of the buffer it shows, eight milliseconds a frame for a thousand
-;; lines of C++ on a big frame, twice the cost of the code window
-;; itself; so it opens when asked, not by itself.
-(after! demap
-  (setq demap-minimap-window-side 'right
-        demap-minimap-window-width 16))
+;; SPC t m: the buffer in a tiny font on the right, the part on screen
+;; marked; autoload/minimap.el. A copy of the text, taken again once the
+;; typing pauses, so moving and typing cost it nothing.
 
 ;; A window can say it is not one to move to, and the minimap says it:
 ;; there is nothing to do in there and no way back but the way you came.
@@ -422,7 +385,8 @@ ends: hold the minimap still meanwhile, then let it catch up."
       (:prefix "t"
        :desc "Glyph test buffer"     "G" #'+ui/glyph-test
        :desc "The outline of this buffer" "o" #'imenu-list-smart-toggle
-       :desc "Where you are, in the header" "h" #'+ui-where-mode)
+       :desc "Where you are, in the header" "h" #'+ui-where-mode
+       :desc "Minimap"                  "m" #'+ui/minimap)
       (:prefix "c"
        :desc "Docs at point (popup)" "H" #'eldoc-box-help-at-point)
       (:prefix ("e" . "explorer")
