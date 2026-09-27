@@ -18,8 +18,12 @@
   "The last (LEFT . TOP) the picture was centred with, so a command that
 moved nothing does not draw it again.")
 
-(defvar-local +core--image-shim nil
-  "The overlay holding the empty space above the picture.")
+(defun +core--image-shims ()
+  "The overlays holding the empty space above the picture. Found by
+their mark rather than kept in a variable: a redraw that replaces the
+buffer's text resets the variables, and the overlay outlives both."
+  (seq-filter (lambda (o) (overlay-get o '+core-image-shim))
+              (overlays-in (point-min) (point-max))))
 
 (defun +core--image-spec ()
   "The image this buffer shows, or nil."
@@ -44,17 +48,19 @@ the line; the height goes in an overlay above it."
           (with-silent-modifications
             (put-text-property (point-min) (point-max) 'line-prefix
                                `(space :width (,left)))
-            (cond
-             ((zerop top)
-              (when (overlayp +core--image-shim)
-                (delete-overlay +core--image-shim)
-                (setq +core--image-shim nil)))
-             (t
-              (unless (overlayp +core--image-shim)
-                (setq +core--image-shim (make-overlay (point-min) (point-min) nil t)))
-              (overlay-put +core--image-shim 'before-string
-                           (propertize "\n" 'display
-                                       `(space :width 1 :height (,top))))))))))))
+            (let ((shims (+core--image-shims)))
+              (mapc #'delete-overlay (if (zerop top) shims (cdr shims)))
+              (unless (zerop top)
+                (let ((shim (or (car shims)
+                                (make-overlay (point-min) (point-min) nil t))))
+                  (overlay-put shim '+core-image-shim t)
+                  ;; A line of its own, as tall as the gap: a newline
+                  ;; drawn as the space itself would end no line, and
+                  ;; the picture would sit beside it rather than below.
+                  (overlay-put shim 'before-string
+                               (concat (propertize " " 'display
+                                                   `(space :width 1 :height (,top)))
+                                       "\n")))))))))))
 
 ;;;###autoload
 (defun +core-image-uncenter ()
@@ -63,10 +69,8 @@ C-c C-c turns the picture into its source, and the space that held the
 picture in the middle would hold every line of the source there too."
   (with-silent-modifications
     (remove-text-properties (point-min) (point-max) '(line-prefix nil)))
-  (when (overlayp +core--image-shim)
-    (delete-overlay +core--image-shim))
-  (setq +core--image-shim nil
-        +core--image-centring nil))
+  (mapc #'delete-overlay (+core--image-shims))
+  (setq +core--image-centring nil))
 
 ;;;###autoload
 (defun +core--image-center-h ()
@@ -98,6 +102,17 @@ the fit the eye means."
   (image-bob)
   (setq +core--image-centring nil)
   (+core-image-center))
+
+;;;###autoload
+(defun +core--image-refit-recenter-a (window)
+  "Centre again after WINDOW's picture was fitted to it. The fit comes
+a moment after the window changes size, so the centring done at the
+change was for the picture as it was: while a side window is laid out
+its height is 0 for a moment, and a diagram was centred as a sliver,
+then fitted to the full height and left low and to the left."
+  (when (window-live-p window)
+    (with-current-buffer (window-buffer window)
+      (+core--image-recenter-a))))
 
 ;;;###autoload
 (defun +core--image-recenter-a (&rest _)

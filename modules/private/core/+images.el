@@ -8,6 +8,7 @@
 (declare-function +core-image-uncenter "images")
 (declare-function +core--image-center-h "images")
 (declare-function +core--image-recenter-a "images")
+(declare-function +core--image-refit-recenter-a "images")
 
 ;; An SVG carries the size it is drawn at. ImageMagick reads one with a
 ;; renderer of its own that ignores it and hands back 30 by 30 pixels,
@@ -91,7 +92,8 @@ has no cursor."
     (defadvice! +core--image-refit-anyway-a (fn &rest args)
       :around #'image-fit-to-window
       (cl-letf (((symbol-function 'current-message) #'ignore))
-        (apply fn args)))))
+        (apply fn args)))
+    (advice-add 'image-fit-to-window :after #'+core--image-refit-recenter-a)))
 
 ;; An SVG is a text file you write and a picture you look at, and
 ;; changing one means watching the other. So it opens as its XML, with

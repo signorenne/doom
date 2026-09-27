@@ -10,6 +10,8 @@
 ;; changes when that makes sense, and steps out of the way when you move
 ;; to a buffer that has none.
 
+(declare-function +core-image-uncenter "images")
+
 (defvar +core-view-side 'right
   "Which side the view takes.")
 
@@ -119,6 +121,8 @@ needed here; it is part of what a draw function returns so the caller
 says what it made."
   (with-current-buffer (+core-view--buffer)
     (let ((inhibit-read-only t))
+      ;; The last picture's centring goes with it, overlay and all.
+      (+core-image-uncenter)
       (fundamental-mode)
       (set-buffer-multibyte nil)
       (erase-buffer)
