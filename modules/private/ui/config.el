@@ -167,36 +167,43 @@ top: reused while the top stays inside it and the buffer unchanged,
 since the header line is asked on every redisplay, dozens a second
 while the wheel turns.")
 
+(defun +ui--defun-around (top)
+  "(START . END) of the function holding TOP, or nil.  From the syntax
+tree where the buffer has one, in as many steps as it is deep: moving to
+the start and end of a defun walks every sibling on the way, and in a
+large object literal or array that was most of a scroll step's time."
+  (if (and (fboundp 'treesit-defun-at-point)
+           (bound-and-true-p treesit-defun-type-regexp)
+           (treesit-parser-list))
+      (when-let* ((node (save-excursion (goto-char top) (treesit-defun-at-point))))
+        (cons (treesit-node-start node) (treesit-node-end node)))
+    (save-excursion
+      (goto-char top)
+      (when-let* ((start (and (ignore-errors (beginning-of-defun) t) (point)))
+                  (end (progn (ignore-errors (end-of-defun)) (point))))
+        (cons start end)))))
+
 (defun +ui--scrolled-defun ()
   "The first line of the function that holds the window's first line,
 when that first line is scrolled off; nil at the top of a function or
-between two.  The answer holds for a range of window tops, the
-function's own or the gap up to the next one, and is kept for it."
+between two.  Kept while the window's top stays inside that function."
   (let ((top (window-start)))
     (when (> top (point-min))
       (pcase-let ((`(,from ,to ,tick . ,line) +ui--defun-cache))
         (if (and from (<= from top) (< top to) (eq tick (buffer-chars-modified-tick)))
             line
-          (save-excursion
-            (goto-char top)
-            (let* ((found (and (ignore-errors (beginning-of-defun) t) (point)))
-                   (end (and found (progn (ignore-errors (end-of-defun)) (point))))
-                   (inside (and found (< found top) (> end top)))
-                   (text (and inside
-                              (progn (goto-char found)
-                                     (font-lock-ensure found (pos-eol))
-                                     (string-trim-right (buffer-substring found (pos-eol))))))
-                   ;; Inside: good until the function ends.  Between two,
-                   ;; or at one's first line: good until the next begins.
-                   (from (if inside found (max (or end (point-min)) (point-min))))
-                   (to (if inside end
-                         (save-excursion
-                           (goto-char top)
-                           (if (and (ignore-errors (end-of-defun) t) (> (point) top))
-                               (progn (ignore-errors (beginning-of-defun)) (max (point) (1+ top)))
-                             (point-max))))))
-              (setq +ui--defun-cache (cons from (cons (max to (1+ from)) (cons (buffer-chars-modified-tick) text))))
-              text)))))))
+          (let* ((range (+ui--defun-around top))
+                 (inside (and range (< (car range) top) (> (cdr range) top)))
+                 (text (and inside
+                            (save-excursion
+                              (goto-char (car range))
+                              (font-lock-ensure (car range) (pos-eol))
+                              (string-trim-right (buffer-substring (car range) (pos-eol)))))))
+            (setq +ui--defun-cache
+                  (cons (if inside (car range) top)
+                        (cons (if inside (cdr range) (1+ top))
+                              (cons (buffer-chars-modified-tick) text))))
+            text))))))
 
 (defvar-local +ui--crumbs-cache nil
   "(LINE-START TICK . CRUMBS): the breadcrumbs of the line point is on,
