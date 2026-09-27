@@ -132,6 +132,23 @@
               (funcall eglot-move-to-linepos-function col)))
           (if marker (copy-marker (point-marker)) (point)))))))
 
+;; Its "a fix is available" mark asks the server about the expression
+;; around point, and tree-sitter finds that expression by walking its
+;; siblings: most of a pause's time in a large array or object literal.
+;; The symbol at point is what the server needs.
+(after! eglot
+  (defadvice! +core--lsp-code-action-bounds-a ()
+    "The region, else the diagnostics at point, else the symbol at point."
+    :override #'eglot--code-action-bounds
+    (let (diags bounds)
+      (cond ((use-region-p) (list (region-beginning) (region-end)))
+            ((setq diags (eglot--flymake-diagnostics (point)))
+             (list (apply #'min (mapcar #'flymake-diagnostic-beg diags))
+                   (apply #'max (mapcar #'flymake-diagnostic-end diags))))
+            ((setq bounds (bounds-of-thing-at-point 'symbol))
+             (list (car bounds) (cdr bounds)))
+            (t (list (point) (point)))))))
+
 ;; The echo area takes up to three lines for what is under the cursor.
 ;; One line cut every diagnostic that did not fit, which is most of the
 ;; ones worth reading; three holds nearly all of them and still does not
