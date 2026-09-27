@@ -355,7 +355,8 @@ so it takes whatever they are given."
       (:prefix "t"
        :desc "Corfu auto-complete" "a" #'+corfu/toggle-auto-complete
        :desc "Subword (camelCase)" "S" #'subword-mode
-       :desc "Transparency"        "T" #'+core/toggle-transparency)
+       :desc "Transparency"        "T" #'+core/toggle-transparency
+       :desc "Watch for pauses"    "W" #'+core-latency-watch-mode)
 
       (:prefix "f"
        :desc "Open externally"     "x" #'+core/open-externally
@@ -368,7 +369,10 @@ so it takes whatever they are given."
        :desc "Copy menu"           "k" #'+core/copy-menu)
 
       (:prefix "p"
-       :desc "Project TODOs"       "t" #'+core/project-todos))
+       :desc "Project TODOs"       "t" #'+core/project-todos)
+
+      (:prefix "h"
+       :desc "Delays: what paused" "D" #'+core/latency-show))
 
 ;; Next to Doom's own reload keys (SPC h r ...).
 (map! :map help-map
