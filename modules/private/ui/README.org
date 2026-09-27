@@ -13,13 +13,12 @@
   and the symbol path, file > class > function, replaced by the first
   line of the enclosing function while that is scrolled off the top;
   the symbol outline at the side on ~SPC t o~; in the modeline, after
-  the line and column, a rail lit from the top of the buffer to where
-  you are and the percentage that is, so the fringe is left to the git
-  gutter and the diagnostics; the minimap on the right
-  on ~SPC t m~, off until asked since its window lays out the whole
-  buffer on every redisplay, eight milliseconds a frame for a thousand
-  lines on a big frame, its marks held still while the wheel turns;
-  indent guides on ~SPC t i~,
+  the line and column, how far through the buffer you are as a
+  percentage, so the fringe is left to the git gutter and the
+  diagnostics; the minimap on the right on ~SPC t m~, a copy of the
+  buffer in a tiny font with the part on screen marked, taken again
+  once the typing pauses, so moving and typing cost it nothing, and a
+  click in it goes there; indent guides on ~SPC t i~,
   off until asked since each bar costs a redisplay per scroll step on a
   big frame; diagnostics at the end of the line as well as in the
   popup, flymake underneath, which eglot reports into directly,
@@ -91,7 +90,7 @@ it.
 | ~SPC t G~ | ~+ui/glyph-test~          | see whether the fonts render       |
 | ~SPC t o~ | ~imenu-list-smart-toggle~ | the symbol outline at the side     |
 | ~SPC t h~ | ~+ui-where-mode~          | the header line saying where you are |
-| ~SPC t m~ | ~demap-toggle~            | the minimap, off until asked       |
+| ~SPC t m~ | ~+ui/minimap~             | the minimap on the right           |
 | ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
 | ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
 | ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation in a popup           |
@@ -107,7 +106,16 @@ should say so oneself, so a buffer flymake checks gets a
 
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
-- ~+ui-position-width~, how many cells the modeline's rail takes, 12 by
-  default; its faces are ~+ui-position-done~ and ~+ui-position-rest~.
+- The minimap: ~+ui-minimap-width~ (16 columns), ~+ui-minimap-idle~
+  (0.1 s before its marks follow), ~+ui-minimap-copy-idle~ (0.5 s after
+  an edit before the text is copied again), ~+ui-minimap-colour-max-size~
+  (1 MB, past which only the colours already worked out are shown), and
+  the faces ~+ui-minimap-face~, ~+ui-minimap-region-face~,
+  ~+ui-minimap-line-face~. It is not demap, Doom's: demap's minimap is an
+  indirect buffer, which shares its text's change counters with the
+  file, so every overlay the file moved redrew the minimap, 8 ms a key.
+- ~+ui-flymake-eol-max~, 300: past that many diagnostics in a report,
+  none is written at the end of its line; the underline, the fringe and
+  the popup still show them.
 - The fonts themselves are in =$DOOMDIR/config.el=; ~SPC h r f~ reloads them.
 - Dashboard entries: ~+doom-dashboard-menu-sections~.
