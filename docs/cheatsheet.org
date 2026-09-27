@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-27 21:37
+#+generated: 2026-09-27 23:42
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -300,7 +300,7 @@ grammar one: for grammar see ~SPC n w c~, LanguageTool, under the notes.
 | ~SPC t r~ | read only                                                                                     |
 | ~SPC t T~ | transparency                                                                                  |
 | ~SPC t S~ | subword motion                                                                                |
-| ~SPC t m~ | the minimap on the right, off until asked: it costs a redisplay of the whole buffer per frame |
+| ~SPC t m~ | the minimap on the right; a copy of the buffer, so moving and typing cost it nothing           |
 | ~SPC t o~ | the symbol outline at the side, following the cursor                                          |
 | ~SPC t h~ | the header line: project path, symbol path, or the function you scrolled into                 |
 | ~SPC t i~ | indent guides, off until asked: they cost a redisplay per scroll step                         |
@@ -1311,8 +1311,8 @@ The header line of a code buffer says where you are, the project path
 and the symbol path, file > class > function; scroll into a long
 function and it turns into that function's first line, pinned, until
 its start is back on screen. The modeline says where you are in the
-buffer: the line and column, then a rail lit from the top to where you
-are, then how far through that is as a percentage.
+buffer: the line and column, then how far through the buffer that is,
+as a percentage.
 The most severe problem of a line shows at its end, all of them in the
 popup at point, and the commit behind the line, who and when, at its
 end after a moment of rest.
@@ -2308,9 +2308,17 @@ scratch, which is what a changed preset needs.
 | the native-comp warnings buffer | harmless, close it                       |
 | vterm is missing                | =M-x vterm-module-compile=                 |
 | Emacs is slow or busy           | =M-x profiler-start=, then =profiler-report= |
+| Emacs pauses now and then       | ~SPC t W~, work on, then ~SPC h D~             |
 
 Grammars install themselves the first time you open such a file, so a plain
 looking buffer usually means the install failed; the command above says why.
+
+A pause that comes now and then, in one file and not another, is seldom
+caught by trying again. ~SPC t W~ watches while you work and writes down
+every key that took over 50 ms to answer, every timer that ran as long
+and every garbage collection, each with the buffer and mode it happened
+in; ~SPC h D~ shows the list, and the name on the slow line is the thing
+to look at. It costs a little while it watches, so turn it off after.
 
 The profiler names what is burning time; =C-c C-c= on a line opens it. The
 usual suspects here are a repeating timer (every tick is a redisplay),
@@ -2583,6 +2591,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC h C-s~   | search-forward-help-for-help     |
 | ~SPC h C-t~   | view-emacs-todo                  |
 | ~SPC h C-w~   | describe-no-warranty             |
+| ~SPC h D~     | Delays: what paused              |
 | ~SPC h E~     | doom/sandbox                     |
 | ~SPC h F~     | describe-face                    |
 | ~SPC h I~     | describe-input-method            |
@@ -2961,6 +2970,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC t I~ | Indent style                 |
 | ~SPC t S~ | Subword (camelCase)          |
 | ~SPC t T~ | Transparency                 |
+| ~SPC t W~ | Watch for pauses             |
 | ~SPC t Z~ | Zen mode (fullscreen)        |
 | ~SPC t a~ | Corfu auto-complete          |
 | ~SPC t b~ | Big mode                     |
@@ -3128,6 +3138,7 @@ bound.
 - ~+core/image-pan-right~ (~l~) :: Move the picture left under the window,
   '+core-image-pan-step' at a time.
 - ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
+- ~+core/latency-show~ (~SPC h D~) :: Show what the watch wrote down.
 - ~+core/new-project~ (~SPC k n~) :: Start a project, of any kind a module
   here can make.
 - ~+core/open-externally~ (~SPC f x~) :: Open FILE with the desktop's
@@ -3190,6 +3201,9 @@ bound.
   completion across all icon sets.
 - ~+ui/insert-glyph-form~ (~SPC i G~) :: Insert a form like
   (nerd-icons-mdicon "nf-md-robot") for a chosen glyph.
+- ~+ui/minimap~ (~SPC t m~) :: Show the minimap on the right, or close it.
+- ~+ui/minimap-jump~ :: Show in the window beside it the place clicked in
+  the minimap.
 
 ** C and C++
 - ~+cpp/assembly~ (~SPC k a~) :: Show the assembly this file compiles to,
