@@ -234,8 +234,10 @@
 ;; then the compositor has taken the keyboard away: the question is on
 ;; screen and nothing can answer it. Take the focus back before asking,
 ;; and raise the frame, since it may be behind something too.
-(defun +core--focus-to-ask ()
-  "Bring the frame forward and give it the keyboard, before a question."
+(defun +core--focus-to-ask (&rest _)
+  "Bring the frame forward and give it the keyboard, before a question.
+It advises commands that take an argument, SPC q q's prefix among them,
+so it takes whatever they are given."
   (when (display-graphic-p)
     (let ((frame (selected-frame)))
       (when (frame-live-p frame)
