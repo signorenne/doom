@@ -255,6 +255,37 @@ or the enclosing function's first line while it is scrolled off the top."
 (after! flymake
   (setq flymake-show-diagnostics-at-end-of-line 'short))
 
+;; flymake rewrites the text at the end of every line with a diagnostic
+;; at each report: 1 607 lines of it in a file a server found 2 896
+;; problems in, which doubled the cost of a key. Past a few hundred the
+;; ends of the lines are a wall no one reads; the underline, the fringe
+;; and the popup still say it all, and the text comes back when the
+;; count comes down.
+(defvar +ui-flymake-eol-max 300
+  "Past this many diagnostics in a report, none is written at a line's end.")
+
+(defvar-local +ui--flymake-eol-held nil
+  "Non-nil while this buffer has too many diagnostics for line ends.")
+
+(defun +ui--flymake-eol-within-reason-a (fn backend token report-action &rest args)
+  "Hold the end-of-line text back while a report is too long for it."
+  (when (and (listp report-action) (default-value 'flymake-show-diagnostics-at-end-of-line))
+    (if (> (length report-action) +ui-flymake-eol-max)
+        (unless +ui--flymake-eol-held
+          (setq +ui--flymake-eol-held t)
+          (setq-local flymake-show-diagnostics-at-end-of-line nil)
+          (save-restriction
+            (widen)
+            (dolist (o (overlays-in (point-min) (point-max)))
+              (when (overlay-get o 'flymake--eol-overlay) (delete-overlay o)))))
+      (when +ui--flymake-eol-held
+        (setq +ui--flymake-eol-held nil)
+        (kill-local-variable 'flymake-show-diagnostics-at-end-of-line))))
+  (apply fn backend token report-action args))
+
+(after! flymake
+  (advice-add 'flymake--handle-report :around #'+ui--flymake-eol-within-reason-a))
+
 ;; ]e and [e are `next-error', which walks whatever buffer last reported
 ;; errors: with flymake doing the checking that is some compilation log
 ;; from an hour ago, and the key leaves the file to ask where vertico's
