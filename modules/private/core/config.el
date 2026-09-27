@@ -94,6 +94,13 @@
         ;; grow to three lines at every hit and read like a prompt.
         eglot-code-action-indications '(margin)))
 
+;; eglot answers imenu from the server: every symbol of the file, asked
+;; for again after each edit by the header line's breadcrumbs, and an
+;; eleven thousand line JSON file froze five seconds at every pause.
+;; The mode's own index, tree-sitter's, is local and instant.
+(after! eglot
+  (add-to-list 'eglot-stay-out-of 'imenu))
+
 ;; The echo area takes up to three lines for what is under the cursor.
 ;; One line cut every diagnostic that did not fit, which is most of the
 ;; ones worth reading; three holds nearly all of them and still does not
