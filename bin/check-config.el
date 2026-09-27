@@ -103,6 +103,49 @@ whose lists the config touches are loaded first, so their lists exist."
                   grown))))
       (nreverse grown))))
 
+(defun check-config--arity-fits (got need)
+  "Non-nil when a function taking GOT, a `func-arity', can be called
+with NEED arguments, another."
+  (and (<= (car got) (car need))
+       (or (eq (cdr got) 'many)
+           (and (numberp (cdr need)) (>= (cdr got) (cdr need))))))
+
+(defun check-config--advice-problems ()
+  "This config's advice that cannot take what it will be given.
+An advice called with more arguments than it accepts signals, but only
+when that path runs: SPC q q stopped on one for ten days.  A function
+whose library is not loaded yet keeps its advice waiting on the
+symbol; the library is loaded so the advice is in place to look at."
+  (let ((ours (check-config--own-regexp)) problems)
+    (mapatoms (lambda (symbol)
+                (when (and (get symbol 'advice--pending)
+                           (autoloadp (symbol-function symbol)))
+                  (ignore-errors (autoload-do-load (symbol-function symbol) symbol)))))
+    (mapatoms
+     (lambda (symbol)
+       (let ((def (and (fboundp symbol) (advice--symbol-function symbol))))
+         (when (advice--p def)
+           (let* ((original (advice--cd*r def))
+                  (arity (and (not (autoloadp original)) (not (macrop original))
+                              (ignore-errors (func-arity original)))))
+             (when (consp arity)
+               (while (advice--p def)
+                 (let* ((advice (advice--car def))
+                        (how (if (fboundp 'advice--how) (advice--how def) (advice--where def)))
+                        (got (ignore-errors (func-arity advice)))
+                        (need (pcase how
+                                ((or :filter-args :filter-return) '(1 . 1))
+                                (:around (cons (1+ (car arity))
+                                               (if (numberp (cdr arity)) (1+ (cdr arity)) (cdr arity))))
+                                (_ arity))))
+                   (when (and (symbolp advice) (consp got)
+                              (string-match-p ours (symbol-name advice))
+                              (not (check-config--arity-fits got need)))
+                     (push (format "%s on %s %s takes %S, is given %S" advice symbol how got need)
+                           problems)))
+                 (setq def (advice--cdr def)))))))))
+    problems))
+
 (defun check-config--run (out log)
   "Compile into OUT and write the report to LOG."
   (let* (;; Asked before anything is compiled: compiling defines every
@@ -184,6 +227,13 @@ whose lists the config touches are loaded first, so their lists exist."
                       "every menu sets up clean, the leader holds up, every documented key is bound"))
                 "no +docs/check-keys, the docs module is off")
               "\n")
+      (insert "\nadvice against what it advises: ")
+      (let ((problems (check-config--advice-problems)))
+        (insert (if problems
+                    (format "%d problem(s)\n%s" (length problems)
+                            (mapconcat (lambda (p) (concat "  " p "\n")) problems ""))
+                  "every advice of this config takes the arguments it is given")
+                "\n"))
       (insert "\nafter two reloads:\n")
       (let ((grown (check-config--reload-growth)))
         (if grown
