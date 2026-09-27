@@ -309,37 +309,20 @@ ends: hold the minimap still meanwhile, then let it catch up."
 ;;; Where you are in the buffer
 
 ;; In the modeline, where the eye already goes for a buffer's facts: the
-;; line and column, a rail lit from the top of the buffer to where you
-;; are, and how far through it that is as a number. It is drawn from four
-;; numbers Emacs knows anyway, so it costs a redisplay nothing more, and
-;; it takes no column from the text and no pixel from the fringe, which
-;; carries the git gutter and the diagnostics.
-
-(defvar +ui-position-width 12
-  "How many cells the position rail takes in the modeline.")
-
-(defface +ui-position-done '((t :inherit font-lock-keyword-face))
-  "The part of the rail from the top of the buffer to where you are."
-  :group 'mode-line)
-
-(defface +ui-position-rest '((t :inherit shadow))
-  "The part of the rail still ahead of you."
-  :group 'mode-line)
-
+;; line and column, then how far through the buffer point is, as a
+;; percentage. It is worked out from three numbers Emacs knows anyway,
+;; so it costs a redisplay nothing more, and it takes no column from the
+;; text and no pixel from the fringe, which carries the git gutter and
+;; the diagnostics.
 (defun +ui--position ()
-  "The rail and the percentage, for the modeline."
-  (let* ((span (max 1 (- (point-max) (point-min))))
-         (done (/ (float (- (point) (point-min))) span))
-         (lit (min +ui-position-width (round (* done +ui-position-width)))))
-    (concat (propertize (make-string lit ?\u2501) 'face '+ui-position-done)
-            (propertize (make-string (- +ui-position-width lit) ?\u2500)
-                        'face '+ui-position-rest)
-            ;; %%%% here is %% after `format', which the modeline then
-            ;; shows as one %: a lone % would be read as one of its codes.
-            (format " %3d%%%%" (round (* 100 done))))))
+  "How far through the buffer point is, for the modeline."
+  ;; %%%% here is %% after `format', which the modeline then shows as
+  ;; one %: a lone % would be read as one of its codes.
+  (format "%3d%%%%" (round (* 100 (/ (float (- (point) (point-min)))
+                                     (max 1 (- (point-max) (point-min))))))))
 
 ;; Doom's light modeline says "30:12 Bot"; this keeps the line and
-;; column and puts the rail and the number where the word was.
+;; column and puts the percentage where the word was.
 (setq-default +modeline-position '("  %l:%C  " (:eval (+ui--position)) "  "))
 
 
