@@ -180,6 +180,13 @@
   (set-tree-sitter! 'sh-mode 'bash-ts-mode
     '((bash :url "https://github.com/tree-sitter/tree-sitter-bash"))))
 
+;; yasnippet-capf looks for a snippet key by scanning the buffer from its
+;; first character to point each time completion is tried, unless told
+;; how far to look: most of the typing cost in a long org file. A key is
+;; a word, and eighty characters either side is plenty.
+(after! yasnippet-capf
+  (setq yasnippet-capf-max-search-distance 80))
+
 ;; Completion as you type, the way VS Code and Zed do it: the popup
 ;; comes after two characters and a short pause with the first
 ;; candidate already chosen, RET takes it, TAB completes what the
