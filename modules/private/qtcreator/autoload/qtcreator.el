@@ -79,16 +79,20 @@ in order: the tool chains, the Qt versions, the kits."
 ;; Autoloaded: `+cpp/forget-kits' drops it with the rest.
 ;;;###autoload
 (defvar +qtcreator--kits-cache)
+(defvar +qtcreator--qt-prefixes)
 
 (defun +qtcreator-forget ()
-  "Read the settings directories, the kits and the container homes again."
+  "Read the settings directories, the kits, the container homes and what
+each qmake says again."
   (setq +qtcreator--settings nil
         ;; Every other cache here is keyed by the file's mtime; this one
         ;; is read once and was never dropped, so a kit whose sysroot or
         ;; compiler changed kept the old answer until Emacs restarted.
         +qtcreator--kits-cache nil)
   (when (fboundp '+container-forget) (+container-forget))
-  (clrhash +qtcreator--cache))
+  (clrhash +qtcreator--cache)
+  (clrhash +qtcreator--qt-prefixes)
+  (doom-store-clear "+qtcreator"))
 
 (defun +qtcreator--settings-dirs ()
   "Every Qt Creator settings directory this machine can see, as
@@ -207,14 +211,22 @@ drops it.")
 
 (defun +qtcreator--qt-prefix (qmake container)
   "What QMAKE, run in CONTAINER or on the host, says its install prefix
-is; nil when it cannot be run."
+is; nil when it cannot be run.  Kept across sessions: in a container the
+question takes half a second, asked for each kit at the first file of a
+session, and the answer changes only with the SDK, whose directory
+names its version.  `+cpp/forget-kits' asks again."
   (when qmake
-    (let ((hit (gethash (cons container qmake) +qtcreator--qt-prefixes 'unknown)))
+    (let* ((key (cons container qmake))
+           (hit (gethash key +qtcreator--qt-prefixes 'unknown)))
       (if (not (eq hit 'unknown))
           hit
-        (puthash (cons container qmake)
-                 (let ((line (+container-run container (list qmake "-query" "QT_INSTALL_PREFIX"))))
-                   (and line (string-prefix-p "/" line) line))
+        (puthash key
+                 (or (doom-store-get key "+qtcreator")
+                     (let* ((line (+container-run container (list qmake "-query" "QT_INSTALL_PREFIX")))
+                            (prefix (and line (string-prefix-p "/" line) line)))
+                       ;; No answer is a container that was down: not kept.
+                       (when prefix (doom-store-put key prefix nil "+qtcreator"))
+                       prefix))
                  +qtcreator--qt-prefixes)))))
 
 (defun +qtcreator--expand (parameter kit type)
