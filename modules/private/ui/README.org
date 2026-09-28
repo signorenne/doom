@@ -11,17 +11,17 @@
   with their current keys; the same in a terminal,
 - where you are, in code buffers: a header line with the project path
   and the symbol path, file > class > function, replaced by the first
-  line of the enclosing function while that is scrolled off the top;
-  the symbol outline at the side on ~SPC t o~; in the modeline, after
-  the line and column, how far through the buffer you are as a
-  percentage, so the fringe is left to the git gutter and the
-  diagnostics; the minimap on the right on ~SPC t m~, a copy of the
-  buffer in a tiny font with the part on screen marked, taken again
-  once the typing pauses, so moving and typing cost it nothing, and a
-  click in it goes there; indent guides on ~SPC t i~,
+  line of the enclosing function while that is scrolled off the top; the
+  symbol outline at the side on ~SPC t o~; in the modeline, the line out
+  of how many the buffer has, the column, and how far through the buffer
+  you are as a percentage, =228/1009:7  23%=, so the fringe is left to
+  the git gutter and the diagnostics; the minimap on the right on
+  ~SPC t m~, a copy of the buffer in a tiny font with the part on screen
+  marked, taken again once the typing pauses, so moving and typing cost
+  it nothing, and a click in it goes there; indent guides on ~SPC t i~,
   off until asked since each bar costs a redisplay per scroll step on a
-  big frame; diagnostics at the end of the line as well as in the
-  popup, flymake underneath, which eglot reports into directly,
+  big frame; diagnostics at the end of the line as well as in the popup,
+  flymake underneath, which eglot reports into directly,
 - Treemacs settings and documentation popups.
 
 * The banner and the greeting
