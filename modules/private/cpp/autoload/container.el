@@ -42,12 +42,18 @@ keep one next to their sysroots; it is what the toolchain file reads."
           hit
         (let ((script
                (if container
-                   (and (fboundp '+container-run)
-                        (+container-run
-                         container
-                         (list "sh" "-c"
-                               (format "ls -d %s/environment-setup-* 2>/dev/null | head -1"
-                                       (shell-quote-argument sdk)))))
+                   ;; Entering the container takes half a second, so its
+                   ;; answer is kept across sessions; `+cpp/forget-kits'
+                   ;; asks again.
+                   (or (doom-store-get key "+cpp")
+                       (when-let* (((fboundp '+container-run))
+                                   (found (+container-run
+                                           container
+                                           (list "sh" "-c"
+                                                 (format "ls -d %s/environment-setup-* 2>/dev/null | head -1"
+                                                         (shell-quote-argument sdk))))))
+                         (doom-store-put key found nil "+cpp")
+                         found))
                  (car (file-expand-wildcards (concat sdk "/environment-setup-*"))))))
           (puthash key script +cpp--env-scripts)
           script)))))
@@ -58,6 +64,7 @@ keep one next to their sysroots; it is what the toolchain file reads."
   "Drop what was found about the SDK scripts, and about the containers
 themselves, for a container started or an SDK installed since."
   (clrhash +cpp--env-scripts)
+  (doom-store-clear "+cpp")
   (when (fboundp '+container-forget) (+container-forget)))
 
 ;;
