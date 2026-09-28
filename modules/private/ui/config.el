@@ -376,6 +376,60 @@ or the enclosing function's first line while it is scrolled off the top."
 
 
 ;;
+;;; Redrawing only what changed
+
+;; Emacs redraws a window by laying out every line of it again, unless it
+;; can tell that only the cursor moved or only a line changed; on a full
+;; frame of C++ that layout is most of what a key costs.
+
+;; The theme draws the current line's number unlike the others, bright on
+;; hl-line's band. Emacs sees two faces that differ and gives up every
+;; shortcut: each redraw laid out the whole window, even one after a
+;; timer or a server message that changed nothing, 2.8 ms instead of 0.6,
+;; and a key cost 6 ms instead of 4. So where Emacs looks the two faces
+;; are the same, and the theme's look comes back through a remap in the
+;; buffers where hl-line is on. There a change of line always moves
+;; hl-line's overlay, which redraws the whole window anyway, so the
+;; bright number is never left on the line the cursor left.
+(defface +ui-current-line-number '((t))
+  "The current line's number as the theme draws it, kept by
+`+ui--line-number-faces-h'."
+  :group 'display-line-numbers)
+
+(defun +ui--line-number-faces-h (&optional frame)
+  "Keep the theme's current line number in `+ui-current-line-number', and
+make `line-number-current-line' the same as `line-number', on FRAME or
+on every frame."
+  (dolist (f (if (framep frame) (list frame) (frame-list)))
+    (unless (internal-lisp-face-equal-p 'line-number 'line-number-current-line f)
+      (copy-face 'line-number-current-line '+ui-current-line-number f)
+      (copy-face 'line-number 'line-number-current-line f))))
+
+(add-hook 'doom-load-theme-hook #'+ui--line-number-faces-h)
+(add-hook 'after-make-frame-functions #'+ui--line-number-faces-h)
+
+(defvar-local +ui--current-line-number nil
+  "The remap that draws this buffer's current line number the theme's way.")
+
+(defun +ui--current-line-number-h ()
+  "Draw the current line's number the theme's way while hl-line is on."
+  (cond ((and hl-line-mode (null +ui--current-line-number))
+         (setq +ui--current-line-number
+               (face-remap-add-relative 'line-number-current-line
+                                        '+ui-current-line-number)))
+        ((and (not hl-line-mode) +ui--current-line-number)
+         (face-remap-remove-relative +ui--current-line-number)
+         (setq +ui--current-line-number nil))))
+
+(add-hook 'hl-line-mode-hook #'+ui--current-line-number-h)
+
+;; solaire gives the line numbers of its buffers a face of their own; the
+;; current one gets the same, or the two would differ again in there.
+(after! solaire-mode
+  (add-to-list 'solaire-mode-remap-alist
+               '(line-number-current-line . solaire-line-number-face)))
+
+;;
 ;;; Minimap
 
 ;; SPC t m: the buffer in a tiny font on the right, the part on screen
