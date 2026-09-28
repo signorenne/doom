@@ -107,20 +107,28 @@ and the container's environment says where."
     (if (not (eq hit 'unknown))
         hit
       (puthash name
-               (with-temp-buffer
-                 (when (and (executable-find +container-runtime)
-                            (zerop (condition-case nil
-                                       (call-process +container-runtime nil t nil "inspect" "-f"
-                                                     "{{range .Config.Env}}{{println .}}{{end}}" name)
-                                     (error 1))))
-                   (goto-char (point-min))
-                   (when (re-search-forward "^HOME=\\(.+\\)$" nil t)
-                     (let ((home (match-string 1)))
-                       ;; A container that shares the host's home has none
-                       ;; of its own, and there is nothing there to find.
-                       (and (file-directory-p home)
-                            (not (file-equal-p home (expand-file-name "~")))
-                            home)))))
+               ;; A container keeps the home it was made with, so the answer
+               ;; is kept across sessions; `+container-forget' asks again.
+               (let ((stored (doom-store-get name "+container" 'unknown)))
+                 (if (not (eq stored 'unknown))
+                     stored
+                   (with-temp-buffer
+                     (when (and (executable-find +container-runtime)
+                                (zerop (condition-case nil
+                                           (call-process +container-runtime nil t nil "inspect" "-f"
+                                                         "{{range .Config.Env}}{{println .}}{{end}}" name)
+                                         (error 1))))
+                       (goto-char (point-min))
+                       (let ((home (and (re-search-forward "^HOME=\\(.+\\)$" nil t)
+                                        (match-string 1))))
+                         ;; A container that shares the host's home has none
+                         ;; of its own, and there is nothing there to find.
+                         (setq home (and home
+                                         (file-directory-p home)
+                                         (not (file-equal-p home (expand-file-name "~")))
+                                         home))
+                         (doom-store-put name home nil "+container")
+                         home)))))
                +container--homes))))
 
 ;;;###autoload
@@ -134,7 +142,8 @@ it through the runtime."
   "Drop what was found about containers, for one started or a program
 installed since.  The library half: `+container/forget\=' is the command."
   (clrhash +container--by-program)
-  (clrhash +container--homes))
+  (clrhash +container--homes)
+  (doom-store-clear "+container"))
 
 ;;;###autoload
 (defun +container/forget ()
