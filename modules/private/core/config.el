@@ -171,6 +171,50 @@
              (list (car bounds) (cdr bounds)))
             (t (list (point) (point)))))))
 
+;; With the buffer given back before the server answers (above), a second
+;; file of the project opened while its server is still starting, a
+;; header straight after its source, started a second server: eglot
+;; knows of a server only once it has answered. One of the two then died,
+;; and said so as an error. A start on its way is waited for now; when
+;; its server answers it takes every open file of the project, this one
+;; too. A start asked for by hand always goes ahead.
+(defvar +core--lsp-starting nil
+  "((ROOT . MODES) . TIME) for each server started and not answering yet.")
+
+(defvar-local +core--lsp-ensuring nil
+  "Set by `eglot-ensure': the next start in this buffer is not by hand.")
+
+(defun +core--lsp-started-h (server)
+  "Forget that SERVER was on its way: it answered, or it died."
+  (setq +core--lsp-starting
+        (assoc-delete-all (cons (project-root (eglot--project server))
+                                (eglot--major-modes server))
+                          +core--lsp-starting)))
+
+(after! eglot
+  (defadvice! +core--lsp-ensuring-a (&rest _)
+    "Mark the start `eglot-ensure' will make as automatic."
+    :before #'eglot-ensure
+    (setq +core--lsp-ensuring t))
+
+  (defadvice! +core--lsp-one-start-a (fn managed-modes project &rest args)
+    "Start a server, unless an automatic start finds one for PROJECT and
+MANAGED-MODES on its way already."
+    :around #'eglot--connect
+    (let ((automatic (prog1 +core--lsp-ensuring (setq +core--lsp-ensuring nil)))
+          (key (cons (project-root project) managed-modes))
+          (patience (if (numberp eglot-connect-timeout) eglot-connect-timeout 30)))
+      ;; A start that never answered is let go once eglot gives up on it.
+      (setq +core--lsp-starting
+            (seq-filter (lambda (entry) (< (- (float-time) (cdr entry)) patience))
+                        +core--lsp-starting))
+      (unless (and automatic (assoc key +core--lsp-starting))
+        (push (cons key (float-time)) +core--lsp-starting)
+        (apply fn managed-modes project args))))
+
+  (add-hook 'eglot-connect-hook #'+core--lsp-started-h)
+  (advice-add 'eglot--on-shutdown :after #'+core--lsp-started-h))
+
 ;; The echo area takes up to three lines for what is under the cursor.
 ;; One line cut every diagnostic that did not fit, which is most of the
 ;; ones worth reading; three holds nearly all of them and still does not
