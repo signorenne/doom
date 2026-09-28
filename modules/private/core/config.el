@@ -76,6 +76,21 @@
 ;; rest, not a glance.
 (setq gcmh-idle-delay 4)
 
+;; Doom compiles a few functions it calls often once Emacs is idle, and
+;; natively where it can: `native-compile' runs a batch Emacs for each
+;; one and waits for it, a third of a second frozen, and a key pressed
+;; then waits too. Byte code is made in place in a few milliseconds and
+;; is most of the gain over the interpreter.
+(defadvice! +core--byte-compile-functions-a (&rest fns)
+  "Byte-compile FNS the next time Emacs is idle."
+  :override #'doom-compile-functions
+  (run-with-idle-timer
+   1.5 nil (lambda ()
+             (dolist (fn fns)
+               (when (interpreted-function-p (indirect-function fn))
+                 (let ((byte-compile-warnings nil))
+                   (ignore-errors (byte-compile fn))))))))
+
 
 ;; A 47 MB log opens in a fifth of a second here, in fundamental mode as
 ;; Doom arranges for big files, so the "really open?" question can wait
