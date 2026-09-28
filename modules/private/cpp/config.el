@@ -156,6 +156,22 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; connects, so a dir-local `+cpp-lsp-server' can override the default.
 (set-eglot-client! +cpp-modes #'+cpp--eglot-server-program)
 
+;; The first C or C++ file of a session loads the files of this module
+;; that find the kit and the container, Qt Creator's and projection's, a
+;; fifth of a second; they are loaded ahead while Emacs waits after
+;; starting when the file opened last was one (`+core-warm-up-functions').
+(defun +cpp--warm-up-h (mode)
+  "Load what the first C or C++ file of a session loads, if MODE is one."
+  (when (memq mode +cpp-modes)
+    (+core-load-autoloads '+pio--configure-command '+cpp-kit-abs-dir
+                          '+cpp--eglot-server-program '+cpp--projection-project
+                          '+cpp--sdk-root '+cpp--project-kind '+qtcreator-kits
+                          '+container-list 'doom-store-get)
+    (require 'xml)
+    (require 'projection-type-cmake nil t)))
+
+(add-hook '+core-warm-up-functions #'+cpp--warm-up-h 50)
+
 ;; F4 and SPC p o: header and source. Doom sets these rules when cc-mode
 ;; loads, but a tree-sitter buffer never loads cc-mode, so they were never
 ;; there. Set here, and with one more pair for names with a platform in
