@@ -1311,8 +1311,8 @@ The header line of a code buffer says where you are, the project path
 and the symbol path, file > class > function; scroll into a long
 function and it turns into that function's first line, pinned, until
 its start is back on screen. The modeline says where you are in the
-buffer: the line and column, then how far through the buffer that is,
-as a percentage.
+buffer: the line out of how many there are, the column, then how far
+through the buffer that is as a percentage, =228/1009:7  23%=.
 The most severe problem of a line shows at its end, all of them in the
 popup at point, and the commit behind the line, who and when, at its
 end after a moment of rest.
