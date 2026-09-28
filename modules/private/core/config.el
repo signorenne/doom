@@ -91,6 +91,101 @@
                  (let ((byte-compile-warnings nil))
                    (ignore-errors (byte-compile fn))))))))
 
+;; The first file of a session costs close to a second that the next one
+;; does not: eglot and what it needs load, version control and the diff
+;; gutter, the mode's own library, its tree-sitter queries are compiled
+;; and its snippets read, and the modules load their files. The first
+;; key costs a fifth of a second too, which-key mostly. Emacs does it
+;; while it waits after starting instead, one step at a time; a key
+;; pressed during a step stops it at once, and it is taken up again at
+;; the next pause. The mode set up ahead is that of the latest file
+;; opened in a tree-sitter mode.
+(defvar +core-warm-up-features
+  '(which-key vertico corfu
+    ert eldoc xref jsonrpc external-completion flymake eglot yasnippet
+    vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table)
+  "Libraries the first file of a session loads, loaded ahead while Emacs
+waits after starting.")
+
+(defvar +core-warm-up-functions '(+core--warm-up-mode)
+  "Called one at a time, each at a pause, once `+core-warm-up-features'
+are loaded: with the tree-sitter mode of the latest recent file that has
+one, or nil.")
+
+(defvar +core--warm-up-queue nil
+  "(MODE . STEPS): the warm-up steps left, and the mode they are for,
+`unknown' until the first function step asks.")
+
+(defun +core--last-file-mode ()
+  "The mode of the latest recent file that opens in a tree-sitter mode,
+the kind that gains the most from being set up ahead; or nil."
+  (require 'recentf)
+  (unless recentf-list (recentf-load-list))
+  (seq-some (lambda (file)
+              ;; Remote names are passed over by their shape: asking Emacs
+              ;; whether one is remote loads TRAMP.
+              (unless (string-match-p "\\`/[^/:]+:" file)
+                (when-let* ((mode (assoc-default file auto-mode-alist #'string-match))
+                            (mode (major-mode-remap (if (consp mode) (car mode) mode))))
+                  (and (symbolp mode)
+                       (string-suffix-p "-ts-mode" (symbol-name mode))
+                       mode))))
+            (seq-take recentf-list 10)))
+
+(defun +core--warm-up-mode (mode)
+  "Set MODE up once in a buffer no one sees: its library loads, its
+tree-sitter queries are compiled into the cache every buffer shares,
+and its snippets are read."
+  (when (and mode (fboundp mode))
+    ;; A warning, a grammar gone missing, is logged but not shown: no
+    ;; window should open while you are not looking.
+    (let ((warning-minimum-level :emergency))
+      (with-temp-buffer
+        (delay-mode-hooks (funcall mode))
+        (when (fboundp 'yas--load-pending-jits)
+          (yas--load-pending-jits))))))
+
+(defun +core-load-autoloads (&rest fns)
+  "Load the file each of FNS, an autoloaded function, lives in, unless
+it is loaded already."
+  (dolist (fn fns)
+    (let ((def (symbol-function fn)))
+      (when (autoloadp def)
+        (autoload-do-load def fn)))))
+
+(defun +core--warm-up ()
+  "Take the next warm-up step, unless a key comes first, then wait for a
+pause again for the one after."
+  (pcase-let ((`(,mode . ,steps) +core--warm-up-queue))
+    (when steps
+      (pcase-let ((`(,how . ,what) (car steps)))
+        (unless (eq t (while-no-input
+                        (let ((inhibit-message t))
+                          (with-demoted-errors "Warm-up: %S"
+                            (if (eq how 'require)
+                                (require what nil t)
+                              (when (eq mode 'unknown)
+                                (setq mode (ignore-errors (+core--last-file-mode))))
+                              (funcall what mode))))
+                        nil))
+          (setq steps (cdr steps))))
+      (setq +core--warm-up-queue (cons mode steps))
+      (when steps
+        ;; A second step in the same pause needs a time past the pause's
+        ;; length so far, or it waits for the next pause.
+        (run-with-idle-timer (time-add (or (current-idle-time) 0) 0.1)
+                             nil #'+core--warm-up)))))
+
+(defun +core--warm-up-start-h ()
+  "Queue the warm-up, to start at the first pause after starting."
+  (setq +core--warm-up-queue
+        (cons 'unknown
+              (append (mapcar (lambda (f) (cons 'require f)) +core-warm-up-features)
+                      (mapcar (lambda (f) (cons 'call f)) +core-warm-up-functions))))
+  (run-with-idle-timer 1 nil #'+core--warm-up))
+
+(add-hook 'doom-after-init-hook #'+core--warm-up-start-h 90)
+
 
 ;; A 47 MB log opens in a fifth of a second here, in fundamental mode as
 ;; Doom arranges for big files, so the "really open?" question can wait
