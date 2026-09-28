@@ -380,7 +380,8 @@ or the enclosing function's first line while it is scrolled off the top."
 
 ;; Emacs redraws a window by laying out every line of it again, unless it
 ;; can tell that only the cursor moved or only a line changed; on a full
-;; frame of C++ that layout is most of what a key costs.
+;; frame of C++ that layout is most of what a key costs. Two things kept
+;; it from telling.
 
 ;; The theme draws the current line's number unlike the others, bright on
 ;; hl-line's band. Emacs sees two faces that differ and gives up every
@@ -428,6 +429,20 @@ on every frame."
 (after! solaire-mode
   (add-to-list 'solaire-mode-remap-alist
                '(line-number-current-line . solaire-line-number-face)))
+
+;; And hl-line puts its overlay on the current line after every command,
+;; even when the overlay is there already, and an overlay moved, even in
+;; place, changes the whole window as far as redisplay knows. It moves
+;; now only when the line did: moving along a line and typing on it no
+;; longer lay out the window.
+(defadvice! +ui--hl-line-stay-a (fn overlay)
+  "Leave OVERLAY where it is when it already covers the current line."
+  :around #'hl-line-move
+  (unless (and (null hl-line-range-function)
+               (eq (overlay-buffer overlay) (current-buffer))
+               (eql (overlay-start overlay) (line-beginning-position))
+               (eql (overlay-end overlay) (line-beginning-position 2)))
+    (funcall fn overlay)))
 
 ;;
 ;;; Minimap
