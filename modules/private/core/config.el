@@ -163,6 +163,19 @@
 ;; not enough.
 (setq eldoc-echo-area-use-multiline-p 3)
 
+;; eldoc, which eglot brings from ELPA and which loads with the first
+;; file, primes its list of motion commands by running thirty prefixes
+;; one by one through every symbol there is: 76 000 of them in a session
+;; here, 235 ms, and 581 while the minibuffer folds case. One regexp for
+;; all thirty, matched in C in a single pass, finds the same 152 commands
+;; in 30 ms.
+(defadvice! +core--eldoc-command-completions-a (&rest names)
+  "Add every command whose name starts with one of NAMES, in one pass."
+  :override #'eldoc-add-command-completions
+  (let ((completion-regexp-list (list (concat "\\`" (regexp-opt names))))
+        (completion-ignore-case nil))
+    (apply #'eldoc-add-command (all-completions "" obarray #'commandp))))
+
 ;; Questions are answered on the keyboard, in the minibuffer. Emacs asks
 ;; through a GTK dialog when the question was started by the mouse, and
 ;; closing the frame with the window button is one of those: the dialog
