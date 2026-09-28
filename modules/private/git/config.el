@@ -263,6 +263,15 @@ git's answer, once after an edit.")
     (+git-blame-line-mode 1)))
 
 (add-hook 'prog-mode-hook #'+git--blame-on-h)
+
+;; Loaded ahead while Emacs waits after starting, with what else the first
+;; file of a session loads (`+core-warm-up-functions').
+(defun +git--warm-up-h (_mode)
+  "Load the blame, which the first file under git turns on."
+  (+core-load-autoloads '+git-blame-line-mode))
+
+(add-hook '+core-warm-up-functions #'+git--warm-up-h 50)
+
 ;; A commit turns "not committed yet" into a commit, with no edit to
 ;; the buffer that would say so.
 (add-hook 'git-commit-post-finish-hook #'+git--blame-forget-all-h)
