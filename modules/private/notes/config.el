@@ -154,6 +154,24 @@ startup from loading it; .git is a file in a worktree."
 ;;
 ;;; Spelling and style
 
+;; The notes are spelt British, colour and centre, and American is taken
+;; as well, since code and quotes bring it in. The words of this config
+;; and its tools, config, keymap, clangd, magit, are in dictionary.pws
+;; beside this file, which zg adds to: gathered from the notes, the
+;; READMEs and the cheat sheet, where 300 of them were marked as errors.
+;; Italian is not checked here, twenty million word forms to hold in
+;; memory; LanguageTool reads it, below.
+(setq ispell-dictionary "en_GB"
+      ispell-personal-dictionary (expand-file-name "dictionary.pws" (dir!)))
+
+(declare-function spell-fu-dictionary-add "spell-fu")
+(declare-function spell-fu-get-ispell-dictionary "spell-fu")
+
+(add-hook! 'spell-fu-mode-hook
+  (defun +notes--spell-american-too-h ()
+    "Take American spelling as well as British."
+    (spell-fu-dictionary-add (spell-fu-get-ispell-dictionary "en_US"))))
+
 ;; writegood marks the passive voice, a list of vague words and a word
 ;; said twice, as you type: 116 marks in these notes and not one of them
 ;; an error, "is generated" and "is checked" among them, and "m M" from
