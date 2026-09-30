@@ -175,6 +175,14 @@ tests, the debugger, the server. An empty name goes back to detecting.
 A container started after the first look is noticed by =SPC k m Z=,
 which forgets what the kits read.
 
+What only a trip into the container can tell, what each kit's qmake says
+its Qt is and where an SDK keeps its environment script, is kept across
+sessions: each trip is half a second, asked for every kit at the first
+C++ file of a session. =SPC k m Z= forgets that too, for an SDK
+reinstalled at the same path. And while Emacs waits after starting, it
+loads the files of this module the first C++ file would, when the
+latest file opened in a tree-sitter mode was C or C++.
+
 Run and debug take Qt Creator's run configuration when there is one: the
 target, the arguments and the working directory; =A= in the panel chooses
 another target, =a= other arguments, both kept in =.dir-locals.el=. Every
