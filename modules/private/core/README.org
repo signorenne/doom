@@ -267,12 +267,42 @@ before and after the eglot, snippet and diagnostics changes below: an
 Python file with 2 896 diagnostics 135 to 24, a 17 018 line C data array
 337 to 87; Enter in C++ 27 to 9.5.
 
+On 2026-09-28, the old and the new alternated in one session, with
+doom-one and clangd indexing the project beside it, CPU per key with a
+key every 40 ms as when one is held down: a line move 20.6 ms to 10.2,
+along a line 20.6 to 2.7, a keystroke 24.8 to 12.5, a line move that
+scrolls 26.9 to 18.7; a redraw that follows a timer or a server message
+and changes nothing, 11.2 ms to 1.1. The first C++ file of a session
+opened in 2.5 s and opens in 0.25 s once Emacs has had four seconds to
+itself after starting (0.95 s when opened straight away); the first key
+of a session took 190 ms and takes 51. What changed is in the ui README
+(the redraws) and in the list below.
+
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
   redisplay, and with dirvish on screen a redisplay costs some 20 ms. The
   dashboard animation stops off screen; the butler wakes once per step.
 - ~eglot-sync-connect~ is nil: the buffer comes back at once, the server
   attaches when ready, instead of a one second wait on every first open.
+  A second file of the project opened while its server is still on its
+  way, a header straight after its source, waits for that server
+  instead of starting another; one of the two used to die, and say so.
+- What the first file of a session loads is loaded while Emacs waits
+  after starting, a step at a time, each giving way to a key: eglot and
+  its libraries, version control and the diff gutter, which-key and the
+  completion, then the mode of the latest recent file in a tree-sitter
+  mode, set up once in a hidden buffer so its queries are compiled and
+  its snippets read, and the files the modules load for it
+  (~+core-warm-up-features~, ~+core-warm-up-functions~).
+- The answers that cost a trip into the container, what each kit's qmake
+  says and where a container keeps its home, are kept across sessions:
+  a second of the first C++ file of every session. =SPC k m Z=
+  (~+cpp/forget-kits~) asks again.
+- eldoc primes its list of motion commands with one regexp over all the
+  symbols, in C, not thirty passes over them: 30 ms, not 235 to 581.
+- Doom compiles a few of its hot functions when Emacs is idle; they are
+  byte-compiled in place now, not natively in a batch Emacs waited for,
+  a third of a second frozen each.
 - clangd indexes at low priority, with half the cores.
 - dired shows no vc state: that attribute ran git twice per file, in the
   background, every time a directory of a repository was entered. Add
