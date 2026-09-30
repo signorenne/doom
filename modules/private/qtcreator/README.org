@@ -29,7 +29,10 @@ is asked of the =:private container= module.
 
 A value may name another: =%{Qt:QT_INSTALL_PREFIX}= and the compilers are
 expanded as Qt Creator expands them, asking =qmake= where its Qt is when
-it has to, in the container when the kit runs in one.
+it has to, in the container when the kit runs in one. That answer is
+kept across sessions, in Doom's store: in a container it takes half a
+second, for each kit, and it changes only with the SDK, whose directory
+names its version. ~+qtcreator-forget~ asks again.
 
 * Configuration
 - ~+qtcreator-settings-dirs~ ("~/.config/QtProject/qtcreator"), where to
