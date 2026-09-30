@@ -172,6 +172,17 @@ startup from loading it; .git is a file in a worktree."
     "Take American spelling as well as British."
     (spell-fu-dictionary-add (spell-fu-get-ispell-dictionary "en_US"))))
 
+;; org-modern draws the tags, the keywords, the dates and the labels in
+;; faces of its own, which Doom's list of faces not to check does not
+;; know: a note's tags, :config: and :cpp:, were read as prose.
+(after! spell-fu
+  (dolist (face '(org-modern-tag org-modern-label org-modern-todo org-modern-done
+                  org-modern-priority org-modern-date-active org-modern-time-active
+                  org-modern-date-inactive org-modern-time-inactive
+                  org-modern-block-name org-modern-internal-target
+                  org-modern-radio-target))
+    (cl-pushnew face (alist-get 'org-mode +spell-excluded-faces-alist))))
+
 ;; writegood marks the passive voice, a list of vague words and a word
 ;; said twice, as you type: 116 marks in these notes and not one of them
 ;; an error, "is generated" and "is checked" among them, and "m M" from
