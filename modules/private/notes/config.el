@@ -152,6 +152,21 @@ startup from loading it; .git is a file in a worktree."
 
 
 ;;
+;;; Spelling and style
+
+;; writegood marks the passive voice, a list of vague words and a word
+;; said twice, as you type: 116 marks in these notes and not one of them
+;; an error, "is generated" and "is checked" among them, and "m M" from
+;; SPC m M as a word said twice. It also makes every font-lock rule of
+;; its buffer ignore case, org's too: a heading called Done was taken
+;; for the DONE keyword with no title, and its fontification failed.
+;; Off where Doom turns it on; LanguageTool, SPC n w c, reads the style.
+(dolist (hook '(org-mode-hook markdown-mode-hook rst-mode-hook
+                asciidoc-mode-hook latex-mode-hook LaTeX-mode-hook))
+  (remove-hook hook #'writegood-mode))
+
+
+;;
 ;;; Grammar
 
 ;; LanguageTool reads a buffer and says what is clumsy in it, not only
