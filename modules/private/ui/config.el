@@ -315,10 +315,10 @@ or the enclosing function's first line while it is scrolled off the top."
 ;;; Where you are in the buffer
 
 ;; In the modeline, where the eye already goes for a buffer's facts: the
-;; line out of how many the buffer has, the column, and how far through
-;; the buffer point is as a percentage, 228/1009:7  23%. They take no
-;; column from the text and no pixel from the fringe, which carries the
-;; git gutter and the diagnostics.
+;; line out of how many the buffer has, the column out of how many the
+;; line has, and how far through the buffer point is as a percentage,
+;; 228/1009:7/42  23%. They take no column from the text and no pixel
+;; from the fringe, which carries the git gutter and the diagnostics.
 (defun +ui--position ()
   "How far through the buffer point is, for the modeline."
   ;; %%%% here is %% after `format', which the modeline then shows as
@@ -368,11 +368,37 @@ or the enclosing function's first line while it is scrolled off the top."
                              (force-mode-line-update))))))))
             lines)))))
 
+;; The line's width is measured again only when point is on another line
+;; or the text changed, so moving along a line costs a comparison; and
+;; past `+ui-line-width-max' characters it is the count of characters,
+;; since measuring a line of a minified file reads all of it at each key.
+;; Past the end of the line, in insert state, the column is one more than
+;; the width: 43/42.
+(defvar +ui-line-width-max 4000
+  "Past this many characters a line's width is its count of characters.")
+
+(defvar-local +ui--line-width nil
+  "(TICK BOL . WIDTH): the width of the line point was on, when measured.")
+
+(defun +ui--line-width ()
+  "How many columns the current line has, for the modeline."
+  (let ((tick (buffer-chars-modified-tick))
+        (bol (pos-bol)))
+    (unless (and (eq tick (car +ui--line-width))
+                 (eq bol (cadr +ui--line-width)))
+      (let ((eol (pos-eol)))
+        (setq +ui--line-width
+              (cons tick (cons bol (if (> (- eol bol) +ui-line-width-max)
+                                       (- eol bol)
+                                     (save-excursion (goto-char eol) (current-column))))))))
+    (number-to-string (cddr +ui--line-width))))
+
 ;; Doom's light modeline says "30:12 Bot"; this keeps the line and
-;; column, adds how many lines there are, and puts the percentage where
-;; the word was.
+;; column, adds how many lines and columns there are, and puts the
+;; percentage where the word was.
 (setq-default +modeline-position
-              '("  %l/" (:eval (+ui--line-total)) ":%C  " (:eval (+ui--position)) "  "))
+              '("  %l/" (:eval (+ui--line-total)) ":%C/" (:eval (+ui--line-width)) "  "
+                (:eval (+ui--position)) "  "))
 
 
 ;;
