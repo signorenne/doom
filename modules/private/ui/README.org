@@ -104,6 +104,31 @@ in its own manual that it does not take ~next-error~ over and that one
 should say so oneself, so a buffer flymake checks gets a
 ~next-error-function~ of its own and ~]e~ walks that buffer's diagnostics.
 
+* Redrawing
+Emacs redraws a window by laying out every line of it again unless it
+can tell that only the cursor moved or only a line changed, and on a
+full frame of C++ that layout is most of what a key costs. Two things
+kept it from telling, and one made the modeline dear:
+- The theme draws the current line's number unlike the others, bright on
+  hl-line's band, and Emacs gives up every shortcut when those two faces
+  differ: each redraw laid out the whole window, even one that follows a
+  timer or a server message and changes nothing. Where Emacs looks, the
+  two faces are the same now, and the theme's look comes back through a
+  remap in the buffers where hl-line is on; there a change of line always
+  moves hl-line's overlay, which redraws the whole window anyway, so the
+  bright number cannot stay behind on the line the cursor left.
+- hl-line moved its overlay onto the current line after every command,
+  even where it already was, and an overlay moved in place still counts
+  as a change of the whole window. It moves only when the line does.
+- Doom's light modeline formatted its right half twice at every key, once
+  only to measure it, and eglot's piece of it is a quoted cl-loop the
+  interpreter expanded afresh each time. Once, and expanded once, it
+  takes 70 microseconds instead of 200.
+
+Measured with the key held, in a C++ file with clangd attached: a line
+move 20.6 ms to 10.2, a move along the line 20.6 to 2.7, a keystroke 24.8
+to 12.5, a redraw that changes nothing 11.2 to 1.1.
+
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
 - The minimap: ~+ui-minimap-width~ (16 columns), ~+ui-minimap-idle~
@@ -114,6 +139,8 @@ should say so oneself, so a buffer flymake checks gets a
   ~+ui-minimap-line-face~. It is not demap, Doom's: demap's minimap is an
   indirect buffer, which shares its text's change counters with the
   file, so every overlay the file moved redrew the minimap, 8 ms a key.
+- ~+ui-current-line-number~: the current line's number as the theme
+  draws it, taken from ~line-number-current-line~ whenever a theme loads.
 - ~+ui-flymake-eol-max~, 300: past that many diagnostics in a report,
   none is written at the end of its line; the underline, the fringe and
   the popup still show them.
