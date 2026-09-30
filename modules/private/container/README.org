@@ -30,6 +30,10 @@ one only if none of them has the program, saying so while it does;
 what it finds is cached against the list of running containers, so a
 container started later is looked at again rather than a miss sticking.
 
+~+container-home~ asks the runtime once per container ever: a container
+keeps the home it was made with, so the answer is kept across sessions,
+in Doom's store, until ~+container-forget~.
+
 ~+container-enter~ drops the shell functions this Emacs exports
 (=BASH_FUNC_x%%=), which a bash of another version refuses with a line of
 noise on every command.
