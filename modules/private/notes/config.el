@@ -183,6 +183,15 @@ startup from loading it; .git is a file in a worktree."
                   org-modern-radio-target))
     (cl-pushnew face (alist-get 'org-mode +spell-excluded-faces-alist))))
 
+;; A possessive is spelt right when its word is: config's was marked with
+;; config known, and SDK's when SDK alone, in capitals, is left alone.
+(defadvice! +notes--spell-possessive-a (fn pos-beg pos-end word)
+  "Check a possessive, config's, as the word it is made of."
+  :around #'spell-fu-check-word
+  (if (string-match "\\`\\(.+\\)['\u2019]s\\'" word)
+      (funcall fn pos-beg (+ pos-beg (match-end 1)) (match-string 1 word))
+    (funcall fn pos-beg pos-end word)))
+
 ;; writegood marks the passive voice, a list of vague words and a word
 ;; said twice, as you type: 116 marks in these notes and not one of them
 ;; an error, "is generated" and "is checked" among them, and "m M" from
