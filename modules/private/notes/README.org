@@ -129,6 +129,24 @@ graph; only the list between =# BEGIN MAP= and =# END MAP= is regenerated.
 5. What you want to keep goes to roam: promote a heading with ~SPC m m e~,
    link it with ~SPC n r i~, tag it, then rebuild its map with ~SPC n r m~.
 
+* Spelling and style
+Words are checked as you type against British English, which is how
+the notes are spelt, and American, which code and quotes bring in, and
+against =dictionary.pws= in this module: the words of this config and
+its tools, config, keymap, clangd, magit, gathered from the notes, the
+READMEs and the cheat sheet, where aspell alone marked 300 of them. ~zg~
+adds a word to it and ~z=~ corrects one. A possessive is checked as its
+word, so config's passes with config. The tags, dates and labels
+org-modern draws are not checked, as the code, the links and the
+verbatim are not. Italian is left to LanguageTool below: spell-fu keeps
+every form of every word in memory, and Italian has twenty million.
+
+writegood, which marks the passive voice, a list of vague words and a
+word said twice, is off: it made 116 marks in the notes and none was an
+error, and it makes org's own rules ignore case, so a heading called
+Done broke the fontification of =reading.org=. LanguageTool, below,
+reads the style when asked.
+
 * Grammar
 ~SPC n w c~ runs LanguageTool over the buffer, ~SPC n w w~ says what is
 wrong where the cursor is, ~SPC n w f~ walks the buffer correcting, and
