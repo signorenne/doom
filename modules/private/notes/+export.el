@@ -36,6 +36,22 @@ visibly but does not hold up the window.")
       (setq org-indent-agentized-buffers
             (delq (current-buffer) org-indent-agentized-buffers)))))
 
+;; Org looks for LaTeX to colour with no bound on the search: from the
+;; line being coloured to the next fragment, which in a file with few is
+;; its end, and it throws away what it finds past the region anyway. The
+;; cheat sheet paid 14 ms at every key and 3.6 s to open, one such scan
+;; for each heading on screen. The search now stops a few kilobytes past
+;; the region, enough for a fragment that starts in it to end.
+(defvar +notes-latex-reach 4096
+  "How far past the region being coloured org looks for LaTeX, in characters.")
+
+(defadvice! +notes--latex-within-reach-a (fn limit)
+  "Look for LaTeX no further than `+notes-latex-reach' past LIMIT."
+  :around #'org-do-latex-and-related
+  (save-restriction
+    (narrow-to-region (point-min) (min (point-max) (+ limit +notes-latex-reach)))
+    (funcall fn limit)))
+
 (use-package! org-fragtog
   :hook (org-mode . org-fragtog-mode))
 
