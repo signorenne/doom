@@ -216,6 +216,24 @@ startup from loading it; .git is a file in a worktree."
 
 
 ;;
+;;; Code in notes and documents
+
+;; A code block in markdown or org is coloured by running the mode its
+;; language names in a hidden buffer, the whole block at each key typed in
+;; it. markdown takes a tree-sitter mode only when that mode appears in
+;; `auto-mode-alist', and org never looks for one, while Emacs's own
+;; remapping, which opens a .c file in c-ts-mode, is in neither: a C block
+;; went to cc-mode, 25 ms for 230 lines at every key. A block gets the mode
+;; a file of its language opens in.
+(defun +notes--block-mode-remap-a (mode)
+  "MODE as a file of its language would open in, tree-sitter's if so."
+  (if (and mode (fboundp 'major-mode-remap)) (major-mode-remap mode) mode))
+
+(advice-add 'markdown-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
+(advice-add 'org-src-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
+
+
+;;
 ;;; Grammar
 
 ;; LanguageTool reads a buffer and says what is clumsy in it, not only
