@@ -25,6 +25,25 @@
 ;; Install tree-sitter grammars on first use instead of asking.
 (setq treesit-auto-install-grammar 'always)
 
+;; Doom treats a file over a megabyte as large: so-long switches off what
+;; costs most there. It marks the file from `abort-if-file-too-large',
+;; which Emacs 31 calls before the file has a buffer, so the mark went to
+;; the buffer the file was opened from and no file was ever large. It is
+;; made here instead, in the file's own buffer, before Doom's hook reads
+;; it.
+(advice-remove 'abort-if-file-too-large #'doom--prepare-for-large-files-a)
+
+(add-hook! 'find-file-hook :depth -95
+  (defun +core--mark-large-file-h ()
+    "Mark the file just opened as large when it is, for Doom's hook."
+    (when-let* (((not doom-inhibit-large-file-detection))
+                (file buffer-file-name)
+                ((not (file-remote-p file)))
+                (size (file-attribute-size (file-attributes file)))
+                (limit (assoc-default file doom-large-file-size-alist #'string-match-p)))
+      (when (> size (* 1024 1024 limit))
+        (setq-local doom-large-file-p size)))))
+
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
 ;; delete-file behind them move the file to the desktop's trash, the one
 ;; Dolphin shows, and SPC f t opens it here. Put a file back from the
