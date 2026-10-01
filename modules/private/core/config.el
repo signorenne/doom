@@ -44,6 +44,33 @@
       (when (> size (* 1024 1024 limit))
         (setq-local doom-large-file-p size)))))
 
+;; Tree-sitter reparses what an edit touched, which in most files is a
+;; function; but in a file that is one declaration, an image as a C array
+;; of 17 000 lines, that is all of it, and every key rebuilt it: 176 ms.
+;; A file the grammar cannot read at all, nlohmann's json.hpp, is one error
+;; node, and nothing of it is reused: 55 ms. A large file, and a quarter of
+;; one that failed to parse, opens in the mode Emacs had before
+;; tree-sitter: 7 ms a key in that array.
+(defvar +core-treesit-unparsed-max (* 256 1024)
+  "Past this size a file tree-sitter could not parse opens without it.")
+
+(defun +core--classic-mode (mode)
+  "The mode that tree-sitter MODE stands in for, or nil."
+  (car (or (rassq mode major-mode-remap-alist)
+           (rassq mode (bound-and-true-p major-mode-remap-defaults)))))
+
+(add-hook! 'find-file-hook :depth -90
+  (defun +core--without-treesit-h ()
+    "Open a file tree-sitter would make slow in the mode before it."
+    (when-let* (((treesit-parser-list))
+                (classic (+core--classic-mode major-mode))
+                ((fboundp classic))
+                ((or doom-large-file-p
+                     (and (> (buffer-size) +core-treesit-unparsed-max)
+                          (equal (treesit-node-type (treesit-buffer-root-node)) "ERROR")))))
+      (funcall classic)
+      (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
+
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
 ;; delete-file behind them move the file to the desktop's trash, the one
 ;; Dolphin shows, and SPC f t opens it here. Put a file back from the
