@@ -192,6 +192,17 @@ startup from loading it; .git is a file in a worktree."
       (funcall fn pos-beg (+ pos-beg (match-end 1)) (match-string 1 word))
     (funcall fn pos-beg pos-end word)))
 
+;; The first note of a session loaded the three word lists, some 60 ms;
+;; they are loaded while Emacs waits after starting instead
+;; (`+core-warm-up-functions'), in a buffer no one sees.
+(defun +notes--warm-up-h (_mode)
+  "Load the spelling word lists ahead of the first note."
+  (with-temp-buffer
+    (spell-fu-mode 1)
+    (spell-fu-mode -1)))
+
+(add-hook '+core-warm-up-functions #'+notes--warm-up-h 50)
+
 ;; writegood marks the passive voice, a list of vague words and a word
 ;; said twice, as you type: 116 marks in these notes and not one of them
 ;; an error, "is generated" and "is checked" among them, and "m M" from
