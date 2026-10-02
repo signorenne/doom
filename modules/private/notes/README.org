@@ -162,12 +162,32 @@ module looks for the directory that holds the whole set and puts its
 =libs= on the classpath too. ~SPC h r d~ says so when the jars or the java
 that runs them are missing.
 
+* Code blocks and LaTeX
+A code block in markdown or org is coloured by the mode of its
+language, run in a hidden buffer over the whole block at each key typed
+in it. The block gets the mode a file of that language opens in:
+markdown took a tree-sitter mode only when that mode was in
+~auto-mode-alist~, and org never did, so a C block went to cc-mode.
+Typing in a 230 line C block of the blog takes 22 ms instead of 35, in a
+10 line one 6 ms, in prose 4; half the blocks there are five lines. The
+whole block is still coloured again at each key: that is how
+markdown-mode does it.
+
+Org looks for LaTeX to colour from the text being coloured on to the
+next fragment, which in a file with few is its end, at every key and for
+every heading on screen. It stops now ~+notes-latex-reach~ characters
+past that text, room for a fragment that starts in it to end. The cheat
+sheet opens in 0.3 s instead of 1.4 and takes 5 ms a key instead of 19,
+and its colours are the same.
+
 * Configuration
 - ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~.
 - ~+notes-roam-head~, the header every roam note starts with;
   ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
   and first lines.
 - ~+notes-bibliography~ (=~/org/refs.bib=), ~+notes-commit-idle~ (600).
+- ~+notes-latex-reach~ (4096), how far past the text being coloured org
+  looks for LaTeX.
 - ~org-directory~ (=~/org=, from core's ~+core-notes-dir~) and
   ~org-roam-directory~ (=~/org/roam=).
 - The files: =config.el= (documents, the workflow block, the commit
