@@ -119,7 +119,11 @@ kept it from telling, and one made the modeline dear:
   bright number cannot stay behind on the line the cursor left.
 - hl-line moved its overlay onto the current line after every command,
   even where it already was, and an overlay moved in place still counts
-  as a change of the whole window. It moves only when the line does.
+  as a change of the whole window. It moves only when the line does; and
+  while a key is held, commands closer together than
+  ~+ui-hl-line-repeat~ (70 ms, where KDE repeats every 40), the band and
+  the bright number step aside in the window you work in and are back
+  as soon as the key is let go. A held line move costs 1.4 ms, not 3.9.
 - Doom's light modeline formatted its right half twice at every key, once
   only to measure it, and eglot's piece of it is a quoted cl-loop the
   interpreter expanded afresh each time. Once, and expanded once, it
@@ -128,6 +132,26 @@ kept it from telling, and one made the modeline dear:
 Measured with the key held, in a C++ file with clangd attached: a line
 move 20.6 ms to 10.2, a move along the line 20.6 to 2.7, a keystroke 24.8
 to 12.5, a redraw that changes nothing 11.2 to 1.1.
+
+Colouring had its own waste:
+- Emacs 31 colours text as it comes on screen in chunks that end where
+  hidden text starts, so that a folded subtree is not coloured for
+  nothing. But org also hides the ~=~ and =~= around code and the
+  brackets of a link, and each of those ended a chunk, widened again to
+  whole lines: a line of the cheat sheet with ten of them was coloured
+  twenty times. A chunk runs on through hidden text shorter than
+  ~+ui-jit-lock-hidden-min~ (500 characters) and stops before a longer
+  one, the body of a fold. A half page of the unfolded cheat sheet shown
+  for the first time: 60 ms to 8; typing in it 6.4 to 4.7.
+- When colouring a chunk takes in text before it, as a markdown code
+  block does from the line typed on back to its first, jit-lock redraws
+  the window a second time; now only when a window shows that text. Typing
+  in a block whose start is above the window: 8.3 ms to 5.8.
+- The header line's function is looked up again half a second after the
+  typing stops, not at every key, where there is no syntax tree to ask:
+  in cc-mode that walk was half of what a key cost. In a file Doom calls
+  large it is not looked up at all; in a 2 MB header of declarations
+  cc-mode walked back through them at every step, 130 ms a line scrolled.
 
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
@@ -141,6 +165,11 @@ to 12.5, a redraw that changes nothing 11.2 to 1.1.
   file, so every overlay the file moved redrew the minimap, 8 ms a key.
 - ~+ui-current-line-number~: the current line's number as the theme
   draws it, taken from ~line-number-current-line~ whenever a theme loads.
+- ~+ui-hl-line-repeat~, 0.07 s: commands closer together than this come
+  from a held key, and hl-line steps aside until it is let go; 0 keeps
+  the band on every line the cursor passes.
+- ~+ui-jit-lock-hidden-min~, 500: hidden text shorter than this many
+  characters is coloured with the text around it.
 - ~+ui-flymake-eol-max~, 300: past that many diagnostics in a report,
   none is written at the end of its line; the underline, the fringe and
   the popup still show them.
