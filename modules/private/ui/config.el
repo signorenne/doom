@@ -162,10 +162,14 @@ draws on the dashboard moves on from here, inside
 ;; first line of the enclosing function while that line is scrolled off
 ;; the top, the way VS Code and Zed pin it.  In code buffers.
 (defvar-local +ui--defun-cache nil
-  "(START END TICK . LINE) of the function last found under the window's
-top: reused while the top stays inside it and the buffer unchanged,
-since the header line is asked on every redisplay, dozens a second
-while the wheel turns.")
+  "(START END TICK TOP . LINE) of the function last found under the
+window's top TOP: reused while the top stays inside it and the buffer
+unchanged, since the header line is asked on every redisplay, dozens a
+second while the wheel turns; and while the window stays still and only
+the text changes, until the typing stops.")
+
+(defvar-local +ui--defun-refresh nil
+  "The idle timer that looks the function up again once typing stops.")
 
 (defun +ui--defun-around (top)
   "(START . END) of the function holding TOP, or nil.  From the syntax
@@ -186,12 +190,28 @@ large object literal or array that was most of a scroll step's time."
 (defun +ui--scrolled-defun ()
   "The first line of the function that holds the window's first line,
 when that first line is scrolled off; nil at the top of a function or
-between two.  Kept while the window's top stays inside that function."
+between two.  Kept while the window's top stays inside that function.
+Typing with the window still keeps it too, and it is looked up again
+half a second after the typing stops: without a syntax tree the lookup
+walks the code, and in cc-mode it was half of what a key cost."
   (let ((top (window-start)))
     (when (> top (point-min))
-      (pcase-let ((`(,from ,to ,tick . ,line) +ui--defun-cache))
-        (if (and from (<= from top) (< top to) (eq tick (buffer-chars-modified-tick)))
-            line
+      (pcase-let ((`(,from ,to ,tick ,old-top . ,line) +ui--defun-cache))
+        (cond
+         ((and from (<= from top) (< top to) (eq tick (buffer-chars-modified-tick)))
+          line)
+         ((and from (eql top old-top))
+          (unless (timerp +ui--defun-refresh)
+            (let ((buffer (current-buffer)))
+              (setq +ui--defun-refresh
+                    (run-with-idle-timer
+                     0.5 nil (lambda ()
+                               (when (buffer-live-p buffer)
+                                 (with-current-buffer buffer
+                                   (setq +ui--defun-refresh nil +ui--defun-cache nil)
+                                   (force-mode-line-update))))))))
+          line)
+         (t
           (let* ((range (+ui--defun-around top))
                  (inside (and range (< (car range) top) (> (cdr range) top)))
                  (text (and inside
@@ -202,8 +222,8 @@ between two.  Kept while the window's top stays inside that function."
             (setq +ui--defun-cache
                   (cons (if inside (car range) top)
                         (cons (if inside (cdr range) (1+ top))
-                              (cons (buffer-chars-modified-tick) text))))
-            text))))))
+                              (cons (buffer-chars-modified-tick) (cons top text)))))
+            text)))))))
 
 (defvar-local +ui--crumbs-cache nil
   "(LINE-START TICK . CRUMBS): the breadcrumbs of the line point is on,
