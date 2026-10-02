@@ -582,6 +582,36 @@ out of the way while a key is held."
                     (_ entry)))
                 mode-line-misc-info)))
 
+;; Emacs 31 colours text as it comes on screen in chunks that end where
+;; hidden text starts, so that a folded subtree is not coloured for
+;; nothing. But org also hides the = and ~ around code and the brackets
+;; of a link, and each of those ended a chunk; every chunk is widened to
+;; whole lines, so a line of the cheat sheet with ten of them was coloured
+;; twenty times, and a half page first shown took 60 ms. A chunk now runs
+;; on through hidden text shorter than `+ui-jit-lock-hidden-min' and stops
+;; before a longer one, the body of a fold.
+(defvar +ui-jit-lock-hidden-min 500
+  "Hidden text shorter than this, in characters, is coloured with the text
+around it; longer, it waits until it shows.")
+
+(defadvice! +ui--jit-lock-past-hidden-a (fn start)
+  "Colour the chunk from START on through short hidden text."
+  :around #'jit-lock-function
+  (if (or (not jit-lock-mode) memory-full
+          (and jit-lock-defer-timer
+               (or (not (eq jit-lock-defer-time 0)) (input-pending-p))))
+      (funcall fn start)
+    (let ((end (min (point-max) (+ start jit-lock-chunk-size)))
+          (pos start))
+      (while (< pos end)
+        (if (and (> pos start)
+                 (get-text-property pos 'invisible)
+                 (>= (- (next-single-property-change pos 'invisible nil (point-max)) pos)
+                     +ui-jit-lock-hidden-min))
+            (setq end pos)
+          (setq pos (next-single-property-change pos 'invisible nil end))))
+      (jit-lock-fontify-now start end))))
+
 
 ;;
 ;;; Minimap
