@@ -612,6 +612,19 @@ around it; longer, it waits until it shows.")
           (setq pos (next-single-property-change pos 'invisible nil end))))
       (jit-lock-fontify-now start end))))
 
+;; When colouring a chunk takes in text before it, as a markdown code
+;; block does from the line typed on back to its first line, jit-lock
+;; redraws the window a second time for what it drew before the change.
+;; That text is often above the window, and then the second redraw, a
+;; whole one, showed nothing new: 2 ms of every key typed in a block.
+(defadvice! +ui--jit-lock-redraw-if-shown-a (fn start end)
+  "Redraw for text coloured between START and END only if a window shows it."
+  :around #'jit-lock-force-redisplay
+  (when (and (marker-buffer start)
+             (seq-some (lambda (window) (> end (window-start window)))
+                       (get-buffer-window-list (marker-buffer start) nil t)))
+    (funcall fn start end)))
+
 
 ;;
 ;;; Minimap
