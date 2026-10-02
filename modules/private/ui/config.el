@@ -460,15 +460,19 @@ on every frame."
 (defvar-local +ui--current-line-number nil
   "The remap that draws this buffer's current line number the theme's way.")
 
-(defun +ui--current-line-number-h ()
-  "Draw the current line's number the theme's way while hl-line is on."
-  (cond ((and hl-line-mode (null +ui--current-line-number))
+(defun +ui--show-current-line-number (on)
+  "Draw the current line's number the theme's way when ON, plainly if not."
+  (cond ((and on (null +ui--current-line-number))
          (setq +ui--current-line-number
                (face-remap-add-relative 'line-number-current-line
                                         '+ui-current-line-number)))
-        ((and (not hl-line-mode) +ui--current-line-number)
+        ((and (not on) +ui--current-line-number)
          (face-remap-remove-relative +ui--current-line-number)
          (setq +ui--current-line-number nil))))
+
+(defun +ui--current-line-number-h ()
+  "Draw the current line's number the theme's way while hl-line is on."
+  (+ui--show-current-line-number hl-line-mode))
 
 (add-hook 'hl-line-mode-hook #'+ui--current-line-number-h)
 
@@ -483,14 +487,64 @@ on every frame."
 ;; place, changes the whole window as far as redisplay knows. It moves
 ;; now only when the line did: moving along a line and typing on it no
 ;; longer lay out the window.
+;;
+;; A held key still moved it at every repeat, and a line move cost 3.9 ms
+;; where the cursor alone costs 1.4. So while a key repeats, commands
+;; closer together than `+ui-hl-line-repeat', the band and the bright
+;; number step aside in the window you work in, and they are back as soon
+;; as the key is let go; a key pressed once moves them at once, as before.
+(defvar +ui-hl-line-repeat 0.07
+  "Commands closer together than this, in seconds, come from a held key.
+KDE repeats a held key every 40 ms.")
+
+(defvar +ui--command-time 0.0
+  "When the last command started.")
+
+(defvar +ui--key-held nil
+  "Non-nil while the command running comes from a held key.")
+
+(defvar-local +ui--hl-line-aside nil
+  "Non-nil while hl-line has stepped aside for a held key.")
+
+(defun +ui--key-held-h ()
+  "Note whether this command follows the last one as a held key does."
+  (let ((now (float-time)))
+    (setq +ui--key-held (< (- now +ui--command-time) +ui-hl-line-repeat)
+          +ui--command-time now)))
+
+(add-hook 'pre-command-hook #'+ui--key-held-h)
+
+(defun +ui--hl-line-return (buffer)
+  "Bring hl-line back in BUFFER once the held key is let go."
+  (setq +ui--key-held nil)
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when +ui--hl-line-aside
+        (setq +ui--hl-line-aside nil)
+        (when hl-line-mode
+          (+ui--show-current-line-number t)
+          (hl-line-highlight))))))
+
 (defadvice! +ui--hl-line-stay-a (fn overlay)
-  "Leave OVERLAY where it is when it already covers the current line."
+  "Leave OVERLAY where it is when it covers the current line already, and
+out of the way while a key is held."
   :around #'hl-line-move
-  (unless (and (null hl-line-range-function)
-               (eq (overlay-buffer overlay) (current-buffer))
-               (eql (overlay-start overlay) (line-beginning-position))
-               (eql (overlay-end overlay) (line-beginning-position 2)))
-    (funcall fn overlay)))
+  (cond
+   ((and (null hl-line-range-function)
+         (eq (overlay-buffer overlay) (current-buffer))
+         (eql (overlay-start overlay) (pos-bol))
+         (eql (overlay-end overlay) (pos-bol 2))))
+   ((and +ui--key-held (eq (current-buffer) (window-buffer)))
+    (unless +ui--hl-line-aside
+      (setq +ui--hl-line-aside t)
+      (delete-overlay overlay)
+      (+ui--show-current-line-number nil)
+      (run-with-idle-timer +ui-hl-line-repeat nil #'+ui--hl-line-return (current-buffer))))
+   (t
+    (when +ui--hl-line-aside
+      (setq +ui--hl-line-aside nil)
+      (+ui--show-current-line-number t))
+    (funcall fn overlay))))
 
 ;; The modeline is formatted again at every key. Doom's light one formats
 ;; its right half twice for it, the first time only to measure it for the
