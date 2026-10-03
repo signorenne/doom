@@ -9,6 +9,21 @@
 (setq evil-want-fine-undo t)
 
 (map! :n "U" #'vundo)
+(map! :leader :desc "Undo graph as you undo" "t u" #'+core/undo-graph-popup)
+
+(declare-function vundo-popup-mode "vundo-popup")
+(declare-function vundo--popup-advice "vundo-popup")
+
+(defun +core/undo-graph-popup ()
+  "Show the undo graph for a moment at each undo and redo, or stop.
+vundo's popup is a mode of one buffer that changes undo in all of them,
+so turning it off from another buffer took two presses; this is one."
+  (interactive)
+  (require 'vundo-popup)
+  (let ((on (not (advice-member-p #'vundo--popup-advice 'undo))))
+    (vundo-popup-mode (if on 1 -1))
+    (message "The undo graph %s"
+             (if on "shows for a moment at each undo" "stays hidden until U"))))
 
 
 ;;
