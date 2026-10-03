@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-27 23:42
+#+generated: 2026-09-28 16:19
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -231,14 +231,34 @@ frame of a daemon leaves Emacs running, which is the point of it.
 | ~SPC s s~   | pick a line with completion |
 
 ** Undo, registers, macros
-| Key       | What it does                   |
-|-----------+--------------------------------|
-| ~u C-r~     | undo, redo                     |
-| ~SPC s u~   | the undo tree                  |
-| ~"ay "ap~   | yank to, paste from a register |
-| ~q a ... q~ | record a macro into ~a~          |
-| ~@a~        | play it back                   |
-| ~SPC i y~   | the kill ring                  |
+| Key       | What it does                                 |
+|-----------+----------------------------------------------|
+| ~u C-r~     | undo, redo                                   |
+| ~U~         | every state the file has been in, as a graph |
+| ~"ay "ap~   | yank to, paste from a register               |
+| ~q a ... q~ | record a macro into ~a~                        |
+| ~@a~        | play it back                                 |
+| ~SPC i y~   | the kill ring                                |
+
+~u~ undoes one edit, not all that was typed in one go in insert state.
+Emacs keeps every state a file has been in, the ones undone too, and ~u~ and
+~C-r~ walk one path through them: an edit after an undo puts the rest out
+of their reach. ~U~ draws all of them as a graph along the bottom, the
+newest on the right, and the file follows you through it; ~RET~ keeps
+where you are, ~q~ puts it back. The lines an undo or a step changes
+light up for a moment. ~SPC t u~ shows the graph for a moment at each ~u~
+and ~C-r~ as well, and ~SPC s u~ is Doom's key for ~U~.
+
+| Key   | In the graph                                    |
+|-------+-------------------------------------------------|
+| ~h l~   | an older state, a newer one                     |
+| ~j k~   | the next branch, the one before                 |
+| ~H L~   | the start and the end of this branch            |
+| ~s S~   | the state last saved, the next saved one        |
+| ~d~     | what this state changed; it follows, ~d~ hides it |
+| ~m u~   | mark a state to compare with, unmark            |
+| ~RET~   | keep this state                                 |
+| ~q~ ~ESC~ | put the file back as it was                     |
 
 ** Folding
 | Key   | What it does                           |
@@ -2996,6 +3016,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC t r~ | Read-only mode               |
 | ~SPC t s~ | Spell checker                |
 | ~SPC t t~ | Pomodoro timer               |
+| ~SPC t u~ | Undo graph as you undo       |
 | ~SPC t v~ | Visible mode                 |
 | ~SPC t w~ | Soft line wrapping           |
 | ~SPC t z~ | Zen mode                     |
@@ -3176,6 +3197,11 @@ bound.
   of this frame.
 - ~+core/trash~ (~SPC f t~) :: The trash, in the file manager: what was
   deleted, newest first.
+- ~+core/undo-diff~ :: Show what the graph's state changed from the one
+  before it, or from the state marked with m, and keep showing it as you
+  move; again, hide it.
+- ~+core/undo-graph-popup~ (~SPC t u~) :: Show the undo graph for a moment
+  at each undo and redo, or stop.
 - ~+core/view-close~ :: Close the view, from wherever you are, the view
   itself included.
 - ~+core/view-follow-toggle~ :: Draw a live view again as you type, or only
