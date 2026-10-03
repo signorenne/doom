@@ -93,3 +93,69 @@ the state marked with m, and keep showing it as you move; again, hide it."
              (+core--undo-diff-window))
     (vundo-diff)))
 
+
+;;
+;;; What an undo changed
+
+;; An undo puts the cursor at one end of what it changed and says no more,
+;; so a u that restored a line far off, or a word in the middle of the
+;; screen, went by unseen. The lines it changed light up for a moment,
+;; after u, C-r and each step through the graph.
+(defface +core-undo-changed '((t (:inherit region :extend t)))
+  "The lines an undo, a redo or a step in the undo graph just changed."
+  :group 'undo)
+
+(defvar +core-undo-flash-time 0.3
+  "Seconds the lines an undo changed stay lit; 0 lights none.")
+
+(defvar +core--undo-changed nil
+  "Markers (BEG . END) of what the undo running now changed.")
+
+(defun +core--undo-note-h (beg end _length)
+  "Keep the span BEG to END the undo running now changed; fifty are plenty."
+  (when (length< +core--undo-changed 50)
+    (push (cons (copy-marker beg) (copy-marker end t)) +core--undo-changed)))
+
+(defun +core--undo-flash (buffer spans)
+  "Light up in BUFFER the lines of SPANS, for `+core-undo-flash-time'."
+  (let (lines overlays)
+    (with-current-buffer buffer
+      (dolist (span spans)
+        (push (cons (save-excursion (goto-char (car span)) (line-beginning-position))
+                    (save-excursion (goto-char (cdr span)) (line-beginning-position 2)))
+              lines)
+        (set-marker (car span) nil)
+        (set-marker (cdr span) nil))
+      (when (and (> +core-undo-flash-time 0) (get-buffer-window buffer))
+        ;; Neighbours and overlaps become one stretch of lines.
+        (dolist (line (sort lines (lambda (a b) (< (car a) (car b)))))
+          (if (and overlays (<= (car line) (overlay-end (car overlays))))
+              (move-overlay (car overlays) (overlay-start (car overlays))
+                            (max (cdr line) (overlay-end (car overlays))))
+            (let ((ov (make-overlay (car line) (cdr line))))
+              (overlay-put ov 'face '+core-undo-changed)
+              (overlay-put ov 'priority -40)
+              (push ov overlays))))
+        (run-at-time +core-undo-flash-time nil #'mapc #'delete-overlay overlays)))))
+
+(defun +core--undo-watch-a (fn &rest args)
+  "Run FN, an undo, a redo or a step through the undo graph, and light up
+the lines it changed in the buffer it changed."
+  (let ((buffer (or (bound-and-true-p vundo--orig-buffer) (current-buffer)))
+        (+core--undo-changed nil))
+    (with-current-buffer buffer
+      (add-hook 'after-change-functions #'+core--undo-note-h nil t))
+    (unwind-protect (apply fn args)
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (remove-hook 'after-change-functions #'+core--undo-note-h t))))
+    (when (buffer-live-p buffer)
+      (+core--undo-flash buffer +core--undo-changed))))
+
+(after! undo-fu
+  (dolist (command '(undo-fu-only-undo undo-fu-only-redo undo-fu-only-redo-all))
+    (advice-add command :around #'+core--undo-watch-a)))
+
+(after! vundo
+  (dolist (command (cons 'vundo-quit +core--undo-moves))
+    (advice-add command :around #'+core--undo-watch-a)))
