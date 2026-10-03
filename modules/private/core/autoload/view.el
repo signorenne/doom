@@ -106,8 +106,12 @@ would leave some other buffer in the side window."
   (get-buffer-window +core-view-buffer-name t))
 
 (defun +core-view--header (source &optional problem)
-  "Say in the view's header what it shows, and what is wrong if anything."
+  "Say in the view's header what it shows, and what is wrong if anything.
+The view takes SOURCE's directory too, so SPC SPC, SPC . or a search run
+from inside it work in SOURCE's project, not the one the view was first
+made in."
   (with-current-buffer (+core-view--buffer)
+    (setq default-directory (buffer-local-value 'default-directory source))
     (setq header-line-format
           (if problem
               (propertize (format " %s: %s" (buffer-name source) problem)
