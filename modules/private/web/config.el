@@ -75,6 +75,11 @@
       "Start the Svelte server when there is one to start."
       (when (executable-find "svelteserver") (lsp!)))))
 
+;; :lang web starts one in XML buffers too, SVG among them, but eglot
+;; knows no server for XML and none is installed: every SVG opened
+;; printed eglot's failure, processp nil, in the echo area.
+(remove-hook 'nxml-mode-local-vars-hook #'lsp!)
+
 
 ;;
 ;;; The project's own tools before the global ones
