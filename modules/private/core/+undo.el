@@ -101,14 +101,26 @@ the state marked with m, and keep showing it as you move; again, hide it."
     (setq +core--undo-diff-follow t)
     (vundo-diff)))
 
+(declare-function vundo-m-parent "vundo")
+(declare-function vundo--current-node "vundo")
+(defvar vundo--prev-mod-list)
+(defvar vundo-diff--marked-node)
+
 (defun +core--undo-diff-follow-h ()
   "Diff the state the graph just moved to, while the diff is on show.
-An error in a command hook takes the hook away, so one is only said."
-  (when (and +core--undo-diff-follow
-             (memq this-command +core--undo-moves)
-             (+core--undo-diff-window))
+The oldest state has nothing before it: vundo said so at every step
+there and left the last diff up, so the diff says it instead. An error
+in a command hook takes the hook away, so one is only said."
+  (when-let* (((and +core--undo-diff-follow (memq this-command +core--undo-moves)))
+              (window (+core--undo-diff-window)))
     (with-demoted-errors "Undo graph diff: %S"
-      (vundo-diff))))
+      (if (or (bound-and-true-p vundo-diff--marked-node)
+              (vundo-m-parent (vundo--current-node vundo--prev-mod-list)))
+          (vundo-diff)
+        (with-current-buffer (window-buffer window)
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert "The oldest state kept: nothing before it to compare with.\n")))))))
 
 ;; A step the history can no longer make, when what it recorded does not
 ;; match the text any more, failed the same way at every key: each move
