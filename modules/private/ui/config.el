@@ -333,6 +333,49 @@ or the enclosing function's first line while it is scrolled off the top."
   t)
 (add-hook '+indent-guides-inhibit-functions #'+ui--no-guides-by-default-h)
 
+;; The wheel went on past the end of a file until its last line stood
+;; alone at the top, and then ultra-scroll put the window's start on the
+;; very end: an empty window. It stops now as the last line reaches the
+;; bottom. The keys are as they were: C-e still scrolls past the end.
+(defun +ui--room-below (enough)
+  "Pixels the selected window can scroll on before its last line is at
+the bottom, counted no further than ENOUGH. The empty line after a final
+newline counts: G goes there, and the modeline counts it."
+  (let* ((body (window-body-height nil t))
+         (vscroll (window-vscroll nil t))
+         (text (window-text-pixel-size nil (window-start) (point-max)
+                                       nil (+ body vscroll enough)))
+         (last (if (eq (char-before (point-max)) ?\n) (default-line-height) 0)))
+    (- (+ (cdr text) last) vscroll body)))
+
+(declare-function ultra-scroll-down "ultra-scroll")
+(defadvice! +ui--wheel-stop-at-end-a (fn delta)
+  "Scroll DELTA pixels, but not past the last line at the bottom."
+  :around #'ultra-scroll-down
+  (let ((room (+ui--room-below delta)))
+    (when (> room 0)
+      (funcall fn (min delta room)))))
+
+(defun +ui--wheel-scroll-up (&optional lines)
+  "Scroll LINES up, a screen when nil, for a wheel that sends no pixel
+steps; it stops where the pixel scrolling does. The window's start is
+moved here rather than by `scroll-up', which puts point back where the
+last scroll left it on screen, and from below the window starts again
+half a window above it: a quick turn of the wheel ran past the end."
+  (let* ((line (default-line-height))
+         (want (if (numberp lines) lines
+                 (max 1 (- (window-body-height) next-screen-context-lines))))
+         (room (+ui--room-below (* want line))))
+    (when (> room 0)
+      (let ((start (save-excursion
+                     (goto-char (window-start))
+                     (vertical-motion (min want (ceiling room line)))
+                     (point))))
+        (set-window-start nil start t)
+        (when (< (point) start) (goto-char start))))))
+
+(setq mwheel-scroll-up-function #'+ui--wheel-scroll-up)
+
 ;;
 ;;; Where you are in the buffer
 
