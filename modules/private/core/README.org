@@ -192,6 +192,9 @@ files section has the detail.
 - ~+core-notes-dir~ (=~/org/=) and ~+core-projects-dir~ (=~/projects/=):
   where the notes and the projects live; the notes module and the C++
   scaffolds read them.
+- ~+core-treesit-unparsed-max~ (256 KB): past this size a file
+  tree-sitter cannot parse opens in the older mode; Doom's
+  ~doom-large-file-size-alist~ (1 MB) says what is large.
 
 * The shared library
 =autoload/lib.el= holds what the other private modules ask core for, one
@@ -257,9 +260,8 @@ project with clangd attached, key and redisplay together: a line move
 9 ms, a half page 13 ms, a keystroke 14 ms, where they were 28, 35 and
 37 before the two changes at the end of the list below. A header that
 tree-sitter's C++ grammar cannot parse, nlohmann's 24 765 line
-=json.hpp= with its whole text inside one error node, reparses all of it
-at every keystroke, 43 ms; cc-mode is slower still there, so that one
-stays as it is.
+=json.hpp= with its whole text inside one error node, reparsed all of it
+at every keystroke, 43 ms; it opens in cc-mode now, below.
 
 The same day, across the modes with their servers attached, a keystroke
 before and after the eglot, snippet and diagnostics changes below: an
@@ -277,6 +279,18 @@ opened in 2.5 s and opens in 0.25 s once Emacs has had four seconds to
 itself after starting (0.95 s when opened straight away); the first key
 of a session took 190 ms and takes 51. What changed is in the ui README
 (the redraws) and in the list below.
+
+Later that day, across the modes, a key every 40 ms and the machine
+quiet: the cheat sheet opens in 0.3 s instead of 1.4, takes 5 ms a key
+instead of 19, and 8 ms a half page shown the first time unfolded
+instead of 60; a line move costs 1.3 to 2.5 ms in every mode, where it
+cost 2.8 to 4.6. Typing inside the 17 018 line C data array went from
+176 ms to 4.6 and scrolling it from 20 to 4; in =json.hpp= from 65 to 8,
+though it opens in 1.2 s instead of 0.6, cc-mode reading its templates;
+in a 2 MB C header from 1.8 s to 7 ms, and it opens in 0.5 s, not 2.3.
+Typing in a 230 line code block of a markdown post, 28 to 22. What
+changed is below, in the ui README (hl-line, colouring) and in the notes
+README (code blocks, LaTeX).
 
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
@@ -341,6 +355,18 @@ What keeps it that way:
   popup whenever a candidate is chosen, for the preview it inserts;
   with the first chosen from the start that was every backspace.
 - ~large-file-warning-threshold~ is 64 MB; below that, files just open.
+- A file over a megabyte is large, as Doom means it: so-long's minor mode
+  turns off the spell check, eldoc, smartparens, flymake, hl-line and the
+  diff gutter, and colours less. Doom marked the file from a function
+  Emacs 31 calls before the file has a buffer, so no file was ever large;
+  it is marked in the file's own buffer now. =M-x so-long-minor-mode=
+  gives it all back in one.
+- A large file, and one over 256 KB that tree-sitter cannot parse
+  (~+core-treesit-unparsed-max~), opens in the mode Emacs had before
+  tree-sitter. Tree-sitter reparses what an edit touched, and in a file
+  that is one declaration, or one error, that is all of it: 176 ms a key
+  in the data array, 55 in =json.hpp=, 1.8 s in a 2 MB header, where the
+  older modes take 5, 8 and 7.
 
 Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
 busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native
