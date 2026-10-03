@@ -124,6 +124,10 @@ where it is a superset of the plain CSS server. lsp-mode runs several
 servers at once and would give class completion everywhere; that is the
 trade this config makes by using eglot.
 
+A language server for XML, SVG included. eglot knows none for it and
+none is installed here, and :lang web's attempt to start one printed an
+error for each SVG opened, so XML buffers start none.
+
 * Configuration
 - ~+web-package-manager~, ~+web-dev-script~, ~+web-build-script~: per-project
   settings, all directory local, all overriding what is read from the
