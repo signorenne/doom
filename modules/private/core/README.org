@@ -6,7 +6,8 @@ The small global things:
 
 - environment: tree-sitter grammars install themselves, =~/.local/bin= stays
   on =exec-path=, and an Emacs server runs so =emacsclient= works,
-- editing defaults: fine-grained undo, bash tree-sitter mode,
+- editing defaults: fine-grained undo with the whole history as a graph
+  on ~U~, bash tree-sitter mode,
   completion as you type with the first candidate chosen, and what a
   candidate means beside the list on ~M-d~,
 - images opened as pictures rather than as their bytes: fitted to the
@@ -172,6 +173,31 @@ Settings: ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~,
 ~+core-view-follow~, ~+core-view-on-open~. The diagrams of =:private uml=
 use it; so do SVG files and images, below.
 
+* Undo
+~u~ undoes one edit, not all that was typed in one go in insert state.
+Emacs keeps every state a buffer has been in, the ones undone too, and ~u~
+and ~C-r~ walk one path through them; an edit after an undo puts the rest
+out of their reach. ~U~ opens vundo, which Doom installs, on all of them:
+a graph along the bottom, newest on the right, the buffer following you
+through it. ~h l~ older and newer, ~j k~ the branches, ~H L~ the ends of a
+branch, ~s S~ the states that were saved, ~d~ a diff of what the state
+changed that follows as you move until ~d~ again, ~m~ a state to diff
+against instead. ~RET~ keeps where you are, ~q~ and ~ESC~ put the buffer
+back; the keys are in the graph's header. ~SPC t u~ shows the graph for a
+moment at each ~u~ and ~C-r~, for every buffer.
+
+After ~u~, ~C-r~ and each step through the graph the lines that changed
+light up for ~+core-undo-flash-time~ (0.3 s): an undo only puts the
+cursor at one end of what it changed.
+
+The graph is drawn anew each time and its first drawing is most of its
+cost: 200 ms for 3 400 states, about the most a buffer holds under Doom's
+~undo-limit~ of 256 KB, since the check for compositions, the cursor flash
+and garbage collection were taken out of it (600 ms before); a step
+through it is a millisecond, a diff 20 ms. A longer history would draw
+longer, so the limits stay Doom's; vundo says so when a collection has
+trimmed the oldest states.
+
 * Pictures
 An SVG opens as its XML with its drawing on the right, over a mid-grey
 checkerboard so a transparent icon shows on any theme, a white one
@@ -202,6 +228,8 @@ files section has the detail.
 - ~+core-notes-dir~ (=~/org/=) and ~+core-projects-dir~ (=~/projects/=):
   where the notes and the projects live; the notes module and the C++
   scaffolds read them.
+- ~+core-undo-flash-time~ (0.3 s), how long the lines an undo changed stay
+  lit; 0 lights none. ~vundo-window-max-height~ is 10 lines.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file
   tree-sitter cannot parse opens in the older mode; Doom's
   ~doom-large-file-size-alist~ (1 MB) says what is large.
