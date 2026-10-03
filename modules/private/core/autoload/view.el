@@ -221,7 +221,11 @@ margin is a title, and what is indented under it belongs to it."
 (defun +core-view--display (source)
   "Put the view in its side window, on SOURCE's side, leaving the cursor
 where it is. A view you can move into: to scroll and search an image's
-report, or to zoom a diagram with the picture's own keys."
+report, or to zoom a diagram with the picture's own keys. The window is
+the view's alone: a file opened from inside it goes to the window it
+stands beside. It was not, and SPC SPC there put the next picture in the
+side window, its report in a new one on the other side, and the source
+in a sliver between them."
   (let ((side (or (buffer-local-value '+core-view-side-here source) +core-view-side))
         (window (+core-view--window)))
     (when (and window (not (eq (window-parameter window 'window-side) side)))
@@ -231,7 +235,30 @@ report, or to zoom a diagram with the picture's own keys."
                       (side . ,side)
                       (window-width . ,+core-view-width)
                       (slot . 0)
-                      (window-parameters . ((no-delete-other-windows . t)))))))
+                      (dedicated . t)
+                      (window-parameters . ((no-delete-other-windows . t)
+                                            (+core-view . t)))))))
+
+;; With the view's window its own, a file opened from inside it went to
+;; a new window: the only other one was split in two, the picture over
+;; its source. A command run from inside the view that shows another
+;; buffer, find-file, the workspace's own switch to a new file, a buffer
+;; switch, runs as if from the window beside it, which it then leaves
+;; selected. Only a command: a timer showing something while you read
+;; the view leaves you where you are.
+(defun +core-view--step-out-a (buffer-or-name &rest _)
+  "Select the window beside the view before BUFFER-OR-NAME is shown, when
+a command run from inside the view shows it."
+  (let ((window (selected-window)))
+    (when-let* ((this-command)
+                ((window-parameter window '+core-view))
+                ((not (and buffer-or-name
+                           (eq (get-buffer buffer-or-name) (window-buffer window)))))
+                (beside (get-mru-window nil nil t)))
+      (select-window beside))))
+
+(advice-add 'display-buffer :before #'+core-view--step-out-a)
+(advice-add 'switch-to-buffer :before #'+core-view--step-out-a)
 
 (defun +core-view--close ()
   "Close the view's window and stop anything it was doing."

@@ -111,6 +111,25 @@ really under once that is known.")
     :before #'dirvish-peek-setup-h
     (dirvish--run-with-delay 'reset))
 
+  (declare-function dirvish-curr "dirvish")
+  (declare-function dv-type "dirvish")
+  (declare-function dv-preview-window "dirvish")
+  ;; The preview goes in the window the prompt was opened from. Opened
+  ;; from inside core's view, a picture's report or an SVG's drawing,
+  ;; that is a window kept for the view alone, so the preview goes to the
+  ;; window the view stands beside, where the file will open. The slot is
+  ;; set by its offset: this file loads before dirvish, and the struct's
+  ;; setf and `cl-struct-slot-value' want its definition when read.
+  (defadvice! +core--peek-beside-view-a (&rest _)
+    :after #'dirvish-peek-setup-h
+    (when-let* ((dv (dirvish-curr))
+                ((eq (dv-type dv) 'peek))
+                (window (dv-preview-window dv))
+                ((window-live-p window))
+                ((window-parameter window '+core-view))
+                (main (get-mru-window nil nil t)))
+      (aset dv (cl-struct-slot-offset 'dirvish 'preview-window) main)))
+
   ;; dirvish-yank-sources is the symbol `all' by default, and it checks
   ;; that value with `functionp' before using it as a name; Emacs 31 made
   ;; `all' a function, so p, P and the links died with a wrong argument
