@@ -385,9 +385,6 @@ MANAGED-MODES on its way already."
 ;;
 ;;; Editing
 
-;; One `u' undoes one edit, not a whole insert session.
-(setq evil-want-fine-undo t)
-
 ;; :lang sh has no +tree-sitter flag, so map the mode here.
 (when (modulep! :tools tree-sitter)
   (set-tree-sitter! 'sh-mode 'bash-ts-mode
@@ -507,6 +504,7 @@ the window the view stands beside."
 (load! "+dired")                        ; the file manager
 (load! "+images")                       ; the image viewer
 (load! "+data")                         ; JSON, YAML, TOML, XML and friends
+(load! "+undo")                         ; undo as a graph, U
 
 
 ;;
