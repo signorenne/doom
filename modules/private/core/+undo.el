@@ -8,6 +8,25 @@
 ;; One `u' undoes one edit, not a whole insert session.
 (setq evil-want-fine-undo t)
 
+;; And typing is undone a word at a time, as in VS Code and Qt Creator.
+;; Emacs gathers up to twenty typed characters into one undo step and
+;; cut them where the twentieth fell, mid-word as often as not, so u
+;; left "running f". A step now also ends where a new word starts: the
+;; letter typed after a space, a bracket or a comma begins the next one.
+(defadvice! +core--undo-by-word-a (fn)
+  "Keep the undo step ending before the word about to be typed, instead
+of running the typing on into it."
+  :around #'undo-auto-amalgamate
+  (if (and (characterp last-command-event)
+           (memq (char-syntax last-command-event) '(?w ?_))
+           (not (bobp))
+           (not (memq (char-syntax (char-before)) '(?w ?_))))
+      ;; What the function does at its twentieth character: the boundary
+      ;; before this one stays, and the count starts again from here.
+      (setq undo-auto--last-boundary-cause 0
+            undo-auto--this-command-amalgamating t)
+    (funcall fn)))
+
 (map! :n "U" #'vundo)
 (map! :leader :desc "Undo graph as you undo" "t u" #'+core/undo-graph-popup)
 
