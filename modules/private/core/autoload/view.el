@@ -11,6 +11,7 @@
 ;; to a buffer that has none.
 
 (declare-function +core-image-uncenter "images")
+(declare-function +core--image-recenter-a "images")
 
 (defvar +core-view-side 'right
   "Which side the view takes.")
@@ -132,7 +133,11 @@ says what it made."
       ;; done for the view too.
       (image-mode)
       (+core-view-panel-mode 1)))
-  (+core-view--header source))
+  (+core-view--header source)
+  ;; image-mode centred the picture before the header line was there,
+  ;; half a line too low; the next redraw that centred it again moved it.
+  (with-current-buffer (+core-view--buffer)
+    (+core--image-recenter-a)))
 
 (defun +core-view--put-text (source text)
   "Show TEXT in the view."
