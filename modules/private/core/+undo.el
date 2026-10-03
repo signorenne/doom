@@ -102,11 +102,54 @@ the state marked with m, and keep showing it as you move; again, hide it."
     (vundo-diff)))
 
 (defun +core--undo-diff-follow-h ()
-  "Diff the state the graph just moved to, while the diff is on show."
+  "Diff the state the graph just moved to, while the diff is on show.
+An error in a command hook takes the hook away, so one is only said."
   (when (and +core--undo-diff-follow
              (memq this-command +core--undo-moves)
              (+core--undo-diff-window))
-    (vundo-diff)))
+    (with-demoted-errors "Undo graph diff: %S"
+      (vundo-diff))))
+
+;; A step the history can no longer make, when what it recorded does not
+;; match the text any more, failed the same way at every key: each move
+;; tried it, q as well, since going back to where you started takes it
+;; again, and only RET got out. A step that fails now draws the graph
+;; again from the text as it is, and q that cannot go back keeps the text
+;; and closes the graph. vundo sets where q goes back to only when the
+;; graph opens, so after a new drawing q keeps the text too.
+(declare-function vundo--refresh-buffer "vundo")
+(declare-function vundo-confirm "vundo")
+(defvar vundo--orig-buffer)
+(defvar vundo--roll-back-to-this)
+
+(defun +core--undo-step-safely-a (fn &rest args)
+  "Run FN, a step through the undo graph; when the step cannot be made,
+say so and draw the graph again from the buffer as it is now."
+  (condition-case err
+      (apply fn args)
+    (error
+     (when (and (derived-mode-p 'vundo-mode) (buffer-live-p vundo--orig-buffer))
+       (with-demoted-errors "Undo graph: %S"
+         (vundo--refresh-buffer vundo--orig-buffer (current-buffer)))
+       (setq vundo--roll-back-to-this nil))
+     (message "That step cannot be made (%s): the graph is drawn again from the text as it is, and q leaves it so"
+              (error-message-string err)))))
+
+(defun +core--undo-quit-safely-a (fn &rest args)
+  "Run FN, leaving the undo graph; when the way back cannot be taken, keep
+the text as it is and close the graph."
+  (condition-case err
+      (apply fn args)
+    (error
+     (when (derived-mode-p 'vundo-mode)
+       (vundo-confirm))
+     (message "Could not go back to where you started (%s): the text stays as it is, u and C-r still work"
+              (error-message-string err)))))
+
+(after! vundo
+  (dolist (command (cons 'vundo-diff +core--undo-moves))
+    (advice-add command :around #'+core--undo-step-safely-a '((depth . -50))))
+  (advice-add 'vundo-quit :around #'+core--undo-quit-safely-a '((depth . -50))))
 
 
 ;;
