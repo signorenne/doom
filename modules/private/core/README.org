@@ -174,7 +174,13 @@ Settings: ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~,
 use it; so do SVG files and images, below.
 
 * Undo
-~u~ undoes one edit, not all that was typed in one go in insert state.
+~u~ undoes one edit, not all that was typed in one go in insert state,
+and typing a word at a time, the way VS Code and Qt Creator do: Emacs
+gathered up to twenty typed characters into a step and cut it wherever
+the twentieth fell, so ~u~ after a sentence left =running f=. A step now
+ends where a new word starts; a word longer than twenty letters still
+comes back in two.
+
 Emacs keeps every state a buffer has been in, the ones undone too, and ~u~
 and ~C-r~ walk one path through them; an edit after an undo puts the rest
 out of their reach. ~U~ opens vundo, which Doom installs, on all of them:
@@ -197,6 +203,14 @@ and garbage collection were taken out of it (600 ms before); a step
 through it is a millisecond, a diff 20 ms. A longer history would draw
 longer, so the limits stay Doom's; vundo says so when a collection has
 trimmed the oldest states.
+
+A step the history can no longer make, when what it recorded does not
+match the text any more, used to fail at every key: each move tried it,
+and ~q~ as well, since going back to where you started takes it again,
+so only ~RET~ got out. Such a step now says so and the graph is drawn
+again from the text as it is; ~q~ that cannot go back keeps the text and
+closes the graph, and ~RET~ always leaves. The diff at the oldest state
+says there is nothing before it, rather than keeping the last one up.
 
 * Pictures
 An SVG opens as its XML with its drawing on the right, over a mid-grey
