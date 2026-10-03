@@ -100,7 +100,9 @@ own setter, never with setq. ~SPC m 2~ opens a second listing beside the
 first, the preview making way; ~C~ and ~R~ then offer the other pane.
 The localleader has the symlink and rsync commands dirvish leaves
 without a key. ~dirvish-peek-mode~ shows the same preview beside the
-minibuffer while choosing a file. A file can be dragged out of a listing
+minibuffer while choosing a file, the first entry as soon as the prompt
+opens: dirvish skipped a file it had previewed last, which the first
+entry of ~SPC SPC~ usually was. A file can be dragged out of a listing
 into another program, a right click is a menu, wdired edits permission
 bits, and renaming a tracked file is a git mv.
 
@@ -141,9 +143,12 @@ an image's structure beside the picture: one piece of machinery, in
 whose output to show; core keeps a side window showing the view of
 whichever such buffer you are in.
 
-- It opens with the buffer, once the command that opened it is done. A
-  buffer visited in the background, by a search or an export, opens no
-  window.
+- It opens with the buffer as the command that opened it ends, before
+  anything is drawn, so a picture comes up in its place beside it. Shown
+  a moment later, it took half the window from a picture already drawn
+  across all of it, which spilled out and was fitted again: a jump at the
+  first picture of a session. A buffer visited in the background, by a
+  search or an export, opens no window.
 - A live view is drawn again after a pause in the typing, once per pause
   rather than once per key.
 - When the drawing fails, halfway through a line, the view keeps what it
@@ -154,7 +159,12 @@ whichever such buffer you are in.
   picture is on the right either way.
 - It is a window you can move into, to scroll a report or zoom a
   drawing; ~q~ in it closes it, and that buffer's view stays closed
-  until you open it again, ~+core-view-on-open~ or not.
+  until you open it again, ~+core-view-on-open~ or not. The window is the
+  view's alone: a file or a buffer opened from inside it opens in the
+  window beside it, a prompt opened there previews in that window, and
+  ~SPC SPC~ there lists the project of the file the view shows. Before,
+  the next picture took the view's window, and the one beside it was
+  split in two.
 - The hooks that follow you are on only while some buffer has a view, so
   a session that never opens one pays nothing.
 
