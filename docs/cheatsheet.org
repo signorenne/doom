@@ -701,7 +701,9 @@ minibuffer while you are choosing a file.
 
 ~SPC SPC~ lists the project fresh every time, so a file added by hand or
 by another tool is there at once. It skips what .gitignore skips; ~SPC s F~
-does not, for build output and generated files.
+does not, for build output and generated files. It opens on the file you
+were in before this one, previewed, with the one you are in at the end of
+the list: ~SPC SPC RET~ goes back.
 
 ** Dired and the file tree
 | Key       | What it opens                         |
