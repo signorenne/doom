@@ -454,6 +454,33 @@ MANAGED-MODES on its way already."
 (after! projectile
   (setq projectile-enable-caching nil))
 
+;; SPC SPC lists the project's files by how recently they were opened,
+;; so the first, the one it opens on and previews, was the file already
+;; on screen: its preview showed what was there and looked like none.
+;; That file goes to the end, and the list opens on the one before it.
+(declare-function projectile-project-root "projectile")
+(defun +core--current-file-last (candidates)
+  "CANDIDATES sorted as usual, with the file shown in the window the
+prompt was opened from moved to the end; from core's view, the file of
+the window the view stands beside."
+  (let ((sorted (funcall (default-value 'vertico-sort-function) candidates))
+        (current (when-let* ((window (let ((from (minibuffer-selected-window)))
+                                       (if (and from (window-parameter from '+core-view))
+                                           (get-mru-window nil nil t)
+                                         from)))
+                             (buffer (window-buffer window))
+                             (file (buffer-file-name buffer))
+                             (root (with-current-buffer buffer
+                                     (ignore-errors (projectile-project-root)))))
+                   (file-relative-name file root))))
+    (if (and current (member current sorted))
+        (nconc (delete current sorted) (list current))
+      sorted)))
+
+(after! vertico-multiform
+  (add-to-list 'vertico-multiform-categories
+               '(project-file (vertico-sort-function . +core--current-file-last))))
+
 (map! :leader
       :desc "Find any file in project" "s F" #'+core/find-any-file)
 
