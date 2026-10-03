@@ -237,7 +237,14 @@ in a sliver between them."
                       (slot . 0)
                       (dedicated . t)
                       (window-parameters . ((no-delete-other-windows . t)
-                                            (+core-view . t)))))))
+                                            (+core-view . t)))))
+    ;; A picture beside the view just lost half its window. Fitted again
+    ;; now rather than when image-mode notices, a fifth of a second on,
+    ;; it is never drawn spilling out of the window it has left.
+    (when-let* ((window (get-buffer-window source)))
+      (with-current-buffer source
+        (when (derived-mode-p 'image-mode)
+          (ignore-errors (image-fit-to-window window)))))))
 
 ;; With the view's window its own, a file opened from inside it went to
 ;; a new window: the only other one was split in two, the picture over
@@ -333,18 +340,30 @@ nil. See `+core-view-draw' for what DRAW returns."
               +core-view-side-here side)
   (when live
     (add-hook 'after-change-functions #'+core-view--schedule nil t))
-  ;; Opened in a window: show the view once the command that opened it
-  ;; is done. Visited in the background, by a search or an export: do
-  ;; nothing, and put no window on the screen.
+  ;; Opened in a window: the view comes up as the command that opened it
+  ;; ends, before anything is drawn, with a word in it until its drawing
+  ;; is ready. Shown a moment later instead, it took half the window from
+  ;; a picture already drawn across all of it, which spilled out and was
+  ;; fitted again: the jump at the first picture of a session. Opened
+  ;; from outside a command, by emacsclient, the timer shows it. Visited
+  ;; in the background, by a search or an export: nothing, and no window.
   (when +core-view-on-open
     (let ((buffer (current-buffer)))
+      (letrec ((open (lambda ()
+                       (remove-hook 'post-command-hook open)
+                       (when (and (buffer-live-p buffer)
+                                  (eq buffer (window-buffer (selected-window))))
+                         (unless (+core-view--window)
+                           (+core-view--put-text buffer (propertize "Drawing..." 'face 'shadow)))
+                         (+core-view--display buffer)))))
+        (add-hook 'post-command-hook open))
       (run-with-idle-timer
        0.05 nil
        (lambda ()
          (when (and (buffer-live-p buffer)
                     (eq buffer (window-buffer (selected-window))))
            (+core-view--display buffer)
-           (+core-view--draw buffer t)))))))
+           (+core-view--draw buffer)))))))
 
 ;;;###autoload
 (defun +core/view-toggle ()
