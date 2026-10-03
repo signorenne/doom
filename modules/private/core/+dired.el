@@ -101,6 +101,16 @@ really under once that is known.")
     (cl-letf (((symbol-function 'dirvish--vc-root-dir) #'+core--peek-root-for))
       (apply fn args)))
 
+  ;; dirvish skips a preview asked for the file it previewed last, and
+  ;; remembers that file from one prompt to the next: SPC SPC opening on
+  ;; the file the last prompt had shown, the usual case with the list in
+  ;; the order files were opened, previewed nothing until the cursor
+  ;; moved. Each prompt starts with nothing previewed.
+  (declare-function dirvish--run-with-delay "dirvish")
+  (defadvice! +core--peek-fresh-a (&rest _)
+    :before #'dirvish-peek-setup-h
+    (dirvish--run-with-delay 'reset))
+
   ;; dirvish-yank-sources is the symbol `all' by default, and it checks
   ;; that value with `functionp' before using it as a name; Emacs 31 made
   ;; `all' a function, so p, P and the links died with a wrong argument
