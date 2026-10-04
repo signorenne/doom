@@ -6,7 +6,7 @@
 (declare-function +core-project-root-or-nil "lib")
 
 ;;;###autoload
-(defun +ai--anthropic-api-key ()
+(defun +ai-anthropic-api-key ()
   "Anthropic API key from ANTHROPIC_API_KEY or ~/.authinfo.gpg."
   (or (getenv "ANTHROPIC_API_KEY")
       (gptel-api-key-from-auth-source "api.anthropic.com")))

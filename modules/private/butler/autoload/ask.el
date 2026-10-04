@@ -19,7 +19,7 @@
 (declare-function gptel-request "gptel-request")
 (declare-function +butler/choices "menu")
 (declare-function +butler--section-here "menu")
-(declare-function +ai--anthropic-api-key "gptel")
+(declare-function +ai-anthropic-api-key "gptel")
 (defvar +docs-cheatsheet-file)
 (defvar +butler--question)              ; config.el
 (defvar +butler--offered)
@@ -179,7 +179,7 @@ line, which is signed in already."
   (cond
    ((and (require 'gptel nil t)
          (fboundp 'gptel-request)
-         (ignore-errors (+ai--anthropic-api-key)))
+         (ignore-errors (+ai-anthropic-api-key)))
     (gptel-request (+butler--claude-prompt question hits)
       :system (+butler--claude-system)
       :callback (lambda (response info)
@@ -213,7 +213,7 @@ with what he found, and answers in a sentence."
     (cond
      (claude (+butler--ask-claude question hits))
      ((null hits)
-      (if (and (require 'gptel nil t) (ignore-errors (+ai--anthropic-api-key)))
+      (if (and (require 'gptel nil t) (ignore-errors (+ai-anthropic-api-key)))
           (+butler--ask-claude question nil)
         (setq +butler--answer nil)
         (+butler--show (format "I have nothing on that, %s." +butler-address))))

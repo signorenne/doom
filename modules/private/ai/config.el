@@ -169,7 +169,7 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
   (setq gptel-backend
         (gptel-make-anthropic "Claude"
           :stream t
-          :key #'+ai--anthropic-api-key
+          :key #'+ai-anthropic-api-key
           :models '((claude-opus-5
                      :description "Most capable, the default"
                      :capabilities (media tool-use cache json)
