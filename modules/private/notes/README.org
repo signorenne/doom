@@ -54,7 +54,8 @@ agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
 | ~SPC o a x~ | dashboard: today, habits, then everything open |
 | ~SPC o a w~ | weekly review                                  |
 | ~SPC o a n~ | next actions, ~p~ projects, ~i~ inbox              |
-| ~SPC n q~   | org-ql query, ~SPC n Q~ searches                 |
+| ~SPC n q~   | org-ql find: in this note, else in the agenda  |
+| ~SPC n Q~   | org-ql search, into a buffer of what it found  |
 | ~C-o~       | the agenda's own menu                          |
 
 ** Roam

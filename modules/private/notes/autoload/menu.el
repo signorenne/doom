@@ -91,7 +91,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a p" "Projects"       +notes/projects)
     ("a i" "Inbox"          +notes/inbox)
     ("a t" "Todo list"      org-todo-list)
-    ("a q" "Query (org-ql)" org-ql-find)]]
+    ("a q" "Query (org-ql)" +notes/query)]]
   [["Roam (r)"
     ("r f" "Find or create node" org-roam-node-find)
     ("r n" "Capture node"        org-roam-capture)

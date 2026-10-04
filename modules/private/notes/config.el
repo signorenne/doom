@@ -274,7 +274,7 @@ startup from loading it; .git is a file in a worktree."
        :desc "The bibliography"       "B" #'citar-open
        ;; SPC n b is Doom's citar-open-notes already.
        :desc "Card dashboard"         "P" #'org-fc-dashboard
-       :desc "org-ql find"            "q" #'org-ql-find
+       :desc "org-ql find"            "q" #'+notes/query
        :desc "org-ql search"          "Q" #'org-ql-search
        (:prefix ("w" . "writing")
         :desc "Check the grammar"     "c" #'langtool-check

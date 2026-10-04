@@ -1,6 +1,9 @@
 ;;; private/notes/autoload/agenda.el -*- lexical-binding: t; -*-
 
 (declare-function org-agenda "org-agenda")
+(declare-function org-agenda-files "org")
+(declare-function org-ql-find "org-ql-find")
+(declare-function +notes--agenda-files-refresh-h "roam")
 
 (defun +notes--agenda (key)
   "Open the custom agenda view KEY."
@@ -36,3 +39,16 @@
   "Tasks still sitting in the inbox."
   (interactive)
   (+notes--agenda "i"))
+
+;;;###autoload
+(defun +notes/query ()
+  "Find a heading by an org-ql query: in this note, or from any other
+buffer in the agenda files, the roam notes that hold a task among them.
+org-ql-find alone refused every buffer that is not Org's."
+  (interactive)
+  (if (derived-mode-p 'org-mode 'org-agenda-mode)
+      (call-interactively #'org-ql-find)
+    ;; Org first: loading it sets the base list the refresh builds on.
+    (require 'org-ql-find)
+    (+notes--agenda-files-refresh-h)
+    (org-ql-find (org-agenda-files))))
