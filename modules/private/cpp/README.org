@@ -203,25 +203,27 @@ header shows what a build depends on: the generator, the build type, the
 kit and where it runs, the default target, the job count and how many
 cache variables you have overridden.
 
-| Group               | Keys                                             |
-|---------------------+--------------------------------------------------|
-| Kit                 | =K= pick the kit, =y= build type, =Y= kit family,      |
+| Group               | Keys                                           |
+|---------------------+------------------------------------------------|
+| Kit                 | =K= pick the kit, =y= build type, =Y= kit family,    |
 |                     | =Z= forget the kits and read the disk again      |
-| Settings            | =-D= set a cache variable, =-U= clear one,           |
-|                     | =-L= log level, =-j= jobs, =-v= verbose,               |
-|                     | =s= default target, =A= run target, =a= run arguments  |
+| Settings            | =-D= set a cache variable, =-U= clear one,         |
+|                     | =-l= list the ones set, =-L= log level,            |
+|                     | =-j= jobs, =-v= verbose, =s= default target,         |
+|                     | =A= run target, =a= run arguments                  |
 | Configure and build | =c= configure, =F= configure fresh (drops the      |
 |                     | cache), =z= configure, reindex and restart the   |
-|                     | server, =b= build, =C= clean, =W= rebuild             |
+|                     | server, =b= build, =C= clean, =W= rebuild            |
 | Files and status    | =I= project status, =v c= CMakeCache.txt,          |
-|                     | =v p= CMakePresets.json,                           |
-|                     | =v j= compile_commands.json, =v d= .dir-locals.el,   |
+|                     | =v p= CMakePresets.json,                         |
+|                     | =v j= compile_commands.json, =v d= .dir-locals.el, |
 |                     | =w= write the setup to .dir-locals.el,           |
 |                     | =G= generate the presets from it                 |
 
 The CMake flags are the keys: =-D= sets a cache variable, =-U= clears one,
-=-j= the jobs, =-v= verbose, =-L= the log level. Running, testing and
-debugging are on the leader and in =SPC k SPC=, not here.
+=-j= the jobs, =-v= verbose, =-L= the log level; =-l= lists the variables
+set. Running, testing and debugging are on the leader and in =SPC k SPC=,
+not here.
 
 - a *preset* comes from =CMakePresets.json= and brings its own build
   directory, build type and cache variables; each preset is a kit.
@@ -332,8 +334,9 @@ the kit, the types of its family, the default target, the server.
 | ~SPC d~     | Doom's debugger keys                                                                                       |
 
 The panel, =SPC k m=: ~K~ ~y~ ~Y~ ~Z~ for the kit (pick, type, family,
-forget); ~-D~ ~-U~ ~-L~ ~-j~ ~-v~ for the cache variables (=CMAKE_PREFIX_PATH=
-offers the Qts found), the log level, the jobs and verbosity; ~s~ ~A~ ~a~ for the default target, the run target and
+forget); ~-D~ ~-U~ ~-l~ to set, clear and list the cache variables
+(=CMAKE_PREFIX_PATH= offers the Qts found), ~-L~ ~-j~ ~-v~ for the log level,
+the jobs and verbosity; ~s~ ~A~ ~a~ for the default target, the run target and
 its arguments; ~c~ ~F~ ~z~ ~b~ ~C~ ~W~ to configure (plain, fresh, with a
 reindex), build, clean, rebuild; ~I~ ~v c~ ~v p~ ~v j~ ~v d~ ~w~ for the status
 and the files behind it, ~G~ generates the presets. A setter keeps the panel open, so the header

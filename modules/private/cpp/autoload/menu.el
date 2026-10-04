@@ -196,7 +196,7 @@ behind it: the generator, the jobs, the overrides, the run line."
   "The settings a CMake build depends on, and the files behind them.
 A setter keeps the panel open, so the header shows what it did; the
 CMake flags are the keys: -D sets a cache variable, -U clears one,
--j the jobs, -v verbose, -L the log level."
+-j the jobs, -v verbose, -L the log level. -l lists the ones set."
   [:description +cpp--cmake-menu-description
    ["Kit"
     ("K" "Pick the kit"       +cpp/set-kit :transient t)
@@ -206,6 +206,7 @@ CMake flags are the keys: -D sets a cache variable, -U clears one,
    ["Settings"
     ("-D" "Set a cache variable" +cpp/cmake-set-variable :transient t)
     ("-U" "Clear a cache variable" +cpp/cmake-clear-variable :transient t)
+    ("-l" "List the ones set" +cpp/cmake-list-variables :transient t)
     ("-L" "Log level"         projection-cmake-set-configure-log-level :transient t)
     ("-j" "Parallel jobs"     +cpp/set-jobs :transient t)
     ("-v" "Verbose build"     projection-cmake-set-build-verbosely :transient t)

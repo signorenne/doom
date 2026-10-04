@@ -1479,6 +1479,7 @@ arguments a script was run with are offered again.
 | Key | What it does                                                               |
 |-----+----------------------------------------------------------------------------|
 | ~-D~  | set a cache variable, ~-U~ clear one; =CMAKE_PREFIX_PATH= offers the Qts found |
+| ~-l~  | the cache variables you set, listed                                        |
 | ~-L~  | the log level of a configure                                               |
 | ~-j~  | how many parallel jobs, ~-v~ verbose build on, off                           |
 | ~s~   | the default target ~b~ builds                                                |
