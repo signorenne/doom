@@ -8,7 +8,7 @@
   "The file `+docs/cheatsheet' opens.")
 
 (defvar +docs-docs
-  '(:groups (("docs" "Docs" () +docs-cheatsheet-mode-map +docs-cheatsheet-mode)))
+  '(:groups (("docs" "Docs" () +docs-cheatsheet-mode)))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
 (defvar +docs-leader-features '(winum)
@@ -28,13 +28,11 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (define-minor-mode +docs-cheatsheet-mode
   "Keys for the cheat sheet buffer: s search, q close, gr regenerate."
   :lighter " Cheat"
-  ;; Without a keymap the mode map is never defined and the map! below
-  ;; waits forever for it.
-  :keymap (make-sparse-keymap)
-  ;; The keys below are evil normal-state bindings inside this map. evil
-  ;; gathers a minor mode's map when it normalizes, on a state change,
-  ;; not when a mode turns on; the sheet buffer is in normal state
-  ;; already, so it is told here, as the org-fc modes are.
+  ;; The keys below are evil normal-state bindings that evil keeps for
+  ;; the mode, with no map of its own. evil gathers them when it
+  ;; normalizes, on a state change, not when a mode turns on; the sheet
+  ;; buffer is in normal state already, so it is told here, as the
+  ;; org-fc modes are.
   (when (fboundp 'evil-normalize-keymaps)
     (evil-normalize-keymaps)))
 
