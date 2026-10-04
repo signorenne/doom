@@ -1,7 +1,7 @@
 ;;; private/docs/autoload/cheatsheet.el -*- lexical-binding: t; -*-
 
 (defvar +docs-cheatsheet-file)
-(declare-function +docs-cheatsheet-mode "config")
+(declare-function +docs-cheatsheet-mode "../config")
 (declare-function consult-org-heading "consult-org")
 (declare-function consult-line "consult")
 (declare-function org-fold-show-all "org-fold")
