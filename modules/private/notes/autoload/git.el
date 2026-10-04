@@ -22,7 +22,7 @@
     ".agent-shell/")
   "Lines written into the notes repository's .gitignore.")
 
-(declare-function +notes--watch "config")
+(declare-function +notes--watch "../config")
 (declare-function magit-status-setup-buffer "magit-status")
 (declare-function org-roam-db-sync "org-roam-db")
 
