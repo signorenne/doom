@@ -12,9 +12,6 @@
 (unless (modulep! :ui zen)
   (warn! "No (:ui zen): SPC t z and the one-font setting here do nothing"))
 
-(unless (modulep! :ui minimap)
-  (warn! "No (:ui minimap): SPC t m and the demap settings here do nothing"))
-
 (unless (modulep! :ui indent-guides)
   (warn! "No (:ui indent-guides): SPC t i and the off-until-asked rule here do nothing"))
 
@@ -22,7 +19,7 @@
   (warn! "No (:ui treemacs): SPC e t and the treemacs settings here do nothing"))
 
 (unless (modulep! :ui smooth-scroll)
-  (warn! "No (:ui smooth-scroll): the minimap is not held still while the wheel turns"))
+  (warn! "No (:ui smooth-scroll): the wheel scrolls by lines, and the pixel wheel's stop at the last line here does nothing"))
 
 (unless (modulep! :checkers syntax +flymake)
   (warn! "No (:checkers syntax +flymake): ]e and [e walk Doom's list, not this buffer's diagnostics"))
