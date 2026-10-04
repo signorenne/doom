@@ -5,6 +5,8 @@
          "This module configures magit: enable (:tools magit)")
 (assert! (modulep! :emacs vc)
          "The hub's browse and copy-link entries and the time machine are the vc module's: enable (:emacs vc)")
+(assert! (modulep! :private core)
+         "The repository list and clones go to core's projects directory: enable (:private core)")
 
 (unless (executable-find "git")
   (error! "git is not installed"))
