@@ -16,12 +16,12 @@ here=$(cd "$(dirname "$0")" && pwd)
 cleanup() {
   emacsclient -s "$name" -e '(let ((kill-emacs-hook nil)) (kill-emacs))' >/dev/null 2>&1
   # Without the hook the server does not remove its own socket file.
-  # Emacs puts it under $XDG_RUNTIME_DIR/emacs/, and in /tmp/emacs<uid>/
-  # with no emacs/ of its own when that variable is not set.
+  # Emacs puts it under $XDG_RUNTIME_DIR/emacs/, and in emacs<uid>/ under
+  # $TMPDIR, else /tmp, when that variable is not set.
   if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
     rm -f "$XDG_RUNTIME_DIR/emacs/$name"
   else
-    rm -f "/tmp/emacs$(id -u)/$name"
+    rm -f "${TMPDIR:-/tmp}/emacs$(id -u)/$name"
   fi
   rm -rf "$dir"
 }
