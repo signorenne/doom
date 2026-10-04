@@ -3,6 +3,11 @@
 # on; until it exists clangd guesses C++17 and every std::print and
 # std::span in the file is underlined for no reason.
 #
+# Emacs starts clangd on the database of the kit in use, whatever the
+# preset, and that wins over the directory named below, which is for
+# other editors. SPC k l c writes this file for another directory,
+# SPC k l l links the database into the root instead.
+#
 # clangd resolves a relative -I against the directory of the file it is
 # checking, not the project root, so the include directory is named from
 # each depth the layout has: the root, src/ and tests/, and one deeper.
