@@ -256,16 +256,16 @@ Doom's key for ~U~. If a step cannot be made, the graph says so and is
 drawn again from the text as it is; ~RET~ always leaves it, keeping what
 is on screen.
 
-| Key   | In the graph                                    |
-|-------+-------------------------------------------------|
-| ~h l~   | an older state, a newer one                     |
-| ~j k~   | the next branch, the one before                 |
-| ~H L~   | the start and the end of this branch            |
-| ~s S~   | the state last saved, the next saved one        |
-| ~d~     | what this state changed; it follows, ~d~ hides it |
-| ~m u~   | mark a state to compare with, unmark            |
-| ~RET~   | keep this state                                 |
-| ~q~ ~ESC~ | put the file back as it was                     |
+| Key   | In the graph                                                      |
+|-------+-------------------------------------------------------------------|
+| ~h l~   | an older state, a newer one; at a fork ~l~ goes back the way ~h~ came |
+| ~j k~   | the branch drawn below, above, from any state on this one         |
+| ~H L~   | the start and the end of this branch                              |
+| ~s S~   | the state last saved, the next saved one                          |
+| ~d~     | what this state changed; it follows, ~d~ hides it                   |
+| ~m u~   | mark a state to compare with, unmark                              |
+| ~RET~   | keep this state                                                   |
+| ~q~ ~ESC~ | put the file back as it was                                       |
 
 ** Folding
 | Key   | What it does                           |

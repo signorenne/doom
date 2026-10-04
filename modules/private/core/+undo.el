@@ -50,7 +50,9 @@ so turning it off from another buffer took two presses; this is one."
 
 (defvar +core--undo-moves
   '(vundo-forward vundo-backward vundo-next vundo-previous vundo-stem-root
-    vundo-stem-end vundo-next-root vundo-goto-last-saved vundo-goto-next-saved)
+    vundo-stem-end vundo-next-root vundo-goto-last-saved vundo-goto-next-saved
+    +core/undo-graph-down +core/undo-graph-up +core/undo-graph-newer
+    +core/undo-graph-start +core/undo-graph-end)
   "The commands that move through the undo graph, and the buffer with them.")
 
 (defvar-local +core--undo-diff-follow nil
@@ -72,11 +74,13 @@ so turning it off from another buffer took two presses; this is one."
       (setq header-line-format
             (let ((key (lambda (k) (propertize k 'face 'help-key-binding))))
               (concat " " (funcall key "h l") " older, newer  "
-                      (funcall key "j k") " branches  "
+                      (funcall key "j k") " branch below, above  "
+                      (funcall key "H L") " its start, end  "
                       (funcall key "s S") " saved  "
                       (funcall key "d") " what changed  "
                       (funcall key "RET") " keep this  "
                       (funcall key "q") " put it back")))
+      (add-hook 'pre-command-hook #'+core--undo-note-trail-h nil t)
       (add-hook 'post-command-hook #'+core--undo-diff-follow-h nil t)))
   (when (modulep! :ui nav-flash)
     (pushnew! +nav-flash-exclude-modes 'vundo-mode))
@@ -86,14 +90,174 @@ so turning it off from another buffer took two presses; this is one."
 ;; evil-collection gives the graph h j k l and puts vundo's own d back
 ;; after this module is read, so these go in once it has.
 (defun +core--undo-graph-keys-h (mode &rest _)
-  "The graph's keys that evil-collection has not got, and its d."
+  "The graph's keys that evil-collection has not got, its d, and the
+moves by the drawing in place of vundo's."
   (when (eq mode 'vundo)
     (map! :map vundo-mode-map
+          :n [remap evil-next-line]     #'+core/undo-graph-down
+          :n [remap evil-previous-line] #'+core/undo-graph-up
+          :n [remap evil-forward-char]  #'+core/undo-graph-newer
+          :n [remap evil-window-top]    #'+core/undo-graph-start
+          :n [remap evil-window-bottom] #'+core/undo-graph-end
           :n "s" #'vundo-goto-last-saved
           :n "S" #'vundo-goto-next-saved
-          :n "d" #'+core/undo-diff)))
+          :n "d" #'+core/undo-diff)
+    ;; C-n, C-j and the rest of vundo's own keys for the same moves.
+    (map! :map vundo-mode-map
+          [remap vundo-next]      #'+core/undo-graph-down
+          [remap vundo-previous]  #'+core/undo-graph-up
+          [remap vundo-forward]   #'+core/undo-graph-newer
+          [remap vundo-stem-root] #'+core/undo-graph-start
+          [remap vundo-stem-end]  #'+core/undo-graph-end)))
 
 (add-hook 'evil-collection-setup-hook #'+core--undo-graph-keys-h)
+
+;; vundo's j and k went only to the other branches of the fork just
+;; behind you; further along a branch they did nothing, so a branch was
+;; reached by going back to where it forked. Each branch is a line of the
+;; drawing, and the keys move by the drawing now: j and k to the line below
+;; and above, onto the state drawn nearest, H and L to the ends of the
+;; line. l after h goes back the way h came; it took the top branch at
+;; every fork.
+(declare-function vundo-m-children "vundo")
+(declare-function vundo-m-point "vundo")
+(declare-function vundo--move-to-node "vundo")
+(declare-function vundo--trim-undo-list "vundo")
+(declare-function vundo--sans-nil "vundo")
+(declare-function vundo-backward "vundo")
+(defvar vundo--prev-mod-list)
+(defvar vundo--prev-undo-list)
+(defvar vundo-after-undo-functions)
+
+(defvar-local +core--undo-trail nil
+  "Each fork to the child the graph was last beyond it through.")
+
+(defun +core--undo-note-trail-h ()
+  "Note at each fork above the state the graph is on the way down to it,
+before a key moves it, so l can follow that way back."
+  (when-let* ((mods (bound-and-true-p vundo--prev-mod-list))
+              (node (vundo--current-node mods)))
+    (unless +core--undo-trail
+      (setq +core--undo-trail (make-hash-table :test #'eq :weakness 'key)))
+    (let ((parent (vundo-m-parent node)))
+      (while parent
+        (when (cdr (vundo-m-children parent))
+          (puthash parent node +core--undo-trail))
+        (setq node parent
+              parent (vundo-m-parent node))))))
+
+(defun +core--undo-go (where nothing)
+  "Take the graph to the state WHERE returns for the one it is on, or say
+NOTHING when that is none. vundo's own moves check the same first: its
+check is a macro, and compiling it in would load vundo at every start."
+  (unless (derived-mode-p 'vundo-mode)
+    (user-error "Not in the undo graph"))
+  (unless (buffer-live-p vundo--orig-buffer)
+    (user-error "The buffer of this graph is gone"))
+  (if (not (eq (vundo--sans-nil (buffer-local-value 'buffer-undo-list
+                                                    vundo--orig-buffer))
+               (vundo--sans-nil vundo--prev-undo-list)))
+      ;; Edited since it was drawn.
+      (progn (vundo--refresh-buffer vundo--orig-buffer (current-buffer))
+             (message "The graph is drawn again from the text as it is"))
+    (let* ((source (vundo--current-node vundo--prev-mod-list))
+           (dest (funcall where source)))
+      (if (or (null dest) (eq dest source))
+          (message "%s" nothing)
+        (vundo--move-to-node source dest vundo--orig-buffer vundo--prev-mod-list)
+        (vundo--trim-undo-list vundo--orig-buffer dest vundo--prev-mod-list)
+        (vundo--refresh-buffer vundo--orig-buffer (current-buffer) 'incremental)
+        (run-hook-with-args 'vundo-after-undo-functions vundo--orig-buffer)))))
+
+(defun +core--undo-row ()
+  "The states drawn on the line point is on, as (COLUMN . NODE)."
+  (let ((end (line-end-position))
+        row)
+    (save-excursion
+      (forward-line 0)
+      (while (< (point) end)
+        (when-let* ((node (get-text-property (point) 'vundo-node)))
+          (push (cons (current-column) node) row))
+        (goto-char (next-single-property-change (point) 'vundo-node nil end))))
+    row))
+
+(defun +core--undo-across (node lines)
+  "The state drawn nearest NODE, LINES lines below it, above when LINES is
+negative, or on the last line there is that way; nil when there is none.
+Of two as near, the older."
+  (save-excursion
+    (goto-char (1- (vundo-m-point node)))
+    (let ((column (current-column))
+          (step (if (< lines 0) -1 1))
+          (left (abs lines))
+          found)
+      (while (and (> left 0)
+                  (let ((start (line-beginning-position)))
+                    (forward-line step)
+                    (/= (line-beginning-position) start)))
+        (when-let* ((row (+core--undo-row)))
+          (setq left (1- left)
+                found nil)
+          (pcase-dolist (`(,col . ,candidate) row)
+            (let ((distance (abs (- col column))))
+              (when (or (null found)
+                        (< distance (car found))
+                        (and (= distance (car found)) (< col (cadr found))))
+                (setq found (list distance col candidate)))))))
+      (nth 2 found))))
+
+(defun +core--undo-newer (node count)
+  "The state COUNT steps newer than NODE: at a fork, down the branch last
+taken beyond it, else the one drawn beside it."
+  (let (children)
+    (while (and (> count 0) (setq children (vundo-m-children node)))
+      (let ((taken (and +core--undo-trail (gethash node +core--undo-trail))))
+        (setq node (if (memq taken children) taken (car children))
+              count (1- count)))))
+  node)
+
+(defun +core/undo-graph-down (count)
+  "Go to the branch drawn COUNT lines below, onto the state drawn nearest."
+  (interactive "p" vundo-mode)
+  (+core--undo-go (lambda (node) (+core--undo-across node count))
+                  (if (< count 0) "No branch above" "No branch below")))
+
+(defun +core/undo-graph-up (count)
+  "Go to the branch drawn COUNT lines above, onto the state drawn nearest."
+  (interactive "p" vundo-mode)
+  (+core--undo-go (lambda (node) (+core--undo-across node (- count)))
+                  (if (< count 0) "No branch below" "No branch above")))
+
+(defun +core/undo-graph-newer (count)
+  "Go COUNT states newer; at a fork, down the branch you came back from."
+  (interactive "p" vundo-mode)
+  (if (< count 0)
+      (vundo-backward (- count))
+    (+core--undo-go (lambda (node) (+core--undo-newer node count))
+                    "The newest state of this branch")))
+
+(defun +core/undo-graph-start ()
+  "Go to the first state of this branch's line."
+  (interactive nil vundo-mode)
+  (+core--undo-go
+   (lambda (node)
+     ;; vundo draws a first child beside its parent, the others below.
+     (let (parent)
+       (while (and (setq parent (vundo-m-parent node))
+                   (eq node (car (vundo-m-children parent))))
+         (setq node parent)))
+     node)
+   "The first state of this branch"))
+
+(defun +core/undo-graph-end ()
+  "Go to the last state of this branch's line."
+  (interactive nil vundo-mode)
+  (+core--undo-go
+   (lambda (node)
+     (while (vundo-m-children node)
+       (setq node (car (vundo-m-children node))))
+     node)
+   "The newest state of this branch"))
 
 ;; Drawing the graph makes a lot of garbage, and a collection in the
 ;; middle of it was a sixth of the wait; it can wait for the next pause.

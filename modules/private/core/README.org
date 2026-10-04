@@ -185,12 +185,14 @@ Emacs keeps every state a buffer has been in, the ones undone too, and ~u~
 and ~C-r~ walk one path through them; an edit after an undo puts the rest
 out of their reach. ~U~ opens vundo, which Doom installs, on all of them:
 a graph along the bottom, newest on the right, the buffer following you
-through it. ~h l~ older and newer, ~j k~ the branches, ~H L~ the ends of a
-branch, ~s S~ the states that were saved, ~d~ a diff of what the state
-changed that follows as you move until ~d~ again, ~m~ a state to diff
-against instead. ~RET~ keeps where you are, ~q~ and ~ESC~ put the buffer
-back; the keys are in the graph's header. ~SPC t u~ shows the graph for a
-moment at each ~u~ and ~C-r~, for every buffer.
+through it. Each branch is a line of the drawing: ~j k~ go to the line
+below and above from any state, onto the state drawn nearest, ~H L~ to
+the ends of the line; ~h l~ older and newer, ~l~ at a fork back down the
+branch ~h~ came up. ~s S~ the states that were saved, ~d~ a diff of what
+the state changed that follows as you move until ~d~ again, ~m~ a state
+to diff against instead. ~RET~ keeps where you are, ~q~ and ~ESC~ put the
+buffer back; the keys are in the graph's header. ~SPC t u~ shows the
+graph for a moment at each ~u~ and ~C-r~, for every buffer.
 
 After ~u~, ~C-r~ and each step through the graph the lines that changed
 light up for ~+core-undo-flash-time~ (0.3 s): an undo only puts the
