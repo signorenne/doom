@@ -6,7 +6,6 @@
 (defvar +core-todo-markers)             ; core/autoload/lib.el
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
-(defvar compilation-in-progress)
 (defvar compilation-ask-about-save)
 (declare-function claude-code-ide-make-tool "claude-code-ide-mcp-server")
 
