@@ -29,11 +29,12 @@ create a repository and ask again.")
 (defvar +core--roots (make-hash-table :test #'equal)
   "Directory to (TIME . ROOT) as last answered, ROOT nil for none.")
 
-;; Autoloaded: the ai module asks for the root without a fallback.
 ;;;###autoload
-(defun +core--project-root ()
+(defun +core-project-root-or-nil ()
   "The project root of `default-directory', projectile's answer, else
-project.el's, else nil, remembered for `+core-project-root-memo-seconds'."
+project.el's, else nil, remembered for `+core-project-root-memo-seconds'.
+`+core-project-root' without its fallback, for a caller that must know
+there is no project."
   (let* ((dir (expand-file-name default-directory))
          (hit (gethash dir +core--roots))
          (now (float-time)))
@@ -56,7 +57,7 @@ The version control root when there is one, else the topmost CMake or
 PlatformIO directory (projectile and project.el both know those, see
 the cpp module), else `default-directory' with NOERROR, else an error.
 The answer is remembered a moment, see `+core-project-root-memo-seconds'."
-  (or (+core--project-root)
+  (or (+core-project-root-or-nil)
       (if noerror
           default-directory
         (user-error "Not inside a project"))))

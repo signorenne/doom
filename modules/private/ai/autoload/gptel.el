@@ -3,7 +3,7 @@
 (declare-function gptel-make-tool "gptel-request")
 (declare-function gptel-api-key-from-auth-source "gptel-request")
 (declare-function project-files "project")
-(declare-function +core--project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
 
 ;;;###autoload
 (defun +ai--anthropic-api-key ()
@@ -16,7 +16,7 @@
 `+core-project-root\=' answers `default-directory\=' outside a project, and a
 conversation started from the dashboard or from home would have made
 the whole home directory readable, .authinfo.gpg with it."
-  (let ((root (+core--project-root)))
+  (let ((root (+core-project-root-or-nil)))
     (unless root
       (error "Not inside a project, so there is nothing the tools may read"))
     (setq root (file-name-as-directory (expand-file-name root)))

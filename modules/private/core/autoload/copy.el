@@ -6,14 +6,14 @@
 
 (require 'transient)
 
-(declare-function +core--project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
 
 (defun +core--project-path (file)
   "FILE relative to the project, or abbreviated when there is no project.
 The project is `+core-project-root\=''s, which knows the CMake and
 PlatformIO roots the cpp module registers; `doom-project-root\=' does not,
 and gave an absolute path in a tree projectile does not claim."
-  (if-let* ((root (+core--project-root)))
+  (if-let* ((root (+core-project-root-or-nil)))
       (file-relative-name file root)
     (abbreviate-file-name file)))
 

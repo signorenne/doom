@@ -253,10 +253,11 @@ files section has the detail.
 answer each: ~+core-project-root~ (the VCS root, else the topmost CMake or
 PlatformIO directory, remembered for ~+core-project-root-memo-seconds~
 since projectile walks the whole tree for a directory without a
-repository), ~+core-file-at-point~ (dired marks, the file at
-point, this file), ~+core-compile~ (a compilation buffer that carries its
-name in ~+core-compile-name~), ~+core-last-compilation-buffer~ (the build,
-test or run that started last, whoever started it), ~+core-run-in-vterm~,
+repository; ~+core-project-root-or-nil~ is the same with no fallback),
+~+core-file-at-point~ (dired marks, the file at point, this file),
+~+core-compile~ (a compilation buffer that carries its name in
+~+core-compile-name~), ~+core-last-compilation-buffer~ (the build, test
+or run that started last, whoever started it), ~+core-run-in-vterm~,
 ~+core-git~ and ~+core-git-state~ (no-repo, stopped, dirty, clean),
 ~+core-todo-regexp~, ~+core-language~ (a mode's language for a fenced
 block or a babel block, one table, ~+core-languages~).
