@@ -21,7 +21,6 @@
 (defvar +butler-quips)
 (defvar +butler-dashboard-say-ticks)
 (defvar +doom-dashboard-name)
-(declare-function +ui--dashboard-width "dashboard")
 (defvar +butler-greetings)
 (defvar +butler-address)
 (defvar +butler--said)
@@ -446,11 +445,16 @@ with however many ticks it slept, so a hold lasts the same in both."
 ;; there. Both are autoloaded, since the dashboard is drawn before any
 ;; command of his has loaded this file.
 
+(defvar +butler--dashboard-width nil
+  "The width the dashboard last handed him to centre in, for what he
+says there after.")
+
 ;; Autoloaded: `+ui-dashboard-greeting-function', set in config.el.
 ;;;###autoload
 (defun +butler--dashboard-greeting (width)
   "Insert him saying the greeting of the hour, centred in WIDTH columns,
 his words in the dashboard's greeting face."
+  (setq +butler--dashboard-width width)
   (+butler--insert-speech (+butler-greeting) width '+ui-greeting))
 
 (defun +butler--dashboard-line ()
@@ -479,8 +483,7 @@ shift under it."
         (when-let* ((match (text-property-search-forward '+butler-speech))
                     (start (prop-match-beginning match))
                     (end (prop-match-end match))
-                    (width (and (fboundp '+ui--dashboard-width)
-                                (+ui--dashboard-width))))
+                    (width +butler--dashboard-width))
           (let ((inhibit-read-only t))
             (with-silent-modifications
               (delete-region start end)
