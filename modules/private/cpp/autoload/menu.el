@@ -104,7 +104,7 @@ behind it: the generator, the jobs, the overrides, the run line."
     ("c" "Configure"          projection-commands-configure-project)
     ("b" "Build"              projection-commands-build-project)
     ("B" "Build a target"     projection-multi-compile)
-    ("x" "Recompile"          recompile)
+    ("x" "Build, then run"    +cpp/build-and-run)
     ("t" "Test"               projection-commands-test-project)
     ("T" "Test at point"      +cpp/test-at-point :if (lambda () (+cpp--kind-p 'cmake)))
     ("u" "A test executable"  +cpp/test-binary :if (lambda () (+cpp--kind-p 'cmake)))
