@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-28 16:19
+#+generated: 2026-09-28 21:48
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3555,6 +3555,9 @@ bound.
 - ~+notes/projects~ (~SPC o a p~) :: Every PROJ task.
 - ~+notes/protocol-bookmarklets~ :: Show the bookmarklets that send the
   current page to Emacs.
+- ~+notes/query~ (~SPC n q~) :: Find a heading by an org-ql query: in this
+  note, or from any other buffer in the agenda files, the roam notes that
+  hold a task among them.
 - ~+notes/roam-extract~ (~SPC m m e~) :: Move the subtree at point into its
   own note and leave a link where it was.
 - ~+notes/roam-guide~ (~SPC n r ?~) :: Open the guide: how to work with the
