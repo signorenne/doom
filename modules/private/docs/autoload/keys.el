@@ -340,12 +340,16 @@ key of evil's would look unbound.  Those maps are put aside here."
       ;; when there is no map to check the rest against.
       ('dape (or (in-buffer)
                  (if (boundp 'dape-active-mode-map) (in-map dape-active-mode-map) t)))
-      ('dired (let ((buffer (ignore-errors (dired-noselect doom-user-dir))))
+      ;; A directory of its own: dired hands back the buffer already
+      ;; listing a directory, and killing that closed the user's.
+      ('dired (let* ((dir (make-temp-file "docs-keys" t))
+                     (buffer (ignore-errors (dired-noselect dir))))
                 (unwind-protect
                     (and buffer (with-current-buffer buffer
                                   (when (fboundp 'evil-normal-state) (evil-normal-state))
                                   (in-buffer)))
-                  (when (buffer-live-p buffer) (kill-buffer buffer)))))
+                  (when (buffer-live-p buffer) (kill-buffer buffer))
+                  (delete-directory dir))))
       ('org (with-temp-buffer (org-mode)
                               (when (fboundp 'evil-normal-state) (evil-normal-state))
                               (in-buffer)))
