@@ -221,15 +221,15 @@ cache variables you have overridden.
 
 The CMake flags are the keys: =-D= sets a cache variable, =-U= clears one,
 =-j= the jobs, =-v= verbose, =-L= the log level. Running, testing and
-debugging are on the leader and in =SPC k m=, not here.
+debugging are on the leader and in =SPC k SPC=, not here.
 
 - a *preset* comes from =CMakePresets.json= and brings its own build
   directory, build type and cache variables; each preset is a kit.
-- *cache variables* you set with =v= are passed as =-DNAME=VALUE= to every
-  configure, the way Qt Creator keeps its CMake configuration table. =v=
+- *cache variables* you set with =-D= are passed as =-DNAME=VALUE= to every
+  configure, the way Qt Creator keeps its CMake configuration table. =-D=
   completes over what =CMakeCache.txt= already holds, with the current value
   shown, so you are picking from the project's real options rather than
-  typing blind. =V= drops one again.
+  typing blind. =-U= drops one again.
 
 The panel writes what you choose into the project's =.dir-locals.el=:
 =+cpp-kit=, =+cpp-container=, =+cpp-build-target=, =+cpp-cache-overrides=,
