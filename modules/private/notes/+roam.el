@@ -33,8 +33,10 @@ day is written under.")
   ;; Every command that reads the list, not only the agenda: the todo
   ;; list and org-ql went through neither, so in a session that had not
   ;; opened an agenda they missed every task written inside a note.
-  (dolist (command '(org-agenda org-refile org-todo-list
-                     org-ql-find org-ql-search))
+  ;; org-ql-search reads it at its prompt, before advice on the command
+  ;; itself runs, so the prompt is refreshed too.
+  (dolist (command '(org-agenda org-refile org-todo-list org-ql-search
+                     org-ql-view--complete-buffers-files))
     (advice-add command :before #'+notes--agenda-files-refresh-h))
 
   ;; The dailies live in daily/, the package's default.
