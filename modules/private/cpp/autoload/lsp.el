@@ -250,7 +250,10 @@ database to say one, so a project without one still resolves QString."
         (let ((flags (append (unless (file-exists-p
                                       (expand-file-name "compile_commands.json"
                                                         (expand-file-name db-dir root)))
-                               '("-xc++" "-std=c++20"))
+                               ;; The templates' own: C++23, and include/
+                               ;; seen from the root, src/ and one deeper.
+                               '("-xc++" "-std=c++23" "-Iinclude"
+                                 "-I../include" "-I../../include"))
                              (+cpp--qt-include-flags))))
           (when flags
             (insert "  # Flags for files no compilation database covers.\n"
