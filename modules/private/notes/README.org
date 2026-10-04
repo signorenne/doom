@@ -73,7 +73,7 @@ menu make a concept and a meeting straight away.
 | Key         | What it does                                   |
 |-------------+------------------------------------------------|
 | ~SPC n r f~   | find or create a node, ~i~ links to one          |
-| ~SPC n r n~   | new note, one of nine templates                |
+| ~SPC n r n~   | new note, one of the nine kinds                |
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
