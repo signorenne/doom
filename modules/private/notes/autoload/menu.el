@@ -9,13 +9,23 @@
 (declare-function org-roam-node-find "org-roam-node")
 (declare-function org-roam-db-query "org-roam-db")
 
+(defvar +notes--inbox-count nil
+  "((FILE MTIME) . COUNT), the memo behind `+notes--inbox-count'.")
+
 (defun +notes--inbox-count ()
-  "Number of TODO entries in the inbox, or nil when there is no inbox."
+  "Number of TODO entries in the inbox, or nil when there is no inbox.
+Counted again only when the file has changed: the menu asks on every
+redraw, and read the whole inbox each time."
   (let ((file (expand-file-name "inbox.org" org-directory)))
     (when (file-readable-p file)
-      (with-temp-buffer
-        (insert-file-contents file)
-        (how-many "^\\*+ TODO " (point-min) (point-max))))))
+      (let ((key (list file (file-attribute-modification-time
+                             (file-attributes file)))))
+        (unless (equal key (car +notes--inbox-count))
+          (setq +notes--inbox-count
+                (cons key (with-temp-buffer
+                            (insert-file-contents file)
+                            (how-many "^\\*+ TODO " (point-min) (point-max))))))
+        (cdr +notes--inbox-count)))))
 
 (defvar +notes--roam-count nil
   "(TIME . COUNT), the memo behind `+notes--roam-count'.")
