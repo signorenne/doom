@@ -191,12 +191,15 @@ It is drawn at the end of the line too, and is the one to read."
              (room (- (window-max-chars-per-line) at 1)))
         (+git--blame-hide)
         (when (> room 12)
-          (let ((overlay (make-overlay eol eol nil t nil)))
-            (overlay-put overlay 'after-string
-                         (concat (make-string (- at column) ?\s)
-                                 (propertize (truncate-string-to-width
-                                              (+git--blame-text commit info) room nil nil "...")
-                                             'face '+git-blame-face)))
+          (let ((overlay (make-overlay eol eol nil t nil))
+                (text (concat (make-string (- at column) ?\s)
+                              (propertize (truncate-string-to-width
+                                           (+git--blame-text commit info) room nil nil "...")
+                                          'face '+git-blame-face))))
+            ;; With point at the end of the line, as A leaves it, the
+            ;; cursor was drawn after the note; this puts it before.
+            (put-text-property 0 1 'cursor t text)
+            (overlay-put overlay 'after-string text)
             (setq +git--blame-overlay overlay
                   +git--blame-shown (cons (line-beginning-position)
                                           (buffer-chars-modified-tick)))))))))
@@ -254,6 +257,8 @@ when the buffer has changed since the last one."
     (add-hook 'post-command-hook #'+git--blame-moved-h nil t)
     (add-hook 'after-save-hook #'+git--blame-forget-h nil t)
     (add-hook 'kill-buffer-hook #'+git--blame-stop-h nil t)
+    ;; Not shown while typing: one shown already goes as insert begins.
+    (add-hook 'evil-insert-state-entry-hook #'+git--blame-hide nil t)
     (unless (timerp +git--blame-timer)
       (setq +git--blame-timer
             (run-with-idle-timer +git-blame-idle t #'+git--blame-show))))
@@ -261,6 +266,7 @@ when the buffer has changed since the last one."
     (remove-hook 'post-command-hook #'+git--blame-moved-h t)
     (remove-hook 'after-save-hook #'+git--blame-forget-h t)
     (remove-hook 'kill-buffer-hook #'+git--blame-stop-h t)
+    (remove-hook 'evil-insert-state-entry-hook #'+git--blame-hide t)
     (+git--blame-stop-h)
     (+git--blame-hide)
     (setq +git--blame-lines nil
