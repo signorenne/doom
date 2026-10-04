@@ -56,17 +56,22 @@ Tried again once the buffer changes or is saved.")
 ;;; Taking the blame
 
 (defun +git--blame-take ()
-  "Blame this buffer as it stands, in the background."
+  "Blame this buffer as it stands, in the background.
+git's answer is gathered in a string and its complaints go nowhere: two
+buffers killed when git was done died under whatever was walking the
+buffer list and waiting on a process meanwhile, eglot connecting a
+server among them, which then stopped on \"Selecting deleted buffer\"."
   (unless (process-live-p +git--blame-process)
     (let* ((buffer (current-buffer))
            (tick (buffer-chars-modified-tick))
            (size (line-number-at-pos (point-max)))
-           (out (generate-new-buffer " *git blame*" t))
-           (err (generate-new-buffer " *git blame errors*" t))
+           (chunks nil)
+           (err (make-pipe-process :name "git-blame-errors" :buffer nil
+                                   :noquery t :filter #'ignore :sentinel #'ignore))
            (default-directory (file-name-directory buffer-file-name)))
       (setq +git--blame-process
             (make-process
-             :name "git-blame" :buffer out :stderr err :noquery t
+             :name "git-blame" :buffer nil :stderr err :noquery t
              :connection-type 'pipe
              ;; Sent as the file is written, line endings included, so its
              ;; lines are the ones git compares against the commit.
@@ -74,6 +79,7 @@ Tried again once the buffer changes or is saved.")
              :command (list "git" "--no-pager" "blame" "--porcelain"
                             "--contents" "-" "--"
                             (file-name-nondirectory buffer-file-name))
+             :filter (lambda (_proc string) (push string chunks))
              :sentinel
              (lambda (proc _event)
                (unless (process-live-p proc)
@@ -81,25 +87,24 @@ Tried again once the buffer changes or is saved.")
                      (when (buffer-live-p buffer)
                        (with-current-buffer buffer
                          (if (zerop (process-exit-status proc))
-                             (progn (+git--blame-read out tick size)
+                             (progn (+git--blame-read
+                                     (apply #'concat (nreverse chunks)) tick size)
                                     ;; Answered while point rests: show it
                                     ;; now; mid-movement, wait for the rest.
                                     (when (current-idle-time) (+git--blame-show)))
                            (setq +git--blame-failed tick))))
-                   ;; The stderr pipe may still be open; no question.
-                   (let ((kill-buffer-query-functions nil))
-                     (kill-buffer out)
-                     (kill-buffer err)))))))
+                   (delete-process err))))))
       (process-send-region +git--blame-process (point-min) (point-max))
       (process-send-eof +git--blame-process))))
 
 (defun +git--blame-read (out tick size)
-  "Keep OUT, git blame's porcelain, as this buffer's blame at TICK, a
-buffer of SIZE lines."
+  "Keep OUT, git blame's porcelain as a string, as this buffer's blame at
+TICK, a buffer of SIZE lines."
   (let ((lines (make-vector (+ size 2) nil))
         (commits (make-hash-table :test #'equal))
         info)
-    (with-current-buffer out
+    (with-temp-buffer
+      (insert out)
       (goto-char (point-min))
       (while (not (eobp))
         (cond
