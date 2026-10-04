@@ -240,14 +240,17 @@ frame of a daemon leaves Emacs running, which is the point of it.
 | ~@a~        | play it back                                 |
 | ~SPC i y~   | the kill ring                                |
 
-~u~ undoes one edit, not all that was typed in one go in insert state.
-Emacs keeps every state a file has been in, the ones undone too, and ~u~ and
-~C-r~ walk one path through them: an edit after an undo puts the rest out
-of their reach. ~U~ draws all of them as a graph along the bottom, the
-newest on the right, and the file follows you through it; ~RET~ keeps
-where you are, ~q~ puts it back. The lines an undo or a step changes
-light up for a moment. ~SPC t u~ shows the graph for a moment at each ~u~
-and ~C-r~ as well, and ~SPC s u~ is Doom's key for ~U~.
+~u~ undoes one edit, and typing a word at a time, not all that was typed
+in one go in insert state. Emacs keeps every state a file has been in,
+the ones undone too, and ~u~ and ~C-r~ walk one path through them: an
+edit after an undo puts the rest out of their reach. ~U~ draws all of
+them as a graph along the bottom, the newest on the right, and the file
+follows you through it; ~RET~ keeps where you are, ~q~ puts it back. The
+lines an undo or a step changes light up for a moment. ~SPC t u~ shows
+the graph for a moment at each ~u~ and ~C-r~ as well, and ~SPC s u~ is
+Doom's key for ~U~. If a step cannot be made, the graph says so and is
+drawn again from the text as it is; ~RET~ always leaves it, keeping what
+is on screen.
 
 | Key   | In the graph                                    |
 |-------+-------------------------------------------------|
