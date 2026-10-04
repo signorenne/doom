@@ -422,29 +422,37 @@ the whole of it is a binding, or if each of its parts is."
                           (cdr parts))))))
 
 ;;;###autoload
-;;;###autoload
 (defun +docs-module-problems ()
   "Every private module the cheat sheet\='s list of READMEs leaves out.
 The list is written by hand and a module added later has been missed
-twice; nothing else notices, since a missing link breaks nothing."
+twice; nothing else notices, since a missing link breaks nothing. Only
+the list counts: the sheet links some READMEs further down as well, and
+those links hid four modules the list had left out."
   (let* ((dir (expand-file-name "modules/private" doom-user-dir))
          (modules (when (file-directory-p dir)
                     (seq-filter
                      (lambda (name)
                        (file-exists-p (file-name-concat dir name "README.org")))
                      (directory-files dir nil "\\`[^.]"))))
-         (sheet (with-temp-buffer
-                  (insert-file-contents +docs-cheatsheet-file)
-                  (buffer-string))))
-    (delq nil
-          (mapcar (lambda (name)
-                    (unless (string-match-p
-                             (regexp-quote
-                              (format "modules/private/%s/README.org" name))
-                             sheet)
-                      (format "the sheet does not link the %s module's README"
-                              name)))
-                  modules))))
+         (paragraph (with-temp-buffer
+                      (insert-file-contents +docs-cheatsheet-file)
+                      (goto-char (point-min))
+                      (when (search-forward "Each module keeps its own notes" nil t)
+                        (buffer-substring-no-properties
+                         (point) (if (re-search-forward "^[ \t]*$" nil t)
+                                     (point)
+                                   (point-max)))))))
+    (if (not paragraph)
+        (list "the sheet has lost its list of the modules' READMEs")
+      (delq nil
+            (mapcar (lambda (name)
+                      (unless (string-match-p
+                               (regexp-quote
+                                (format "modules/private/%s/README.org" name))
+                               paragraph)
+                        (format "the sheet's list of READMEs leaves out the %s module"
+                                name)))
+                    modules)))))
 
 (defun +docs-binding-problems ()
   "Every key the sheet names outside the leader that is not bound where

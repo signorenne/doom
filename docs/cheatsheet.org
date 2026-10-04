@@ -70,8 +70,12 @@ Each module keeps its own notes, reachable with =SPC h M=:
 [[file:../modules/private/docs/README.org][docs]],
 [[file:../modules/private/git/README.org][git]],
 [[file:../modules/private/notes/README.org][notes]],
+[[file:../modules/private/pascal/README.org][pascal]],
 [[file:../modules/private/qtcreator/README.org][qtcreator]],
-[[file:../modules/private/ui/README.org][ui]]
+[[file:../modules/private/rust/README.org][rust]],
+[[file:../modules/private/ui/README.org][ui]],
+[[file:../modules/private/uml/README.org][uml]],
+[[file:../modules/private/web/README.org][web]]
 
 * Doom
 ** Config files
