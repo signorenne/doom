@@ -170,12 +170,12 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
         (gptel-make-anthropic "Claude"
           :stream t
           :key #'+ai-anthropic-api-key
-          :models '((claude-opus-5
+          :models '((claude-opus-5-5
                      :description "Most capable, the default"
                      :capabilities (media tool-use cache json)
                      :mime-types ("image/jpeg" "image/png" "image/gif"
                                   "image/webp" "application/pdf")
-                     :context-window 1000 :input-cost 5 :output-cost 25)
+                     :context-window 1000 :input-cost 4 :output-cost 20)
                     (claude-sonnet-5
                      :description "Fast, still very capable"
                      :capabilities (media tool-use cache json)
@@ -188,7 +188,7 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
                      :mime-types ("image/jpeg" "image/png" "image/gif"
                                   "image/webp" "application/pdf")
                      :context-window 200 :input-cost 1 :output-cost 5)))
-        gptel-model 'claude-opus-5
+        gptel-model 'claude-opus-5-5
         gptel-temperature nil           ; these models reject sampling args
         gptel-max-tokens 16000
         gptel-cache t                   ; cache the prompt prefix
@@ -203,8 +203,8 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
     (setf (alist-get (car directive) gptel-directives) (cdr directive)))
   (+ai--register-gptel-tools)
   (gptel-make-preset 'deep
-    :description "Opus 5 with the Emacs tools, for careful work"
-    :backend "Claude" :model 'claude-opus-5 :temperature nil
+    :description "Opus 5.5 with the Emacs tools, for careful work"
+    :backend "Claude" :model 'claude-opus-5-5 :temperature nil
     :tools '("emacs_read_buffer" "emacs_read_file"
              "emacs_list_project_files" "emacs_grep_project"))
   (gptel-make-preset 'quick

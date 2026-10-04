@@ -135,7 +135,7 @@ whether this tool, a key or a menu started it."
   (interactive
    (list (completing-read
           "Claude model (empty for the default): "
-          '("opus" "sonnet" "haiku" "claude-opus-5" "claude-sonnet-5")
+          '("opus" "sonnet" "haiku" "claude-opus-5-5" "claude-sonnet-5")
           nil nil (or +ai-claude-model ""))))
   (setq +ai-claude-model (unless (string-empty-p model) model))
   (+ai--apply-claude-model)

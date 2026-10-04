@@ -82,5 +82,5 @@ Inside Claude, =/ide= shows the Emacs connection and =/mcp= lists the tools.
   before Claude redraws for it. Its terminal follows the window down to 40
   columns, vterm's own floor is 80.
 - ~agent-shell-preferred-agent-config~, ~agent-shell-display-action~.
-- ~gptel-model~ (=claude-opus-5=), presets =deep= and =quick=.
+- ~gptel-model~ (=claude-opus-5-5=), presets =deep= and =quick=.
 - For MCP servers in gptel: set ~mcp-hub-servers~, then =M-x gptel-mcp-connect=.
