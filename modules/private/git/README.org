@@ -22,6 +22,10 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   commit, checkout and reset and after every save, so a botched rebase
   is one log away (=SPC g h L=),
 - three menus in plain words: the hub, the history, the branches,
+- a tag menu on =t=: a tag on the commit under the cursor, on any commit
+  found by a word of its message or its hash, on a branch's head, or on
+  HEAD; every prompt for a commit lists the latest ones, hash, date and
+  subject, the one under the cursor first,
 - what magit has no command for: change a commit's date or author,
   split a commit, uncommit, a branch from the fetched main, the merged
   branches swept, the diff and the log against main,
@@ -30,13 +34,14 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
-| Key         | Command                | What it does                           |
-|-------------+------------------------+----------------------------------------|
-| ~SPC g SPC~ | ~+git/menu~            | the hub: every day, menus, repos, tools |
-| ~SPC g h~   | ~+git/history~         | rewrite: reword, edit, date, author, split, drop, fixup, rebase |
-| ~SPC g n~   | ~+git/branches~        | make, switch, rename, delete, compare with main |
-| ~C-c C-t~   | ~+git/commit-conventional~ | in the commit buffer: type(scope):  |
-| ~SPC t B~   | ~+git-blame-line-mode~ | the commit behind the current line at its end, on in code buffers under 1M |
+| Key       | Command                  | What it does                                                               |
+|-----------+--------------------------+----------------------------------------------------------------------------|
+| ~SPC g SPC~ | ~+git/menu~                | the hub: every day, menus, repos, tools                                    |
+| ~SPC g h~   | ~+git/history~             | rewrite: reword, edit, date, author, split, drop, fixup, rebase            |
+| ~SPC g n~   | ~+git/branches~            | make, switch, rename, delete, compare with main                            |
+| ~C-c C-t~   | ~+git/commit-conventional~ | in the commit buffer: type(scope):                                         |
+| ~t~         | ~+git/tag~                 | in magit: tag a commit by message or hash, a branch head, HEAD             |
+| ~SPC t B~   | ~+git-blame-line-mode~     | the commit behind the current line at its end, on in code buffers under 1M |
 
 Everything else is magit's own, under the keys evil gives it: =SPC g g=
 status, then =s u= stage and unstage, =c= commit, =p= push, =F= pull,
@@ -64,6 +69,7 @@ keep, with ediff and refine for the ones that are not obvious.
 * Configuration
 - ~+git-commit-types~: the types =C-c C-t= offers, the hook's list.
 - ~+git-date-format~: how a commit's date is shown and read.
+- ~+git-pick-commits~, 500: how many commits a prompt for one lists.
 - The rebase menu's defaults, =--autostash --autosquash=, are set only
   when the menu was never saved (=C-x C-s= in it keeps your own).
 - ~+git-delta-max-size~, 400k: past that a diff is painted the plain way,
