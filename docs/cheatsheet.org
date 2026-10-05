@@ -1268,29 +1268,158 @@ Nothing committed is lost for two weeks, whatever a reset did: ~l r~,
 the commit, ~o~. Work that was never committed is in the WIP log the
 moment the file was saved.
 
-** How to
-- Fix the last commit: stage the fix, ~c e~ (same message) or ~c a~
-  (edit it). Only the message: ~c w~.
-- Fix an older commit: stage the fix, ~c F~, pick the commit; it is
-  folded in and the commits after it replayed.
-- Reword or redate an older commit: put the cursor on it in ~l l~,
-  ~SPC g h w~ or ~SPC g h d~.
-- Split a commit: cursor on it, ~SPC g h s~; its changes are back and
-  unstaged; ~V~ and ~s~ a piece, ~c c~, again; ~r r~ finishes when it
-  was not the last one.
-- Reorder or squash several: cursor on the oldest to touch, ~r i~,
-  move lines with ~M-k M-j~, mark ~s~ ~f~ ~r~ ~d~, ~ZZ~.
-- Rebase onto main: ~SPC g n m~ made the branch from main; later,
-  ~f a~ then ~r e~, =origin/main=; a conflict stops it, resolve, ~s~,
-  ~r r~. Then ~p -f u~.
-- Move commits to a new branch, made on the wrong one: ~b s~, name it;
-  the current branch goes back to where it was.
-- Resolve a conflict: ~RET~ on the unmerged file, ~SPC m n~, keep ~u~
-  or ~l~ or edit by hand, ~SPC m n~ again, save, ~s~ in status, ~r r~.
-- Recover after a bad reset: ~l r~, find the line before the reset,
-  ~o~ on it.
-- Who changed this line and why: ~SPC g B~, ~RET~ on the line; or
-  ~SPC g L~ for the file's history, ~-S~ with the text for its origin.
+** Guides, step by step
+Each starts in the status buffer, ~SPC g g~. "In the log" means ~l l~ there,
+the cursor on a commit. Where a command needs a commit and the cursor is
+not on one, it either lists the latest commits, hash, date and subject,
+where typing a word of the message finds one and ~RET~ takes it, or opens
+a log to choose from, where ~C-c C-c~ takes the commit under the cursor
+and ~C-c C-k~ gives up. A message opens in its own buffer: write it, ~ZZ~
+to go on, ~ZQ~ to give up.
+
+Any commit changed after it was pushed has to be pushed with force, see
+"Push after rewriting". A commit not pushed yet is yours to change freely.
+
+*** Change the last commit's message
+1. ~c w~: the message opens.
+2. Edit it, ~ZZ~.
+
+*** Change an older commit's message
+1. In the log, cursor on the commit.
+2. ~r w~, or ~w~ in ~SPC g h~: the message opens.
+3. Edit it, ~ZZ~. The commits after it are replayed on top, by themselves.
+
+*** Add forgotten changes to the last commit
+1. Stage them: ~s~ on the files or hunks.
+2. ~c e~ keeps the message; ~c a~ opens it to edit as well.
+
+*** Add forgotten changes to an older commit
+1. Stage them.
+2. In the log, cursor on the commit that should have had them.
+3. ~c F~: they are folded into it and the commits after it replayed.
+   With ~c f~ instead, a fixup! commit is made now and ~r f~ folds it in
+   later, with others.
+
+*** Change the date of a commit
+1. In the log, cursor on the commit; or from anywhere, and pick it.
+2. ~SPC g h d~.
+3. The date: =2026-09-01 14:30=, or =+2d 9:00=, =-1w=, or pick it in the
+   calendar that opens. ~RET~.
+Author and committer date both change. For an older commit the ones
+after it are replayed: their author dates stay, their committer dates
+become today, as any rebase does. ~c d~ changes the last commit's date
+the same way, from magit.
+
+*** Change the author of a commit
+1. In the log, cursor on the commit; or pick it.
+2. ~SPC g h a~: =Name <email>=, filled in with the current one.
+3. Edit it, ~RET~.
+
+*** Take back the last commit
+~SPC g h u~: the commit goes, its changes stay staged, ready to commit
+again otherwise. To drop the changes too: in the log, cursor on the
+commit before it, ~O h~. Either way the reflog, ~l r~, still has it.
+
+*** Push after rewriting
+A rewritten commit is a new commit: the remote still has the old one and
+refuses a plain push.
+1. ~p~, then ~-f~ (force with lease), then ~u~.
+2. With lease, the push is refused if someone else pushed to the branch
+   since you fetched, so nothing of theirs is lost. Then ~f u~ to fetch,
+   ~r u~ to put your commits on theirs, and push again.
+~-F~ is force without the check: it overwrites whatever is there. Never on
+a branch others push to.
+
+*** Cherry-pick a commit from another branch
+1. ~l o~, the other branch, ~RET~: its log.
+2. Cursor on the commit, ~A A~: a copy of it is committed on your branch.
+3. Several: ~V~, ~j~ to select them, then ~A A~; they go in oldest first.
+~-x~ in the menu before ~A~ notes in the message where it came from. ~A a~
+applies the changes without committing, to adjust them first. ~A d~
+donates the commit under the cursor to another branch: it leaves this one.
+
+*** Merge a branch into this one
+1. ~m~, then ~m~ again, and pick the branch.
+2. It fast-forwards when it can. ~-n~ in the menu first makes a merge
+   commit every time, which keeps the branch visible in the log.
+~m p~ previews what the merge would bring, ~m s~ squashes it into staged
+changes you commit as one commit, ~m e~ opens the merge message to edit.
+
+*** When a merge, rebase or cherry-pick stops on a conflict
+1. The files are under "Unmerged" in status; ~RET~ opens one.
+2. ~]n~ to the next conflict, ~SPC g x~ for the menu: ~u~ keep upper, ~l~
+   keep lower, ~a~ both, or edit by hand. Save.
+3. In status, ~s~ on the file: it is resolved.
+4. Go on: ~m m~ for a merge, ~r r~ for a rebase, ~A A~ for a
+   cherry-pick. Or give up and put everything back: ~m a~, ~r a~, ~A a~.
+In a merge upper is this branch, in a rebase upper is the branch you
+rebase onto and lower your own commit.
+
+*** Bring your branch up to date with main
+1. ~f a~: fetch everything.
+2. ~r e~, =origin/main=, ~RET~: your commits are replayed on top of it.
+3. A conflict stops it: see above, then ~r r~.
+4. It was pushed before: push after rewriting, ~p -f u~.
+~SPC g n m~ starts a new branch from main, fetched first.
+
+*** Squash, reorder or drop several commits
+1. In the log, cursor on the oldest commit to touch.
+2. ~r i~: a list of the commits, oldest at the top.
+3. On each line: ~s~ squash into the one above (both messages kept), ~f~
+   fixup (this message dropped), ~r~ reword, ~e~ stop to edit, ~d~ drop;
+   ~M-k M-j~ move a line up, down.
+4. ~ZZ~ runs it; ~ZQ~ leaves everything as it was.
+
+*** Split a commit in two
+1. In the log, cursor on it; ~SPC g h s~: its changes come back unstaged.
+2. Stage the first piece (~s~, or ~V~ lines then ~s~), ~c c~, a message.
+3. The same for the rest.
+4. When it was not the last commit: ~r r~ replays the ones after it.
+
+*** Undo a commit that was pushed
+In the log, cursor on it, ~_ _~: a new commit that undoes it, message
+ready, ~ZZ~. Push it normally; nothing is rewritten. ~_ v~ puts the undo
+in the files only, to commit yourself.
+
+*** Tag a commit, a branch or HEAD
+~t~ opens the tag menu in any magit buffer, ~T~ in ~SPC g SPC~ from anywhere.
+- A commit: ~t t~, the name, ~RET~. The list shows every branch's latest
+  commits with the branches and tags already on them, the one under the
+  cursor first. Type a word of the message, or a hash, even of a commit no
+  branch holds any more; ~RET~.
+- The head of a branch: ~t b~, the name, then the branch, listed with its
+  last commit.
+- Where you are: ~t h~ and the name.
+~-a~ in the menu first makes an annotated tag, with a message. Tags stay
+local until pushed: ~t P~ or ~p T~ one tag, ~p t~ every tag.
+
+*** Delete or move a tag
+- Delete: ~t x~ and the tag. On the remote as well: ~t p~ offers to delete
+  there the tags you no longer have.
+- Move: ~t~, ~-f~, ~t~, the same name, the new commit. Then ~p~, ~-F~,
+  ~T~ and the tag, since the remote has it on the old commit.
+
+*** Put work aside for a moment
+~Z z~ stashes everything with a message; the tree is clean. ~Z p~ on the
+stash puts it back and drops it, ~Z a~ keeps it. ~-u~ in the menu takes
+untracked files too.
+
+*** Commits made on the wrong branch
+~b s~ and a new branch name: they move to it, and the branch you were on
+goes back to where it was before them.
+
+*** Throw away every change not committed
+In status, cursor on "Unstaged changes", ~x~; on "Staged changes" as
+well. Saved files were kept in the WIP log, ~SPC g h L~.
+
+*** Get back what a reset or a rebase took
+1. ~l r~: every place HEAD has been, newest first.
+2. ~RET~ shows one; cursor on the one before the mistake.
+3. ~O h~: the branch is back there.
+
+*** Who changed this line, and why
+~SPC g B~, then ~RET~ on the line: the commit. ~SPC g L~ is the file's
+history; ~l l~, ~-S~ and the text finds the commit that introduced it.
 
 ** Not wired yet
 forge, which would bring issues and pull requests into magit, waits for
