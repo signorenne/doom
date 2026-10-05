@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-29 10:50
+#+generated: 2026-09-29 11:41
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2609,12 +2609,14 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC c D~ | Jump to references                  |
 | ~SPC c E~ | Evaluate & replace region           |
 | ~SPC c H~ | Docs at point (popup)               |
+| ~SPC c T~ | Type hierarchy                      |
 | ~SPC c W~ | Delete trailing newlines            |
 | ~SPC c a~ | LSP Execute code action             |
 | ~SPC c c~ | Compile                             |
 | ~SPC c d~ | Jump to definition                  |
 | ~SPC c e~ | Evaluate buffer/region              |
 | ~SPC c f~ | Format buffer/region                |
+| ~SPC c h~ | Call hierarchy                      |
 | ~SPC c i~ | Find implementations                |
 | ~SPC c j~ | Jump to symbol in current workspace |
 | ~SPC c k~ | Jump to documentation               |
@@ -3681,6 +3683,8 @@ bound.
 - ~+git/tag-branch~ :: Tag the head of BRANCH as NAME, BRANCH picked with
   its last commit.
 - ~+git/tag-create~ :: Tag COMMIT as NAME.
+- ~+git/tag-delete-everywhere~ :: Delete TAG here and, when ON-REMOTE, on
+  REMOTE as well.
 - ~+git/tag-head~ :: Tag HEAD, the commit checked out, as NAME.
 - ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
   commit again differently.
