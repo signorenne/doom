@@ -59,6 +59,11 @@ the next session by savehist.")
 
   ;; The same preview beside the minibuffer while choosing a file.
   (dirvish-peek-mode 1)
+  ;; Only once the cursor stops. Its delay is its own, not
+  ;; `dirvish-input-debounce', and was none: holding a key down opened a
+  ;; file every quarter second, 20 to 150 ms each, and the list stuttered
+  ;; under it. Held, it now opens none; stopped, the file shows 0.15 s on.
+  (setq dirvish-peek-key '(:debounce 0.15 any))
 
   ;; Dirvish kills the buffers it previewed with, and Doom records a jump
   ;; whenever a file buffer that is in a window is killed, so opening a
