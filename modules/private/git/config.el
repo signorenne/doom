@@ -201,6 +201,11 @@ paints it the plain way instead."
     (when (fboundp command)
       (advice-add command :around #'doom-set-jump-a))))
 
+;; t t in the tag menu tags a commit picked by its date and subject, the
+;; one under the cursor first; magit's asked among branch names only.
+(after! magit-tag
+  (transient-replace-suffix 'magit-tag "t" '("t" "tag" +git/tag-create)))
+
 
 ;;
 ;;; What is left to do, where it is

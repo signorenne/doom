@@ -1230,18 +1230,19 @@ After ~r i~ or an amend on a branch that was pushed, ~p -f u~ is the
 push: with lease, so a colleague's commit on the same branch stops it.
 
 ** Tags, worktrees, submodules, bisect, patches
-| Key     | What it does                                                       |
-|---------+--------------------------------------------------------------------|
-| ~t t~     | tag the commit under point; ~-a~ annotated; ~t k~ delete; ~t p~ prune    |
-| ~% c~     | a new branch in a new worktree, another checkout beside this one   |
-| ~% b~     | an existing branch in a new worktree; ~% g~ visit one; ~% k~ delete it |
-| ~' a~     | add a submodule; ~' u~ update; ~' s~ sync URLs; ~' l~ list them          |
-| ~B B~     | bisect: start with a bad and a good commit                         |
-| ~B b~ ~B g~ | mark the checked-out commit bad, good; ~B k~ skip it; ~B r~ done       |
-| ~B s~     | bisect with a script that says good or bad                         |
-| ~W c~     | write the commits since main as patch files                        |
-| ~w w~     | apply patch files, or a mailbox of them                            |
-| ~T~       | notes on a commit                                                  |
+| Key     | What it does                                                                     |
+|---------+----------------------------------------------------------------------------------|
+| ~t t~     | tag a commit, the one under the cursor first or any by its message; ~-a~ annotated |
+| ~t x~     | delete a tag; ~t p~ prune the tags the remote no longer has                        |
+| ~% c~     | a new branch in a new worktree, another checkout beside this one                 |
+| ~% b~     | an existing branch in a new worktree; ~% g~ visit one; ~% k~ delete it               |
+| ~' a~     | add a submodule; ~' u~ update; ~' s~ sync URLs; ~' l~ list them                        |
+| ~B B~     | bisect: start with a bad and a good commit                                       |
+| ~B b~ ~B g~ | mark the checked-out commit bad, good; ~B k~ skip it; ~B r~ done                     |
+| ~B s~     | bisect with a script that says good or bad                                       |
+| ~W c~     | write the commits since main as patch files                                      |
+| ~w w~     | apply patch files, or a mailbox of them                                          |
+| ~T~       | notes on a commit                                                                |
 
 ** Repositories, running git
 | Key         | What it does                                                |
