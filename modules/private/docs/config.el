@@ -11,11 +11,12 @@
   '(:groups (("docs" "Docs" () +docs-cheatsheet-mode)))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
-(defvar +docs-leader-features '(winum)
+(defvar +docs-leader-features '(winum eglot)
   "Features loaded before the leader keys are read for the sheet: what
 Doom binds under the leader only once the package has loaded, and it
 loads on a hook.  winum takes SPC w 0 to 9 on the first window switch;
-a session that never switched would write evil's defaults instead.")
+a session that never switched would write evil's defaults instead.  The
+cpp module binds SPC c h and SPC c T once eglot has loaded.")
 
 ;; Each private module says how the sheet documents it, in its own
 ;; `+NAME-docs'; see `+docs--module-docs'. These are the sections of the
