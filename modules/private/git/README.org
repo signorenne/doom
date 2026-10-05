@@ -24,8 +24,9 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - three menus in plain words: the hub, the history, the branches,
 - a tag menu on =t=: a tag on the commit under the cursor, on any commit
   found by a word of its message or its hash, on a branch's head, or on
-  HEAD; every prompt for a commit lists the latest ones, hash, date and
-  subject, the one under the cursor first,
+  HEAD, and one deleted here and on the remote at once; every prompt for
+  a commit lists the latest ones, hash, date and subject, the one under
+  the cursor first,
 - what magit has no command for: change a commit's date or author,
   split a commit, uncommit, a branch from the fetched main, the merged
   branches swept, the diff and the log against main,

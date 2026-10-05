@@ -1230,20 +1230,20 @@ After ~r i~ or an amend on a branch that was pushed, ~p -f u~ is the
 push: with lease, so a colleague's commit on the same branch stops it.
 
 ** Tags, worktrees, submodules, bisect, patches
-| Key     | What it does                                                          |
-|---------+-----------------------------------------------------------------------|
-| ~t t~     | tag a commit: the one under the cursor, or any by its message or hash |
-| ~t b~     | tag the head of a branch; ~t h~ HEAD; ~-a~ annotated, ~-f~ move a tag       |
-| ~t x~     | delete a tag; ~t p~ prune what one side lost; ~t P~ push a tag            |
-| ~% c~     | a new branch in a new worktree, another checkout beside this one      |
-| ~% b~     | an existing branch in a new worktree; ~% g~ visit one; ~% k~ delete it    |
-| ~' a~     | add a submodule; ~' u~ update; ~' s~ sync URLs; ~' l~ list them             |
-| ~B B~     | bisect: start with a bad and a good commit                            |
-| ~B b~ ~B g~ | mark the checked-out commit bad, good; ~B k~ skip it; ~B r~ done          |
-| ~B s~     | bisect with a script that says good or bad                            |
-| ~W c~     | write the commits since main as patch files                           |
-| ~w w~     | apply patch files, or a mailbox of them                               |
-| ~T~       | notes on a commit                                                     |
+| Key     | What it does                                                           |
+|---------+------------------------------------------------------------------------|
+| ~t t~     | tag a commit: the one under the cursor, or any by its message or hash  |
+| ~t b~     | tag the head of a branch; ~t h~ HEAD; ~-a~ annotated, ~-f~ move a tag        |
+| ~t x~     | delete a tag here, ~t X~ here and on the remote; ~t P~ push one; ~t p~ prune |
+| ~% c~     | a new branch in a new worktree, another checkout beside this one       |
+| ~% b~     | an existing branch in a new worktree; ~% g~ visit one; ~% k~ delete it     |
+| ~' a~     | add a submodule; ~' u~ update; ~' s~ sync URLs; ~' l~ list them              |
+| ~B B~     | bisect: start with a bad and a good commit                             |
+| ~B b~ ~B g~ | mark the checked-out commit bad, good; ~B k~ skip it; ~B r~ done           |
+| ~B s~     | bisect with a script that says good or bad                             |
+| ~W c~     | write the commits since main as patch files                            |
+| ~w w~     | apply patch files, or a mailbox of them                                |
+| ~T~       | notes on a commit                                                      |
 
 ** Repositories, running git
 | Key         | What it does                                                |
@@ -1394,8 +1394,10 @@ in the files only, to commit yourself.
 local until pushed: ~t P~ or ~p T~ one tag, ~p t~ every tag.
 
 *** Delete or move a tag
-- Delete: ~t x~ and the tag. On the remote as well: ~t p~ offers to delete
-  there the tags you no longer have.
+- Delete: ~t x~ removes it here only, ~t X~ here and on the remote, after
+  a yes. ~t p~ prunes instead: it first offers to delete here every tag
+  the remote does not have, the ones not pushed yet among them; answer no
+  to those.
 - Move: ~t~, ~-f~, ~t~, the same name, the new commit. Then ~p~, ~-F~,
   ~T~ and the tag, since the remote has it on the old commit.
 

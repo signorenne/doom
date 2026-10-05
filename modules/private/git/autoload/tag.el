@@ -13,6 +13,12 @@
 (declare-function magit-git-lines "magit-git")
 (declare-function magit-rev-verify "magit-git")
 (declare-function magit-run-git-with-editor "magit-process")
+(declare-function magit-run-git-async "magit-process")
+(declare-function magit-call-git "magit-process")
+(declare-function magit-read-remote "magit-git")
+(declare-function magit-remote-list-tags "magit-git")
+(declare-function magit-tag-at-point "magit-git")
+(declare-function magit-completing-read "magit-base")
 (declare-function +git--read-commit "commit")
 
 (defun +git--tag-args ()
@@ -78,6 +84,28 @@ is annotated."
      (list (+git--read-tag-name args) args)))
   (magit-run-git-with-editor "tag" args name "HEAD"))
 
+;;;###autoload
+(defun +git/tag-delete-everywhere (tag remote &optional on-remote)
+  "Delete TAG here and, when ON-REMOTE, on REMOTE as well. magit's prune
+reaches the remote only after offering to delete here every tag not
+pushed yet."
+  (interactive
+   (let* ((remote (magit-read-remote "Delete it on the remote" nil t))
+          (there (progn (message "Asking %s for its tags..." remote)
+                        (prog1 (magit-remote-list-tags remote) (message nil))))
+          (tag (magit-completing-read
+                "Delete the tag, here and on the remote"
+                (delete-dups (append (magit-list-tags) there))
+                nil t nil nil (magit-tag-at-point))))
+     (unless (y-or-n-p (format "Delete the tag %s here and on %s? " tag remote))
+       (user-error "The tag %s stays" tag))
+     (list tag remote (member tag there))))
+  (when (member tag (magit-list-tags))
+    (magit-call-git "tag" "-d" tag))
+  (if on-remote
+      (magit-run-git-async "push" remote (concat ":refs/tags/" tag))
+    (message "%s had no tag %s; deleted here" remote tag)))
+
 ;;;###autoload (autoload '+git/tag "private/git/autoload/tag" nil t)
 (transient-define-prefix +git/tag ()
   "Tags: where to put one, and what to do with them."
@@ -92,5 +120,6 @@ is annotated."
     ("r" "A release, the next version" magit-tag-release)]
    ["Share and remove"
     ("P" "Push a tag"                  magit-push-tag)
-    ("x" "Delete a tag"                magit-tag-delete)
+    ("x" "Delete a tag here"           magit-tag-delete)
+    ("X" "Delete a tag here and on the remote" +git/tag-delete-everywhere)
     ("p" "Prune: tags one side lost, from the other" magit-tag-prune)]])
