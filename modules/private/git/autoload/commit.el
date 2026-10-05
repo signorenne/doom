@@ -81,15 +81,19 @@ be emptied for a commit that has none."
 ;; hash, date and subject, the one under the cursor first; a word of the
 ;; message finds one.
 ;;;###autoload
-(defun +git--read-commit (prompt)
-  "A commit read with PROMPT from the latest ones, then the branches and
-tags, in that order."
-  (let* ((fields "--format=%h  %ad  %s")
+(defun +git--read-commit (prompt &optional everywhere)
+  "A commit read with PROMPT from the latest of this branch, of every
+branch with EVERYWHERE, each with the branches and tags on it, then the
+branch and tag names. A hash not listed is taken as typed."
+  (let* ((fields "--format=%h  %ad  %s%d")
          (choices (delete-dups
                    (append (when-let* ((at (magit-commit-at-point)))
                              (magit-git-lines "log" "-1" fields "--date=short" at))
                            (magit-git-lines "log" (format "-%d" +git-pick-commits)
-                                            fields "--date=short")
+                                            fields "--date=short"
+                                            (if everywhere
+                                                '("--branches" "--tags" "--remotes")
+                                              "HEAD"))
                            (magit-list-refnames nil t))))
          (choice (completing-read
                   (format "%s (a commit, a branch or a tag): " prompt)

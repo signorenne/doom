@@ -201,8 +201,11 @@ paints it the plain way instead."
     (when (fboundp command)
       (advice-add command :around #'doom-set-jump-a))))
 
-;; t t in the tag menu tags a commit picked by its date and subject, the
-;; one under the cursor first; magit's asked among branch names only.
+;; t in a magit buffer is the tag menu of autoload/tag.el: a tag on the
+;; commit under the cursor, any commit by its message, a branch's head or
+;; HEAD. magit's own menu, still behind its dispatch, tags the same way.
+(after! magit
+  (define-key magit-mode-map [remap magit-tag] #'+git/tag))
 (after! magit-tag
   (transient-replace-suffix 'magit-tag "t" '("t" "tag" +git/tag-create)))
 

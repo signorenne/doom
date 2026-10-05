@@ -95,7 +95,7 @@ transients is one key away on /, its dispatch."
     ("x" "Conflicts"           +git/conflicts)
     ("z" "Stashes"             magit-stash)
     ("M" "Remotes"             magit-remote)
-    ("T" "Tags"                magit-tag)
+    ("T" "Tags"                +git/tag)
     ("/" "Everything else: magit's dispatch" magit-dispatch)]
    ["Repositories"
     ("C" "Clone"               magit-clone)
