@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-28 21:48
+#+generated: 2026-09-29 10:50
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3341,8 +3341,16 @@ bound.
 - ~+core/undo-diff~ :: Show what the graph's state changed from the one
   before it, or from the state marked with m, and keep showing it as you
   move; again, hide it.
+- ~+core/undo-graph-down~ :: Go to the branch drawn COUNT lines below, onto
+  the state drawn nearest.
+- ~+core/undo-graph-end~ :: Go to the last state of this branch's line.
+- ~+core/undo-graph-newer~ :: Go COUNT states newer; at a fork, down the
+  branch you came back from.
 - ~+core/undo-graph-popup~ (~SPC t u~) :: Show the undo graph for a moment
   at each undo and redo, or stop.
+- ~+core/undo-graph-start~ :: Go to the first state of this branch's line.
+- ~+core/undo-graph-up~ :: Go to the branch drawn COUNT lines above, onto
+  the state drawn nearest.
 - ~+core/view-close~ :: Close the view, from wherever you are, the view
   itself included.
 - ~+core/view-follow-toggle~ :: Draw a live view again as you type, or only
@@ -3662,6 +3670,11 @@ bound.
 - ~+git/next-conflict~ :: The next conflict in this file, or the next file
   that has one.
 - ~+git/previous-conflict~ :: The conflict before this one.
+- ~+git/tag~ (~t~) :: Tags: where to put one, and what to do with them.
+- ~+git/tag-branch~ :: Tag the head of BRANCH as NAME, BRANCH picked with
+  its last commit.
+- ~+git/tag-create~ :: Tag COMMIT as NAME.
+- ~+git/tag-head~ :: Tag HEAD, the commit checked out, as NAME.
 - ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
   commit again differently.
 
