@@ -9,7 +9,8 @@
 (defvar +git-date-format)
 (declare-function magit-staged-files "magit-git")
 (declare-function magit-commit-at-point "magit-git")
-(declare-function magit-read-branch-or-commit "magit-git")
+(declare-function magit-git-lines "magit-git")
+(declare-function magit-list-refnames "magit-git")
 (declare-function magit-rev-parse "magit-git")
 (declare-function magit-rev-verify "magit-git")
 (declare-function magit-rev-format "magit-git")
@@ -72,10 +73,41 @@ be emptied for a commit that has none."
 ;;
 ;;; Reaching a commit
 
+(defvar +git-pick-commits 500
+  "How many of the latest commits a prompt for a commit lists.")
+
+;; magit asks for a commit among branch names only, so one was reached by
+;; its hash or by standing on it first. This lists the latest commits,
+;; hash, date and subject, the one under the cursor first; a word of the
+;; message finds one.
+;;;###autoload
+(defun +git--read-commit (prompt)
+  "A commit read with PROMPT from the latest ones, then the branches and
+tags, in that order."
+  (let* ((fields "--format=%h  %ad  %s")
+         (choices (delete-dups
+                   (append (when-let* ((at (magit-commit-at-point)))
+                             (magit-git-lines "log" "-1" fields "--date=short" at))
+                           (magit-git-lines "log" (format "-%d" +git-pick-commits)
+                                            fields "--date=short")
+                           (magit-list-refnames nil t))))
+         (choice (completing-read
+                  (format "%s (a commit, a branch or a tag): " prompt)
+                  (lambda (string pred action)
+                    (if (eq action 'metadata)
+                        '(metadata (display-sort-function . identity)
+                                   (cycle-sort-function . identity))
+                      (complete-with-action action choices string pred)))
+                  nil nil nil 'magit-revision-history (car choices)))
+         (rev (car (split-string choice))))
+    (unless (and rev (magit-rev-verify rev))
+      (user-error "No commit, branch or tag %s" choice))
+    rev))
+
 (defun +git--commit-to-change (verb)
   "The commit at point, else one asked for with VERB."
   (or (magit-commit-at-point)
-      (magit-read-branch-or-commit verb)))
+      (+git--read-commit verb)))
 
 (defun +git--head-p (commit)
   "Non-nil when COMMIT is HEAD."
