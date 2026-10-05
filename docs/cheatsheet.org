@@ -1073,17 +1073,17 @@ commit-msg hook in the config repository, refuses a subject that is not
 imperative, and there is no length limit.
 
 ** Branches
-| Key | What it does                                                         |
-|-----+----------------------------------------------------------------------|
-| ~b b~ | switch to a branch; a remote one gets a local tracking branch        |
-| ~b c~ | new branch from here, or from what you name, and switch to it        |
-| ~b n~ | new branch, stay where you are                                       |
-| ~b s~ | spin off: the commits you made on the wrong branch move to a new one |
-| ~b m~ | rename; ~b k~ delete; ~b x~ reset a branch to a commit                   |
-| ~b C~ | configure: the upstream, the push target, the description            |
-| ~b o~ | an orphan branch, no history                                         |
-| ~yr~  | every branch and tag with its state, the refs buffer                 |
-| ~Y~   | cherries: what this branch has that the upstream does not            |
+| Key | What it does                                                                |
+|-----+-----------------------------------------------------------------------------|
+| ~b b~ | switch to a branch or a commit; ~b l~ a remote branch, tracked by a local one |
+| ~b c~ | new branch from here, or from what you name, and switch to it               |
+| ~b n~ | new branch, stay where you are                                              |
+| ~b s~ | spin off: the commits you made on the wrong branch move to a new one        |
+| ~b m~ | rename; ~b x~ delete; ~b X~ reset a branch to a commit                          |
+| ~b C~ | configure: the upstream, the push target, the description                   |
+| ~b o~ | an orphan branch, no history                                                |
+| ~yr~  | every branch and tag with its state, the refs buffer                        |
+| ~Y~   | cherries: what this branch has that the upstream does not                   |
 
 ~SPC g n~ adds what magit has no key for: a new branch from main fetched
 first, wherever you are (~m~), delete every branch already merged (~K~),
@@ -1127,19 +1127,19 @@ In the sequence buffer ~r i~ opens, one line per commit, oldest first:
 | ~ZZ~      | run it; ~ZQ~ change your mind                      |
 
 ** Cherry-pick, revert, reset
-| Key | What it does                                                    |
-|-----+-----------------------------------------------------------------|
-| ~A A~ | cherry-pick the commit under point onto this branch             |
-| ~A a~ | apply it without committing; ~A h~ harvest it from another branch |
-| ~A d~ | donate it to another branch; ~A n~ spin it out onto a new one     |
-| ~A A~ | while one is in progress: continue; ~A s~ skip, ~A a~ abort         |
-| ~_ V~ | revert the commit under point with a new commit; ~-~ without      |
-| ~O s~ | reset soft: HEAD moves, the changes stay staged                 |
-| ~O m~ | reset mixed: the changes stay, unstaged                         |
-| ~O h~ | reset hard: the changes go, the WIP log still has them          |
-| ~O k~ | reset keep: like hard, but uncommitted work is kept             |
-| ~o~   | reset this branch to the commit under point, mixed              |
-| ~O f~ | reset one file to a revision                                    |
+| Key | What it does                                                           |
+|-----+------------------------------------------------------------------------|
+| ~A A~ | cherry-pick the commit under point onto this branch                    |
+| ~A a~ | apply it without committing; ~A h~ harvest it from another branch        |
+| ~A d~ | donate it to another branch; ~A n~ spin it out onto a new one            |
+| ~A A~ | while one is in progress: continue; ~A s~ skip, ~A a~ abort                |
+| ~_ _~ | revert the commit under point with a new commit; ~_ v~ in the files only |
+| ~O s~ | reset soft: HEAD moves, the changes stay staged                        |
+| ~O m~ | reset mixed: the changes stay, unstaged                                |
+| ~O h~ | reset hard: the changes go, the WIP log still has them                 |
+| ~O k~ | reset keep: like hard, but uncommitted work is kept                    |
+| ~o~   | reset this branch to the commit under point, mixed                     |
+| ~O f~ | reset one file to a revision                                           |
 
 ** Stashes
 | Key | What it does                                              |
@@ -1224,7 +1224,7 @@ is the branch you rebase onto and lower your own commit being replayed.
 | ~p o~ | push another branch; ~p t~ every tag; ~p T~ one tag                           |
 | ~-f~  | force with lease: the rewrite after a rebase, refused if the remote moved |
 | ~-u~  | set the upstream while pushing a new branch                               |
-| ~M a~ | add a remote; ~M r~ rename; ~M k~ remove; ~M C~ its URL and refspecs            |
+| ~M a~ | add a remote; ~M r~ rename; ~M x~ remove; ~M C~ its URL and refspecs            |
 
 After ~r i~ or an amend on a branch that was pushed, ~p -f u~ is the
 push: with lease, so a colleague's commit on the same branch stops it.
@@ -1318,7 +1318,9 @@ conflicts are marked up rather than raw text.
 ~]n~ goes on to the next file that conflicts once this one is clean, so a
 whole rebase is walked with ~]n~ and one letter at each stop. When every
 conflict in a file is settled, stage it the ordinary way, ~SPC g g~ then
-~s~, and carry on with ~SPC g r~ for the rebase.
+~s~, and carry on: ~r r~ for a rebase, ~m m~ for a merge, ~A A~ for a
+cherry-pick, or ~C~ in ~SPC g h~. ~SPC g r~ is not it: that reverts the
+change under the cursor.
 
 * Code and language servers
 ** Change the code
