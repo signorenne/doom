@@ -1308,7 +1308,8 @@ Any commit changed after it was pushed has to be pushed with force, see
 Author and committer date both change. For an older commit the ones
 after it are replayed: their author dates stay, their committer dates
 become today, as any rebase does. ~c d~ changes the last commit's date
-the same way, from magit.
+the same way, from magit. Several in a row: ~r t~, see "Squash, reorder
+or drop several commits".
 
 *** Change the author of a commit
 1. In the log, cursor on the commit; or pick it.
@@ -1369,6 +1370,10 @@ rebase onto and lower your own commit.
    fixup (this message dropped), ~r~ reword, ~e~ stop to edit, ~d~ drop;
    ~M-k M-j~ move a line up, down.
 4. ~ZZ~ runs it; ~ZQ~ leaves everything as it was.
+5. Reordered commits keep their dates, now out of order. ~r t~, cursor on
+   the first of them, ~C-c C-c~, a date, ~RET~: it gets that date and each
+   one after it the next minute. The date offered ends the run at the
+   present minute; ~M-p~ offers one right after the commit before.
 
 *** Split a commit in two
 1. In the log, cursor on it; ~SPC g h s~: its changes come back unstaged.
