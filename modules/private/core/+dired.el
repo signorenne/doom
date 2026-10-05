@@ -59,6 +59,10 @@ the next session by savehist.")
 
   ;; The same preview beside the minibuffer while choosing a file.
   (dirvish-peek-mode 1)
+  ;; A text file is previewed from its first 64 KB, not the first
+  ;; megabyte: a 900 KB header was parsed whole by tree-sitter at every
+  ;; preview, two thirds of a second, for the fifty lines on show.
+  (setq dirvish-preview-large-file-threshold (* 64 1024))
   ;; Only once the cursor stops. Its delay is its own, not
   ;; `dirvish-input-debounce', and was none: holding a key down opened a
   ;; file every quarter second, 20 to 150 ms each, and the list stuttered
