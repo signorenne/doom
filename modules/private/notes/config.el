@@ -237,9 +237,66 @@ of the screen at every key.")
           (puthash mode (major-mode-remap mode) +notes--block-modes))
     mode))
 
-
 (advice-add 'markdown-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
 (advice-add 'org-src-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
+
+;; markdown-mode tries every * and _ of a line as the start of an italic
+;; or a bold, and asks for each whether it sits in inline code by matching
+;; the code of its text block again from the start: a paragraph that is
+;; one long line full of names like espressif__mdns took a quarter of a
+;; second at every line moved, a first screen of it thirteen. The code of
+;; a block is matched once for each state of the buffer.
+(defvar-local +notes--md-code nil
+  "(TICK START END . SPANS): the inline code of the text block START to
+END, each span the match data `markdown-match-code' leaves.")
+
+(declare-function markdown-match-code "markdown-mode")
+(declare-function markdown-beginning-of-text-block "markdown-mode")
+(declare-function markdown-end-of-text-block "markdown-mode")
+
+(defun +notes--md-code-spans (start end)
+  "The inline code spans of the text block START to END."
+  (let ((tick (buffer-chars-modified-tick)))
+    (if (and (eql (nth 0 +notes--md-code) tick)
+             (eql (nth 1 +notes--md-code) start)
+             (eql (nth 2 +notes--md-code) end))
+        (nthcdr 3 +notes--md-code)
+      (let (spans)
+        (save-excursion
+          (save-match-data
+            (goto-char start)
+            (while (markdown-match-code end)
+              (push (match-data t) spans))))
+        (setq spans (nreverse spans)
+              +notes--md-code (cons tick (cons start (cons end spans))))
+        spans))))
+
+(defun +notes--md-inline-code-at-pos-a (_fn pos &optional from)
+  "Whether POS is in inline code, as `markdown-inline-code-at-pos' says,
+from the spans of its block found once; the match data set the same."
+  (save-excursion
+    (let* ((known (and (eql (nth 0 +notes--md-code) (buffer-chars-modified-tick))
+                       (<= (nth 1 +notes--md-code) pos)
+                       (< pos (nth 2 +notes--md-code))))
+           ;; The block's bounds, found again only for a position outside
+           ;; the one known: finding them was most of what was left.
+           (end (if known (nth 2 +notes--md-code)
+                  (goto-char pos) (markdown-end-of-text-block) (point)))
+           (start (if known (nth 1 +notes--md-code)
+                    (goto-char pos) (markdown-beginning-of-text-block) (point)))
+           ;; The first span from FROM that does not end before POS, as
+           ;; the loop it replaces stops at.
+           (span (seq-find (lambda (data)
+                             (and (or (null from) (>= (car data) (1- from)))
+                                  (>= (nth 1 data) pos)))
+                           (+notes--md-code-spans start end))))
+      (when span
+        (set-match-data span)
+        (let ((group (if (eq (char-after (match-beginning 0)) ?`) 0 1)))
+          (and (<= (match-beginning group) pos)
+               (> (match-end 0) pos)))))))
+
+(advice-add 'markdown-inline-code-at-pos :around #'+notes--md-inline-code-at-pos-a)
 
 
 ;;

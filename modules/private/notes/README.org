@@ -175,6 +175,13 @@ whole block is still coloured again at each key: that is how
 markdown-mode does it. The mode for a language is looked up once a
 session, not for every block at every key.
 
+markdown-mode tries every =*= and =_= of a line as the start of an
+italic or a bold, and asked for each whether it sat in inline code by
+matching the code of its paragraph again from the start. A file of long
+lines full of names like =espressif__mdns= took up to two seconds a line
+moved; the code of a paragraph is found once now, 64 s to 1.3 s for the
+whole of a 160 KB file, with the same colours.
+
 Org looks for LaTeX to colour from the text being coloured on to the
 next fragment, which in a file with few is its end, at every key and for
 every heading on screen. It stops now ~+notes-latex-reach~ characters
