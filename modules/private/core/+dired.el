@@ -164,7 +164,9 @@ really under once that is known.")
   ;; blocks. Emacs does the enlarging instead, at draw time and smoothly,
   ;; which is also why the cache stays small.
   (defvar +core-image-thumb-width 1000
-    "How wide a thumbnail is made, whatever the pane happens to be.
+    "The square a thumbnail is made to fit, whatever the pane happens to be.
+A square, not a width: a tall picture made 1000 wide was 2667 high, and
+drawing it took a fifth of a second.
 Emacs scales it to the pane as it draws, so one thumbnail serves every
 width: resizing the frame redraws from the file already there instead of
 making another, and the preview does not blink while ImageMagick runs.")
@@ -219,21 +221,28 @@ the pane, the way an image viewer does."
       (let* ((w (dirvish-media--img-size preview-window))
              (h (dirvish-media--img-size preview-window 'height))
              (alpha (member ext +core-image-alpha-exts))
-             (cache (dirvish--img-thumb-name file +core-image-thumb-width
+             (box (format "%dx%d" +core-image-thumb-width +core-image-thumb-width))
+             (cache (dirvish--img-thumb-name file (concat "box" box)
                                               (if alpha ".png" ".jpg"))))
         (cond
-         ((file-exists-p cache)
+         ;; A thumbnail older than its picture is made again: the name is
+         ;; the path's, so an edited picture kept showing as it was.
+         ((and (file-exists-p cache) (not (file-newer-than-file-p file cache)))
           `(img . ,(+core--preview-image cache w h)))
-         ((member ext '("ico" "svg"))
+         ((equal ext "ico")
           `(img . ,(+core--preview-image file w h)))
+         ;; An SVG was drawn here, in Emacs, while the cursor waited: 2.4 s
+         ;; for a 2.7 MB one, then another second to show it. vips draws
+         ;; it in its own process, once, the pane waiting instead; and to
+         ;; fill the thumbnail's square whatever its own size, a drawing
+         ;; not being made of pixels to sample.
          ((executable-find dirvish-vipsthumbnail-program)
           `(cache . (,dirvish-vipsthumbnail-program ,file
-                     "--size" ,(format "%sx>" +core-image-thumb-width)
+                     "--size" ,(if (member ext '("svg" "svgz")) box (concat box ">"))
                      "--output" ,cache)))
          ((executable-find dirvish-magick-program)
           `(cache . (,dirvish-magick-program ,(concat (expand-file-name file) "[0]")
-                     "-auto-orient" "-thumbnail"
-                     ,(format "%sx>" +core-image-thumb-width)
+                     "-auto-orient" "-thumbnail" ,(concat box ">")
                      ,@(unless alpha '("-quality" "85"))
                      ,cache)))))))
 
