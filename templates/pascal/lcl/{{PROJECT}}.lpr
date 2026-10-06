@@ -10,10 +10,10 @@ uses
   Forms,
   MainForm;
 
-{ No {$R *.res} here: Lazarus writes that resource file only once the
-  project has an icon or version information, and a project that has
-  neither would not build without it. Give it either in the IDE and
-  Lazarus puts the directive back itself. }
+// No resource directive here: Lazarus writes the .res file it names
+// only once the project has an icon or version information, and with
+// the directive a project that has neither does not build. Give it
+// either in the IDE and Lazarus puts the directive back itself.
 
 begin
   RequireDerivedFormResource := True;
