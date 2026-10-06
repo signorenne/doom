@@ -97,6 +97,11 @@ elsewhere.
 Until pasls is there, a Pascal buffer has opascal-mode's own navigation,
 imenu and the project's files, and no completion.
 
+In a Lazarus project pasls is also handed the LCL's include directory:
+it reads the project's unit paths from the =.lpi= but not the include
+path of the LCL's own package, and failed on =lcl_defines.inc= in every
+LCL unit, so nothing of the LCL, =TForm= among it, could be looked up.
+
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
   and ~+pascal-run-args~: the per-project settings, all directory local.

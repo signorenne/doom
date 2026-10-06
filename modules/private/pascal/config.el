@@ -104,12 +104,26 @@ openSUSE puts them under lib64; another distribution will not.")
 ;; pasls is Lazarus's CodeTools behind an LSP server. It is not
 ;; packaged: the README says how to build it, and until it is there a
 ;; Pascal buffer has the mode's own navigation and nothing more.
+(declare-function +pascal-project-kind "pascal")
+
+;; pasls reads a Lazarus project's unit paths from its .lpi, but not the
+;; include path the LCL's own package sets: every LCL unit it opened then
+;; failed on lcl_defines.inc, and nothing of the LCL, TForm among it,
+;; could be looked up. A Lazarus project hands it that directory.
+(defun +pascal--pasls-contact (&rest _)
+  "How to start pasls for this buffer's project, or nil without pasls."
+  (when-let* ((pasls (executable-find "pasls")))
+    (let ((include (and +pascal-lazarus-dir
+                        (eq (ignore-errors (+pascal-project-kind)) 'lazarus)
+                        (expand-file-name "lcl/include" +pascal-lazarus-dir))))
+      (if (and include (file-directory-p include))
+          (list pasls :initializationOptions
+                (list :fpcOptions (vector (concat "-Fi" include))))
+        (list pasls)))))
+
 (when (modulep! :tools lsp)
   (after! eglot
-    (add-to-list 'eglot-server-programs
-                 `(opascal-mode . ,(lambda (&rest _)
-                                     (when-let* ((pasls (executable-find "pasls")))
-                                       (list pasls)))))
+    (add-to-list 'eglot-server-programs '(opascal-mode . +pascal--pasls-contact))
     ;; CodeTools needs to know where the compiler and its sources are,
     ;; the way the Lazarus IDE tells it. pasls reads the environment for
     ;; this, so the variables are set rather than only sent.
