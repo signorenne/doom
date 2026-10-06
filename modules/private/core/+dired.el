@@ -68,6 +68,9 @@ the next session by savehist.")
   ;; file every quarter second, 20 to 150 ms each, and the list stuttered
   ;; under it. Held, it now opens none; stopped, the file shows 0.15 s on.
   (setq dirvish-peek-key '(:debounce 0.15 any))
+  ;; The file manager's own pane the same: j held through a directory
+  ;; opened a file every quarter second as it went.
+  (setq dirvish-input-debounce 0.15)
 
   ;; Dirvish kills the buffers it previewed with, and Doom records a jump
   ;; whenever a file buffer that is in a window is killed, so opening a

@@ -107,7 +107,8 @@ without a key. ~dirvish-peek-mode~ shows the same preview beside the
 minibuffer while choosing a file, the first entry as soon as the prompt
 opens: dirvish skipped a file it had previewed last, which the first
 entry of ~SPC SPC~ usually was. It waits for the cursor to stop, 0.15 s:
-holding a key through the list opens nothing on the way. A file can be
+holding a key through the list opens nothing on the way; the file
+manager's own pane waits the same. A file can be
 dragged out of a listing into another program, a right click is a menu,
 wdired edits permission bits, and renaming a tracked file is a git mv.
 
