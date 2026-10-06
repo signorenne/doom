@@ -1775,11 +1775,11 @@ header are already there.
 Type the key and press =TAB=.
 
 ** New projects
-| Key       | What it creates                                  |
-|-----------+--------------------------------------------------|
-| ~SPC k n~   | a project from a template, PlatformIO among them |
-| ~SPC k N~   | a Qt Quick application in MVVM                   |
-| ~SPC k p n~ | a PlatformIO project                             |
+| Key       | What it creates                                                       |
+|-----------+-----------------------------------------------------------------------|
+| ~SPC k n~   | a new project: the language, then its template, PlatformIO among them |
+| ~SPC k N~   | a Qt Quick application in MVVM                                        |
+| ~SPC k p n~ | a PlatformIO project                                                  |
 
 | Template   | What you get                                          |
 |------------+-------------------------------------------------------|
@@ -1827,7 +1827,7 @@ and C++ use: they ask what kind of project this is, so in a tree with a
 | ~SPC k r~   | run, ~SPC k R~ with arguments asked now             |
 | ~SPC k d~   | debug with codelldb                               |
 | ~SPC k m~   | the panel: what is set, and everything cargo does |
-| ~SPC k n~   | a new project: bin, lib or workspace              |
+| ~SPC k n~   | a new project: Rust, then bin, lib or workspace   |
 | ~SPC m k c~ | check, the fast one                               |
 | ~SPC m k l~ | clippy, ~SPC m k L~ fixing what it is sure of       |
 | ~SPC m k u~ | the test the cursor is in, alone                  |
@@ -1865,18 +1865,18 @@ in the IDE, because its compiler is Windows software and this machine
 has none.
 
 ** Building and running
-| Key       | What it does                                  |
-|-----------+-----------------------------------------------|
-| ~F7~        | build: lazbuild for a =.lpi=, fpc for a =.lpr=     |
-| ~F6~        | run it                                        |
-| ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug with gdb     |
-| ~SPC k m~   | the panel: what is set, and everything else   |
-| ~SPC k n~   | a new project: console or lcl                 |
-| ~SPC m k x~ | build, then run                               |
+| Key       | What it does                                     |
+|-----------+--------------------------------------------------|
+| ~F7~        | build: lazbuild for a =.lpi=, fpc for a =.lpr=       |
+| ~F6~        | run it                                           |
+| ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug with gdb       |
+| ~SPC k m~   | the panel: what is set, and everything else      |
+| ~SPC k n~   | a new project: Pascal, then console or lcl       |
+| ~SPC m k x~ | build, then run                                  |
 | ~SPC m k y~ | the Lazarus build mode, ~SPC m k w~ the widget set |
-| ~SPC m k s~ | which program, when the project holds several |
-| ~SPC m k C~ | clean                                         |
-| ~SPC m k I~ | what is installed, and what this project is   |
+| ~SPC m k s~ | which program, when the project holds several    |
+| ~SPC m k C~ | clean                                            |
+| ~SPC m k I~ | what is installed, and what this project is      |
 
 ** The files
 =.pas=, =.pp=, =.lpr=, =.dpr=, =.dpk= and =.inc= open in ~opascal-mode~,
@@ -1909,7 +1909,7 @@ package manager, read from its lock file.
 | ~SPC k b~   | build, ~SPC k t~ test                             |
 | ~SPC k d~   | debug node, or Electron's main process          |
 | ~SPC k m~   | the panel: everything the project can be told   |
-| ~SPC k n~   | a new project                                   |
+| ~SPC k n~   | a new project: Web, then its template           |
 | ~SPC m k v~ | preview what the build made                     |
 | ~SPC m k s~ | any script out of package.json                  |
 | ~SPC m k l~ | lint, ~SPC m k c~ the types without building      |

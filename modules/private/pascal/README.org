@@ -37,7 +37,7 @@ The module adds:
 | ~F6~        | run it                                        |
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug             |
 | ~SPC k m~   | the panel: what is set, and everything else   |
-| ~SPC k n~   | a new project: console or lcl                 |
+| ~SPC k n~   | a new project: Pascal, then console or lcl    |
 | ~SPC m k x~ | build, then run                               |
 | ~SPC m k y~ | the Lazarus build mode                        |
 | ~SPC m k w~ | the widget set: gtk2, gtk3, qt5, qt6          |
@@ -47,7 +47,7 @@ The module adds:
 | ~SPC m k v~ | open the .lpi, .lpr or .dproj                 |
 
 * Starting a project
-~SPC k n~ then =console= or =lcl=.
+~SPC k n~, from anywhere, then Pascal, then =console= or =lcl=.
 
 - *console* is a Free Pascal program: the =.lpr= wires it together, the
   logic sits in =src/=, and =fpc -Mobjfpc -Sh -gw3 -FEbin= builds it into

@@ -55,7 +55,8 @@
                         :run #'+rust/run
                         :debug #'+rust/debug
                         :panel #'+rust/menu
-                        :new #'+rust/new-project)
+                        :new #'+rust/new-project
+                        :label "Rust")
 
 
 ;;

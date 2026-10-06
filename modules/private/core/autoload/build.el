@@ -15,14 +15,14 @@
 Each entry is (NAME TEST . PLIST).  TEST is called with no arguments,
 in the project root, and answers non-nil when that module owns the
 project.  PLIST holds a command under any of :run, :debug, :panel and
-:new, and :fallback when the module answers for whatever nothing else
-claimed. cpp does, since a directory with a Makefile and a binary in
+:new, :label, what SPC k n calls its projects, and :fallback when the
+module answers for whatever nothing else claimed. cpp does, since a directory with a Makefile and a binary in
 it is its business as much as a CMake tree is.")
 
 ;;;###autoload
 (defun +core-register-builder (name test &rest plist)
   "Say that module NAME runs, debugs, shows or starts a project TEST claims.
-PLIST takes :run, :debug, :panel, :new and :fallback; see
+PLIST takes :run, :debug, :panel, :new, :label and :fallback; see
 `+core-builders'.  Registering again under the same NAME replaces the
 entry, so a reload does not stack them."
   (setq +core-builders
@@ -75,8 +75,28 @@ registered; the fallback answers only when none of them does."
   (interactive)
   (+core--build-call :panel "This kind of project has no panel"))
 
+;; A new project was asked of the module owning the project you were in,
+;; so it offered that language alone: from the dashboard or a C++ tree
+;; only C++ templates, and a Pascal, Rust or web project could not be
+;; started at all. The language is asked first now, yours offered first.
 ;;;###autoload
 (defun +core/new-project ()
-  "Start a project, of any kind a module here can make."
+  "Start a project, of any kind a module here can make: the language,
+then its templates."
   (interactive)
-  (+core--build-call :new "Nothing here knows how to start a project"))
+  (let* ((makers (seq-filter (lambda (e) (plist-get (cddr e) :new)) +core-builders))
+         (label (lambda (e) (or (plist-get (cddr e) :label)
+                                (capitalize (symbol-name (car e))))))
+         (here (or (seq-find #'+core--builder-claims-p
+                             (seq-remove (lambda (e) (plist-get (cddr e) :fallback)) makers))
+                   (seq-find (lambda (e) (plist-get (cddr e) :fallback)) makers)))
+         (makers (if here (cons here (remq here makers)) makers))
+         (entry (if (cdr makers)
+                    (let ((choice (completing-read
+                                   "New project in: " (mapcar label makers)
+                                   nil t nil nil (funcall label (car makers)))))
+                      (seq-find (lambda (e) (equal (funcall label e) choice)) makers))
+                  (car makers))))
+    (unless entry
+      (user-error "Nothing here knows how to start a project"))
+    (call-interactively (plist-get (cddr entry) :new))))

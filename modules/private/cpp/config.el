@@ -374,6 +374,7 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
                         :debug #'+cpp/debug
                         :panel #'+cpp/cmake-menu
                         :new #'+cpp/new-project
+                        :label "C and C++, PlatformIO"
                         :fallback t)
 
 

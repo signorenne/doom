@@ -95,7 +95,8 @@ openSUSE puts them under lib64; another distribution will not.")
                         :run #'+pascal/run
                         :debug #'+pascal/debug
                         :panel #'+pascal/menu
-                        :new #'+pascal/new-project)
+                        :new #'+pascal/new-project
+                        :label "Pascal: Free Pascal and Lazarus")
 
 
 ;;

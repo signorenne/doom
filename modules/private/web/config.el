@@ -156,7 +156,8 @@
                         :run #'+web/dev
                         :debug #'+web/debug
                         :panel #'+web/menu
-                        :new #'+web/new-project)
+                        :new #'+web/new-project
+                        :label "Web")
 
 
 ;;
