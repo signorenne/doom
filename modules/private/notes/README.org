@@ -172,7 +172,8 @@ markdown took a tree-sitter mode only when that mode was in
 Typing in a 230 line C block of the blog takes 22 ms instead of 35, in a
 10 line one 6 ms, in prose 4; half the blocks there are five lines. The
 whole block is still coloured again at each key: that is how
-markdown-mode does it.
+markdown-mode does it. The mode for a language is looked up once a
+session, not for every block at every key.
 
 Org looks for LaTeX to colour from the text being coloured on to the
 next fragment, which in a file with few is its end, at every key and for

@@ -225,9 +225,18 @@ startup from loading it; .git is a file in a worktree."
 ;; remapping, which opens a .c file in c-ts-mode, is in neither: a C block
 ;; went to cc-mode, 25 ms for 230 lines at every key. A block gets the mode
 ;; a file of its language opens in.
+(defvar +notes--block-modes (make-hash-table :test #'eq)
+  "Each mode a block has named, to the mode a file of its language opens
+in: asking Emacs is 150 microseconds, and it was asked for every block
+of the screen at every key.")
+
 (defun +notes--block-mode-remap-a (mode)
   "MODE as a file of its language would open in, tree-sitter's if so."
-  (if (and mode (fboundp 'major-mode-remap)) (major-mode-remap mode) mode))
+  (if (and mode (fboundp 'major-mode-remap))
+      (or (gethash mode +notes--block-modes)
+          (puthash mode (major-mode-remap mode) +notes--block-modes))
+    mode))
+
 
 (advice-add 'markdown-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
 (advice-add 'org-src-get-lang-mode :filter-return #'+notes--block-mode-remap-a)
