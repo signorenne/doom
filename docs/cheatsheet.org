@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-29 11:41
+#+generated: 2026-09-29 15:19
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3320,7 +3320,7 @@ bound.
 - ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
 - ~+core/latency-show~ (~SPC h D~) :: Show what the watch wrote down.
 - ~+core/new-project~ (~SPC k n~) :: Start a project, of any kind a module
-  here can make.
+  here can make: the language, then its templates.
 - ~+core/open-externally~ (~SPC f x~) :: Open FILE with the desktop's
   default application.
 - ~+core/project-todos~ (~SPC p t~) :: Search the project for TODO, FIXME,
