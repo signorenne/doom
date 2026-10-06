@@ -593,7 +593,7 @@ out of the way while a key is held."
 ;; its right half twice for it, the first time only to measure it for the
 ;; space that pushes it to the edge; and eglot's piece of it is a cl-loop
 ;; quoted into `mode-line-misc-info', a macro the interpreter expands
-;; afresh each time. Formatted once, with eglot's loop expanded once, the
+;; afresh each time. Formatted once, with eglot's loop compiled once, the
 ;; modeline takes 70 microseconds instead of 200 and half the garbage.
 (defun +ui--modeline-right ()
   "The right half of the modeline, pushed against the window's edge."
@@ -611,16 +611,33 @@ out of the way while a key is held."
       (setq mode-line-format
             '("" +modeline-bar +modeline-format-left (:eval (+ui--modeline-right)))))))
 
+(defun +ui--compiled (form)
+  "FORM as a compiled function of no arguments."
+  (let ((byte-compile-warnings nil))
+    (byte-compile `(lambda () ,form))))
+
+;; And the pieces that loop formats, the server's errors, its pending
+;; requests, its progress, are quoted code too: when-let* and cl-loop
+;; expanded at every redisplay, and a closure made over a hash each
+;; time, which expands its body again. While a server works that is at
+;; every message it sends, and it was a tenth of a whole file's inlay
+;; hints being fetched. Each is compiled once.
 (after! eglot
+  (dolist (piece eglot-mode-line-format)
+    (when (and (symbolp piece) (boundp piece))
+      (pcase (symbol-value piece)
+        ;; Compiled already, by a reload before this one.
+        (`(:eval (funcall ,(pred compiled-function-p))))
+        (`(:eval ,form)
+         (set piece `(:eval (funcall ,(+ui--compiled form))))))))
   (setq mode-line-misc-info
         (mapcar (lambda (entry)
                   (pcase entry
                     ;; Only eglot's own loop: after a reload the entry is
                     ;; this one already, and would come to call itself.
                     (`(eglot--managed-mode (,open (:eval ,(and form `(cl-loop . ,_))) ,close))
-                     (defalias '+ui--eglot-mode-line
-                       (eval `(lambda () ,(macroexpand-all form)) t)
-                       "eglot's piece of the modeline: its own code, expanded once.")
+                     (defalias '+ui--eglot-mode-line (+ui--compiled form)
+                       "eglot's piece of the modeline: its own code, compiled once.")
                      `(eglot--managed-mode (,open (:eval (+ui--eglot-mode-line)) ,close)))
                     (_ entry)))
                 mode-line-misc-info)))

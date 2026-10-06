@@ -129,8 +129,10 @@ kept it from telling, and one made the modeline dear:
   as soon as the key is let go. A held line move costs 1.4 ms, not 3.9.
 - Doom's light modeline formatted its right half twice at every key, once
   only to measure it, and eglot's piece of it is a quoted cl-loop the
-  interpreter expanded afresh each time. Once, and expanded once, it
-  takes 70 microseconds instead of 200.
+  interpreter expanded afresh each time. Once, and compiled once, it
+  takes 70 microseconds instead of 200. The pieces that loop formats,
+  the server's errors, pending requests and progress, are quoted code
+  as well, compiled once too.
 
 Measured with the key held, in a C++ file with clangd attached: a line
 move 20.6 ms to 10.2, a move along the line 20.6 to 2.7, a keystroke 24.8
