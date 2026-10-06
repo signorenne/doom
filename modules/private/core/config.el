@@ -100,6 +100,13 @@
 ;; And the keys that read a buffer, once nothing is listening.
 (add-hook 'compilation-finish-functions #'+core--run-finished-h)
 
+;; A program's output was a plain window beside the source, not one of
+;; Doom's popups like the build's: the cursor stayed in the source and ESC
+;; left it standing. It opens as a popup on the right now, the cursor in
+;; it, and ESC or q closes it, from it or from the source. The buffer is
+;; kept, and what still runs in it, a dev server, goes on running.
+(set-popup-rule! "^\\*run[ :]" :side 'right :size 0.45 :select t :quit t :ttl nil)
+
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
 ;; org-protocol, $EDITOR). Daemons already run one.
 (add-hook! 'doom-after-init-hook
