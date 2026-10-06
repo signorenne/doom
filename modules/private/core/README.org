@@ -400,6 +400,12 @@ What keeps it that way:
   the symbol at point, where it walked every sibling in the syntax tree
   to find the expression around it. And no server formats as you type:
   that was a round trip waited for at every newline.
+- Inlay hints, the parameter names before the arguments, are asked for
+  the whole file when they come on, in blocks of 300 lines from the one
+  on screen, and for the screen again after an edit; eglot asked a
+  screen at a time as each part was first drawn, so scrolling sent a
+  request at every page and the text moved as the names came in. ~SPC k
+  l i~ twice asks for the whole file again.
 - The header line finds the function around the window's top in the
   syntax tree, as many steps as the tree is deep, not by moving to the
   start and end of a defun past every sibling.

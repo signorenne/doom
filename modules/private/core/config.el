@@ -295,6 +295,98 @@ pause again for the one after."
               (funcall eglot-move-to-linepos-function col)))
           (if marker (copy-marker (point-marker)) (point)))))))
 
+;; Inlay hints, the parameter names before each argument, were asked for
+;; a screen at a time, as each part of the file was first drawn: every
+;; new screen scrolled to sent a request, and the text moved as the names
+;; came back. They are asked for the whole file when the hints come on,
+;; with the file or after SPC k l i; after an edit for what is on screen,
+;; as eglot does; and not for scrolling alone. The whole file goes in
+;; blocks, the one on screen first: painted at once, eleven thousand
+;; hints held Emacs a quarter of a second. Not again at each save: that
+;; many hints made again are garbage enough for a collection each time.
+(declare-function eglot--update-hints-1 "eglot")
+(declare-function eglot-current-server "eglot")
+(declare-function jsonrpc-connection-ready-p "jsonrpc")
+(defvar eglot-inlay-hints-mode)
+
+(defvar +core-inlay-block-lines 300
+  "How many lines of inlay hints are asked for at a time for a whole file.")
+
+(defvar-local +core--inlay-tick nil
+  "The buffer's modification tick when its inlay hints were last asked for.")
+
+(defvar-local +core--inlay-round 0
+  "Counts the whole-file requests, so a newer one stops an older's blocks.")
+
+(defvar +core--inlay-all nil
+  "Non-nil while a block of a whole-file request is asked for.")
+
+(defun +core--inlay-send (buffer round lines)
+  "Ask for BUFFER's inlay hints block by block, from the first line of
+each in LINES, while ROUND is the latest whole-file request. A block
+waits while the server has edits to receive."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (and lines (= round +core--inlay-round)
+                 (bound-and-true-p eglot-inlay-hints-mode))
+        (let ((server (eglot-current-server)))
+          (cond
+           ((null server))
+           ((not (jsonrpc-connection-ready-p server 'eglot--update-hints-1))
+            (run-at-time 0.2 nil #'+core--inlay-send buffer round lines))
+           (t
+            (save-excursion
+              (save-restriction
+                (widen)
+                (goto-char (point-min))
+                (forward-line (car lines))
+                (let ((from (point)))
+                  (forward-line +core-inlay-block-lines)
+                  (let ((+core--inlay-all t))
+                    (eglot--update-hints-1 from (point))))))
+            (run-at-time 0.03 nil #'+core--inlay-send buffer round (cdr lines)))))))))
+
+(defun +core--inlay-hints-all ()
+  "Ask for the inlay hints of the whole buffer, the block on screen first,
+then outward; after this command, since eglot turns the hints on before
+it tells the server the file is open."
+  (let* ((round (setq +core--inlay-round (1+ +core--inlay-round)))
+         (total (count-lines (point-min) (point-max)))
+         (here (/ (1- (line-number-at-pos
+                       (if-let* ((window (get-buffer-window)))
+                           (window-start window)
+                         (point))))
+                  +core-inlay-block-lines))
+         (blocks (number-sequence 0 (/ total +core-inlay-block-lines))))
+    (run-at-time 0 nil #'+core--inlay-send (current-buffer) round
+                 (mapcar (lambda (block) (* block +core-inlay-block-lines))
+                         (sort blocks :key (lambda (block) (abs (- block here))))))))
+
+(after! eglot
+  (defadvice! +core--inlay-hints-on-edit-a (fn from to)
+    "Ask for the hints of FROM to TO when the buffer changed since they
+were last asked for, or for a block of the whole buffer; scrolling finds
+them there. After an edit the whole screen is asked for: eglot's region
+starts after the line just typed, drawn already, and scrolling no longer
+asks again for it."
+    :around #'eglot--update-hints-1
+    (cond
+     (+core--inlay-all
+      (setq +core--inlay-tick (buffer-chars-modified-tick))
+      (funcall fn from to))
+     ((not (eql +core--inlay-tick (buffer-chars-modified-tick)))
+      (setq +core--inlay-tick (buffer-chars-modified-tick))
+      (let ((window (get-buffer-window)))
+        (funcall fn
+                 (if window (min from (window-start window)) from)
+                 (if window (max to (window-end window t)) to))))))
+
+  (add-hook! 'eglot-inlay-hints-mode-hook
+    (defun +core--inlay-hints-whole-h ()
+      "Ask for the whole buffer's hints as they come on."
+      (when eglot-inlay-hints-mode
+        (+core--inlay-hints-all)))))
+
 ;; Its "a fix is available" mark asks the server about the expression
 ;; around point, and tree-sitter finds that expression by walking its
 ;; siblings: most of a pause's time in a large array or object literal.
