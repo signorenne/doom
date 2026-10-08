@@ -1,15 +1,46 @@
 #+title: {{PROJECT}}
 
-A Free Pascal console program.
+A Free Pascal command line program: it reads its options, then greets.
 
-* Building
-| Command                                  | What it does        |
-|------------------------------------------+---------------------|
-| =fpc -Mobjfpc -Sh -gw3 -FEbin {{PROJECT}}.lpr= | build into =bin/=     |
-| =bin/{{PROJECT}}=                              | run it              |
+* Build, run, test
+#+begin_src sh
+mkdir -p bin lib
+fpc -Mobjfpc -Sh -gw3 -FEbin -FUlib -Fusrc {{PROJECT}}.lpr
+bin/{{PROJECT}} --name ada --count 2 --verbose
+fpc -Mobjfpc -Sh -gw3 -FEbin -FUlib -Fusrc -Futests tests/tests.lpr
+bin/tests
+#+end_src
 
-In Emacs: =F7= builds, =F6= runs, =SPC k m= is the panel, =SPC k d= debugs.
+In Emacs: =F7= builds, =F6= runs, =SPC k t= tests, =SPC k m= is the panel
+(=R= runs once with arguments, =a= keeps them), =F5= debugs.
+
+* The command line
+| Option          | What it does                       |
+|-----------------+------------------------------------|
+| =-n=, =--name NAME= | who to greet, =world= when not given |
+| =-c=, =--count N=   | how many times, from 1 up          |
+| =-v=, =--verbose=   | say what is being done, on stderr  |
+| =-h=, =--help=      | the usage                          |
+| =--version=       | the version                        |
+
+A value follows its option or joins it: =--name ada= or =--name=ada=.
+An option it does not know, one missing its value, or a count that is
+not a number prints the reason and the usage to stderr and exits 2,
+the code a command line mistake gets; anything else that fails exits 1.
 
 * Layout
-- ={{PROJECT}}.lpr= wires the program together.
-- =src/{{PROJECT}}_core.pas= holds the logic.
+| Path             | Holds                                        |
+|------------------+----------------------------------------------|
+| ={{PROJECT}}.lpr=  | the wiring: read the options, greet, report  |
+| =src/options.pas=  | the options and how the command line is read |
+| =src/greeter.pas=  | what the program does with them              |
+| =tests/tests.lpr=  | the fpcunit runner                           |
+| =tests/*tests.pas= | one test case per unit                       |
+| =bin/=, =lib/=       | the program and the compiled units, not kept |
+
+The parser takes an array of strings, not =ParamStr=, so the tests hand
+it any command line they like. A new option is a field in =TOptions=, a
+branch in =ParseOptions=, a line in =UsageText= and a test.
+
+* Style
+[[file:AGENTS.md][AGENTS.md]] states the rules.

@@ -49,9 +49,11 @@ The module adds:
 * Starting a project
 ~SPC k n~, from anywhere, then Pascal, then =console= or =lcl=.
 
-- *console* is a Free Pascal program: the =.lpr= wires it together, the
-  logic sits in =src/=, and =fpc -Mobjfpc -Sh -gw3 -FEbin= builds it into
-  =bin/=.
+- *console* is a Free Pascal command line program, the shape of the C++
+  =app=: =src/options.pas= reads =--name=, =--count=, =--verbose=, =--help=
+  and =--version= into a record, =src/greeter.pas= acts on it, the =.lpr=
+  wires them and sets the exit code, and =tests/= holds fpcunit tests
+  for both. =fpc -Mobjfpc -Sh -gw3 -FEbin= builds it into =bin/=.
 - *lcl* is a Lazarus application with a window: the =.lpi= Lazarus reads,
   the =.lpr=, and a form as =mainform.pas= beside =mainform.lfm=. It carries
   a Debug and a Release build mode, range and overflow checks on in
