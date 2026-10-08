@@ -3,6 +3,7 @@
 ;; Run and debug one of the project's executables, where the kit runs,
 ;; with the arguments and working directory Qt Creator uses.
 
+(declare-function +core/debug "build")
 (declare-function +cpp--save-project-buffers "project")
 (declare-function +cpp--kind-p "project")
 (defvar +cpp-modes)
@@ -311,9 +312,11 @@ else asks for the program and uses gdb."
 (defun +cpp/debug-or-continue ()
   "Continue the running debug session, or start one."
   (interactive)
+  ;; Started as SPC k d is: it was the C++ debug, which in a Pascal,
+  ;; Rust or web project asked for a program instead of knowing it.
   (if (+cpp--dape-stopped-p)
       (call-interactively #'dape-continue)
-    (+cpp/debug)))
+    (call-interactively #'+core/debug)))
 
 ;;;###autoload
 (defun +cpp/install-codelldb ()
