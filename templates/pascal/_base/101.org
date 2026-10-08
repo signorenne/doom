@@ -1,0 +1,554 @@
+#+title: Pascal 101
+#+startup: overview
+#+options: toc:nil
+
+This came with {{PROJECT}}: what Pascal is, how a program becomes a
+binary, and the loop you work in, for someone who has not written any.
+Read it top to bottom once; after that the headings are the index, and
+the keys are collected at the end. It is yours to keep notes in, or to
+delete.
+
+* The short version
+1. =F7= builds, =F6= runs.
+2. =SPC k m R= runs it once with arguments: =--name ada --count 2= in a
+   =console= project.
+3. =SPC k t= builds the tests and runs them.
+4. =F9= on a line, =F5= to stop there.
+5. A build that fails: =RET= on the error opens the line, =]e= goes to
+   the next one.
+
+=SPC k n= starts the next project: Pascal, then =console= for a command
+line program or =lcl= for one with a window.
+
+The rest says what each of those does, and what the language under
+them looks like.
+
+* The names you will meet
+Pascal is Niklaus Wirth's language from 1970, made to teach programming
+cleanly. Borland's Turbo Pascal made it fast and popular in the eighties,
+and Delphi added classes to it in 1995: that version, with classes and
+exceptions, is Object Pascal, and it is what you write here.
+
+| Name        | What it is                                               |
+|-------------+----------------------------------------------------------|
+| Free Pascal | the compiler, =fpc=: free, and speaks several dialects     |
+| Lazarus     | an IDE on top of Free Pascal, with a library for windows |
+| LCL         | that library: forms, buttons, menus, on GTK or Qt        |
+| =lazbuild=    | builds a Lazarus project without opening the IDE         |
+| =lazarus-ide= | the IDE itself, to draw forms                            |
+| Delphi      | the commercial one, on Windows; read here, not built     |
+| pasls       | the language server: completion and go-to in Emacs       |
+| gdb         | the debugger behind =F5=                                   |
+
+And the files:
+
+| File | What it holds                                           |
+|------+---------------------------------------------------------|
+| =.lpr= | the program: where it starts                            |
+| =.pas= | a unit: one piece of the program, used by the others    |
+| =.inc= | a fragment pasted into a unit with ={$I file.inc}=        |
+| =.lpi= | a Lazarus project: its settings, in XML                 |
+| =.lfm= | a Lazarus form: the window's layout, written by the IDE |
+| =.ppu= | a compiled unit's interface, in =lib/=                    |
+| =.o=   | a compiled unit's machine code, in =lib/=                 |
+
+Free Pascal speaks several dialects and calls them modes. Every file
+here starts with ={$MODE OBJFPC}{$H+}=: Object Pascal, the dialect Free
+Pascal and Delphi agree on, with long strings. Leave that line alone.
+
+* A program and its units
+A program is one =.lpr= file and any number of units. The program file
+says which units it needs and runs; the units hold the code.
+
+#+begin_src opascal
+program {{PROJECT}};  { the program's name }
+
+{$MODE OBJFPC}{$H+}       { the dialect, and long strings }
+
+uses
+  SysUtils,               { units this file needs, from the library }
+  Options, Greeter;       { and from src/ }
+
+var
+  Parsed: TOptions;       { variables are declared before begin }
+
+begin                     { the program starts here }
+  Parsed := ParseOptions(['--name', 'ada']);
+  WriteLn(Greetings(Parsed)[0]);
+end.                      { a full stop ends the program }
+#+end_src
+
+A unit has two halves:
+
+#+begin_src opascal
+unit Greeter;
+
+{$MODE OBJFPC}{$H+}
+
+interface                 { what other units can see }
+
+uses
+  Options;
+
+function Greetings(const AOptions: TOptions): TStringArray;
+
+implementation            { how it does it; nobody else sees this }
+
+function Greetings(const AOptions: TOptions): TStringArray;
+begin
+  ...
+end;
+
+end.
+#+end_src
+
+The =interface= is the promise, the =implementation= the code that keeps
+it. If you know C, it is the header and the source in one file, and
+the compiler writes the header itself. Anything declared only in the
+=implementation= is private to the unit.
+
+Three rules that save an afternoon:
+
+- The unit's name is its file's name: =unit Greeter= lives in
+  =greeter.pas=. On Linux the file name is lower case.
+- =uses= is how one file sees another. =Identifier not found= almost
+  always means a unit is missing from it.
+- A unit in the =interface= section's =uses= is one the promise needs,
+  a type in a signature. The rest go in a =uses= under =implementation=.
+
+A unit may end with =initialization= and =finalization= sections, code
+run once when the program starts and once when it ends. The tests use
+the first to register themselves.
+
+* How it compiles
+=F7= runs this, from the project root:
+
+#+begin_src sh
+mkdir -p bin lib && fpc -Mobjfpc -Sh -gw3 -vb -FEbin -FUlib -Fusrc -Fu. -Fisrc {{PROJECT}}.lpr
+#+end_src
+
+What fpc does with it:
+
+1. It reads ={{PROJECT}}.lpr= and its =uses=.
+2. For each unit there, it looks for the source on the unit path,
+   =src/= and the root, and for the compiled unit in =lib/=.
+3. A unit with no compiled copy, or whose source is newer, is compiled:
+   =lib/greeter.ppu=, the interface, and =lib/greeter.o=, the code. A
+   unit whose interface changed makes the units using it compile again.
+4. Every =.o= is linked, with Free Pascal's own runtime library, into
+   one file: =bin/{{PROJECT}}=.
+
+There is no Makefile, because =uses= already is one: the compiler
+follows it from the program file to every unit, and one command builds
+the whole thing. The binary is statically linked, so that one file is
+the program: copy it to another 64-bit Linux machine and it runs.
+
+| Flag        | What it does                                                  |
+|-------------+---------------------------------------------------------------|
+| =-Mobjfpc=    | Object Pascal, the same as ={$MODE OBJFPC}= in each file        |
+| =-Sh=         | =string= is a long string, not Turbo Pascal's 255 characters    |
+| =-gw3=        | debug information gdb can read                                |
+| =-vb=         | full paths in the messages, so the build buffer can open them |
+| =-FEbin=      | the program goes in =bin/=                                      |
+| =-FUlib=      | the compiled units go in =lib/=                                 |
+| =-Fusrc -Fu.= | units are looked for in =src/= and the root                     |
+| =-Fisrc=      | so are the files ={$I}= includes                                |
+| =-Futests=    | and, for =SPC k t= only, in =tests/=                              |
+
+Some you will want one day, by hand in a terminal:
+
+| Flag  | What it does                                     |
+|-------+--------------------------------------------------|
+| =-B=    | compile everything again, whatever =lib/= holds    |
+| =-O2=   | optimise, for a release                          |
+| =-gl=   | line numbers in the trace a crash prints         |
+| =-gh=   | at exit, list the memory created and never freed |
+| =-vwnh= | show warnings, notes and hints, not only errors  |
+
+Two switches go at the top of a file, under the mode line, and are
+worth having on while you learn: ={$R+}= checks every array index and
+={$Q+}= every sum that could overflow. Without them an index past the
+end reads memory that is not yours and carries on; with them the
+program stops and says =Range check error=.
+
+* Reading an error
+Every message is a place and a kind:
+
+#+begin_example
+/home/you/{{PROJECT}}/src/greeter.pas(23,3) Error: Identifier not found "Nam"
+#+end_example
+
+File, line 23, column 3. The kinds, most serious first: =Fatal= stops
+now, =Error= stops at the end of the unit, =Warning= builds but look at
+it, =Note= and =Hint= are for your information. The last lines, =There
+were 1 errors= and =Compilation aborted=, are a count, not a new
+problem.
+
+In the build buffer =RET= on an error opens its line, =]e= and =[e= move
+to the next and the previous from anywhere, and =ESC= closes the buffer.
+
+The ones you will see in your first week, word for word:
+
+| The compiler says                                            | It means                                                |
+|--------------------------------------------------------------+---------------------------------------------------------|
+| Identifier not found "Foo"                                   | a typo, or the unit that declares it is not in =uses=     |
+| Syntax error, ";" expected but "ELSE" found                  | a =;= before =else=, see below                              |
+| Illegal expression                                           | ~=~ where ~:=~ was meant: ~=~ compares, ~:=~ assigns            |
+| Incompatible types: got "Constant String" expected "LongInt" | the wrong type: convert it, =IntToStr= or =StrToInt=        |
+| Can't find unit Missing used by Greeter                      | misspelled, or not in =src/=: the unit is its file's name |
+| Syntax error, "." expected but "end of file" found           | the program's last =end= needs its full stop              |
+| Duplicate identifier "X"                                     | two things with one name, a variable and a unit say     |
+| Variable "X" does not seem to be initialized                 | a warning: it is read before it is given a value        |
+
+* The language in one sitting
+** Values
+#+begin_src opascal
+var
+  Count: Integer;          { whole number, 32 bits; Int64 for more }
+  Price: Double;           { a number with a fraction }
+  Done: Boolean;           { True or False }
+  Letter: Char;            { one character }
+  Name: string;            { text, any length }
+const
+  Greeting = 'Hello';      { strings are in single quotes }
+begin
+  Count := 3;              { := gives a value }
+  if Count = 3 then        { = compares it }
+    Done := True;
+end;
+#+end_src
+
+Variables live in a =var= block before the =begin=, never in the middle
+of the code. Pascal does not care about case: =Count=, =count= and =COUNT=
+are the same name. Comments are ={ like this }=, =(* like this *)= or =//=
+to the end of the line; ={$...}= is a comment the compiler reads.
+
+** Blocks, and the semicolon
+=begin= ... =end= groups statements into one. The semicolon /separates/
+statements; it does not end them. That is the whole reason for the
+most common error there is:
+
+#+begin_src opascal
+if Count > 0 then
+  WriteLn('some')          { no ; here: the if is not over yet }
+else
+  WriteLn('none');
+
+if Count > 0 then
+begin
+  WriteLn('some');
+  WriteLn('really');
+end                        { nor here }
+else
+  WriteLn('none');
+#+end_src
+
+** Loops and choices
+#+begin_src opascal
+for Index := 1 to 10 do WriteLn(Index);          { also downto }
+for Line in Lines do WriteLn(Line);               { every item }
+while Count > 0 do Dec(Count);
+repeat Inc(Count) until Count = 10;               { runs at least once }
+
+case Count of
+  0: WriteLn('none');
+  1..9: WriteLn('a few');
+else
+  WriteLn('many');
+end;
+#+end_src
+
+=Break= leaves a loop, =Continue= goes to its next turn, =Exit= leaves
+the function.
+
+** Procedures and functions
+#+begin_src opascal
+procedure Shout(const AText: string);              { returns nothing }
+begin
+  WriteLn(UpperCase(AText));
+end;
+
+function Twice(AValue: Integer): Integer;          { returns a value }
+begin
+  Result := AValue * 2;                            { Result is what it returns }
+end;
+
+procedure Swap(var A, B: Integer);                 { var: changes the caller's }
+var
+  Kept: Integer;
+begin
+  Kept := A; A := B; B := Kept;
+end;
+#+end_src
+
+A parameter is copied unless it says otherwise: =const= is read only
+and not copied, which is what you want for strings and records; =var=
+lets the function change the caller's variable; =out= is =var= for a
+value that is only written. =Exit(Value)= returns early.
+
+** Text and lists
+#+begin_src opascal
+Name := 'ada';
+Name[1]                    { 'a': a string's first character is 1 }
+Length(Name)               { 3 }
+Copy(Name, 2, 2)           { 'da' }
+Pos('d', Name)             { 2, and 0 when it is not there }
+Format('%s is %d', [Name, 36])
+IntToStr(36)  StrToInt('36')  TryStrToInt('x', Count)
+
+var Lines: TStringArray;   { array of string, any length }
+SetLength(Lines, 2);       { two items, Lines[0] and Lines[1] }
+Length(Lines)  High(Lines) { 2 and 1: the last index }
+#+end_src
+
+Strings count from 1, arrays from 0: the one inconsistency to learn by
+heart. =SysUtils= holds the string functions; =StrUtils= has more.
+
+** Records and classes
+A record is a value, a class is an object you create and must free:
+
+#+begin_src opascal
+type
+  TPoint = record          { a value: assigning copies it }
+    X, Y: Integer;
+  end;
+
+  TCounter = class         { an object: variables hold a reference }
+  private
+    FCount: Integer;
+  public
+    procedure Add;
+    property Count: Integer read FCount;
+  end;
+
+procedure TCounter.Add;
+begin
+  Inc(FCount);
+end;
+
+var
+  Counter: TCounter;
+begin
+  Counter := TCounter.Create;
+  try
+    Counter.Add;
+    WriteLn(Counter.Count);
+  finally
+    Counter.Free;          { always, even if something failed }
+  end;
+end;
+#+end_src
+
+Strings, dynamic arrays and records made of those free themselves.
+Objects of a class do not: every =Create= needs its =Free=, and the
+=try= ... =finally= is how you make sure. =-gh= above tells you which
+ones you forgot.
+
+The house names: =TName= for types and classes, =EName= for exceptions,
+=FName= for a class's own fields, =AName= for parameters.
+
+** When something fails
+#+begin_src opascal
+try
+  Count := StrToInt(Text);
+except
+  on E: EConvertError do
+    WriteLn('not a number: ', E.Message);
+end;
+
+raise EOptionError.Create(oeMissingValue, '--name needs a value');
+#+end_src
+
+A function that cannot do its job raises an exception rather than
+returning an error code; the caller that knows what to do about it
+catches it, and nobody else. =except= catches, =finally= cleans up
+whatever happened; they are two different =try= blocks.
+
+** The library
+| Unit                 | What is in it                                      |
+|----------------------+----------------------------------------------------|
+| =SysUtils=             | strings, numbers, files, dates, =Format=, exceptions |
+| =Classes=              | =TStringList=, streams, the base of every component  |
+| =StrUtils=             | more on strings: split, replace, pad               |
+| =Math=                 | =Max=, =Min=, =Power=, rounding                          |
+| =DateUtils=            | date arithmetic                                    |
+| =Generics.Collections= | =TList<T>=, =TDictionary<K, V>=                        |
+| =fpjson=, =jsonparser=   | JSON                                               |
+
+=K= on any name shows what the server knows about it, and =gd= goes to
+its source, the library's included.
+
+* A console project, file by file
+What =SPC k n= makes for a =console= project; an =lcl= one is under /A
+program with a window/.
+
+| File             | What it does                                                    |
+|------------------+-----------------------------------------------------------------|
+| the =.lpr=         | named after the project: the command line in, the exit code out |
+| =src/options.pas=  | =TOptions=, and =ParseOptions= turning arguments into one           |
+| =src/greeter.pas=  | =Greetings=: what the program does with the options               |
+| =tests/tests.lpr=  | the program that runs the tests                                 |
+| =tests/*tests.pas= | one test case per unit                                          |
+| =AGENTS.md=        | the house rules                                                 |
+
+The path through it: =ParamStr= gives the arguments, the program hands
+them to =ParseOptions=, which fills a =TOptions= or raises =EOptionError=;
+=Greetings= turns the options into lines; the program prints them.
+
+=ParseOptions= takes an array of strings rather than reading =ParamStr=
+itself, and that is the design decision worth copying: the tests can
+hand it any command line they like, and nothing in =src/= knows it runs
+in a terminal.
+
+The exit code says how it went: 0 fine, 2 the command line was wrong,
+1 something failed while running. A script calling the program reads
+that, so keep the rule when you add to it.
+
+* Your first change: an option
+In a =console= project, add =--shout=, which greets in capitals. Four places, the same four
+for any option.
+
+In =src/options.pas=, a field in =TOptions=:
+#+begin_src opascal
+    Shout: Boolean;       { Greet in capitals. }
+#+end_src
+
+its default in =DefaultOptions=:
+#+begin_src opascal
+  Result.Shout := False;
+#+end_src
+
+a branch in =ParseOptions=, before the =--version= one:
+#+begin_src opascal
+    else if (Option = '-s') or (Option = '--shout') then
+    begin
+      NoValue;
+      Result.Shout := True;
+    end
+#+end_src
+
+and a line in =UsageText=:
+#+begin_src opascal
+    '  -s, --shout       greet in capitals' + LineEnding +
+#+end_src
+
+In =src/greeter.pas=, use it: the loop body becomes a block.
+#+begin_src opascal
+  for Index := 0 to AOptions.Count - 1 do
+  begin
+    Result[Index] := 'Hello, ' + Name;
+    if AOptions.Shout then
+      Result[Index] := UpperCase(Result[Index]);
+  end;
+#+end_src
+
+In =tests/greetertests.pas=, a test: its name under =published=,
+#+begin_src opascal
+    procedure ShoutGreetsInCapitals;
+#+end_src
+
+and its body above =initialization=:
+#+begin_src opascal
+procedure TGreeterTest.ShoutGreetsInCapitals;
+begin
+  AssertEquals('HELLO, ADA', Greetings(ParseOptions(['--name', 'ada', '--shout']))[0]);
+end;
+#+end_src
+
+Then =F7=, =SPC k m R= with =--name ada --shout=, and =SPC k t=.
+
+* Tests
+The tests are fpcunit, which ships with Free Pascal. A test case is a
+class inheriting =TTestCase=; every method under =published= is a test.
+
+#+begin_src opascal
+AssertEquals(Expected, Actual);    { expected first: the message says which is which }
+AssertTrue(Condition);
+Fail('why');
+#+end_src
+
+A unit of tests registers its case in its =initialization= section, and
+=tests/tests.lpr= lists the unit in its =uses=: a new test unit needs
+that line, or its tests never run.
+
+=SPC k t= builds =tests/tests.lpr= with the same flags as the program,
+so the units =F7= compiled are not compiled again, then runs
+=bin/tests=. When one fails it prints its name, what was expected and
+what came, and the build buffer ends in =exited abnormally with code 1=.
+
+* Debugging
+=F9= puts a breakpoint on the line, =F5= starts the program under gdb.
+It stops first at the program's =begin=; =F5= again runs on to your
+breakpoint.
+
+| Key   | What it does               |
+|-------+----------------------------|
+| =F9=    | breakpoint on this line    |
+| =F5=    | start, or continue         |
+| =F10=   | the next line              |
+| =F11=   | into the call on this line |
+| =S-F11= | out of this function       |
+| =S-F5=  | stop                       |
+
+The variables of where it stopped are in the windows on the right, and
+their values show at the end of each line as you step. The program is
+run with the arguments =SPC k m a= keeps, and it debugs what =F7= last
+built: build first after a change.
+
+* The editor's help
+With pasls installed (the module README says how), a Pascal buffer has:
+
+| Key     | What it does                              |
+|---------+-------------------------------------------|
+| =gd=      | go to the definition, the library's too   |
+| =K=       | what this is: its declaration and comment |
+| =SPC c D= | every place it is used                    |
+| =SPC c r= | rename it everywhere                      |
+| =SPC c x= | the problems in this project              |
+
+Completion comes up as you type, and the parameters show while you
+write a call. pasls does not format code; =TAB= and ~=~ indent it.
+
+* A program with a window
+=SPC k n=, Pascal, =lcl=, makes a Lazarus application: a =.lpi=, the
+=.lpr=, and a form as =mainform.pas= beside =mainform.lfm=. =F7= builds it
+with lazbuild, =F6= opens its window.
+
+The form's layout is drawn, not typed: =lazarus-ide {{PROJECT}}.lpi= opens the
+project in the IDE, where you place buttons and double-click one to get
+its =OnClick= handler written into =mainform.pas=. The code in it you can
+write in Emacs; Lazarus notices the file changed and offers to reload.
+
+=SPC k m y= switches between the Debug and Release build modes. Debug
+has range and overflow checks on, the ={$R+}= and ={$Q+}= above.
+
+* Where to read more
+- The Free Pascal documentation, the language reference and the
+  library's: https://www.freepascal.org/docs.html
+- The wiki, for how-tos and Lazarus: https://wiki.freepascal.org
+- /Modern Object Pascal Introduction for Programmers/, free, short, and
+  the best next read after this one: https://castle-engine.io/modern_pascal
+
+* Every key in this guide
+| Key       | What it does                                  |
+|-----------+-----------------------------------------------|
+| =SPC k n=   | new project: Pascal, then =console= or =lcl=      |
+| =F7=        | build, =SPC k b=                                |
+| =F6=        | run, =SPC k r=                                  |
+| =SPC k t=   | build and run the tests                       |
+| =SPC k m=   | the panel: what the build is set to, and more |
+| =SPC k m R= | run once with arguments                       |
+| =SPC k m a= | keep arguments, for =F6= and =F5=                 |
+| =SPC k m x= | build, then run                               |
+| =SPC k m y= | the Lazarus build mode                        |
+| =RET=       | in the build buffer, open the error's line    |
+| =]e= =[e=     | the next error, the previous                  |
+| =F9=        | toggle a breakpoint                           |
+| =F5=        | debug or continue, =SPC k d=; =S-F5= stops        |
+| =F10= =F11=   | the next line, into the call; =S-F11= out       |
+| =gd= =K=      | definition, what it is                        |
+| =SPC c D=   | where it is used, =SPC c r= rename              |
+| =SPC m k I= | what is installed, and what this project is   |
+
+The cheat sheet has the rest, on =SPC h /= or =F12=. =SPC h j= asks the
+butler in your own words.
