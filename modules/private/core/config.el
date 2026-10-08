@@ -107,6 +107,12 @@
 ;; kept, and what still runs in it, a dev server, goes on running.
 (set-popup-rule! "^\\*run[ :]" :side 'right :size 0.45 :select t :quit t :ttl nil)
 
+;; And a build, a test or a check this config starts is named for what it
+;; is, *build* or *clippy*, which none of Doom's popup rules knows: it
+;; stood as a plain window that ESC left, where *compilation* goes. It
+;; goes the same way now, at the bottom, the cursor left where it was.
+(set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
+
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
 ;; org-protocol, $EDITOR). Daemons already run one.
 (add-hook! 'doom-after-init-hook

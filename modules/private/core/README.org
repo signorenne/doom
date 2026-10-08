@@ -25,6 +25,11 @@ Every transient menu closes with =q= or =ESC=, through transient's own
 module, applied here as soon as transient loads. A menu that had a command
 on =q= shows it on =Q= instead; transient does that substitution itself.
 
+A build, a test or a check opens at the bottom and leaves the cursor
+where it was; a program's output, =F6= or =SPC k r= in any language, opens
+on the right with the cursor in it. =ESC= closes either, from it or from
+the source, and so does =q= once nothing is running in it.
+
 * Keybindings
 | Key         | Command                     | What it does                      |
 |-------------+-----------------------------+-----------------------------------|

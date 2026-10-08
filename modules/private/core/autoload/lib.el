@@ -85,6 +85,16 @@ point, else the visited file.  Signals a `user-error' when there is none."
 can tell the buffers it started from grep, rmsbolt and the rest.")
 (put '+core-compile-name 'permanent-local t) ; a re-run keeps it
 
+(defvar +core--compiling nil
+  "The name `+core-compile' is starting a command under, while it shows
+its buffer: how its popup rules tell its windows from anything else.")
+
+;;;###autoload
+(defun +core--compile-popup-p (_name &rest _)
+  "Non-nil while `+core-compile' shows a build's, a test's or a check's
+buffer; a program's output has a rule of its own."
+  (and +core--compiling (not (string-prefix-p "run" +core--compiling))))
+
 ;;;###autoload
 (defun +core-compile (name command &optional dir comint)
   "Run shell COMMAND in a compilation buffer named *NAME* from DIR.
@@ -94,6 +104,7 @@ Returns the buffer, which carries NAME in `+core-compile-name'."
                              (expand-file-name (or dir (+core-project-root 'noerror)))))
          (compilation-buffer-name-function
           (lambda (_mode) (format "*%s*" name)))
+         (+core--compiling name)
          (buffer (compile command comint)))
     (with-current-buffer buffer
       (setq +core-compile-name name))
