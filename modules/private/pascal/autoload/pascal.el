@@ -127,13 +127,15 @@ Free Pascal's to build."
 (defun +pascal--fpc-args ()
   "The fpc flags this project is set to, plus the ones every build wants.
 -Mobjfpc is Object Pascal rather than Turbo Pascal, -Sh long strings,
--gw3 the DWARF a debugger can read, -FE and -FU put the binary and the
-units somewhere other than beside the sources, and -Fu says where the
-project\='s own units are."
+-gw3 the DWARF a debugger can read, -vb full paths in the messages, -FE
+and -FU put the binary and the units somewhere other than beside the
+sources, and -Fu says where the project\='s own units are."
   (append
    ;; -Fu names where the units are: without src/ on it, fpc looks only
    ;; beside the program file and cannot find the project's own units.
-   '("-Mobjfpc" "-Sh" "-gw3" "-FEbin" "-FUlib" "-Fusrc" "-Fu." "-Fisrc")
+   ;; -vb: an error in src/greeter.pas said greeter.pas, which the build
+   ;; buffer looked for at the root and could not open.
+   '("-Mobjfpc" "-Sh" "-gw3" "-vb" "-FEbin" "-FUlib" "-Fusrc" "-Fu." "-Fisrc")
    (when +pascal-target
      (let ((parts (split-string +pascal-target "-")))
        (list (concat "-P" (car parts))

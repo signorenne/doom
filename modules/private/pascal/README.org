@@ -27,6 +27,9 @@ The module adds:
 - two projection types, so ~SPC k b~, ~SPC k r~ and, for a Free Pascal
   project with =tests/tests.lpr=, ~SPC k t~ work here as they do in a
   CMake tree,
+- fpc's =file(line,col) Error:= messages as jumps in the build buffer,
+  which none of Emacs's own patterns read: ~RET~ opens one, ~]e~ goes to
+  the next,
 - the panel on ~SPC k m~, and a new project on ~SPC k n~,
 - gdb through dape, reading the DWARF the build asks fpc for,
 - pasls when it is installed, through eglot.

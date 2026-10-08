@@ -88,6 +88,17 @@ openSUSE puts them under lib64; another distribution will not.")
                 (seq-remove (lambda (type) (memq (oref type name) '(lazarus fpc)))
                             projection-project-types))))
 
+;; fpc writes file(line,col) Error: text, which none of Emacs's own
+;; patterns reads: a build's errors were plain text, and RET on one or
+;; M-g n went nowhere. The closing "Fatal: There were 2 errors" names
+;; the file without its directory and is a count, not a place: it is
+;; information, which ]e passes over. lazbuild numbers them: (10026).
+(after! compile
+  (add-to-list 'compilation-error-regexp-alist-alist
+               '(fpc "^\\([^\t\n(]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?) \\(?:\\(Note:\\|Hint:\\|Fatal: \\(?:([0-9]+) \\)?There were\\)\\|Fatal:\\|Error:\\|\\(Warning:\\)\\)"
+                 1 2 3 (5 . 4)))
+  (add-to-list 'compilation-error-regexp-alist 'fpc))
+
 ;; SPC k r, SPC k d, SPC k m and SPC k n in a Pascal project are this
 ;; module's. A Delphi project is claimed too: the panel and the status
 ;; then say what can and cannot be done with it here, which is better
