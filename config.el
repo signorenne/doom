@@ -28,8 +28,9 @@
       doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
       doom-emoji-font (font-spec :family "Noto Color Emoji"))
 
-;; t, 'relative, 'visual or nil. SPC t l cycles it.
-(setq display-line-numbers-type t)
+;; No line numbers in any buffer: the modeline has the line and the
+;; count. SPC t l shows them in one buffer, then relative, then none.
+(setq display-line-numbers-type nil)
 
 
 ;;
