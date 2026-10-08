@@ -24,8 +24,9 @@ The module adds:
 - what a build depends on, which is the Lazarus build mode, the widget
   set, the target, which program when there is more than one and the
   run arguments, kept in =.dir-locals.el= and carried by every command,
-- two projection types, so ~SPC k b~ and ~SPC k r~ work here as they do in
-  a CMake tree,
+- two projection types, so ~SPC k b~, ~SPC k r~ and, for a Free Pascal
+  project with =tests/tests.lpr=, ~SPC k t~ work here as they do in a
+  CMake tree,
 - the panel on ~SPC k m~, and a new project on ~SPC k n~,
 - gdb through dape, reading the DWARF the build asks fpc for,
 - pasls when it is installed, through eglot.
@@ -36,6 +37,7 @@ The module adds:
 | ~F7~        | build, with what the project is set to        |
 | ~F6~        | run it                                        |
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug             |
+| ~SPC k t~   | build the tests and run them                  |
 | ~SPC k m~   | the panel: what is set, and everything else   |
 | ~SPC k n~   | a new project: Pascal, then console or lcl    |
 | ~SPC m k x~ | build, then run                               |

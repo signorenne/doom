@@ -78,6 +78,7 @@ openSUSE puts them under lib64; another distribution will not.")
      :predicate (lambda () (eq (+pascal-project-kind default-directory) 'fpc))
      :build #'+pascal-build-command
      :run   #'+pascal/run
+     :test  #'+pascal/test
      :src-dir "src")
     "projection type for Free Pascal projects, built with fpc.")
 

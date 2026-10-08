@@ -234,6 +234,36 @@ project\='s own units are."
                                        " ")))))
 
 ;;;###autoload
+(defun +pascal-tests-file ()
+  "The tests' program, tests/tests.lpr, or nil when the project has none."
+  (let ((file (expand-file-name "tests/tests.lpr" (+pascal-root))))
+    (and (file-exists-p file) file)))
+
+;;;###autoload
+(defun +pascal-test-command ()
+  "What `SPC k t' runs in a Free Pascal project: build the tests, run them.
+They are built with the program's own flags, so the units the build
+already compiled into lib/ are not compiled again."
+  (unless (eq (+pascal-project-kind) 'fpc)
+    (user-error "SPC k t builds a Free Pascal project's tests; build a Lazarus one's in the IDE"))
+  (let ((tests (or (+pascal-tests-file)
+                   (user-error "No tests here: SPC k t builds tests/tests.lpr"))))
+    (concat "mkdir -p bin lib && "
+            (string-join (append '("fpc") (+pascal--fpc-args) '("-Futests")
+                                 (list (shell-quote-argument tests)))
+                         " ")
+            " && "
+            (shell-quote-argument
+             (expand-file-name (concat "bin/" (file-name-base tests)) (+pascal-root)))
+            " --all --format=plain")))
+
+;;;###autoload
+(defun +pascal/test ()
+  "Build the tests and run them all."
+  (interactive)
+  (+pascal--compile "test" (+pascal-test-command)))
+
+;;;###autoload
 (defun +pascal/clean ()
   "Remove what the build made."
   (interactive)
