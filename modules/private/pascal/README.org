@@ -68,6 +68,13 @@ The module adds:
 Both get =.editorconfig=, =.gitignore= and =AGENTS.md=, the rules an agent
 reads before touching the repo.
 
+The project's name is the =.lpr='s and so the binary's, and it is
+written into the program's =program= line, so it has to be a name Pascal
+takes there: not a keyword (=label=, =file=, =set=), and not a unit the
+template has or uses (=options=, =sysutils=, =tests=), which would be a
+duplicate identifier. ~SPC k n~ says so before it makes anything. The
+units themselves are named for what they hold, not for the project.
+
 * What has to be installed
 #+begin_src sh
 sudo zypper in fpc fpc-src lazarus

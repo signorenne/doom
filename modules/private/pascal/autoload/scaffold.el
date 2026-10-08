@@ -18,6 +18,39 @@ A directory starting with _ is the overlay every kind is built on."
             (seq-filter #'file-directory-p
                         (directory-files +pascal-templates-dir t "^[^._]")))))
 
+(defconst +pascal--reserved-words
+  '("and" "array" "as" "asm" "begin" "case" "class" "const" "constructor"
+    "destructor" "dispinterface" "div" "do" "downto" "else" "end" "except"
+    "exports" "file" "finalization" "finally" "for" "function" "goto" "if"
+    "implementation" "in" "inherited" "initialization" "interface" "is"
+    "label" "library" "mod" "nil" "not" "object" "of" "operator" "or"
+    "packed" "procedure" "program" "property" "raise" "record" "repeat"
+    "resourcestring" "set" "shl" "shr" "string" "then" "threadvar" "to"
+    "try" "type" "unit" "until" "uses" "var" "while" "with" "xor")
+  "The words fpc -Mobjfpc will not take as a program's name.")
+
+(defun +pascal--names-taken (kind)
+  "The names a KIND project cannot have: the units its template's files
+are and use.  A program called like one of them is a duplicate identifier."
+  (let ((names nil)
+        (case-fold-search t))
+    (dolist (part (list "_base" kind))
+      (let ((dir (file-name-concat +pascal-templates-dir part)))
+        (when (file-directory-p dir)
+          (dolist (file (directory-files-recursively dir "\\.\\(pas\\|pp\\|lpr\\)\\'"))
+            (push (downcase (file-name-base file)) names)
+            (with-temp-buffer
+              (insert-file-contents file)
+              ;; Comments out first: {$IFDEF UNIX}cthreads,{$ENDIF}.
+              (while (re-search-forward "{[^}]*}\\|//.*" nil t)
+                (replace-match " "))
+              (goto-char (point-min))
+              (while (re-search-forward "\\_<uses\\_>\\([^;]*\\);" nil t)
+                (dolist (unit (split-string (match-string 1) "," t "[ \t\n]+"))
+                  ;; Options in 'src/options.pas' is the unit Options.
+                  (push (downcase (car (split-string unit "[ \t\n]+" t))) names))))))))
+    (delete "{{project}}" (delete-dups names))))
+
 ;;;###autoload
 (defun +pascal/new-project (kind dir name)
   "Start Pascal project NAME of KIND in DIR, and open it.
@@ -28,6 +61,11 @@ application with a window."
                     (user-error "No templates in %s" +pascal-templates-dir))))
      (cons (completing-read "Kind: " kinds nil t nil nil (car kinds))
            (+core-read-new-project))))
+  (cond ((member name +pascal--reserved-words)
+         (user-error "%s is a Pascal keyword: a program cannot be called that" name))
+        ((member name (+pascal--names-taken kind))
+         (user-error "The %s template has a unit called %s already: pick another name"
+                     kind name)))
   (when (and (file-exists-p dir) (directory-files dir nil "^[^.]"))
     (unless (y-or-n-p (format "%s is not empty.  Continue? " dir))
       (user-error "Aborted")))
