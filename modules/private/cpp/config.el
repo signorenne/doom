@@ -657,8 +657,11 @@ function, so `c-ts-mode-set-style' installs them."
       :desc "Debug on the device"     "k D" #'+cpp/debug-on-device
       :desc "Attach to a gdb server"  "k j" #'+cpp/debug-remote)
 
+;; F6 runs the project whatever its language, as SPC k r does: it was the
+;; C++ run, which in a Pascal or Rust project went round by projection
+;; and found nothing in a directory without version control.
 (map! :g "<f5>"  #'+cpp/debug-or-continue
-      :g "<f6>"  #'+cpp/run
+      :g "<f6>"  #'+core/run
       :g "<S-f6>" #'+cpp/build-and-run
       :g "<f7>"  #'projection-commands-build-project
       :g "<f8>"  #'projection-commands-configure-project
