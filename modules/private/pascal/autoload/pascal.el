@@ -8,6 +8,8 @@
 (declare-function +core-project-root "lib")
 (declare-function +core-dir-locals-set "lib")
 (declare-function +core-compile "lib")
+(declare-function dape "dape")
+(declare-function dape--config-eval "dape")
 
 
 ;;
@@ -282,12 +284,21 @@ already compiled into lib/ are not compiled again."
 
 ;;;###autoload
 (defun +pascal/debug ()
-  "Debug what this project builds, with gdb."
+  "Debug what this project builds, with gdb, given the run arguments."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
+  (require 'dape)
   (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
-    (funcall #'dape (list 'gdb-pascal :program program :cwd (+pascal-root)))))
+    ;; dape takes the configuration itself, not its name: handed
+    ;; (gdb-pascal :program ...) it read every key as a value, found no
+    ;; command, and no session started.
+    (dape (dape--config-eval
+           'gdb-pascal
+           (list :program program
+                 :cwd (+pascal-root)
+                 :args (vconcat (split-string-shell-command
+                                 (or +pascal-run-args ""))))))))
 
 ;;;###autoload
 (defun +pascal/open-project-file ()

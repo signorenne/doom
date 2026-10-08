@@ -31,7 +31,8 @@ The module adds:
   which none of Emacs's own patterns read: ~RET~ opens one, ~]e~ goes to
   the next,
 - the panel on ~SPC k m~, and a new project on ~SPC k n~,
-- gdb through dape, reading the DWARF the build asks fpc for,
+- gdb through dape, reading the DWARF the build asks fpc for, and
+  given the run arguments,
 - pasls when it is installed, through eglot.
 
 * The keys
