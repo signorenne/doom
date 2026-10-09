@@ -813,6 +813,20 @@ what the session has done."
                (replace-regexp-in-string "[\u2018\u2019]" "'")
                (replace-regexp-in-string "[\u201C\u201D]" "\"")))
 
+(defun +docs--kit-rows (map prefix)
+  "(KEYS . DESCRIPTION) for every command in the SPC k keymap MAP, KEYS
+after PREFIX; a kit map keeps each description in the map itself."
+  (let (rows)
+    (map-keymap
+     (lambda (event def)
+       (let ((keys (concat prefix (if prefix " " "") (key-description (vector event)))))
+         (when (and (consp def) (stringp (car def)))
+           (if (keymapp (cdr def))
+               (setq rows (append (+docs--kit-rows (cdr def) keys) rows))
+             (push (cons keys (car def)) rows)))))
+     map)
+    rows))
+
 (defun +docs--leader-tables ()
   "One org table of leader bindings per prefix."
   (let ((groups nil) (top nil))
@@ -838,6 +852,14 @@ what the session has done."
             (insert (format "| ~SPC %s %s~ | %s |\n" prefix
                             (+docs--org-escape (car binding))
                             (+docs--org-escape (cdr binding)))))))
+      ;; SPC k opens the keys of the project's kind: one table each.
+      (pcase-dolist (`(,where . ,map) (and (fboundp '+core-kit-maps) (+core-kit-maps)))
+        (insert (format "\n** SPC k: %s\n| Key | What it does |\n|-----+--------------|\n"
+                        (+docs--org-escape where)))
+        (dolist (row (sort (+docs--kit-rows map nil) :key #'car :lessp #'string<))
+          (insert (format "| ~SPC k %s~ | %s |\n"
+                          (+docs--org-escape (car row))
+                          (+docs--org-escape (cdr row))))))
       ;; Aligned here, so what goes into the file is what a reader sees
       ;; and a regeneration compares like with like.
       (let ((org-inhibit-startup t) (org-mode-hook nil))
@@ -882,6 +904,12 @@ so dired's and C++'s keys are found from anywhere."
                            (replace-regexp-in-string "\\`M-SPC " "SPC "))))
     (or (when-let* ((key (where-is-internal command (list doom-leader-map) t)))
           (concat doom-leader-key " " (describe key)))
+        ;; SPC k opens the keymap of the project's kind; its commands are
+        ;; found in those maps, not under the leader itself.
+        (when-let* ((key (seq-some (lambda (map) (where-is-internal command (list map) t))
+                                   (and (fboundp '+core-kit-maps)
+                                        (mapcar #'cdr (+core-kit-maps))))))
+          (concat doom-leader-key " k " (describe key)))
         ;; One map at a time, not the whole list at once. Given a list,
         ;; `where-is-internal' drops a key that an earlier map in it binds
         ;; to something else, so dired's j and k hid the image viewer's

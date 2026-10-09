@@ -119,18 +119,31 @@ from the definitions in the private modules; Doom's own +default/ and
        (seq-some (lambda (prefix) (string-prefix-p prefix (symbol-name command)))
                  prefixes)))
 
+(defun +docs--kit-maps ()
+  "Every keymap SPC k can open, one for each kind of project; nil before
+core has made them."
+  (and (fboundp '+core-kit-maps) (mapcar #'cdr (+core-kit-maps))))
+
 (defun +docs--leader-bindings ()
-  "(KEYS . COMMAND) for every command under the leader, KEYS after SPC."
+  "(KEYS . COMMAND) for every command under the leader, KEYS after SPC,
+those of every SPC k keymap among them."
   (let (out)
     (cl-labels ((walk (map prefix)
                   (map-keymap (lambda (event def)
                                 (let ((keys (concat prefix (if prefix " " "")
-                                                    (key-description (vector event)))))
+                                                    (key-description (vector event))))
+                                      ;; A kit map keeps its descriptions
+                                      ;; in the map: ("Build" . command).
+                                      (def (if (and (consp def) (stringp (car def)))
+                                               (cdr def)
+                                             def)))
                                   (cond ((keymapp def) (walk def keys))
                                         ((and def (symbolp def) (not (numberp def)))
                                          (push (cons keys def) out)))))
                               map)))
-      (walk doom-leader-map nil))
+      (walk doom-leader-map nil)
+      (dolist (map (+docs--kit-maps))
+        (walk map "k")))
     out))
 
 ;; Autoloaded: bin/check-config.el calls it in the throwaway daemon.
@@ -144,8 +157,9 @@ in which-key, Doom's word and ours.  Nil when all is well."
   (let ((by-command (make-hash-table)) (by-key (make-hash-table :test #'equal))
         (prefixes (+docs--private-prefixes)) problems)
     (pcase-dolist (`(,keys . ,command) (+docs--leader-bindings))
+      ;; One key in several kit maps, SPC k n in all of them, is one key.
       (when (+docs--private-command-p command prefixes)
-        (push keys (gethash command by-command))))
+        (cl-pushnew keys (gethash command by-command) :test #'equal)))
     (maphash (lambda (command keys)
                (when (cdr keys)
                  (push (format "%s is on SPC %s" command
@@ -205,31 +219,49 @@ skipped, a mention that lists several keys split at the commas."
 The leader map is followed key by key; a command reached with keys
 left over is a menu key when the command is a private menu, checked
 against its layout, and accepted otherwise, a capture template's key
-or an argument.  The localleader is not followed."
-  (let ((parts (split-string keys " " t)) (i 0) (n 0) problem)
-    (setq n (length parts))
-    (if (equal (car parts) "m")
-        nil
-      (catch 'done
-        (while (< i n)
-          (let* ((seq (mapconcat #'identity (seq-take parts (1+ i)) " "))
-                 (binding (ignore-errors (lookup-key doom-leader-map (kbd seq)))))
-            (cond
-             ((keymapp binding))
-             ((or (null binding) (numberp binding))
-              (setq problem (format "SPC %s is not bound" seq))
-              (throw 'done nil))
-             ((= (1+ i) n) (throw 'done nil))
-             ((and (symbolp binding) (get binding 'transient--layout))
-              (let ((rest (mapconcat #'identity (seq-drop parts (1+ i)) " "))
-                    (menu-keys (+docs--menu-keys binding)))
-                (unless (or (member rest menu-keys)
-                            (seq-some (lambda (k) (string-prefix-p (concat rest " ") k)) menu-keys))
-                  (setq problem (format "SPC %s: %s has no key %s" seq binding rest))))
-              (throw 'done nil))
-             (t (throw 'done nil))))
-          (setq i (1+ i))))
-      problem)))
+or an argument.  The localleader is not followed.  SPC k opens the
+keymap of the project's kind, so a key under it is bound when one of
+those maps binds all of it."
+  (let ((parts (split-string keys " " t)))
+    (cond
+     ((equal (car parts) "m") nil)
+     ((and (equal (car parts) "k") (+docs--kit-maps))
+      (let ((problems (mapcar (lambda (map)
+                                (+docs--key-problem-1
+                                 parts (lambda (seq)
+                                         (if (equal seq "k")
+                                             map
+                                           (ignore-errors
+                                             (lookup-key map (kbd (substring seq 2))))))))
+                              (+docs--kit-maps))))
+        (unless (memq nil problems) (car problems))))
+     (t (+docs--key-problem-1
+         parts (lambda (seq) (ignore-errors (lookup-key doom-leader-map (kbd seq)))))))))
+
+(defun +docs--key-problem-1 (parts lookup)
+  "Why the key PARTS is not a binding, following it with LOOKUP, which
+takes the keys so far as a string and returns their binding."
+  (let ((n (length parts)) (i 0) problem)
+    (catch 'done
+      (while (< i n)
+        (let* ((seq (mapconcat #'identity (seq-take parts (1+ i)) " "))
+               (binding (funcall lookup seq)))
+          (cond
+           ((keymapp binding))
+           ((or (null binding) (numberp binding))
+            (setq problem (format "SPC %s is not bound" seq))
+            (throw 'done nil))
+           ((= (1+ i) n) (throw 'done nil))
+           ((and (symbolp binding) (get binding 'transient--layout))
+            (let ((rest (mapconcat #'identity (seq-drop parts (1+ i)) " "))
+                  (menu-keys (+docs--menu-keys binding)))
+              (unless (or (member rest menu-keys)
+                          (seq-some (lambda (k) (string-prefix-p (concat rest " ") k)) menu-keys))
+                (setq problem (format "SPC %s: %s has no key %s" seq binding rest))))
+            (throw 'done nil))
+           (t (throw 'done nil))))
+        (setq i (1+ i))))
+    problem))
 
 ;; Autoloaded: bin/check-config.el calls it in the throwaway daemon.
 ;;;###autoload
