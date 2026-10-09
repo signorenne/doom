@@ -53,6 +53,9 @@
 ;; module's; everywhere else they stay cpp's.
 (+core-register-builder 'rust #'+rust-project-p
                         :run #'+rust/run
+                        :run-with-args #'+rust/run-with-args
+                        ;; cargo run builds first.
+                        :build-and-run #'+rust/run
                         :debug #'+rust/debug
                         :panel #'+rust/menu
                         :new #'+rust/new-project

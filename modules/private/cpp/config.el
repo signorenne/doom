@@ -371,6 +371,8 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; tree is.
 (+core-register-builder 'cpp #'always
                         :run #'+cpp/run
+                        :run-with-args #'+cpp/run-with-args
+                        :build-and-run #'+cpp/build-and-run
                         :debug #'+cpp/debug
                         :panel #'+cpp/cmake-menu
                         :new #'+cpp/new-project
@@ -588,7 +590,7 @@ function, so `c-ts-mode-set-style' installs them."
        ;; Build. Doom's SPC c C recompiles, so the kit prefix does not.
        :desc "Configure"              "c" #'projection-commands-configure-project
        :desc "Build"                  "b" #'projection-commands-build-project
-       :desc "Build, then run"        "x" #'+cpp/build-and-run
+       :desc "Build, then run"        "x" #'+core/build-and-run
        :desc "Build a target"         "B" #'projection-multi-compile
        :desc "Test"                   "t" #'projection-commands-test-project
        :desc "Test at point"          "T" #'+cpp/test-at-point
@@ -598,7 +600,7 @@ function, so `c-ts-mode-set-style' installs them."
        :desc "Copy the package out"   "o" #'+cpp/package-copy
        ;; Run
        :desc "Run"                    "r" #'+core/run
-       :desc "Run with arguments"     "R" #'+cpp/run-with-args
+       :desc "Run with arguments"     "R" #'+core/run-with-args
        :desc "Run a project script"   "S" #'+cpp/run-script
        :desc "Deploy to the device"   "U" #'+cpp/deploy
        :desc "Debug"                  "d" #'+core/debug
@@ -659,10 +661,12 @@ function, so `c-ts-mode-set-style' installs them."
 
 ;; F6 runs the project whatever its language, as SPC k r does: it was the
 ;; C++ run, which in a Pascal or Rust project went round by projection
-;; and found nothing in a directory without version control.
+;; and found nothing in a directory without version control. S-F6 and
+;; SPC k R go by the language too: in a Pascal project they asked for
+;; C++ program arguments, then failed.
 (map! :g "<f5>"  #'+cpp/debug-or-continue
       :g "<f6>"  #'+core/run
-      :g "<S-f6>" #'+cpp/build-and-run
+      :g "<S-f6>" #'+core/build-and-run
       :g "<f7>"  #'projection-commands-build-project
       :g "<f8>"  #'projection-commands-configure-project
       :g "<f9>"  #'dape-breakpoint-toggle

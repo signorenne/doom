@@ -105,6 +105,8 @@ openSUSE puts them under lib64; another distribution will not.")
 ;; than the keys quietly meaning the C++ module.
 (+core-register-builder 'pascal #'+pascal-project-p
                         :run #'+pascal/run
+                        :run-with-args #'+pascal/run-with-args
+                        :build-and-run #'+pascal/build-and-run
                         :debug #'+pascal/debug
                         :panel #'+pascal/menu
                         :new #'+pascal/new-project

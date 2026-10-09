@@ -14,15 +14,17 @@
   "What each module can do with a project.
 Each entry is (NAME TEST . PLIST).  TEST is called with no arguments,
 in the project root, and answers non-nil when that module owns the
-project.  PLIST holds a command under any of :run, :debug, :panel and
-:new, :label, what SPC k n calls its projects, and :fallback when the
-module answers for whatever nothing else claimed. cpp does, since a directory with a Makefile and a binary in
-it is its business as much as a CMake tree is.")
+project.  PLIST holds a command under any of :run, :run-with-args,
+:build-and-run, :debug, :panel and :new, :label, what SPC k n calls its
+projects, and :fallback when the module answers for whatever nothing
+else claimed.  cpp does, since a directory with a Makefile and a binary
+in it is its business as much as a CMake tree is.")
 
 ;;;###autoload
 (defun +core-register-builder (name test &rest plist)
   "Say that module NAME runs, debugs, shows or starts a project TEST claims.
-PLIST takes :run, :debug, :panel, :new, :label and :fallback; see
+PLIST takes :run, :run-with-args, :build-and-run, :debug, :panel, :new,
+:label and :fallback; see
 `+core-builders'.  Registering again under the same NAME replaces the
 entry, so a reload does not stack them."
   (setq +core-builders
@@ -39,17 +41,17 @@ entry, so a reload does not stack them."
 
 (defun +core--builder (what)
   "The command registered for WHAT, for the project we are in.
-The modules that claim a project are asked first, in the order they
-registered; the fallback answers only when none of them does."
-  (let ((entries (seq-remove (lambda (e) (plist-get (cddr e) :fallback))
-                             +core-builders))
+The first module that claims the project, in the order they registered,
+owns it and answers, nil when it has no such command; the fallback
+answers only when none of them claims it."
+  (let ((owner (seq-find #'+core--builder-claims-p
+                         (seq-remove (lambda (e) (plist-get (cddr e) :fallback))
+                                     +core-builders)))
         (fallback (seq-find (lambda (e) (plist-get (cddr e) :fallback))
                             +core-builders)))
-    (or (seq-some (lambda (entry)
-                    (and (+core--builder-claims-p entry)
-                         (plist-get (cddr entry) what)))
-                  entries)
-        (and fallback (plist-get (cddr fallback) what)))))
+    ;; A module without the command used to hand it to the fallback, so
+    ;; a web project got the C++ run with arguments, which failed.
+    (plist-get (cddr (or owner fallback)) what)))
 
 (defun +core--build-call (what missing)
   "Call the command registered for WHAT, or say MISSING."
@@ -62,6 +64,20 @@ registered; the fallback answers only when none of them does."
   "Run what this project builds, however this kind of project is run."
   (interactive)
   (+core--build-call :run "Nothing here knows how to run this project"))
+
+;;;###autoload
+(defun +core/run-with-args ()
+  "Run what this project builds once, with arguments asked for."
+  (interactive)
+  (+core--build-call :run-with-args
+                     "Nothing here knows how to run this project with arguments"))
+
+;;;###autoload
+(defun +core/build-and-run ()
+  "Build this project, then run it when the build worked."
+  (interactive)
+  (+core--build-call :build-and-run
+                     "Nothing here knows how to build and run this project"))
 
 ;;;###autoload
 (defun +core/debug ()
