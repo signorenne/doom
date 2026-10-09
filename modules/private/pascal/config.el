@@ -50,10 +50,18 @@ openSUSE puts them under lib64; another distribution will not.")
 (after! opascal
   ;; Two spaces, which is what Lazarus and Delphi both write. The tab
   ;; key is Emacs's own `tab-always-indent' now; opascal's setting for
-  ;; it has been obsolete since 24.4.
+  ;; it has been obsolete since 24.4. A begin sits under the statement
+  ;; that owns it, if, for, else or on: at 2 it went one level further
+  ;; and its body two, which no Pascal style writes.
   (setq opascal-indent-level 2
-        opascal-compound-block-indent 2
-        opascal-case-label-indent 2))
+        opascal-compound-block-indent 0
+        opascal-case-label-indent 2)
+  ;; And where opascal has rules of its own, the formatter's instead: a
+  ;; routine after a type, var or const section was indented into it,
+  ;; a condition broken over lines went twenty columns out. See
+  ;; autoload/indent.el.
+  (advice-add #'opascal-corrected-indentation :around #'+pascal--indentation-a)
+  (advice-add #'opascal-open-group-indent :override #'+pascal--open-group-indent-a))
 
 
 ;;
