@@ -556,6 +556,13 @@ MANAGED-MODES on its way already."
 (after! projectile
   (setq projectile-enable-caching nil))
 
+;; A project whose directory was deleted or moved stayed in SPC p p for
+;; good, and picking it failed. The list is checked each time it is
+;; asked for now: a root that is gone leaves it and projects.eld. So
+;; does one on a disk that is not mounted; a remote one is kept.
+(after! projectile
+  (setq projectile-auto-cleanup-known-projects t))
+
 ;; SPC SPC lists the project's files by how recently they were opened,
 ;; so the first, the one it opens on and previews, was the file already
 ;; on screen: its preview showed what was there and looked like none.
