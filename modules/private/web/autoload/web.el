@@ -5,6 +5,8 @@
 ;; the settings live in .dir-locals.el, every command is built from them,
 ;; so SPC k b and the panel and F7 run the same line.
 
+(declare-function dape "dape")
+(declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
 (declare-function +core-dir-locals-set "lib")
 (declare-function +core-compile "lib")
@@ -311,9 +313,12 @@ template's CI workflow builds that one."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
-  (funcall #'dape (if (+web-electron-p)
-                      (list 'electron-main :cwd (+web-root))
-                    (list 'node-project :cwd (+web-root)))))
+  (require 'dape)
+  ;; dape takes the configuration itself, not its name: handed
+  ;; (node-project :cwd ...) it read every key as a value, found no
+  ;; command, and no session started.
+  (dape (dape--config-eval (if (+web-electron-p) 'electron-main 'node-project)
+                           (list :cwd (+web-root)))))
 
 
 ;;
