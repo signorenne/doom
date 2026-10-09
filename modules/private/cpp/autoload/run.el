@@ -228,7 +228,11 @@ which for PlatformIO means upload."
                                                  (cons exe (+cpp--run-argv args))
                                                  " ")))
                              t))))
-      (projection-commands-run-project))))
+      ;; It takes the project and the command, which its interactive
+      ;; form works out: called bare it failed on the number of them.
+      (when (and args (not (string-empty-p args)))
+        (user-error "Only a CMake project's programs are given arguments here"))
+      (call-interactively #'projection-commands-run-project))))
 
 ;;;###autoload
 (defun +cpp/run-with-args (args)
