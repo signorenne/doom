@@ -44,6 +44,11 @@ redraw; a marker file appearing or going changes the root's mtime.")
         (puthash root (cons mtime kind) +cpp--kind-cache)
         kind))))
 
+;;;###autoload
+(defun +cpp-project-p ()
+  "Non-nil in a C or C++ project: CMake, PlatformIO, Meson or make."
+  (+cpp--kind-p 'cmake 'platformio 'meson 'make))
+
 ;; Autoloaded: called from the menus.
 ;;;###autoload
 (defun +cpp--kind-p (&rest kinds)

@@ -30,6 +30,23 @@ where it was; a program's output, =F6= or =SPC k r= in any language, opens
 on the right with the cursor in it. =ESC= closes either, from it or from
 the source, and so does =q= once nothing is running in it.
 
+* SPC k, the project's keys
+=SPC k= opens the keys of the project you are in, from the module that
+knows its kind: C and C++, Pascal, Rust or the web, each with the same
+letters for the same things, =b= build, =r= run, =R= with arguments, =t=
+test, =d= debug, =m= the panel, =n= a new project. A module registers its
+map with ~+core-register-builder~.
+
+- In a project no module knows, a Gradle or a Python one, =SPC k= has
+  what projection can do with it: build, test, run, install, and the
+  menu of its kind on =SPC k SPC=.
+- Outside a project, it starts one or goes to one: =SPC k n= a new
+  project, =p= open one, =f= a file in any of them, =o= the projects
+  folder, =g= clone a repository, =D= forget one.
+
+A project with no version control is known by its files, so a Pascal
+folder made without =git init= still has the Pascal keys.
+
 * Keybindings
 | Key         | Command                     | What it does                      |
 |-------------+-----------------------------+-----------------------------------|

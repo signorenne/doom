@@ -364,12 +364,13 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 
 (set-popup-rule! "^\\*pio monitor"
   :side 'bottom :size 0.35 :quit nil :ttl nil :select t)
-;; The four keys that cannot go through projection, which are run,
-;; debug, the panel and a new project, are dispatched by kind, so they
-;; mean the same thing in a Rust or a Pascal buffer. cpp is the fallback: a directory
-;; with a Makefile and a binary in it is its business as much as a CMake
-;; tree is.
-(+core-register-builder 'cpp #'always
+;; The keys that cannot go through projection, which are run, debug,
+;; the panel and a new project, are dispatched by kind, so they mean the
+;; same thing in a Rust or a Pascal buffer. cpp is the fallback for
+;; those: a directory with a Makefile and a binary in it is its business
+;; as much as a CMake tree is. Its SPC k keys it shows only in a C or
+;; C++ project, which is what its test says.
+(+core-register-builder 'cpp #'+cpp-project-p
                         :run #'+cpp/run
                         :run-with-args #'+cpp/run-with-args
                         :build-and-run #'+cpp/build-and-run
@@ -377,6 +378,7 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
                         :panel #'+cpp/cmake-menu
                         :new #'+cpp/new-project
                         :label "C and C++, PlatformIO"
+                        :keys '+cpp-kit-map
                         :fallback t)
 
 
@@ -583,82 +585,88 @@ function, so `c-ts-mode-set-style' installs them."
 ;;
 ;;; Keybindings
 
-(map! :leader
-      (:prefix-map ("k" . "kit: build, run, fix")
-       :desc "Kit menu: what you do"  "SPC" #'+cpp/menu
-       :desc "The project's panel"       "m" #'+core/build-panel
-       ;; Build. Doom's SPC c C recompiles, so the kit prefix does not.
-       :desc "Configure"              "c" #'projection-commands-configure-project
-       :desc "Build"                  "b" #'projection-commands-build-project
-       :desc "Build, then run"        "x" #'+core/build-and-run
-       :desc "Build a target"         "B" #'projection-multi-compile
-       :desc "Test"                   "t" #'projection-commands-test-project
-       :desc "Test at point"          "T" #'+cpp/test-at-point
-       :desc "A test executable"      "u" #'+cpp/test-binary
-       :desc "Install"                "i" #'projection-commands-install-project
-       :desc "Package"                "P" #'+cpp/package
-       :desc "Copy the package out"   "o" #'+cpp/package-copy
-       ;; Run
-       :desc "Run"                    "r" #'+core/run
-       :desc "Run with arguments"     "R" #'+core/run-with-args
-       :desc "Run a project script"   "S" #'+cpp/run-script
-       :desc "Deploy to the device"   "U" #'+cpp/deploy
-       :desc "Debug"                  "d" #'+core/debug
-       ;; Kit
-       :desc "Pick the kit"           "K" #'+cpp/set-kit
-       :desc "Build type"             "y" #'+cpp/build-type
-       :desc "Kit family"             "Y" #'+cpp/kit-family
-       :desc "Which kit, and why"     "?" #'+cpp/show-kit
-       :desc "Default target"         "s" #'+cpp/set-build-target
-       :desc "Project status"         "I" #'+cpp/project-status
-       :desc "Write the setup to .dir-locals.el" "w" #'+cpp/write-dir-locals
-       :desc "Generate the presets"   "G" #'+cpp/write-presets
-       ;; Fix
-       :desc "Next problem"           "e" #'+cpp/next-problem
-       :desc "Previous problem"       "E" #'+cpp/previous-problem
-       :desc "Fix it: the quickfix at point" "." #'+cpp/quickfix
-       :desc "clang-format this buffer" "f" #'+cpp/format-buffer
-       (:prefix ("g" . "gates: format, tidy")
-        :desc "clang-format the project" "F" #'+cpp/format-project
-        :desc "clang-tidy this file"  "t" #'+cpp/tidy-file
-        :desc "clang-tidy this file, apply the fixes" "T" (cmd! (+cpp/tidy-file t))
-        :desc "clang-tidy the project" "p" #'+cpp/tidy-project)
-       ;; Files and tools. Header and source is Doom's SPC p o, and F4.
-       :desc "Other file of the project" "H" #'projection-find-other-file
-       :desc "Assembly, live"         "a" #'+cpp/assembly
-       :desc "Disassemble at point"   "A" #'disaster
-       :desc "New project"            "n" #'+core/new-project
-       :desc "New Qt MVVM app"        "N" #'+cpp/new-qt-project
-       (:prefix ("l" . "language server")
-        :desc "Switch server: clangd, ccls" "s" #'+cpp/set-lsp-server
-        :desc "Restart it"            "r" #'+cpp/restart-lsp
-        :desc "Inlay hints"           "i" #'eglot-inlay-hints-mode
-        :desc "Write .clangd"         "c" #'+cpp/write-clangd-config
-        :desc "Link compile_commands.json into the root" "l" #'+cpp/link-compile-commands
-        :desc "Run the kit in a container" "b" #'+cpp/set-container
-        :desc "The server's log"      "e" #'eglot-events-buffer)
-       (:prefix ("p" . "PlatformIO")
-        :desc "Environment"           "e" #'+pio/set-env
-        :desc "Build"                 "b" #'+pio/build
-        :desc "Upload"                "u" #'+pio/upload
-        :desc "Clean"                 "c" #'+pio/clean
-        :desc "Serial monitor"        "m" #'+pio/monitor
-        :desc "Test"                  "t" #'+pio/test
-        :desc "compile_commands.json" "i" #'+pio/compiledb
-        :desc "Debug (gdb)"           "d" #'+pio/debug
-        :desc "Devices"               "l" #'+pio/device-list
-        :desc "Boards"                "B" #'+pio/boards
-        :desc "Install a library"     "L" #'+pio/lib-install
-        :desc "Update the packages"   "U" #'+pio/update
-        :desc "PlatformIO Home"       "H" #'+pio/home
-        :desc "New project"           "n" #'+pio/new-project)))
+(declare-function +core-kit-keymap "build")
+(defvar +core-kit-project-map)          ; core/config.el
+
+(defvar +cpp-kit-map
+  (+core-kit-keymap
+   `(("SPC" "Kit menu: what you do" #'+cpp/menu)
+     ("m" "The project's panel" #'+core/build-panel)
+     ;; Build. Doom's SPC c C recompiles, so the kit prefix does not.
+     ("c" "Configure" #'projection-commands-configure-project)
+     ("b" "Build" #'projection-commands-build-project)
+     ("x" "Build, then run" #'+core/build-and-run)
+     ("B" "Build a target" #'projection-multi-compile)
+     ("t" "Test" #'projection-commands-test-project)
+     ("T" "Test at point" #'+cpp/test-at-point)
+     ("u" "A test executable" #'+cpp/test-binary)
+     ("i" "Install" #'projection-commands-install-project)
+     ("P" "Package" #'+cpp/package)
+     ("o" "Copy the package out" #'+cpp/package-copy)
+     ;; Run
+     ("r" "Run" #'+core/run)
+     ("R" "Run with arguments" #'+core/run-with-args)
+     ("S" "Run a project script" #'+cpp/run-script)
+     ("U" "Deploy to the device" #'+cpp/deploy)
+     ("d" "Debug" #'+core/debug)
+     ("D" "Debug on the device" #'+cpp/debug-on-device)
+     ("j" "Attach to a gdb server" #'+cpp/debug-remote)
+     ;; Kit
+     ("K" "Pick the kit" #'+cpp/set-kit)
+     ("y" "Build type" #'+cpp/build-type)
+     ("Y" "Kit family" #'+cpp/kit-family)
+     ("?" "Which kit, and why" #'+cpp/show-kit)
+     ("s" "Default target" #'+cpp/set-build-target)
+     ("I" "Project status" #'+cpp/project-status)
+     ("w" "Write the setup to .dir-locals.el" #'+cpp/write-dir-locals)
+     ("G" "Generate the presets" #'+cpp/write-presets)
+     ;; Fix
+     ("e" "Next problem" #'+cpp/next-problem)
+     ("E" "Previous problem" #'+cpp/previous-problem)
+     ("." "Fix it: the quickfix at point" #'+cpp/quickfix)
+     ("f" "clang-format this buffer" #'+cpp/format-buffer)
+     ("g" "gates: format, tidy"
+      (("F" "clang-format the project" #'+cpp/format-project)
+       ("t" "clang-tidy this file" #'+cpp/tidy-file)
+       ("T" "clang-tidy this file, apply the fixes" ,(cmd! (+cpp/tidy-file t)))
+       ("p" "clang-tidy the project" #'+cpp/tidy-project)))
+     ;; Files and tools. Header and source is Doom's SPC p o, and F4.
+     ("H" "Other file of the project" #'projection-find-other-file)
+     ("a" "Assembly, live" #'+cpp/assembly)
+     ("A" "Disassemble at point" #'disaster)
+     ("n" "New project" #'+core/new-project)
+     ("N" "New Qt MVVM app" #'+cpp/new-qt-project)
+     ("l" "language server"
+      (("s" "Switch server: clangd, ccls" #'+cpp/set-lsp-server)
+       ("r" "Restart it" #'+cpp/restart-lsp)
+       ("i" "Inlay hints" #'eglot-inlay-hints-mode)
+       ("c" "Write .clangd" #'+cpp/write-clangd-config)
+       ("l" "Link compile_commands.json into the root" #'+cpp/link-compile-commands)
+       ("b" "Run the kit in a container" #'+cpp/set-container)
+       ("e" "The server's log" #'eglot-events-buffer)))
+     ("p" "PlatformIO"
+      (("e" "Environment" #'+pio/set-env)
+       ("b" "Build" #'+pio/build)
+       ("u" "Upload" #'+pio/upload)
+       ("c" "Clean" #'+pio/clean)
+       ("m" "Serial monitor" #'+pio/monitor)
+       ("t" "Test" #'+pio/test)
+       ("i" "compile_commands.json" #'+pio/compiledb)
+       ("d" "Debug (gdb)" #'+pio/debug)
+       ("l" "Devices" #'+pio/device-list)
+       ("B" "Boards" #'+pio/boards)
+       ("L" "Install a library" #'+pio/lib-install)
+       ("U" "Update the packages" #'+pio/update)
+       ("H" "PlatformIO Home" #'+pio/home)
+       ("n" "New project" #'+pio/new-project)))))
+  "SPC k in a C or C++ project: CMake, PlatformIO, Meson or make.")
+
+;; And its menu of what a project can do, which reads Cargo, Gradle,
+;; Maven, npm and Python projects as well, in a project no module knows.
+(define-key +core-kit-project-map (kbd "SPC") (cons "What the project can do" #'+cpp/menu))
 
 ;; Qt Creator's function keys. F2 and F4 only in C and C++ buffers; map!
 ;; defers each map until its mode loads, so the four maps share one block.
-(map! :leader
-      :desc "Debug on the device"     "k D" #'+cpp/debug-on-device
-      :desc "Attach to a gdb server"  "k j" #'+cpp/debug-remote)
-
 ;; F6 runs the project whatever its language, as SPC k r does: it was the
 ;; C++ run, which in a Pascal or Rust project went round by projection
 ;; and found nothing in a directory without version control. S-F6 and

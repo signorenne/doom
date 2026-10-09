@@ -110,7 +110,8 @@ openSUSE puts them under lib64; another distribution will not.")
                         :debug #'+pascal/debug
                         :panel #'+pascal/menu
                         :new #'+pascal/new-project
-                        :label "Pascal: Free Pascal and Lazarus")
+                        :label "Pascal: Free Pascal and Lazarus"
+                        :keys '+pascal-kit-map)
 
 
 ;;
@@ -185,7 +186,30 @@ openSUSE puts them under lib64; another distribution will not.")
 ;;
 ;;; Keybindings
 
-;; The build keys are SPC k, shared. These are the ones only Pascal has.
+;; SPC k in a Pascal project: the panel's keys, on the letters SPC k
+;; has in every project, b build, r run, t test, d debug, m the panel.
+(declare-function +core-kit-keymap "build")
+(defvar +pascal-kit-map
+  (+core-kit-keymap
+   '(("m" "The panel: what is set"   #'+pascal/menu)
+     ("b" "Build"                    #'+pascal/build)
+     ("x" "Build, then run"          #'+pascal/build-and-run)
+     ("r" "Run"                      #'+pascal/run)
+     ("R" "Run with arguments"       #'+pascal/run-with-args)
+     ("t" "Test"                     #'+pascal/test)
+     ("d" "Debug"                    #'+pascal/debug)
+     ("C" "Clean"                    #'+pascal/clean)
+     ("y" "Build mode"               #'+pascal/set-build-mode)
+     ("w" "Widget set"               #'+pascal/set-widgetset)
+     ("T" "Target"                   #'+pascal/set-target)
+     ("s" "Which program"            #'+pascal/set-main)
+     ("a" "Run arguments, kept"      #'+pascal/set-run-args)
+     ("I" "Project status"           #'+pascal/project-status)
+     ("v" "The project file"         #'+pascal/open-project-file)
+     ("n" "New project"              #'+core/new-project)))
+  "SPC k in a Pascal project.")
+
+;; The most used of them, also on the localleader.
 (map! :after opascal
       :map opascal-mode-map
       :localleader

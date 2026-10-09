@@ -563,6 +563,42 @@ MANAGED-MODES on its way already."
 (after! projectile
   (setq projectile-auto-cleanup-known-projects t))
 
+;; SPC k was the C++ keys wherever you were: in a Pascal project most of
+;; them meant nothing, and outside a project nothing at all. It opens
+;; the keys of the module that owns the project now, C++, Pascal, Rust
+;; or the web; in a project none of them knows, what projection can do
+;; with it; outside one, starting a project and going to one. Each
+;; module registers its map with `+core-register-builder'.
+(defvar +core-kit-map
+  (+core-kit-keymap
+   '(("n" "New project"            #'+core/new-project)
+     ("p" "Open a project"         #'projectile-switch-project)
+     ("f" "A file in any project"  #'projectile-find-file-in-known-projects)
+     ("o" "The projects folder"    #'+core/open-projects-dir)
+     ("g" "Clone a repository"     #'magit-clone)
+     ("D" "Forget a project"       #'projectile-remove-known-project)))
+  "SPC k outside a project: starting one, and going to one.")
+
+(defvar +core-kit-project-map
+  (let ((map (+core-kit-keymap
+              '(("b" "Build"             #'projection-commands-build-project)
+                ("B" "Build a target"    #'projection-multi-compile)
+                ("c" "Configure"         #'projection-commands-configure-project)
+                ("t" "Test"              #'projection-commands-test-project)
+                ("r" "Run"               #'projection-commands-run-project)
+                ("i" "Install"           #'projection-commands-install-project)
+                ("P" "Package"           #'projection-commands-package-project)))))
+    (set-keymap-parent map +core-kit-map)
+    map)
+  "SPC k in a project no module here knows: what projection can do with
+its sixty kinds, and the keys from outside a project.")
+
+(define-key doom-leader-map "k" '(menu-item "project" nil :filter +core--kit-map))
+(after! which-key
+  (which-key-add-key-based-replacements
+    (concat doom-leader-key " k") "project"
+    (concat doom-leader-alt-key " k") "project"))
+
 ;; SPC SPC lists the project's files by how recently they were opened,
 ;; so the first, the one it opens on and previews, was the file already
 ;; on screen: its preview showed what was there and looked like none.

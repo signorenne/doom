@@ -1,14 +1,17 @@
 ;;; private/core/autoload/build.el -*- lexical-binding: t; -*-
 ;;
-;; One set of keys for every language. SPC k b, SPC k t and SPC k i go
-;; through projection, which already knows one project type from
-;; another; SPC k r, SPC k d, SPC k m and SPC k n cannot, because
-;; running, debugging, the panel and starting a project are this
-;; config's own. A module says what it can do with
-;; `+core-register-builder' and the first whose test answers takes it,
-;; so the keys mean the same thing in a Rust buffer as in a C++ one.
+;; One set of keys for every language. A module says what it can do
+;; with `+core-register-builder' and the first whose test answers takes
+;; the project: F6, F5 and the rest mean the same thing in a Rust buffer
+;; as in a C++ one, and SPC k opens that module's own keys, the same
+;; letters for the same things, b build, r run, t test, d debug, m the
+;; panel, n a new project.
 
 (declare-function +core-project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
+(defvar +core-kit-map)                  ; config.el
+(defvar +core-kit-project-map)          ; config.el
+(defvar +core-projects-dir)             ; config.el
 
 (defvar +core-builders nil
   "What each module can do with a project.
@@ -16,15 +19,17 @@ Each entry is (NAME TEST . PLIST).  TEST is called with no arguments,
 in the project root, and answers non-nil when that module owns the
 project.  PLIST holds a command under any of :run, :run-with-args,
 :build-and-run, :debug, :panel and :new, :label, what SPC k n calls its
-projects, and :fallback when the module answers for whatever nothing
-else claimed.  cpp does, since a directory with a Makefile and a binary
-in it is its business as much as a CMake tree is.")
+projects, :keys, the symbol of the keymap SPC k opens in its projects,
+and :fallback when the module answers for whatever nothing else
+claimed.  cpp does, since a directory with a Makefile and a binary in it
+is its business as much as a CMake tree is; its own keys it shows only
+where its TEST says the project is its kind.")
 
 ;;;###autoload
 (defun +core-register-builder (name test &rest plist)
   "Say that module NAME runs, debugs, shows or starts a project TEST claims.
 PLIST takes :run, :run-with-args, :build-and-run, :debug, :panel, :new,
-:label and :fallback; see
+:label, :keys and :fallback; see
 `+core-builders'.  Registering again under the same NAME replaces the
 entry, so a reload does not stack them."
   (setq +core-builders
@@ -58,6 +63,93 @@ answers only when none of them claims it."
   (if-let* ((command (+core--builder what)))
       (call-interactively command)
     (user-error "%s" missing)))
+
+;;
+;;; SPC k
+
+;;;###autoload
+(defun +core-kit-keymap (bindings)
+  "A keymap for SPC k of BINDINGS, (KEY DESCRIPTION DEFINITION) each.
+The description is kept in the map itself, where which-key reads it, so
+one key can say one thing in a C++ project and another in a Pascal one.
+A DEFINITION that is a list of bindings is a prefix of its own; one
+written #\='command is the command, and the config's check of what it
+refers to then sees it."
+  (let ((map (make-sparse-keymap)))
+    (pcase-dolist (`(,key ,description ,definition) bindings)
+      (define-key map (kbd key)
+                  (cons description
+                        (cond ((eq (car-safe definition) 'function) (cadr definition))
+                              ((and (consp definition) (consp (car definition)))
+                               (+core-kit-keymap definition))
+                              (t definition)))))
+    map))
+
+(defvar +core--kit-owners (make-hash-table :test #'equal)
+  "Directory to (MTIME . NAME): the module whose keys SPC k opens there.
+which-key asks on every page it draws; a marker file appearing or going
+changes the directory's mtime.")
+
+(defun +core--kit-dir ()
+  "Where SPC k looks: the project root, else the buffer's own directory,
+so a project with no version control is still known by its files.  Not
+the home directory or /, where every folder under them would be read."
+  (or (+core-project-root-or-nil)
+      (let ((dir (expand-file-name default-directory)))
+        (unless (or (file-equal-p dir "~/") (file-equal-p dir "/"))
+          dir))))
+
+(defun +core--kit-owner ()
+  "The `+core-builders' entry whose keys SPC k opens here, or nil.
+The first module that claims the project, else the fallback when its own
+test says the project is its kind."
+  (when-let* ((dir (+core--kit-dir)))
+    (let* ((dir (file-name-as-directory dir))
+           (mtime (file-attribute-modification-time (file-attributes dir)))
+           (hit (gethash dir +core--kit-owners))
+           (claims (lambda (entry)
+                     (condition-case nil
+                         (let ((default-directory dir)) (funcall (cadr entry)))
+                       (error nil))))
+           (name (if (and hit (equal (car hit) mtime))
+                     (cdr hit)
+                   (let ((owner (or (seq-find claims
+                                              (seq-remove (lambda (e) (plist-get (cddr e) :fallback))
+                                                          +core-builders))
+                                    (seq-find (lambda (e) (and (plist-get (cddr e) :fallback)
+                                                               (funcall claims e)))
+                                              +core-builders))))
+                     (puthash dir (cons mtime (car owner)) +core--kit-owners)
+                     (car owner)))))
+      (and name (assq name +core-builders)))))
+
+;;;###autoload
+(defun +core--kit-map (&optional _)
+  "The keymap SPC k opens here: the owning module's; else, in a project
+no module knows, what projection can do with it; else starting a project
+and going to one."
+  (let ((keys (plist-get (cddr (+core--kit-owner)) :keys)))
+    (cond ((and keys (boundp keys)) (symbol-value keys))
+          ((+core-project-root-or-nil) +core-kit-project-map)
+          (t +core-kit-map))))
+
+;;;###autoload
+(defun +core-kit-maps ()
+  "Every keymap SPC k can open, as (WHERE . KEYMAP), for the docs."
+  (append (list (cons "outside a project" +core-kit-map)
+                (cons "a project no module knows" +core-kit-project-map))
+          (cl-loop for entry in (reverse +core-builders)
+                   for keys = (plist-get (cddr entry) :keys)
+                   when (and keys (boundp keys))
+                   collect (cons (or (plist-get (cddr entry) :label)
+                                     (capitalize (symbol-name (car entry))))
+                                 (symbol-value keys)))))
+
+;;;###autoload
+(defun +core/open-projects-dir ()
+  "Open the folder new projects go in, to pick one by hand."
+  (interactive)
+  (dired (expand-file-name +core-projects-dir)))
 
 ;;;###autoload
 (defun +core/run ()

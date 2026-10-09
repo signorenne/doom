@@ -7,8 +7,9 @@ project; C and C++ get the most, the rest get the same menu:
 
 - [[https://github.com/mohkale/projection][projection]] drives the build: CMake through the kit (below), and its
   own types for Cargo, Meson, Make, Gradle, Maven, npm, Python and some
-  sixty more. ~SPC k SPC~ is one menu for all of them; the columns follow
-  the project type.
+  sixty more. ~SPC k SPC~ is one menu for all of them, in a C or C++
+  project and in one no module has keys for; the columns follow the
+  project type. A Cargo, npm or Pascal project has its own =SPC k=.
 - The kit, the one thing every CMake command goes through: the build
   directory, and where the commands run, read from the disk the way Qt
   Creator would.

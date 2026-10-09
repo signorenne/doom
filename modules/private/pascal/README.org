@@ -36,6 +36,9 @@ The module adds:
 - pasls when it is installed, through eglot.
 
 * The keys
+=SPC k= in a Pascal project opens this module's keys: the panel's, on the
+letters =SPC k= has in every project. The most used:
+
 | Key       | What it does                                  |
 |-----------+-----------------------------------------------|
 | ~F7~        | build, with what the project is set to        |

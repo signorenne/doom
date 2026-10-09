@@ -157,7 +157,8 @@
                         :debug #'+web/debug
                         :panel #'+web/menu
                         :new #'+web/new-project
-                        :label "Web")
+                        :label "Web"
+                        :keys '+web-kit-map)
 
 
 ;;
@@ -194,9 +195,32 @@
 ;;
 ;;; Keybindings
 
-;; The build keys are SPC k, shared: b, t, r, d, m and n all work here
-;; through the dispatcher and projection. These are the ones only a node
-;; project has.
+;; SPC k in a node project: the panel's keys, on the letters SPC k has
+;; in every project, b build, r run, t test, d debug, m the panel. The
+;; panel's m, the package manager, is M here.
+(declare-function +core-kit-keymap "build")
+(defvar +web-kit-map
+  (+core-kit-keymap
+   '(("m" "The panel: what is set"   #'+web/menu)
+     ("r" "Dev server"               #'+web/dev)
+     ("b" "Build"                    #'+web/build)
+     ("v" "Preview the build"        #'+web/preview)
+     ("t" "Test"                     #'+web/test)
+     ("T" "Test, and keep watching"  #'+web/test-watch)
+     ("s" "Any script"               #'+web/run-script)
+     ("l" "Lint"                     #'+web/lint)
+     ("c" "Types, without building"  #'+web/check)
+     ("i" "Install"                  #'+web/install)
+     ("o" "What has moved on"        #'+web/outdated)
+     ("M" "Package manager"          #'+web/set-manager)
+     ("p" "package.json"             #'+web/open-manifest)
+     ("P" "Package the Electron app" #'+web/package)
+     ("d" "Debug"                    #'+web/debug)
+     ("I" "Project status"           #'+web/project-status)
+     ("n" "New project"              #'+core/new-project)))
+  "SPC k in a node project.")
+
+;; The most used of them, also on the localleader.
 (map! :after svelte-mode
       :map svelte-mode-map
       :localleader

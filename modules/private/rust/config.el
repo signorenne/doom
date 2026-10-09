@@ -59,7 +59,8 @@
                         :debug #'+rust/debug
                         :panel #'+rust/menu
                         :new #'+rust/new-project
-                        :label "Rust")
+                        :label "Rust"
+                        :keys '+rust-kit-map)
 
 
 ;;
@@ -127,9 +128,41 @@
 ;;
 ;;; Keybindings
 
-;; The build keys are SPC k, shared: b, t, i, r, d, m and n all work
-;; here through the dispatcher and projection. These are the ones only
-;; Rust has.
+;; SPC k in a cargo project: the panel's keys, on the letters SPC k has
+;; in every project, b build, r run, t test, d debug, m the panel. The
+;; panel's d, the documentation, is D here, since d debugs everywhere.
+(declare-function +core-kit-keymap "build")
+(defvar +rust-kit-map
+  (+core-kit-keymap
+   '(("m" "The panel: what is set"   #'+rust/menu)
+     ("b" "Build"                    #'+rust/build)
+     ("r" "Run"                      #'+rust/run)
+     ("R" "Run with arguments"       #'+rust/run-with-args)
+     ("c" "Check, the fast one"      #'+rust/check)
+     ("l" "Clippy"                   #'+rust/clippy)
+     ("L" "Clippy, fixing"           #'+rust/clippy-fix)
+     ("t" "Test"                     #'+rust/test)
+     ("u" "Test at point"            #'+rust/test-at-point)
+     ("B" "Benchmarks"               #'+rust/bench)
+     ("i" "Install"                  #'projection-commands-install-project)
+     ("d" "Debug"                    #'+rust/debug)
+     ("D" "Documentation"            #'+rust/doc)
+     ("e" "Expand the macros"        #'+rust/expand)
+     ("C" "Clean"                    #'+rust/clean)
+     ("U" "Update the lock file"     #'+rust/update)
+     ("y" "Profile"                  #'+rust/set-profile)
+     ("Y" "dev against release"      #'+rust/toggle-profile)
+     ("f" "Features"                 #'+rust/set-features)
+     ("F" "No default features"      #'+rust/set-no-default-features)
+     ("p" "Workspace member"         #'+rust/set-member)
+     ("T" "Target triple"            #'+rust/set-target)
+     ("a" "Run arguments, kept"      #'+rust/set-run-args)
+     ("I" "Project status"           #'+rust/project-status)
+     ("v" "Cargo.toml"               #'+rust/open-cargo-toml)
+     ("n" "New project"              #'+core/new-project)))
+  "SPC k in a cargo project.")
+
+;; The most used of them, also on the localleader.
 (map! :after rustic
       :map rustic-mode-map
       :localleader
