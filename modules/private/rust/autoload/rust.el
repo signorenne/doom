@@ -5,6 +5,8 @@
 ;; every command built from them, so SPC k b and the panel and the run
 ;; all mean the same thing.
 
+(declare-function dape "dape")
+(declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
 (declare-function +core-dir-locals-set "lib")
 (declare-function +core-compile "lib")
@@ -295,9 +297,13 @@ answer is asked of cargo rather than guessed."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
+  (require 'dape)
   (let ((program (+rust--debug-program)))
-    (funcall #'dape (list 'codelldb-rust :program program
-                          :cwd (+rust-root)))))
+    ;; dape takes the configuration itself, not its name: handed
+    ;; (codelldb-rust :program ...) it read every key as a value, found
+    ;; no command, and no session started.
+    (dape (dape--config-eval 'codelldb-rust
+                             (list :program program :cwd (+rust-root))))))
 
 
 ;;
