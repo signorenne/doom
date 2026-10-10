@@ -33,6 +33,7 @@
 (declare-function +cpp--preset-cache-variable "cmake")
 (declare-function +cpp--target-names "run")
 (declare-function +container-for "container")
+(defvar +container-may-start)
 (declare-function +cpp--env-script-for "container")
 (declare-function +cpp--kit-shell "container")
 (declare-function +cpp--forget-containers "container")
@@ -466,7 +467,13 @@ a plain build directory on the host."
       (if (and cached (equal (car cached) stamp))
           (cdr cached)
         (let ((kit (+cpp--kit-locate (+cpp--choose-kit root))))
-          (puthash root (cons stamp kit) +cpp--kit-cache)
+          ;; Found while no container may be started, as a file opens,
+          ;; a compiler in a stopped one is not found: kept, that answer
+          ;; sent the next build to the host, where it is not.
+          (unless (and (boundp '+container-may-start)
+                       (not +container-may-start)
+                       (not (+cpp-kit-container kit)))
+            (puthash root (cons stamp kit) +cpp--kit-cache))
           kit)))))
 
 (defun +cpp--kit-cache-time (kit root)
