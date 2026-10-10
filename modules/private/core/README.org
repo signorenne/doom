@@ -468,8 +468,10 @@ What keeps it that way:
   measured and is worse: each piece sends the mode over the whole file
   again, 8.8 s in all for that C++ and 40 s for an 8 MB JSON.
 - A file previewed in a prompt is plain past 256 KB
-  (~+core-plain-preview-size~): a 900 KB header took a third of a second
-  to colour at each step through the list.
+  (~+core-plain-preview-size~), and read whole up to 8 MB: a 900 KB
+  header took a third of a second to colour at each step through the
+  list, and past a megabyte consult showed its first 10 KB, so a
+  search's match further down was not on screen.
 
 Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
 busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native

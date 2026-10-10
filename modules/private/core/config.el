@@ -118,7 +118,9 @@ it, which a revert keeps.")
 
 ;; A file previewed in a prompt is a glance, so plain past 256 KB: a 900
 ;; KB header took a third of a second to colour at each step through the
-;; list.
+;; list. And whole up to 8 MB, where consult showed the first 10 KB of
+;; anything past a megabyte, so a search's match beyond them was not on
+;; screen.
 (defvar +core-plain-preview-size (* 256 1024)
   "Past this size a file previewed in a prompt is shown as plain text.")
 
@@ -126,6 +128,7 @@ it, which a revert keeps.")
   "Non-nil while consult opens a file to preview it.")
 
 (after! consult
+  (setq consult-preview-partial-size (* 8 1024 1024))
   (defadvice! +core--previewing-a (fn &rest args)
     :around #'consult--find-file-temporarily
     (let ((+core--previewing t))
