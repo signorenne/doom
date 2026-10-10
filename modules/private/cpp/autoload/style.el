@@ -76,7 +76,11 @@ the fixes clang-tidy proposes."
                                (append (list "run-clang-tidy" "-p" dir "-quiet")
                                        (when current-prefix-arg (list "-fix"))
                                        (list +cpp-tidy-file-filter))
-                               " ")))))
+                               " ")
+                    ;; From the root, which the kit's directory is
+                    ;; relative to; in a container it ran from the
+                    ;; buffer's own directory and found no database.
+                    root))))
 
 ;;;###autoload
 (defun +cpp/tidy-file (&optional fix)
@@ -86,7 +90,8 @@ With FIX, a prefix argument, apply the fixes it proposes and revert."
   (unless buffer-file-name
     (user-error "This buffer is not visiting a file"))
   (+cpp--save-project-buffers)
-  (let ((kit (+cpp--kit)))
+  (let ((kit (+cpp--kit))
+        (root (+core-project-root)))
     (+cpp--compile "clang-tidy"
                    (+cpp--kit-shell
                     kit
@@ -94,4 +99,5 @@ With FIX, a prefix argument, apply the fixes it proposes and revert."
                                (append (list "clang-tidy" (format "-p=%s" (+cpp-kit-dir kit)))
                                        (when fix (list "--fix"))
                                        (list buffer-file-name))
-                               " ")))))
+                               " ")
+                    root))))
