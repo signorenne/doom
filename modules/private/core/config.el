@@ -820,25 +820,30 @@ the window the view stands beside."
 ;;
 ;;; Leaving
 
-;; The window's close button asks whether to save what is open, and by
-;; then the compositor has taken the keyboard away: the question is on
-;; screen and nothing can answer it. Take the focus back before asking,
-;; and raise the frame, since it may be behind something too.
-(defun +core--focus-to-ask (&rest _)
-  "Bring the frame forward and give it the keyboard, before a question.
-It advises commands that take an argument, SPC q q's prefix among them,
-so it takes whatever they are given."
+;; The window's close button asks whether to save what is open, whether
+;; to stop what still runs, whether to quit, in the minibuffer. KDE takes
+;; that click without giving the window the keyboard, and Wayland lets no
+;; program take it: the frame is raised and given the focus here, which
+;; works under X and nowhere else. The click that then brings Emacs
+;; forward lands in a window and puts the cursor there, out of the
+;; minibuffer, so y or n went to the buffer and the question stayed.
+;; While quitting, a question reads the next key wherever the cursor is.
+(defun +core--answer-anywhere-a (fn &rest args)
+  "Call FN with ARGS, the questions it asks answered by the next key.
+It advises the commands that quit, SPC q q's among them."
   (when (display-graphic-p)
     (let ((frame (selected-frame)))
       (when (frame-live-p frame)
         (ignore-errors (raise-frame frame))
-        (ignore-errors (select-frame-set-input-focus frame))))))
+        (ignore-errors (select-frame-set-input-focus frame)))))
+  (let ((y-or-n-p-use-read-key t))
+    (apply fn args)))
 
-(advice-add 'save-buffers-kill-emacs :before #'+core--focus-to-ask)
-(advice-add 'save-buffers-kill-terminal :before #'+core--focus-to-ask)
+(advice-add 'save-buffers-kill-emacs :around #'+core--answer-anywhere-a)
+(advice-add 'save-buffers-kill-terminal :around #'+core--answer-anywhere-a)
 (with-eval-after-load 'doom-ui
   (when (fboundp 'doom/delete-frame-with-prompt)
-    (advice-add 'doom/delete-frame-with-prompt :before #'+core--focus-to-ask)))
+    (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)))
 
 
 ;;
