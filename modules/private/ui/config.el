@@ -376,6 +376,36 @@ half a window above it: a quick turn of the wheel ran past the end."
 
 (setq mwheel-scroll-up-function #'+ui--wheel-scroll-up)
 
+;; ultra-scroll, and the pixel-scroll-precision-mode it rides on, turn
+;; `make-cursor-line-fully-visible' off for good: the wheel leaves the
+;; cursor on a half-shown line while it turns. So j onto the bottom line
+;; of a window, or onto the last line of a file, left that line cut in
+;; half. The option takes a function, asked as Emacs redraws: a line is
+;; brought fully into view unless the wheel is what moved it. What
+;; ultra-scroll feared of it, redisplay slowing a hundredfold (bug#78766),
+;; was fixed in Emacs 31.
+(defconst +ui-wheel-commands
+  '(ultra-scroll ultra-scroll-mac pixel-scroll-precision
+    pixel-scroll-start-momentum pixel-scroll-interpolate-down
+    pixel-scroll-interpolate-up mwheel-scroll scroll-bar-toolkit-scroll
+    scroll-bar-drag)
+  "The commands a wheel, a trackpad or the scroll bar runs.")
+
+(defun +ui--cursor-line-fully-visible-p (_window)
+  "Non-nil unless a wheel scroll is what left the cursor where it is.
+Checked as Emacs redraws, which is between commands, when
+`last-command' holds the one just run, or inside one, in `this-command'."
+  (not (or (memq this-command +ui-wheel-commands)
+           (memq last-command +ui-wheel-commands))))
+
+(add-hook! 'ultra-scroll-mode-hook
+  (defun +ui--cursor-line-fully-visible-h ()
+    "Bring the cursor's line fully into view again, but for the wheel."
+    (setq-default make-cursor-line-fully-visible
+                  (if (bound-and-true-p ultra-scroll-mode)
+                      #'+ui--cursor-line-fully-visible-p
+                    t))))
+
 ;;
 ;;; Where you are in the buffer
 
