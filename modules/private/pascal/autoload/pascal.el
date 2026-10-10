@@ -50,6 +50,15 @@ to the root.  Nil means the one the project names, or the only one.")
 (put '+pascal-main 'safe-local-variable #'stringp)
 
 
+;;;###autoload
+(defun +pascal-jcf-settings-file ()
+  "The formatter's settings for this buffer: the project's jcfsettings.cfg
+when it has one, else `+pascal-jcf-settings'."
+  (if-let* ((dir (locate-dominating-file default-directory "jcfsettings.cfg")))
+      (expand-file-name "jcfsettings.cfg" dir)
+    (bound-and-true-p +pascal-jcf-settings)))
+
+
 ;;
 ;;; What kind of project this is
 

@@ -120,7 +120,57 @@ it reads the project's unit paths from the =.lpi= but not the include
 path of the LCL's own package, and failed on =lcl_defines.inc= in every
 LCL unit, so nothing of the LCL, =TForm= among it, could be looked up.
 
+** The formatter
+=SPC c f= formats with JEDI Code Format, the formatter the Lazarus IDE runs
+from Source > JEDI Code Format. Its command line version ships as source
+inside Lazarus and is built once, like pasls:
+
+#+begin_src sh
+cp -r /usr/lib64/lazarus/components/jcf2 ~/src/jcf2
+cd ~/src/jcf2/CommandLine/Lazarus && lazbuild jcf.lpi
+install -Dm755 ~/src/jcf2/lib/CommandLine-x86_64-linux/jcf ~/.local/bin/jcf
+#+end_src
+
+A copy, because lazbuild writes its units beside the sources and
+=/usr/lib64= is root's. ~SPC h r d~ says when it is missing.
+
+* Formatting
+The standard is what that formatter writes with the settings this
+Lazarus ships for it, =components/jcf2/CommandLine/Lazarus/jcfsettings.cfg=:
+two spaces, =begin= under the statement it belongs to, ~case~ labels one
+level in, built-in types such as =integer= in lower case. The module's
+=jcfsettings.cfg= is that file with five changes, each where the shipped
+one undid what an author did on purpose or disagreed with the rest:
+
+| Setting                     | Shipped | Here  | Why                                                   |
+|-----------------------------+---------+-------+-------------------------------------------------------|
+| =IndentLibraryProcs=          | True    | False | a program's routines went in two, a unit's did not    |
+| =RemoveExpressionReturns=     | True    | False | an expression broken on purpose was joined back       |
+| =RemoveProcedureDefReturns=   | True    | False | so was a parameter list                               |
+| =KeepCommentsWithCodeInProcs= | True    | False | the comment above a nested routine went to the margin |
+| =IndentVarAndConstInClass=    | False   | True  | =class var= sat with =private=, not with the fields       |
+
+Lines too long are still broken. With =KeepCommentsWithCodeInProcs= off a
+comment inside a routine stays where it is put, which Emacs's own
+indentation has already put right. One quirk stays: in a program with no
+=uses= clause, =$MODE= and =$H+= on one line are split in two.
+
+A project's own =jcfsettings.cfg= wins over the module's, and saving
+formats only in a project that has one, as C++ asks for a =.clang-format=:
+someone else's code keeps its style until ~SPC c f~. Projects made with
+~SPC k n~ carry the module's. The Lazarus IDE reads its own copy,
+=~/.lazarus/jcfsettings.cfg=; copy this one there to format alike in both.
+
+Typing agrees with the formatter: =TAB=, =RET= and ~=~ put a line where it
+would. opascal-mode needed four corrections for that, in
+=autoload/indent.el=: a routine after a =type=, =var= or =const= section
+was indented into it, =begin= went one level past its =if=, a line inside
+parentheses lined up under the first argument, and a condition broken over
+lines went twenty columns out.
+
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
   and ~+pascal-run-args~: the per-project settings, all directory local.
 - ~+pascal-templates-dir~, =$DOOMDIR/templates/pascal/= by default.
+- ~+pascal-jcf-settings~, the formatter's settings where a project has
+  none, the module's =jcfsettings.cfg=.

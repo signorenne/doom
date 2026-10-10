@@ -15,6 +15,11 @@
   (file-name-concat doom-user-dir "templates/pascal/")
   "Project templates, one directory per kind: console, lcl.")
 
+(defvar +pascal-jcf-settings
+  (file-name-concat doom-user-dir "modules/private/pascal/jcfsettings.cfg")
+  "The formatter's settings where a project has no jcfsettings.cfg of its
+own: the ones Lazarus ships, with the five changes the README lists.")
+
 (defvar +pascal-modes '(opascal-mode)
   "The modes an Object Pascal file opens in.")
 
@@ -62,6 +67,34 @@ openSUSE puts them under lib64; another distribution will not.")
   ;; autoload/indent.el.
   (advice-add #'opascal-corrected-indentation :around #'+pascal--indentation-a)
   (advice-add #'opascal-open-group-indent :override #'+pascal--open-group-indent-a))
+
+
+;;
+;;; Formatting
+
+;; SPC c f formats with JEDI Code Format, the formatter the Lazarus IDE
+;; runs from Source > JEDI Code Format, with the project's
+;; jcfsettings.cfg or else the module's. It rewrites a file, not a
+;; stream, so apheleia hands it a copy. On a file it cannot parse it
+;; stops and changes nothing, and so does the buffer.
+(after! apheleia
+  (setf (alist-get 'jcf apheleia-formatters)
+        '("jcf" "-clarify" "-inplace" "-y"
+          (concat "-config=" (+pascal-jcf-settings-file))
+          "-F" inplace))
+  (setf (alist-get 'opascal-mode apheleia-mode-alist) 'jcf))
+
+;; On save only in a project that carries a jcfsettings.cfg, as C++ asks
+;; for a .clang-format: someone else's code keeps the style it was
+;; written in until SPC c f. The templates carry one. An .inc is a
+;; fragment the formatter cannot parse on its own.
+(add-hook! 'apheleia-inhibit-functions
+  (defun +pascal--inhibit-format-h ()
+    "Keep a Pascal buffer from formatting on save where it should not."
+    (and (derived-mode-p 'opascal-mode)
+         (or (not (executable-find "jcf"))
+             (and buffer-file-name (string-suffix-p ".inc" buffer-file-name t))
+             (not (locate-dominating-file default-directory "jcfsettings.cfg"))))))
 
 
 ;;
