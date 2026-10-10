@@ -89,6 +89,11 @@ openSUSE puts them under lib64; another distribution will not.")
     "Let show-paren match a Pascal buffer's blocks as well."
     (setq-local show-paren-data-function #'+pascal-show-paren-data)))
 
+;; The unit names in a uses clause; and pasls's completions merged with
+;; the buffer's words and the snippets, where one used to hide the rest.
+(add-hook 'opascal-mode-hook #'+pascal-completion-h)
+(add-hook 'eglot-managed-mode-hook #'+pascal-completion-h)
+
 
 ;;
 ;;; Formatting

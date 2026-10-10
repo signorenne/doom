@@ -187,6 +187,15 @@ With the cursor on =begin=, =try=, =case=, =repeat=, =record= or =class=, or
 on the =end= or =until= that closes one, the other lights up the way a
 matching parenthesis does.
 
+** What completion offers
+- pasls's completions, the words of the open buffers it did not offer,
+  and the snippets whose key fits, in one list: before, the buffer's words
+  showed only when pasls had nothing, so =Par= offered =ParamStr= and not
+  the =Parsed= declared above it.
+- In a =uses= clause, every installed unit by the name its source spells:
+  =sysu= gives =SysUtils=. The LCL's in a Lazarus project only, and the
+  project's own units. The list is read once and kept in Doom's cache.
+
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
   and ~+pascal-run-args~: the per-project settings, all directory local.
