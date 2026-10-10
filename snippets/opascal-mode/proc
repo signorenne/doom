@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: procedure
+# key: proc
+# --
+procedure ${1:Name};
+begin
+  $0
+end;

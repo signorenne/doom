@@ -198,6 +198,35 @@ matching parenthesis does.
 - A new =.pas= or =.pp= file starts as a unit named after it, a new =.lpr=
   as a program.
 
+The snippets, in =$DOOMDIR/snippets/opascal-mode/=; type the key and pick
+it from the list, or =TAB= after it:
+
+| Key     | What it writes                           |
+|---------+------------------------------------------|
+| =beg=     | =begin= ... =end;=                           |
+| =ifb=     | =if= ... =then begin= ... =end;=               |
+| =ife=     | =if= ... =then begin= ... =end else begin= ... |
+| =forb=    | =for I := 0 to= ... =do begin= ... =end;=      |
+| =forin=   | =for Item in Items do begin= ... =end;=      |
+| =whileb=  | =while= ... =do begin= ... =end;=              |
+| =repu=    | =repeat= ... =until= ...;                    |
+| =caseof=  | =case= ... =of= ... =else= ... =end;=            |
+| =tryfin=  | =try= ... =finally= ... =end;=                 |
+| =tryexc=  | =try= ... =except on E: Exception do= ...    |
+| =tryfree= | create, use in =try=, =Free= in =finally=      |
+| =proc=    | a procedure                              |
+| =func=    | a function                               |
+| =cls=     | a class type with a property             |
+| =rec=     | a record type                            |
+| =prop=    | a property and its field                 |
+| =wl=      | =WriteLn(...)=                             |
+| =wlf=     | =WriteLn(Format(...))=                     |
+| =test=    | an fpcunit test method                   |
+
+No key is a word written for itself: with the popup's first candidate
+taken by =RET=, a snippet called =begin= would expand at the end of every
+=begin= typed.
+
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
   and ~+pascal-run-args~: the per-project settings, all directory local.

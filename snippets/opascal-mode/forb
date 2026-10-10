@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: for ... to ... do begin ... end
+# key: forb
+# --
+for ${1:I} := ${2:0} to ${3:High(Items)} do
+begin
+  $0
+end;

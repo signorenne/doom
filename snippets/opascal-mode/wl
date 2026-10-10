@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: WriteLn
+# key: wl
+# --
+WriteLn($0);

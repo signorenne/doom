@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: create, use in try, free in finally
+# key: tryfree
+# --
+${1:List} := ${2:TStringList}.Create;
+try
+  $0
+finally
+  $1.Free;
+end;

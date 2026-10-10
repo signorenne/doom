@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: class type
+# key: cls
+# --
+${1:TThing} = class
+private
+  F${2:Value}: ${3:integer};
+public
+  constructor Create;
+  property $2: $3 read F$2 write F$2;
+end;$0

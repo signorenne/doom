@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: try ... except on E do ... end
+# key: tryexc
+# --
+try
+  $0
+except
+  on E: ${1:Exception} do
+    ${2:WriteLn(StdErr, E.Message)};
+end;

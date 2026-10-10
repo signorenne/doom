@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: WriteLn with Format
+# key: wlf
+# --
+WriteLn(Format('${1:%s}', [${2:Value}]));$0

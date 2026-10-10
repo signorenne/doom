@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: try ... finally ... end
+# key: tryfin
+# --
+try
+  $0
+finally
+  $1
+end;

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: fpcunit test method
+# key: test
+# --
+procedure ${1:TThingTest}.${2:DoesWhatItShould};
+begin
+  AssertEquals(${3:Expected}, ${4:Actual});$0
+end;

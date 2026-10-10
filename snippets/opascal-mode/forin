@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: for ... in ... do begin ... end
+# key: forin
+# --
+for ${1:Item} in ${2:Items} do
+begin
+  $0
+end;

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: if ... then begin ... end
+# key: ifb
+# --
+if ${1:Condition} then
+begin
+  $0
+end;

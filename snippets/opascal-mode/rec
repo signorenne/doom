@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: record type
+# key: rec
+# --
+${1:TPoint} = record
+  ${2:X, Y}: ${3:integer};
+end;$0

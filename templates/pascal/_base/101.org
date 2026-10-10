@@ -509,6 +509,12 @@ With pasls installed (the module README says how), a Pascal buffer has:
 Completion comes up as you type, and the parameters show while you
 write a call.
 
+Ready-made pieces save typing the shape of a block: type =ifb= and pick
+it from the list for =if ... then begin ... end;=, =forb= for a =for= loop,
+=tryfin= for =try ... finally=, =proc= and =func= for a routine. The module
+README lists all of them. With the cursor on a =begin=, its =end= lights up,
+and the other way round: the quickest way to see which block you are in.
+
 =TAB= and ~=~ indent as the formatter would, and =SPC c f= formats the
 whole file the way the Lazarus IDE does: two spaces, =begin= under the
 statement it belongs to, built-in types such as =integer= in lower case.

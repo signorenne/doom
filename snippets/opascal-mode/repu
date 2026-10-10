@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: repeat ... until
+# key: repu
+# --
+repeat
+  $0
+until ${1:Condition};

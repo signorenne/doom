@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: case ... of ... else ... end
+# key: caseof
+# --
+case ${1:Value} of
+  ${2:0}:
+    $3;
+else
+  $0;
+end;

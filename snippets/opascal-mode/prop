@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: property with a field
+# key: prop
+# --
+property ${1:Name}: ${2:integer} read F$1 write F$1;$0
