@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: program
+# key: __program
+# --
+program ${1:`(file-name-base (or buffer-file-name "project1"))`};
+
+{\$MODE OBJFPC}{\$H+}
+
+uses
+  SysUtils;
+
+begin
+  $0
+end.

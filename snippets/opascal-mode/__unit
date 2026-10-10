@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: unit
+# key: __unit
+# --
+unit ${1:`(let ((name (file-name-base (or buffer-file-name "unit1")))) (concat (upcase (substring name 0 1)) (substring name 1)))`};
+
+{\$MODE OBJFPC}{\$H+}
+
+interface
+
+uses
+  SysUtils;
+
+$0
+
+implementation
+
+end.

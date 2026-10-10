@@ -94,6 +94,10 @@ openSUSE puts them under lib64; another distribution will not.")
 (add-hook 'opascal-mode-hook #'+pascal-completion-h)
 (add-hook 'eglot-managed-mode-hook #'+pascal-completion-h)
 
+;; A new unit or program file starts as one, named after the file.
+(set-file-template! "\\.\\(pas\\|pp\\)\\'" :trigger "__unit" :mode 'opascal-mode)
+(set-file-template! "\\.lpr\\'" :trigger "__program" :mode 'opascal-mode)
+
 
 ;;
 ;;; Formatting

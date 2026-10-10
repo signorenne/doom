@@ -195,6 +195,8 @@ matching parenthesis does.
 - In a =uses= clause, every installed unit by the name its source spells:
   =sysu= gives =SysUtils=. The LCL's in a Lazarus project only, and the
   project's own units. The list is read once and kept in Doom's cache.
+- A new =.pas= or =.pp= file starts as a unit named after it, a new =.lpr=
+  as a program.
 
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
