@@ -30,13 +30,16 @@ stopped ones too.  Nil when distrobox is not installed."
 ;;;###autoload
 (defun +container-run (container argv)
   "The first line ARGV prints when run in CONTAINER, on the host when
-CONTAINER is nil; nil when it fails.  A short process, not TRAMP."
+CONTAINER is nil; nil when it fails.  A short process, not TRAMP.
+Only what it prints on its standard output: distrobox says \"Starting
+container...\" on the error output when the container was stopped, and
+that line was taken for the answer."
   (with-temp-buffer
     (when (zerop (condition-case nil
                      (if container
-                         (apply #'call-process +container-program nil t nil
+                         (apply #'call-process +container-program nil '(t nil) nil
                                 "enter" container "--" argv)
-                       (apply #'call-process (car argv) nil t nil (cdr argv)))
+                       (apply #'call-process (car argv) nil '(t nil) nil (cdr argv)))
                    (error 1)))
       (goto-char (point-min))
       (let ((line (string-trim (buffer-substring (point) (line-end-position)))))

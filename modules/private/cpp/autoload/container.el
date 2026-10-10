@@ -51,7 +51,8 @@ keep one next to their sysroots; it is what the toolchain file reads."
                                            container
                                            (list "sh" "-c"
                                                  (format "ls -d %s/environment-setup-* 2>/dev/null | head -1"
-                                                         (shell-quote-argument sdk))))))
+                                                         (shell-quote-argument sdk)))))
+                                   ((string-prefix-p "/" found)))
                          (doom-store-put key found nil "+cpp")
                          found))
                  (car (file-expand-wildcards (concat sdk "/environment-setup-*"))))))
