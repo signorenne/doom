@@ -681,13 +681,20 @@ function, so `c-ts-mode-set-style' installs them."
       (:map (c-mode-map c++-mode-map c-ts-mode-map c++-ts-mode-map)
        "<f2>"   #'+lookup/definition
        "<S-f2>" #'+cpp/find-declaration
-       "<f4>"   #'find-sibling-file)
-      (:after dape
-       :map dape-active-mode-map
-       "<f10>"   #'dape-next
-       "<f11>"   #'dape-step-in
-       "<S-f11>" #'dape-step-out
-       "<S-f5>"  #'dape-quit))
+       "<f4>"   #'find-sibling-file))
+
+;; The stepping keys, while a session runs. dape's mode for that has no
+;; keymap of its own, so a map bound to `dape-active-mode-map' waited
+;; for a variable that never comes and the keys did nothing; this one
+;; hangs from the mode's variable instead.
+(defvar +cpp-dape-active-map
+  (define-keymap
+    "<f10>"   #'dape-next
+    "<f11>"   #'dape-step-in
+    "S-<f11>" #'dape-step-out
+    "S-<f5>"  #'dape-quit)
+  "Keys that step through a running debug session.")
+(add-to-list 'minor-mode-map-alist (cons 'dape-active-mode +cpp-dape-active-map))
 
 ;; The most used ones, also on the localleader.
 (map! :map (c-mode-map c++-mode-map c-ts-mode-map c++-ts-mode-map)
