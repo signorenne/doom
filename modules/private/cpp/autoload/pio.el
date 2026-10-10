@@ -93,6 +93,14 @@ With prefix argument PERSIST, write it to .dir-locals.el."
      (list (unless (string-empty-p choice) choice) current-prefix-arg)))
   (setq-default +pio-env env)
   (setq +pio-env env)
+  ;; And the project's other buffers, which may hold their own value
+  ;; from .dir-locals.el.
+  (when-let* ((root (+pio--root 'noerror)))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (and buffer-file-name (local-variable-p '+pio-env)
+                   (file-in-directory-p buffer-file-name root))
+          (setq +pio-env env)))))
   (when persist
     (+core-dir-locals-set (+pio--root) '+pio-env env))
   (message "PlatformIO environment: %s" (or env "project default")))

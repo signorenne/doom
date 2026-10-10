@@ -11,6 +11,7 @@
 (defvar +cpp-clangd-args)
 (defvar +cpp-container)
 (declare-function +cpp-kit-container "kit")
+(declare-function +cpp--set-setting "project")
 (declare-function +cpp-kit-make "kit")
 (declare-function +cpp-kit-name "kit")
 (defvar +cpp-lsp-server)
@@ -146,7 +147,9 @@ container both."
         (root (+core-project-root)))
     (when (and name (not (executable-find "distrobox")))
       (user-error "distrobox is not installed"))
-    (+core-dir-locals-set root '+cpp-container name)
+    ;; The setter, so the project's open buffers take it too: the value
+    ;; .dir-locals.el gave them as they opened won over the file.
+    (+cpp--set-setting '+cpp-container name)
     (let ((kit (+cpp--kit root)))
       (when (apply #'derived-mode-p +cpp-modes)
         (+cpp/restart-lsp))
