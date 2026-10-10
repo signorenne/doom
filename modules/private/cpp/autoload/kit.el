@@ -455,7 +455,8 @@ directories newest first.  Read again only when the disk changed."
   "The kit in use for the project at ROOT, never nil for a CMake project.
 In order: the one chosen for the project, Qt Creator's active
 configuration when it is configured, the newest configured directory,
-the selected preset, and last a plain build directory on the host."
+Qt Creator's active configuration all the same, the first kit, and last
+a plain build directory on the host."
   (when-let* ((root (or root (+core-project-root 'noerror))))
     (let* ((root (file-name-as-directory (expand-file-name root)))
            (stamp (+cpp--kits-stamp root))
@@ -475,6 +476,16 @@ the selected preset, and last a plain build directory on the host."
 
 (defvar +cpp--warned-roots (make-hash-table :test #'equal)
   "Roots told once that their chosen kit names nothing on disk.")
+
+(defun +cpp--qtcreator-active-kit (root kits)
+  "The kit among KITS that is Qt Creator's active configuration of ROOT,
+or nil."
+  (when-let* ((active (+qtcreator-active root))
+              (dir (plist-get active :dir))
+              (k (+cpp--kit-named (file-relative-name dir root) kits)))
+    (let ((active (copy-+cpp-kit k)))
+      (setf (+cpp-kit-source active) 'qtcreator)
+      active)))
 
 (defun +cpp--choose-kit (root)
   "The kit for ROOT, chosen as `+cpp--kit' describes, not yet located.
@@ -499,15 +510,15 @@ wins whatever wrote it, and projection is told which preset that is."
                           (message "+cpp-kit %S in .dir-locals.el is no preset or build directory here; SPC k K picks one, SPC k c configures it as named"
                                    name)))
                       (+cpp-kit-make :name name :dir name :source 'chosen)))
-                  (when-let* ((active (+qtcreator-active root))
-                              (dir (plist-get active :dir))
-                              (k (+cpp--kit-named (file-relative-name dir root) kits)))
-                    (let ((active (copy-+cpp-kit k)))
-                      (setf (+cpp-kit-source active) 'qtcreator)
-                      active))
+                  (when-let* ((k (+cpp--qtcreator-active-kit root kits))
+                              ((+cpp-kit-configured k)))
+                    k)
                   (when-let* ((configured (seq-filter #'+cpp-kit-configured kits)))
                     (car (seq-sort-by (lambda (k) (+cpp--kit-cache-time k root))
                                       #'> configured)))
+                  ;; Nothing configured yet, a fresh checkout: the one
+                  ;; Qt Creator would build.
+                  (+cpp--qtcreator-active-kit root kits)
                   (car kits)
                   (+cpp-kit-make :name "build" :dir "build" :source 'default))))
     kit))

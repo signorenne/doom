@@ -65,7 +65,8 @@ that touch it run. It is read from the disk, never asked:
 The kit in use is, in order: the one chosen for the project (=SPC k K=,
 written to =.dir-locals.el= as =+cpp-kit=), Qt Creator's active
 configuration when its directory is configured, the newest configured
-kit whatever wrote it, a preset or a plain directory, else the first
+kit whatever wrote it, a preset or a plain directory, else Qt Creator's
+active configuration all the same (a fresh checkout), else the first
 preset, and last a plain =build= on the host. =SPC k ?= says which one
 and why; both menus show it in their header. A directory whose cache
 was written for another path, the project moved since, is stale: CMake
