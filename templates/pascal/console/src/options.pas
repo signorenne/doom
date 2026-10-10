@@ -17,15 +17,15 @@ type
   { What the command line asked for. }
   TOptions = record
     Name: string;         { Who to greet. }
-    Count: Integer;       { How many times, from 1 up. }
-    Verbose: Boolean;     { Say what is being done, on stderr. }
-    ShowHelp: Boolean;    { Print the usage and stop. }
-    ShowVersion: Boolean; { Print the version and stop. }
+    Count: integer;       { How many times, from 1 up. }
+    Verbose: boolean;     { Say what is being done, on stderr. }
+    ShowHelp: boolean;    { Print the usage and stop. }
+    ShowVersion: boolean; { Print the version and stop. }
   end;
 
   { Why a command line could not be read. }
   TOptionErrorKind = (oeUnknownOption, oeMissingValue, oeUnexpectedValue,
-                      oeBadNumber);
+    oeBadNumber);
 
   EOptionError = class(Exception)
   private
@@ -65,10 +65,10 @@ end;
 
 function ParseOptions(const AArguments: array of string): TOptions;
 var
-  Index: Integer;
+  Index: integer;
   Option, Joined, Text: string;
   Separator: SizeInt;
-  HasJoined: Boolean;
+  HasJoined: boolean;
 
   { The value of Option: the part after its =, else the next argument. }
   function TakeValue: string;

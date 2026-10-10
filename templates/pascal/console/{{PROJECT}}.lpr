@@ -10,7 +10,7 @@ uses
 { The arguments after the program's name, as the parser takes them. }
 function Arguments: TStringArray;
 var
-  Index: Integer;
+  Index: integer;
 begin
   Result := nil;
   SetLength(Result, ParamCount);

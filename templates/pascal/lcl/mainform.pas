@@ -18,7 +18,7 @@ type
     GreetingLabel: TLabel;
     procedure GreetButtonClick(Sender: TObject);
   private
-    FCount: Integer;
+    FCount: integer;
   end;
 
 var

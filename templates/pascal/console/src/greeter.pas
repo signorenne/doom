@@ -18,7 +18,7 @@ implementation
 function Greetings(const AOptions: TOptions): TStringArray;
 var
   Name: string;
-  Index: Integer;
+  Index: integer;
 begin
   Name := Trim(AOptions.Name);
   if Name = '' then

@@ -204,10 +204,10 @@ The ones you will see in your first week, word for word:
 ** Values
 #+begin_src opascal
 var
-  Count: Integer;          { whole number, 32 bits; Int64 for more }
-  Price: Double;           { a number with a fraction }
-  Done: Boolean;           { True or False }
-  Letter: Char;            { one character }
+  Count: integer;          { whole number, 32 bits; int64 for more }
+  Price: double;           { a number with a fraction }
+  Done: boolean;           { True or False }
+  Letter: char;            { one character }
   Name: string;            { text, any length }
 const
   Greeting = 'Hello';      { strings are in single quotes }
@@ -268,14 +268,14 @@ begin
   WriteLn(UpperCase(AText));
 end;
 
-function Twice(AValue: Integer): Integer;          { returns a value }
+function Twice(AValue: integer): integer;          { returns a value }
 begin
   Result := AValue * 2;                            { Result is what it returns }
 end;
 
-procedure Swap(var A, B: Integer);                 { var: changes the caller's }
+procedure Swap(var A, B: integer);                 { var: changes the caller's }
 var
-  Kept: Integer;
+  Kept: integer;
 begin
   Kept := A; A := B; B := Kept;
 end;
@@ -310,15 +310,15 @@ A record is a value, a class is an object you create and must free:
 #+begin_src opascal
 type
   TPoint = record          { a value: assigning copies it }
-    X, Y: Integer;
+    X, Y: integer;
   end;
 
   TCounter = class         { an object: variables hold a reference }
   private
-    FCount: Integer;
+    FCount: integer;
   public
     procedure Add;
-    property Count: Integer read FCount;
+    property Count: integer read FCount;
   end;
 
 procedure TCounter.Add;
@@ -410,7 +410,7 @@ for any option.
 
 In =src/options.pas=, a field in =TOptions=:
 #+begin_src opascal
-    Shout: Boolean;       { Greet in capitals. }
+    Shout: boolean;       { Greet in capitals. }
 #+end_src
 
 its default in =DefaultOptions=:
@@ -507,7 +507,13 @@ With pasls installed (the module README says how), a Pascal buffer has:
 | =SPC c x= | the problems in this project              |
 
 Completion comes up as you type, and the parameters show while you
-write a call. pasls does not format code; =TAB= and ~=~ indent it.
+write a call.
+
+=TAB= and ~=~ indent as the formatter would, and =SPC c f= formats the
+whole file the way the Lazarus IDE does: two spaces, =begin= under the
+statement it belongs to, built-in types such as =integer= in lower case.
+In a project made with =SPC k n= every save formats it too; its settings
+are the project's =jcfsettings.cfg=.
 
 * A program with a window
 =SPC k n=, Pascal, =lcl=, makes a Lazarus application: a =.lpi=, the
@@ -548,6 +554,7 @@ has range and overflow checks on, the ={$R+}= and ={$Q+}= above.
 | =F10= =F11=   | the next line, into the call; =S-F11= out       |
 | =gd= =K=      | definition, what it is                        |
 | =SPC c D=   | where it is used, =SPC c r= rename              |
+| =SPC c f=   | format the file                               |
 | =SPC m k I= | what is installed, and what this project is   |
 
 The cheat sheet has the rest, on =SPC h /= or =F12=. =SPC h j= asks the

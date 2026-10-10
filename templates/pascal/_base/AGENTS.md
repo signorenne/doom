@@ -25,4 +25,7 @@ The rules to keep in memory before changing this repo.
 ## Before you finish
 
 - It compiles with no warnings: `fpc -Mobjfpc -Sh -vw` is clean.
+- It is formatted: `jcf -clarify -inplace -y -config=jcfsettings.cfg -F`
+  on the file leaves it as it is. That is JEDI Code Format, the Lazarus
+  IDE's formatter, with this repo's settings.
 - No unit in `uses` that is not used.
