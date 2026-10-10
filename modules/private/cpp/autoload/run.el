@@ -3,6 +3,7 @@
 ;; Run and debug one of the project's executables, where the kit runs,
 ;; with the arguments and working directory Qt Creator uses.
 
+(defvar compilation-start-hook)
 (declare-function +core/debug "build")
 (declare-function +cpp--save-project-buffers "project")
 (declare-function +cpp--kind-p "project")
@@ -347,10 +348,12 @@ dape looks for it there; SPC k d in a Rust buffer uses it afterwards."
 ;;; Build and run in one
 
 (defvar +cpp--run-after-build nil
-  "The buffer a build was started from that should be followed by a run.
-The buffer and not a flag: a timer runs in whatever buffer happens to be
-current when it fires, and `+cpp/run' asks the current buffer which
-project it is in.")
+  "(ORIGIN . BUILD): the buffer a build was started from, which should be
+followed by a run, and the build's compilation buffer.  The buffer and
+not a flag: a timer runs in whatever buffer happens to be current when
+it fires, and `+cpp/run' asks the current buffer which project it is
+in.  The build's own buffer, since any compilation that finished first,
+the assembly view's, ran the program before the build was done.")
 
 ;; Autoloaded: on `compilation-finish-functions', added in config.el.
 ;;;###autoload
@@ -358,8 +361,10 @@ project it is in.")
   "Run what was built, when BUFFER finished with STATUS and was asked to.
 A build that failed stops here, with its output where it is: the reason
 is what you wanted to see, not a program that cannot have changed."
-  (when (and +cpp--run-after-build (buffer-live-p buffer))
-    (let ((origin +cpp--run-after-build))
+  (when (and +cpp--run-after-build
+             (eq buffer (cdr +cpp--run-after-build))
+             (buffer-live-p buffer))
+    (let ((origin (car +cpp--run-after-build)))
       (setq +cpp--run-after-build nil)
       (if (equal status "finished\n")
           (run-at-time 0 nil
@@ -374,8 +379,14 @@ is what you wanted to see, not a program that cannot have changed."
   "Build the project and run it when the build succeeded.
 The two keys in one, since that is the pair you press all day."
   (interactive)
-  (setq +cpp--run-after-build (current-buffer))
-  (condition-case error
-      (call-interactively #'projection-commands-build-project)
-    (error (setq +cpp--run-after-build nil)
-           (signal (car error) (cdr error)))))
+  (let ((origin (current-buffer))
+        build)
+    (setq +cpp--run-after-build nil)
+    ;; The build's buffer, from the hook that sees it start; set once the
+    ;; command is back, so a build it interrupted is not taken for it.
+    (let ((compilation-start-hook
+           (cons (lambda (process) (setq build (process-buffer process)))
+                 compilation-start-hook)))
+      (call-interactively #'projection-commands-build-project))
+    (when build
+      (setq +cpp--run-after-build (cons origin build)))))
