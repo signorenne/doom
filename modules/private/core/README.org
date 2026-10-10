@@ -458,6 +458,15 @@ What keeps it that way:
   that is one declaration, or one error, that is all of it: 176 ms a key
   in the data array, 55 in =json.hpp=, 1.8 s in a 2 MB header, where the
   older modes take 5, 8 and 7.
+- A file past two megabytes (~+core-plain-file-size~) is made by a
+  program, and opens whole as plain text, at once: its mode went over
+  all of it before the first screen, 2.4 s for 8 MB of C++, 2.3 s for
+  2.5 MB of Org, and cc-mode spent minutes on one key in a 50 MB Qt
+  resource. =M-x +core/file-own-mode= gives it its mode, which a revert
+  keeps; an SVG keeps its drawing. Pictures, PDFs, archives and Org
+  files, which the agenda reads in org-mode only, are not touched. Reading such a file in pieces behind the first screen was
+  measured and is worse: each piece sends the mode over the whole file
+  again, 8.8 s in all for that C++ and 40 s for an 8 MB JSON.
 
 Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
 busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native

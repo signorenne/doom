@@ -4,6 +4,7 @@
 ;; the middle of it whatever moves, and the viewer's own keys pan it, zoom
 ;; it and step to the next file in the directory.
 
+(defvar +core-plain-mode)                ; config.el
 (declare-function +core-image-center "images")
 (declare-function +core-image-uncenter "images")
 (declare-function +core--image-center-h "images")
@@ -106,6 +107,13 @@ has no cursor."
 ;; characters, and `so-long-mode' takes it over from nxml-mode for
 ;; speed; it keeps its drawing there too.
 (add-hook 'so-long-mode-hook #'+core--svg-view-h)
+;; One past `+core-plain-file-size' opens as plain text, without
+;; nxml-mode, five seconds for 2 MB, and keeps its drawing all the same.
+(add-hook! 'find-file-hook
+  (defun +core--svg-plain-view-h ()
+    "Give an SVG opened as plain text its drawing beside it."
+    (when (and +core-plain-mode (not (eq +core-plain-mode t)))
+      (+core--svg-view-h))))
 
 ;; Any other image opens as the picture, with what is inside it beside:
 ;; its structure, chunk by chunk or marker by marker, its metadata, and

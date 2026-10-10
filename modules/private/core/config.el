@@ -93,6 +93,55 @@
                 (funcall fn mode)))
             '((depth . -90)))
 
+;; Past two megabytes a file is made by a program: an image as a C array,
+;; a Qt resource, compile_commands.json, a log. Reading one is quick, 50
+;; MB in a fifth of a second; its mode is slow, going over all of it
+;; before the first screen: 2.4 s for 8 MB of C++, 2.3 s for 2.5 MB of
+;; Org, and in a 50 MB resource array cc-mode spent minutes on one key.
+;; Such a file opens whole but as plain text, at once, and
+;; `+core/file-own-mode' gives it its mode. Reading the rest in pieces
+;; behind the first screen was tried and is worse: each piece sends the
+;; mode over the file again, 8.8 s in all for that C++ and 40 s for an 8
+;; MB JSON that opens in 0.4.
+(defvar +core-plain-file-size (* 2 1024 1024)
+  "Past this size a file opens as plain text, without its major mode.")
+
+(defvar +core-plain-file-keep-modes '(org-mode)
+  "Modes a file keeps at any size, besides Doom's own list: org's agenda
+and refile refuse a file that is not in org-mode, and the agenda reads
+every file of the notes.")
+
+(defvar-local +core-plain-mode nil
+  "The mode a file opened as plain text would have had, or t once it has
+it, which a revert keeps.")
+(put '+core-plain-mode 'permanent-local t)
+
+(defadvice! +core--plain-big-file-a (fn mode &rest args)
+  "Set a file past `+core-plain-file-size' up in `fundamental-mode', not MODE.
+Doom's list of the modes a large file keeps, a picture's, a PDF's, an
+archive's, is left alone."
+  :around #'set-auto-mode-0
+  (if (and mode
+           buffer-file-name
+           (not (eq +core-plain-mode t))
+           (> (buffer-size) +core-plain-file-size)
+           (not (memq mode doom-large-file-excluded-modes))
+           (not (memq mode +core-plain-file-keep-modes)))
+      (progn (setq +core-plain-mode mode)
+             (apply fn #'fundamental-mode args))
+    ;; Back under the limit, a revert after the file shrank: not plain.
+    (unless (eq +core-plain-mode t)
+      (setq +core-plain-mode nil))
+    (apply fn mode args)))
+
+(add-hook! 'find-file-hook :depth 90
+  (defun +core--plain-file-say-h ()
+    "Say that the file was opened as plain text, and how to change that."
+    (when (and +core-plain-mode (not (eq +core-plain-mode t)))
+      (message "%s is %s: plain text; M-x +core/file-own-mode for %s"
+               (buffer-name) (file-size-human-readable (buffer-size))
+               +core-plain-mode))))
+
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
 ;; delete-file behind them move the file to the desktop's trash, the one
 ;; Dolphin shows, and SPC f t opens it here. Put a file back from the

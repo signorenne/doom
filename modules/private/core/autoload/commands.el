@@ -5,6 +5,7 @@
 (declare-function doom/restart-and-restore "sessions")
 (defvar consult-fd-args)
 (defvar +core-compile-name)             ; lib.el
+(defvar +core-plain-mode)               ; config.el
 
 (defvar +core-transparency-alpha 85
   "Opacity (0-100) `+core/toggle-transparency' switches to.")
@@ -90,6 +91,17 @@ FILE defaults to the file at point in dired, this buffer's file, or
       (user-error "xdg-open not found on PATH"))
     (call-process "xdg-open" nil 0 nil (expand-file-name target))
     (message "Opened %s externally" (abbreviate-file-name target))))
+
+;;;###autoload
+(defun +core/file-own-mode ()
+  "Give a file opened as plain text the major mode it would have had.
+A file past `+core-plain-file-size' opens in `fundamental-mode'; this
+sets it up as opening it would have, and a revert keeps that."
+  (interactive)
+  (unless (and +core-plain-mode (not (eq +core-plain-mode t)))
+    (user-error "%s was not opened as plain text" (buffer-name)))
+  (setq +core-plain-mode t)
+  (after-find-file nil nil t))
 
 ;;;###autoload
 (defun +core/project-todos ()
