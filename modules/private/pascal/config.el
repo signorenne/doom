@@ -70,6 +70,27 @@ openSUSE puts them under lib64; another distribution will not.")
 
 
 ;;
+;;; What a buffer shows, and what completion offers
+
+(defvar opascal-font-lock-keywords)
+
+;; Keywords in any case and the context-bound ones only in context,
+;; directives, numbers, constants, types, routines, calls and fields each
+;; their own face, in place of opascal's rules. Registered for the mode,
+;; not set in its hook: prog-mode's minor modes run first and make
+;; font-lock read opascal's defaults before any opascal-mode-hook.
+(after! opascal
+  (font-lock-remove-keywords 'opascal-mode opascal-font-lock-keywords)
+  (font-lock-add-keywords 'opascal-mode (+pascal-font-lock-keywords)))
+
+;; And begin and end matched the way ( and ) are.
+(add-hook! 'opascal-mode-hook
+  (defun +pascal--show-blocks-h ()
+    "Let show-paren match a Pascal buffer's blocks as well."
+    (setq-local show-paren-data-function #'+pascal-show-paren-data)))
+
+
+;;
 ;;; Formatting
 
 ;; SPC c f formats with JEDI Code Format, the formatter the Lazarus IDE

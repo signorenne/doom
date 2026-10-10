@@ -168,6 +168,25 @@ was indented into it, =begin= went one level past its =if=, a line inside
 parentheses lined up under the first argument, and a condition broken over
 lines went twenty columns out.
 
+* Reading and writing Pascal
+** What a buffer shows
+opascal-mode coloured keywords, in lower case only, and among them words
+that are also names: =E.Message= and a variable called =Index= were
+keywords, =Begin= was not. The module's rules, =autoload/highlight.el=:
+
+- keywords in any case; =read=, =write=, =index= and =default= only in a
+  property, =virtual=, =override= and the like only after a header,
+- ={$MODE OBJFPC}= as a directive, not a comment,
+- types: the built-in ones, =TName=, =EName=, =IName=, and the type of a
+  declaration; the names a =var= section or a parameter list declares,
+- a routine's name where it is declared, its class apart, and a call
+  where it is made; a field or method after a dot,
+- numbers, =$FF= and =#13= included; =True=, =False=, =nil=; =Result=, =Self=.
+
+With the cursor on =begin=, =try=, =case=, =repeat=, =record= or =class=, or
+on the =end= or =until= that closes one, the other lights up the way a
+matching parenthesis does.
+
 * Configuration
 - ~+pascal-build-mode~, ~+pascal-widgetset~, ~+pascal-target~, ~+pascal-main~
   and ~+pascal-run-args~: the per-project settings, all directory local.
