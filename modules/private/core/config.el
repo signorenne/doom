@@ -116,23 +116,40 @@ every file of the notes.")
 it, which a revert keeps.")
 (put '+core-plain-mode 'permanent-local t)
 
+;; A file previewed in a prompt is a glance, so plain past 256 KB: a 900
+;; KB header took a third of a second to colour at each step through the
+;; list.
+(defvar +core-plain-preview-size (* 256 1024)
+  "Past this size a file previewed in a prompt is shown as plain text.")
+
+(defvar +core--previewing nil
+  "Non-nil while consult opens a file to preview it.")
+
+(after! consult
+  (defadvice! +core--previewing-a (fn &rest args)
+    :around #'consult--find-file-temporarily
+    (let ((+core--previewing t))
+      (apply fn args))))
+
 (defadvice! +core--plain-big-file-a (fn mode &rest args)
-  "Set a file past `+core-plain-file-size' up in `fundamental-mode', not MODE.
-Doom's list of the modes a large file keeps, a picture's, a PDF's, an
-archive's, is left alone."
+  "Set a file past its size limit up in `fundamental-mode', not MODE.
+The limit is `+core-plain-file-size', `+core-plain-preview-size' in a
+preview. Doom's list of the modes a large file keeps, a picture's, a
+PDF's, an archive's, is left alone."
   :around #'set-auto-mode-0
-  (if (and mode
-           buffer-file-name
-           (not (eq +core-plain-mode t))
-           (> (buffer-size) +core-plain-file-size)
-           (not (memq mode doom-large-file-excluded-modes))
-           (not (memq mode +core-plain-file-keep-modes)))
-      (progn (setq +core-plain-mode mode)
-             (apply fn #'fundamental-mode args))
-    ;; Back under the limit, a revert after the file shrank: not plain.
-    (unless (eq +core-plain-mode t)
-      (setq +core-plain-mode nil))
-    (apply fn mode args)))
+  (let ((limit (if +core--previewing +core-plain-preview-size +core-plain-file-size)))
+    (if (and mode
+             buffer-file-name
+             (not (eq +core-plain-mode t))
+             (> (buffer-size) limit)
+             (not (memq mode doom-large-file-excluded-modes))
+             (not (memq mode +core-plain-file-keep-modes)))
+        (progn (setq +core-plain-mode mode)
+               (apply fn #'fundamental-mode args))
+      ;; Back under the limit, a revert after the file shrank: not plain.
+      (unless (eq +core-plain-mode t)
+        (setq +core-plain-mode nil))
+      (apply fn mode args))))
 
 (add-hook! 'find-file-hook :depth 90
   (defun +core--plain-file-say-h ()
