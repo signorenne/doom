@@ -29,6 +29,7 @@
 (declare-function +cpp-kit-configs "kit")
 (declare-function +cpp--kits "kit")
 (declare-function +cpp--kit-config "kit")
+(declare-function +cpp--with-config "kit")
 (declare-function +cpp--kit-locate "kit")
 (declare-function +cpp--kit "kit")
 (declare-function +cpp--target-names "run")
@@ -337,10 +338,12 @@ configure keeps the stale value."
   "Command that builds the clean target, where the kit runs."
   (require 'projection)
   (let ((kit (+cpp--kit)))
-    (+cpp--kit-shell kit (mapconcat #'shell-quote-argument
-                                    (list "cmake" "--build" (+cpp-kit-dir kit)
-                                          "--target" "clean")
-                                    " ")
+    (+cpp--kit-shell kit (+cpp--with-config
+                          (mapconcat #'shell-quote-argument
+                                     (list "cmake" "--build" (+cpp-kit-dir kit)
+                                           "--target" "clean")
+                                     " ")
+                          (+cpp--kit-config kit))
                      (+core-project-root))))
 
 ;;;###autoload

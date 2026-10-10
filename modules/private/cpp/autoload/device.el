@@ -7,6 +7,7 @@
 ;; the installed executable there over ssh. Both from the host, whose
 ;; ssh holds the key; the install itself runs where the kit runs.
 
+(declare-function +cpp--with-config "kit")
 (declare-function +cpp-kit-name "kit")
 (declare-function +cpp-kit-qtc "kit")
 (declare-function +cpp-kit-run "kit")
@@ -107,9 +108,11 @@ asked before anything runs."
          (staging (file-name-concat (+cpp-kit-abs-dir kit root) ".deploy"))
          (install (+cpp--kit-shell
                    kit
-                   (format "cmake --install %s --prefix %s"
-                           (shell-quote-argument (+cpp-kit-abs-dir kit root))
-                           (shell-quote-argument (file-name-concat staging (string-remove-prefix "/" prefix))))
+                   (+cpp--with-config
+                    (format "cmake --install %s --prefix %s"
+                            (shell-quote-argument (+cpp-kit-abs-dir kit root))
+                            (shell-quote-argument (file-name-concat staging (string-remove-prefix "/" prefix))))
+                    (+cpp--kit-config kit))
                    root))
          (stop (+device-kill device (file-name-nondirectory (cdr place))))
          (sync (+device-copy device

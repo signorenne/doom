@@ -718,6 +718,8 @@ nil for a kit with one configuration, the usual case."
     (let ((wanted (+cpp--setting '+cpp-build-config)))
       (if (member wanted configs) wanted (car configs)))))
 
+;; Autoloaded: clean, deploy and the target menu add it as well.
+;;;###autoload
 (defun +cpp--with-config (command config)
   "COMMAND with --config CONFIG behind it when it builds or installs,
 which a multi-config generator needs to know the configuration."
@@ -800,7 +802,10 @@ instead, custom targets included, the packaging ones among them."
                     (if (stringp command)
                         (cons (car entry)
                               (plist-put (copy-sequence (cdr entry))
-                                         :command (+cpp--kit-shell kit command root)))
+                                         :command (+cpp--kit-shell
+                                                   kit
+                                                   (+cpp--with-config command (+cpp--kit-config kit))
+                                                   root)))
                       entry)))
                 (append cmake ctest))))))
 
