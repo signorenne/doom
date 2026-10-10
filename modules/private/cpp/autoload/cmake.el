@@ -30,6 +30,8 @@
 (declare-function +cpp--kits "kit")
 (declare-function +cpp--kit-config "kit")
 (declare-function +cpp--kit-locate "kit")
+(declare-function +cpp--kit "kit")
+(declare-function +cpp--target-names "run")
 (declare-function +cpp-kit-qtc "kit")
 (declare-function +cpp/forget-kits "kit")
 (declare-function +cpp--carried-args "build-type")
@@ -222,9 +224,16 @@ With no overrides left the next configure is back to the preset's values."
   (interactive
    (progn
      (require 'projection-multi-cmake)
-     (let ((targets (mapcar (lambda (cell)
-                              (string-remove-prefix "cmake:" (car cell)))
-                            (projection-multi-cmake-targets))))
+     ;; The kit's directory, not projection's build/, and the targets
+     ;; Qt Creator's or the generator's list gives when projection's own
+     ;; query has no reply there, as the target menu does.
+     (let* ((root (+core-project-root))
+            (kit (+cpp--kit root))
+            (targets (or (+cpp--with-kit kit
+                           (mapcar (lambda (cell)
+                                     (string-remove-prefix "cmake:" (car cell)))
+                                   (ignore-errors (projection-multi-cmake-targets))))
+                         (+cpp--target-names kit root))))
        (unless targets
          (user-error "No targets yet, configure first with SPC k c"))
        (list (completing-read "Default build target: " targets nil t)))))
