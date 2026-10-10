@@ -736,6 +736,50 @@ the window the view stands beside."
       :desc "Search and replace menu" "s SPC" #'+core/search-menu
       :desc "Replace in the project"  "s R"   #'+core/replace-in-project)
 
+;; SPC s s lists every line of the buffer before its prompt opens: 1.9 s
+;; in a 50 MB log, and each key then sifted 430 000 lines. Past
+;; `+core-search-buffer-max' it asks ripgrep about the file instead,
+;; which answers as you type and moves the view as the line search does.
+;; Changes not saved, or a selection over several lines, keep the line
+;; search: ripgrep reads the file on disk.
+(defvar +core-search-buffer-max (* 2 1024 1024)
+  "Past this size SPC s s searches the buffer's file with ripgrep.")
+
+(declare-function consult-ripgrep "consult")
+(defvar consult-async-split-style)
+(defvar consult-async-split-styles-alist)
+(declare-function consult--split-perl "consult")
+
+(defadvice! +core--search-big-buffer-a (fn)
+  "Search a file past `+core-search-buffer-max' with ripgrep."
+  :around #'+default/search-buffer
+  (let ((text (and (region-active-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end)))))
+    (if (and buffer-file-name
+             (> (buffer-size) +core-search-buffer-max)
+             (not (buffer-modified-p))
+             (not (file-remote-p buffer-file-name))
+             (not (and text (string-search "\n" text)))
+             (executable-find "rg")
+             (require 'consult nil t))
+        (let ((query (and text (regexp-quote text)))
+              (consult-async-split-style consult-async-split-style)
+              (consult-async-split-styles-alist consult-async-split-styles-alist))
+          (when text (deactivate-mark))
+          ;; An Emacs regexp, which consult turns into ripgrep's, quoted
+          ;; as Doom's file search quotes; and, as there, another
+          ;; separator than # when the text has one, which would split it.
+          (when (and query (eq consult-async-split-style 'perl)
+                     (string-search "#" query))
+            (setf (alist-get 'perlalt consult-async-split-styles-alist)
+                  (list :initial (or (seq-find (lambda (c) (not (string-search (string c) query)))
+                                               '(?% ?@ ?! ?& ?/ ?\;))
+                                     ?%)
+                        :function #'consult--split-perl)
+                  consult-async-split-style 'perlalt))
+          (consult-ripgrep (list buffer-file-name) query))
+      (funcall fn))))
+
 
 ;;
 ;;; The bigger topics

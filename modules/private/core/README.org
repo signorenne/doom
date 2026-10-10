@@ -135,6 +135,12 @@ dragged out of a listing into another program, a right click is a menu,
 wdired edits permission bits, and renaming a tracked file is a git mv.
 
 * Searching and replacing
+~SPC s s~ in a file past 2 MB (~+core-search-buffer-max~) asks ripgrep
+about the file rather than listing every line of the buffer before the
+prompt opens, 1.9 s in a 50 MB log; the view moves to each match all
+the same. With changes not saved, or a selection over several lines, it
+is the line search.
+
 ~SPC s SPC~ is a menu of the searches and of the flags ripgrep takes for
 them: a literal string, whole words, case, only the names that match,
 only a kind of file it knows, lines of context. consult already passes
