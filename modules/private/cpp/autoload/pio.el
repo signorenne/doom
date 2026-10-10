@@ -138,7 +138,10 @@ With prefix argument PERSIST, write it to .dir-locals.el."
 ;;;###autoload
 (defun +pio/device-list ()
   "List the serial devices that are plugged in."
-  (interactive) (+pio--compile "device" "list"))
+  (interactive)
+  ;; It takes no environment: -e is an error there.
+  (let ((+pio-env nil))
+    (+pio--compile "device" "list")))
 
 ;;;###autoload
 (defun +pio/lib-install (spec)
