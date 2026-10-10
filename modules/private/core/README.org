@@ -406,6 +406,9 @@ What keeps it that way:
 - Tree-sitter grammars for the enabled modes are installed ahead of time,
   so no first open compiles one; ~treesit-auto-install-grammar~ stays
   ~always~ for the next language. (Not listed here: the list rots.)
+  A buffer past tree-sitter's limit, ~treesit-max-buffer-size~ (40 MB),
+  gets the older mode with nothing installed: Doom took the limit for a
+  missing grammar, and built the C++ one again at every such file.
 - Projectile has no cache; fd lists a project in milliseconds.
 - gcmh collects after four seconds of rest. Doom's setting waits ten
   times the last collection, under half a second here, so every pause to

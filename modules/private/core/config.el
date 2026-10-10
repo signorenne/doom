@@ -71,6 +71,28 @@
       (funcall classic)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
+;; Doom installs a grammar it finds missing when it picks a tree-sitter
+;; mode, and takes it to be missing whenever `treesit-ready-p' says no,
+;; which it also says of a buffer past `treesit-max-buffer-size', 40 MB.
+;; Each C++ file that big cloned and built the C++ grammar again, two
+;; seconds, over the library the session had loaded. Such a buffer gets
+;; the older mode instead, with nothing installed.
+(defvar treesit-auto-install-grammar)
+(advice-add 'major-mode-remap :around
+            (defun +core--treesit-no-install-a (fn mode)
+              "Install no grammar for a buffer too big for tree-sitter."
+              ;; Loaded first: bound before treesit.el had defined it,
+              ;; the binding was lexical, and the first file of a session
+              ;; failed to open with treesit loading inside it.
+              (require 'treesit)
+              (let ((treesit-auto-install-grammar
+                     (if (> (buffer-size) (or (bound-and-true-p treesit-max-buffer-size)
+                                             most-positive-fixnum))
+                         'never
+                       treesit-auto-install-grammar)))
+                (funcall fn mode)))
+            '((depth . -90)))
+
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
 ;; delete-file behind them move the file to the desktop's trash, the one
 ;; Dolphin shows, and SPC f t opens it here. Put a file back from the
