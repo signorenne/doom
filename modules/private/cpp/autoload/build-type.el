@@ -62,6 +62,8 @@ cmake-build-debug.  Group 1 is the family, group 2 the type.")
     ("" nil)
     (_ type)))
 
+;; Autoloaded: kit.el configures a planned kit with these two.
+;;;###autoload
 (defun +cpp--kit-type (kit)
   "The build type of KIT: the configuration it builds when its generator
 has several, else what its cache or preset says, else what its name
@@ -232,6 +234,7 @@ its own Qt: the one Qt on this machine, or a choice."
                           (car prefixes))))
       (list (concat "-DCMAKE_PREFIX_PATH=" prefix)))))
 
+;;;###autoload
 (defun +cpp--new-configuration-command (from dir type root &optional planned)
   "The cmake line that configures DIR under ROOT as TYPE with the tool
 set of kit FROM, and the arguments PLANNED, the Qt Creator configuration

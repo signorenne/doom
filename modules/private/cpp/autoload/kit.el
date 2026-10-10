@@ -40,6 +40,8 @@
 (declare-function +qtcreator-active "qtcreator")
 (declare-function +qtcreator-forget "qtcreator")
 (declare-function +cpp--sdk-root "container")
+(declare-function +cpp--new-configuration-command "build-type")
+(declare-function +cpp--kit-type "build-type")
 (defvar +cpp-kits)
 
 
@@ -730,12 +732,23 @@ Run from the project root, whatever buffer asked."
 ;;;###autoload
 (defun +cpp--configure-command ()
   "Configure the kit's build directory.  Writes the file API query first,
-so the reply that lists targets and executables is there afterwards."
+so the reply that lists targets and executables is there afterwards.
+A kit never configured that carries arguments of its own, a Qt Creator
+configuration or one written down in `+cpp-kits', is configured with
+them and its build type, as Qt Creator would: projection passes
+neither, and a toolchain file among them is what picks the SDK."
   (require 'projection)
-  (let ((kit (+cpp--kit)))
+  (let ((kit (+cpp--kit))
+        (root (+core-project-root)))
     (+cpp--with-kit kit
       (+cpp--projection-write-file-api-query))
-    (+cpp--kit-command #'projection-cmake-run-configure)))
+    (if (and (not (+cpp-kit-configured kit))
+             (not (+cpp-kit-preset kit))
+             (+cpp-kit-args kit))
+        (+cpp--new-configuration-command kit (+cpp-kit-dir kit)
+                                         (or (+cpp--kit-type kit) "Debug")
+                                         root kit)
+      (+cpp--kit-command #'projection-cmake-run-configure))))
 
 ;;;###autoload
 (defun +cpp--build-command ()
