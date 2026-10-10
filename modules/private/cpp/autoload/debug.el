@@ -102,13 +102,21 @@ as it was built here."
 
 (defun +cpp--gdbserver-stop ()
   "Stop the gdbserver this Emacs started on the device."
+  (remove-hook 'dape-start-hook #'+cpp--gdbserver-watch-h)
   (when (process-live-p +cpp--gdbserver-process)
     (delete-process +cpp--gdbserver-process))
   (setq +cpp--gdbserver-process nil))
 
 (defun +cpp--gdbserver-watch ()
   "Stop the gdbserver when the session that needed it ends.  dape has no
-hook for that, so the two commands that end a session carry it."
+hook for that, so the two commands that end a session carry it, from
+the moment the session starts: `dape' calls `dape-kill' on the session
+before it first, and that call took the new gdbserver down with it."
+  (add-hook 'dape-start-hook #'+cpp--gdbserver-watch-h))
+
+(defun +cpp--gdbserver-watch-h ()
+  "The session has started: its end stops the gdbserver."
+  (remove-hook 'dape-start-hook #'+cpp--gdbserver-watch-h)
   (dolist (command '(dape-quit dape-kill))
     (advice-add command :after #'+cpp--gdbserver-stop-a)))
 
