@@ -113,9 +113,13 @@ branch and tag names. A hash not listed is taken as typed."
   (or (magit-commit-at-point)
       (+git--read-commit verb)))
 
+(defun +git--commit-hash (commit)
+  "The hash of the commit COMMIT names; a tag's object is not one."
+  (magit-rev-parse (concat commit "^{commit}")))
+
 (defun +git--head-p (commit)
   "Non-nil when COMMIT is HEAD."
-  (equal (magit-rev-parse commit) (magit-rev-parse "HEAD")))
+  (equal (+git--commit-hash commit) (magit-rev-parse "HEAD")))
 
 (defun +git--check-ready ()
   "Refuse while a rebase or a merge waits for a hand."
@@ -126,7 +130,8 @@ branch and tag names. A hash not listed is taken as typed."
   "Start a rebase that stops at COMMIT, its changes committed, so it can
 be amended.  The working tree is stashed round the rebase.  Returns
 non-nil when the rebase stopped there."
-  (let* ((hash (magit-rev-parse commit))
+  (let* ((hash (or (+git--commit-hash commit)
+                   (user-error "No commit %s" commit)))
          (short (substring hash 0 7))
          (parent (and (magit-rev-verify (concat hash "^")) (concat hash "^")))
          (process-environment
@@ -135,6 +140,13 @@ non-nil when the rebase stopped there."
                                  (format "s/^pick \\(%s[0-9a-f]*\\)/edit \\1/" short)))
                         "GIT_EDITOR=true")
                   process-environment)))
+    ;; A commit of another branch has no pick line here, and the rebase
+    ;; ran to its end all the same: this branch, rebuilt on that one.
+    ;; And one behind a merge would come back with the merge flattened.
+    (unless (magit-git-success "merge-base" "--is-ancestor" hash "HEAD")
+      (user-error "%s is not in this branch's history; check out its branch first" short))
+    (when (magit-git-string "rev-list" "--merges" "-n1" (concat hash "..HEAD"))
+      (user-error "A merge lies between %s and HEAD; rewriting would flatten it" short))
     (magit-run-git "rebase" "-i" "--autostash" (or parent "--root"))
     (and (magit-rebase-in-progress-p)
          (equal (magit-rev-parse "HEAD") hash))))
