@@ -96,6 +96,29 @@ can be a glob, and a feature can come from a dependency."
 
 
 ;;
+;;; The edition
+
+(defun +rust--edition (file)
+  "The edition of the crate FILE is in, from its Cargo.toml, or nil.
+A member that takes the workspace's has it from the workspace's."
+  (when-let* ((dir (locate-dominating-file file "Cargo.toml")))
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "Cargo.toml" dir))
+      (goto-char (point-min))
+      (cond ((re-search-forward "^[ \t]*edition[ \t]*=[ \t]*\"\\([0-9]+\\)\"" nil t)
+             (match-string 1))
+            ((re-search-forward "^[ \t]*edition[ \t]*\\(?:\\.\\|=[ \t]*{\\)[ \t]*workspace" nil t)
+             (+rust--edition (file-name-directory (directory-file-name dir))))))))
+
+;;;###autoload
+(defun +rust--edition-args ()
+  "rustfmt's --edition for this buffer's crate, as cargo fmt passes it,
+or nil when its Cargo.toml names none."
+  (when-let* ((edition (+rust--edition (or buffer-file-name default-directory))))
+    (list "--edition" edition)))
+
+
+;;
 ;;; The flags every command carries
 
 ;;;###autoload

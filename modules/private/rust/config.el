@@ -89,9 +89,14 @@
 ;; rustfmt is not a choice anyone makes per project, the way a
 ;; .clang-format is: every crate is formatted the same way, so this
 ;; formats on save without asking whether the project has a file.
+;; rustfmt on its own reads Rust 2015, where async fn is an error, and
+;; saving one in a crate with no rustfmt.toml failed; cargo fmt hands it
+;; the crate's edition, and so does this, from Cargo.toml.
 (after! apheleia
+  (setf (alist-get '+rust-rustfmt apheleia-formatters)
+        '("rustfmt" "--quiet" "--emit" "stdout" (+rust--edition-args)))
   (dolist (mode +rust-modes)
-    (setf (alist-get mode apheleia-mode-alist) 'rustfmt)))
+    (setf (alist-get mode apheleia-mode-alist) '+rust-rustfmt)))
 
 (dolist (mode +rust-modes)
   (add-hook (intern (format "%s-hook" mode))
