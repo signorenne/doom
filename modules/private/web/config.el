@@ -164,32 +164,37 @@
 ;;
 ;;; Debugging
 
-;; node's own inspector, which dape speaks: the main process of an
-;; Electron application is node, so the two differ only in what is
-;; started.
+;; js-debug, the adapter VS Code debugs node and Electron with; node's
+;; own --inspect speaks Chrome's protocol, which dape does not, and no
+;; session ever started. M-x +web/install-js-debug puts it where dape
+;; keeps adapters. Electron's main process is node, run by the electron
+;; binary of the project.
 (after! dape
-  (add-to-list 'dape-configs
-               `(node-project
-                 modes ,+web-modes
-                 ensure dape-ensure-command
-                 command "node"
-                 command-args ("--inspect-brk=:autoport" :program)
-                 port :autoport
-                 :type "node"
-                 :request "launch"
-                 :cwd "."
-                 :program (lambda () (read-file-name "Run: " nil nil t))))
-  (add-to-list 'dape-configs
-               `(electron-main
-                 modes ,+web-modes
-                 ensure dape-ensure-command
-                 command "node"
-                 command-args ("--inspect-brk=:autoport"
-                               "node_modules/electron/cli.js" ".")
-                 port :autoport
-                 :type "node"
-                 :request "launch"
-                 :cwd ".")))
+  (let ((adapter
+         `(modes ,+web-modes
+           ensure ,(lambda (config)
+                     (dape-ensure-command config)
+                     (unless (file-exists-p (car (plist-get config 'command-args)))
+                       (user-error "js-debug is not installed: M-x +web/install-js-debug")))
+           command "node"
+           command-args (,(file-name-concat dape-adapter-dir "js-debug" "src" "dapDebugServer.js")
+                         :autoport)
+           port :autoport
+           :type "pwa-node"
+           :request "launch"
+           :console "internalConsole")))
+    (add-to-list 'dape-configs
+                 `(node-project
+                   ,@adapter
+                   :cwd "."
+                   :program (lambda () (read-file-name "Run: " nil nil t))))
+    (add-to-list 'dape-configs
+                 `(electron-main
+                   ,@adapter
+                   :cwd "."
+                   :runtimeExecutable "node_modules/.bin/electron"
+                   :args ["."]
+                   :outputCapture "std"))))
 
 
 ;;

@@ -46,6 +46,11 @@ watching, =s= any script; =l= lint, =c= types, =I= status; =i= install, =o= what
 has moved on, =m= the package manager, =p= package.json. An Electron
 project gains =P= to package it and =d= to debug the main process.
 
+Debugging goes through js-debug, the adapter VS Code uses for node and
+Electron; =M-x +web/install-js-debug= downloads it once, into the
+directory dape keeps adapters in. node's own =--inspect= speaks
+Chrome's protocol, not the one dape does.
+
 The package manager is read from the lock file (=yarn.lock=, =pnpm-lock=,
 =package-lock.json=, =bun.lockb=), so a project cloned from elsewhere is
 built the way its author built it. =m= overrides that per project.

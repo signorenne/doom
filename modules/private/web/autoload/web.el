@@ -5,6 +5,7 @@
 ;; the settings live in .dir-locals.el, every command is built from them,
 ;; so SPC k b and the panel and F7 run the same line.
 
+(defvar dape-adapter-dir)
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
@@ -317,8 +318,34 @@ template's CI workflow builds that one."
   ;; dape takes the configuration itself, not its name: handed
   ;; (node-project :cwd ...) it read every key as a value, found no
   ;; command, and no session started.
-  (dape (dape--config-eval (if (+web-electron-p) 'electron-main 'node-project)
-                           (list :cwd (+web-root)))))
+  (let ((root (+web-root)))
+    (dape (if (+web-electron-p)
+              (dape--config-eval 'electron-main
+                                 (list :cwd root
+                                       :runtimeExecutable
+                                       (expand-file-name "node_modules/.bin/electron" root)))
+            (dape--config-eval 'node-project (list :cwd root))))))
+
+;;;###autoload
+(defun +web/install-js-debug ()
+  "Download js-debug, the debugger VS Code uses for node and Electron,
+where dape keeps its adapters; SPC k d uses it afterwards."
+  (interactive)
+  (require 'dape)
+  (let* ((version "1.140.0")
+         (url (format "https://github.com/microsoft/vscode-js-debug/releases/download/v%s/js-debug-dap-v%s.tar.gz"
+                      version version))
+         (tarball (expand-file-name "js-debug.tar.gz" temporary-file-directory))
+         (dir (file-name-as-directory dape-adapter-dir)))
+    (unless (executable-find "tar") (user-error "tar is not installed"))
+    (make-directory dir t)
+    (message "Downloading js-debug %s..." version)
+    (url-copy-file url tarball t)
+    (unless (zerop (call-process "tar" nil nil nil "-xzf" tarball "-C" dir))
+      (user-error "tar failed on %s" tarball))
+    (delete-file tarball)
+    (message "js-debug installed: %s"
+             (file-name-concat dir "js-debug" "src" "dapDebugServer.js"))))
 
 
 ;;
