@@ -253,14 +253,34 @@ features.  Each of them stopped at the flag it does not take."
                        "^[[:space:]]*\\(?:pub[[:space:]]+\\)?\\(?:async[[:space:]]+\\)?fn[[:space:]]+\\([a-zA-Z0-9_]+\\)"
                        nil t)
                   (match-string-no-properties 1)))
+          (at (point))
           (modules nil))
       (when name
-        ;; Every `mod' the function sits inside, outermost last: cargo
-        ;; wants the path, not the bare name.
-        (while (re-search-backward "^[[:space:]]*\\(?:pub[[:space:]]+\\)?mod[[:space:]]+\\([a-zA-Z0-9_]+\\)"
-                                   nil t)
-          (push (match-string-no-properties 1) modules))
-        (string-join (append modules (list name)) "::")))))
+        ;; Every `mod' whose braces hold the function, outermost first,
+        ;; behind the file's own place in the crate: cargo wants the
+        ;; path, not the bare name. A `mod x;' line, or a module closed
+        ;; above, is none of them.
+        (while (re-search-backward
+                "^[[:space:]]*\\(?:pub\\(?:([^)]*)\\)?[[:space:]]+\\)?mod[[:space:]]+\\([a-zA-Z0-9_]+\\)[[:space:]]*{"
+                nil t)
+          (when (> (or (ignore-errors (scan-lists (1- (match-end 0)) 1 0)) (point-max))
+                   at)
+            (push (match-string-no-properties 1) modules)))
+        (string-join (append (+rust--file-module-path) modules (list name)) "::")))))
+
+(defun +rust--file-module-path ()
+  "This file's module path under its crate's src/, as a list:
+src/foo/bar.rs is (\"foo\" \"bar\"), src/foo/mod.rs (\"foo\").  Nil
+for the crate's root, a binary under src/bin, and a file outside src/,
+an integration test or an example, which is a crate of its own."
+  (when-let* ((file buffer-file-name)
+              (crate (locate-dominating-file file "Cargo.toml"))
+              (src (expand-file-name "src/" crate))
+              ((file-in-directory-p file src))
+              (parts (split-string (file-relative-name (file-name-sans-extension file) src)
+                                   "/" t)))
+    (unless (or (equal (car parts) "bin") (member parts '(("lib") ("main"))))
+      (if (equal (car (last parts)) "mod") (butlast parts) parts))))
 
 ;;;###autoload
 (defun +rust/doc ()
