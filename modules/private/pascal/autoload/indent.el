@@ -105,7 +105,9 @@ it were a declaration of that section."
                   ;; A routine's body ended: its header is further back.
                   (setq nested (1+ nested)
                         tok start))))
-             ((eq kind 'forward) (setq nested (1+ nested)))
+             ;; A header with no body here: forward, or a routine
+             ;; another library has.
+             ((memq kind '(forward external)) (setq nested (1+ nested)))
              ((memq kind opascal-visibilities) (throw 'done nil))
              ((opascal-composite-type-start tok last) (throw 'done nil))
              ((memq kind opascal-block-statements) (throw 'done nil))
@@ -117,9 +119,11 @@ it were a declaration of that section."
              ((memq kind opascal-unit-sections) (throw 'done 0))
              ((and (memq kind +pascal--routine-kinds) (not interface)
                    (+pascal--routine-header-p tok))
-              (if (> nested 0)
-                  (setq nested (1- nested))
-                (throw 'done (opascal-line-indent-of tok opascal-indent-level))))))
+              (cond ((> nested 0) (setq nested (1- nested)))
+                    ;; The method before it in a class has no body to be
+                    ;; inside of; this one is in the class too, opascal's.
+                    ((null (+pascal--routine-indent tok)) (throw 'done nil))
+                    (t (throw 'done (opascal-line-indent-of tok opascal-indent-level)))))))
           (when (and tok (not (memq (opascal-token-kind tok) opascal-whitespace)))
             (setq last tok))))
       0)))
