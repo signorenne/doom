@@ -58,8 +58,9 @@ and would step through a stripped-looking target without it."
          (argv (append (list gdb)
                        (when (and sysroot (not (string-empty-p sysroot)))
                          (list "-ex" (format "set sysroot %s" sysroot)))
+                       ;; Quoted, or gdb reads a path with a space as two.
                        (when program
-                         (list "-ex" (format "file %s" program)))
+                         (list "-ex" (format "file \"%s\"" program)))
                        (list "--interpreter=dap"))))
     (if kit (+cpp--kit-process kit argv) argv)))
 
