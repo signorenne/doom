@@ -99,27 +99,39 @@ can be a glob, and a feature can come from a dependency."
 ;;; The flags every command carries
 
 ;;;###autoload
-(defun +rust-flags ()
-  "The cargo flags this project is set to, as a list of strings."
+(defun +rust-flags (&optional subcommand)
+  "The cargo flags this project is set to, as a list of strings, those
+SUBCOMMAND takes: install builds release unless told --debug and is
+given no package, bench has a profile of its own, clean knows no
+features.  Each of them stopped at the flag it does not take."
   (append
    (pcase +rust-profile
-     ((or 'nil "dev" "") nil)
-     ("release" '("--release"))
+     ((or 'nil "dev" "") (when (equal subcommand "install") '("--debug")))
+     ("release" (unless (member subcommand '("install" "bench")) '("--release")))
      (profile (list "--profile" profile)))
-   (pcase +rust-features
-     ('all '("--all-features"))
-     ('none '("--no-default-features"))
-     ((and (pred stringp) (pred (lambda (s) (not (string-empty-p s)))) features)
-      (list "--features" features))
-     (_ nil))
-   (when +rust-member (list "-p" +rust-member))
+   (unless (equal subcommand "clean")
+     (pcase +rust-features
+       ('all '("--all-features"))
+       ('none '("--no-default-features"))
+       ((and (pred stringp) (pred (lambda (s) (not (string-empty-p s)))) features)
+        (list "--features" features))
+       (_ nil)))
+   (when (and +rust-member (not (equal subcommand "install")))
+     (list "-p" +rust-member))
    (when +rust-target (list "--target" +rust-target))))
 
 (defun +rust--command (subcommand &rest extra)
   "The cargo command line for SUBCOMMAND with the project's flags."
-  (string-join (append (list "cargo" subcommand) (+rust-flags)
+  (string-join (append (list "cargo" subcommand) (+rust-flags subcommand)
                        (delq nil extra))
                " "))
+
+(defun +rust--member-dir (member)
+  "The directory of workspace member MEMBER, or nil."
+  (when-let* ((metadata (+rust--metadata))
+              (package (seq-find (lambda (p) (equal (alist-get 'name p) member))
+                                 (alist-get 'packages metadata))))
+    (file-name-directory (alist-get 'manifest_path package))))
 
 ;;;###autoload
 (defun +rust-build-command ()
@@ -134,7 +146,11 @@ can be a glob, and a feature can come from a dependency."
 ;;;###autoload
 (defun +rust-install-command ()
   "What `SPC k i' runs in a cargo project."
-  (+rust--command "install" "--path" "."))
+  ;; A member is installed from its own directory: install takes no -p,
+  ;; and the root of a workspace is no package.
+  (+rust--command "install" "--path"
+                  (shell-quote-argument
+                   (or (and +rust-member (+rust--member-dir +rust-member)) "."))))
 
 ;;;###autoload
 (defun +rust-run-command ()
