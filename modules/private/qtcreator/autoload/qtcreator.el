@@ -76,11 +76,11 @@ in order: the tool chains, the Qt versions, the kits."
 (defvar +qtcreator--settings nil
   "Every Qt Creator settings directory found, as (DIR . CONTAINER).")
 
-;; Autoloaded: `+cpp/forget-kits' drops it with the rest.
-;;;###autoload
 (defvar +qtcreator--kits-cache)
 (defvar +qtcreator--qt-prefixes)
 
+;; Autoloaded: `+cpp/forget-kits' drops it with the rest.
+;;;###autoload
 (defun +qtcreator-forget ()
   "Read the settings directories, the kits, the container homes and what
 each qmake says again."
