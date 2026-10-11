@@ -301,12 +301,28 @@ template's CI workflow builds that one."
                           '("linux" "win" "mac" "current") nil t nil nil "linux")))
   (unless (+web-electron-p)
     (user-error "Not an Electron project: no electron in package.json"))
-  (let ((script (+web--script "package" "dist" "build:app")))
+  ;; The project's own script for the target, the one SPC k n writes,
+  ;; else its build and then electron-builder run by the manager: called
+  ;; bare it was not on the path, and nothing was built before it.
+  (let ((script (if (equal target "current")
+                    (+web--script "package" "dist" "build:app")
+                  (+web--script (concat "package:" target))))
+        (build (+web--script "build")))
     (+web--compile
      "package"
-     (cond ((and script (equal target "current")) (+web-run-script-command script))
-           ((equal target "current") "electron-builder")
-           (t (format "electron-builder --%s" target))))))
+     (or (and script (+web-run-script-command script))
+         (concat (if build (concat (+web-run-script-command build) " && ") "")
+                 (+web--exec-command "electron-builder")
+                 (if (equal target "current") "" (concat " --" target)))))))
+
+(defun +web--exec-command (bin)
+  "The command line that runs BIN from the project's node_modules with
+this project's manager."
+  (pcase (+web-manager)
+    ("npm" (format "npx %s" bin))
+    ("pnpm" (format "pnpm exec %s" bin))
+    ("bun" (format "bunx %s" bin))
+    (manager (format "%s %s" manager bin))))
 
 ;;;###autoload
 (defun +web/debug ()
