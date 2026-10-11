@@ -46,10 +46,12 @@
         (user-error "Left alone"))
       (copy-file template file t)
       (find-file file)
-      ;; The template says TITLE where the diagram's own name goes.
+      ;; The template says TITLE where the diagram's own name goes, in
+      ;; capitals: the keyword before it, title, is not one of them.
       (save-excursion
         (goto-char (point-min))
-        (while (search-forward "TITLE" nil t)
+        (while (let ((case-fold-search nil))
+                 (search-forward "TITLE" nil t))
           (replace-match (file-name-base file) t t)))
       (save-buffer)
       (message "%s diagram: %s" kind (file-name-nondirectory file)))))
