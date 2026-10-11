@@ -28,14 +28,16 @@ will not take, so it is carried out rather than left in *Messages*."
       (when (file-directory-p src)
         (+core-copy-template src dir name)))))
 
-(defun +rust--lints ()
-  "The lint table every scaffolded crate carries.
+(defun +rust--lints (&optional table)
+  "The lint table every scaffolded crate carries, under TABLE, \"lints\"
+by default; a workspace's is \"workspace.lints\", which cargo wants
+there and nowhere else in a manifest with no package.
 Written into Cargo.toml rather than left to a flag, so `cargo clippy'
 and the editor and CI all see the same rules."
-  (concat "\n[lints.rust]\n"
+  (concat (format "\n[%s.rust]\n" (or table "lints"))
           "unsafe_code = \"warn\"\n"
           "missing_docs = \"warn\"\n"
-          "\n[lints.clippy]\n"
+          (format "\n[%s.clippy]\n" (or table "lints"))
           "all = { level = \"warn\", priority = -1 }\n"
           "pedantic = { level = \"warn\", priority = -1 }\n"
           "unwrap_used = \"warn\"\n"
@@ -82,24 +84,38 @@ none: a project made here would greet you with a warning about itself."
             "edition = \"2021\"\n"
             (format "repository = \"https://github.com/%s/%s\"\n"
                     (bound-and-true-p +core-github-user) name)
-            (+rust--lints)))
+            (+rust--lints "workspace.lints")))
   (let ((core (file-name-concat dir "crates" (concat name "_core")))
         (app (file-name-concat dir "crates" name)))
     (+rust--cargo dir "new" "--lib" (file-relative-name core dir))
     (+rust--cargo dir "new" "--bin" (file-relative-name app dir))
     (+rust--crate-doc core (concat name "_core"))
     (+rust--crate-doc app name)
-    ;; The binary uses the library, which is the point of a workspace.
-    (let ((manifest (expand-file-name "Cargo.toml" app)))
-      (when (file-exists-p manifest)
-        (with-temp-buffer
-          (insert-file-contents manifest)
-          (goto-char (point-max))
-          (unless (bolp) (insert "\n"))
-          (insert (format "\n[dependencies]\n%s_core = { path = \"../%s_core\" }\n"
-                          name name))
-          (write-region (point-min) (point-max) manifest nil 'quiet))))
+    ;; Each member takes the workspace's lints; the binary uses the
+    ;; library, which is the point of a workspace.
+    (dolist (crate (list core app))
+      (+rust--manifest-add crate "lints" "workspace = true"))
+    (+rust--manifest-add app "dependencies"
+                         (format "%s_core = { path = \"../%s_core\" }" name name))
     app))
+
+(defun +rust--manifest-add (crate table line)
+  "Put LINE in TABLE of CRATE's Cargo.toml, under the table's header when
+it has one, else in a new table at the end; nothing when LINE is there.
+cargo new writes some tables of its own, empty or not, and a table
+written twice is a manifest cargo refuses."
+  (let ((manifest (expand-file-name "Cargo.toml" crate)))
+    (when (file-exists-p manifest)
+      (with-temp-buffer
+        (insert-file-contents manifest)
+        (goto-char (point-min))
+        (unless (search-forward line nil t)
+          (if (re-search-forward (format "^\\[%s\\][ \t]*$" (regexp-quote table)) nil t)
+              (insert "\n" line)
+            (goto-char (point-max))
+            (unless (bolp) (insert "\n"))
+            (insert (format "\n[%s]\n%s\n" table line)))
+          (write-region (point-min) (point-max) manifest nil 'quiet))))))
 
 ;;;###autoload
 (defun +rust-project-kinds ()
