@@ -126,14 +126,17 @@ Free Pascal's to build."
 ;;; The command a build is
 
 (defun +pascal--lazbuild-args ()
-  "The lazbuild flags this project is set to."
-  (append
-   (when +pascal-build-mode (list (concat "--build-mode=" +pascal-build-mode)))
-   (when +pascal-widgetset (list (concat "--widgetset=" +pascal-widgetset)))
-   (when +pascal-target
-     (let ((parts (split-string +pascal-target "-")))
-       (list (concat "--cpu=" (car parts))
-             (concat "--os=" (or (cadr parts) "linux")))))))
+  "The lazbuild flags this project is set to, quoted for the shell: a
+build mode is a name, \"Release Linux\" made lazbuild read Linux as a
+second project."
+  (mapcar #'shell-quote-argument
+          (append
+           (when +pascal-build-mode (list (concat "--build-mode=" +pascal-build-mode)))
+           (when +pascal-widgetset (list (concat "--widgetset=" +pascal-widgetset)))
+           (when +pascal-target
+             (let ((parts (split-string +pascal-target "-")))
+               (list (concat "--cpu=" (car parts))
+                     (concat "--os=" (or (cadr parts) "linux"))))))))
 
 (defun +pascal--fpc-args ()
   "The fpc flags this project is set to, plus the ones every build wants.
