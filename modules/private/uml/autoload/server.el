@@ -63,13 +63,20 @@ Waits for it to answer, since the first start has a JVM to load."
       ;; Wait for it to answer: the port stops being free once it
       ;; listens. A fresh start has a JVM to load, which is the only
       ;; slow render you pay.
-      (let ((deadline (+ (float-time) +uml-server-start-timeout)))
-        (while (and (< (float-time) deadline) (+uml--port-free-p port))
+      ;; A server that died at once, no java, is not waited for: from the
+      ;; drawing's idle timer the wait could not be interrupted, and the
+      ;; next edit started it again.
+      (let ((process +uml--server-process)
+            (deadline (+ (float-time) +uml-server-start-timeout)))
+        (while (and (< (float-time) deadline) (process-live-p process)
+                    (+uml--port-free-p port))
           (sleep-for 0.1))
         (when (+uml--port-free-p port)
           (setq +uml--server-process nil +uml--server-port nil)
-          (user-error "The PlantUML server did not start within %ss"
-                      +uml-server-start-timeout)))))
+          (if (process-live-p process)
+              (user-error "The PlantUML server did not start within %ss"
+                          +uml-server-start-timeout)
+            (user-error "The PlantUML server stopped as it started; see the buffer \" *plantuml server*\""))))))
   +uml--server-port)
 
 ;;;###autoload
