@@ -100,7 +100,8 @@ so it answers nil rather than raising."
 ;;; Which package manager
 
 (defvar +web-package-managers
-  '(("bun.lockb"         . "bun")
+  '(("bun.lock"          . "bun")
+    ("bun.lockb"         . "bun")
     ("pnpm-lock.yaml"    . "pnpm")
     ("yarn.lock"         . "yarn")
     ("package-lock.json" . "npm"))
