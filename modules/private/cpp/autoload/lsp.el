@@ -398,8 +398,9 @@ has is one step of it."
 (defun +cpp--qml-indent-h ()
   "Build this buffer's indent rules for the step this file is written in.
 `qml-ts-mode' writes `qml-ts-mode-indent-offset' into its rules when the
-package loads, so the variable means nothing after that; every step in
-the rules is the offset or zero, so the steps are replaced.  A
+package loads, so the variable means nothing after that; every step
+forward in the rules is the offset, so those are replaced.  The one
+step back, a comment's star under the first, stays.  A
 .editorconfig, or anything else that set the offset for this buffer
 alone, is left as it is; otherwise the file itself is asked."
   (when (and (derived-mode-p 'qml-ts-mode)
@@ -414,7 +415,7 @@ alone, is left as it is; otherwise the file itself is asked."
                      (cons (car language)
                            (mapcar (lambda (rule)
                                      (mapcar (lambda (part)
-                                               (if (and (integerp part) (/= part 0))
+                                               (if (and (integerp part) (> part 0))
                                                    offset
                                                  part))
                                              rule))
