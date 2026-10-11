@@ -10,6 +10,7 @@ fail() { printf 'commit-msg: %s\n  subject: %s\n' "$1" "$subject" >&2; exit 1; }
 
 case "$subject" in
   ''|'#'*) exit 0 ;;                           # empty or a comment: git handles it
+  'fixup! '*|'squash! '*|'amend! '*) exit 0 ;; # folded into another by --autosquash
 esac
 printf '%s' "$subject" | grep -Eq '^(feat|fix|refactor|perf|docs|chore|test|style|build|ci|revert)\([a-z0-9._-]+\): [^ ]' \
   || fail "the subject is type(scope): what, and the scope is not optional"
