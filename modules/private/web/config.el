@@ -88,11 +88,18 @@
 ;; are the versions its code is written against: node_modules/.bin goes
 ;; on `exec-path' for the buffer, so a formatter run here is the one the
 ;; project would run in CI, not whatever is newest on this machine.
-(use-package! add-node-modules-path
-  :defer t
-  :init
-  (dolist (mode +web-modes)
-    (add-hook (intern (format "%s-hook" mode)) #'add-node-modules-path)))
+;; Found on disk: add-node-modules-path asked `npm bin', which npm 9 took
+;; away, so nothing reached the path, and a shell ran for a fifth of a
+;; second at every buffer to learn that.
+(dolist (mode +web-modes)
+  (add-hook (intern (format "%s-hook" mode))
+            (defun +web--node-modules-path-h ()
+              "Put the project's node_modules/.bin in front of this
+buffer's `exec-path'."
+              (when-let* ((dir (locate-dominating-file default-directory "node_modules/.bin")))
+                (setq-local exec-path
+                            (cons (expand-file-name "node_modules/.bin" dir)
+                                  exec-path))))))
 
 
 ;;
@@ -102,8 +109,10 @@
 ;; already. Svelte needs the plugin the project installs, which is why
 ;; this goes through the project's own prettier and not a global one.
 (after! apheleia
+  ;; apheleia-npx, as apheleia's own prettiers: the project's, from its
+  ;; node_modules, which `exec-path' alone does not hand the process.
   (setf (alist-get 'prettier-svelte apheleia-formatters)
-        '("prettier" "--stdin-filepath" filepath))
+        '("apheleia-npx" "prettier" "--stdin-filepath" filepath))
   (setf (alist-get 'svelte-mode apheleia-mode-alist) 'prettier-svelte))
 
 (dolist (mode +web-modes)
