@@ -175,14 +175,20 @@ sources, and -Fu says where the project\='s own units are."
     (_ (user-error "No Pascal project here"))))
 
 ;;;###autoload
+(defun +pascal--program-candidates ()
+  "Where the binary may be: in bin/, where this config's builds put it,
+or beside the project file, where Lazarus does unless told otherwise."
+  (let ((root (+pascal-root))
+        (base (file-name-base (+pascal--main-file))))
+    (list (expand-file-name (concat "bin/" base) root)
+          (expand-file-name base root))))
+
 (defun +pascal-program ()
-  "The binary this project builds, or nil when it has not been built."
-  (let* ((root (+pascal-root))
-         (base (file-name-base (+pascal--main-file)))
-         (candidates (list (expand-file-name base root)
-                           (expand-file-name (concat "bin/" base) root))))
-    (seq-find (lambda (f) (and (file-exists-p f) (file-executable-p f)))
-              candidates)))
+  "The binary this project builds, the newer when both places hold one,
+or nil when it has not been built."
+  (car (sort (seq-filter (lambda (f) (and (file-exists-p f) (file-executable-p f)))
+                         (+pascal--program-candidates))
+             #'file-newer-than-file-p)))
 
 ;;;###autoload
 (defun +pascal-run-command ()
@@ -236,18 +242,17 @@ sources, and -Fu says where the project\='s own units are."
 (defun +pascal/build-and-run ()
   "Build, and run it when the build worked."
   (interactive)
-  (let ((root (+pascal-root)))
-    (+pascal--compile "build" (concat (+pascal-build-command)
-                                      " && "
-                                      (string-join
-                                       (delq nil
-                                             (list (shell-quote-argument
-                                                    (expand-file-name
-                                                     (concat "bin/" (file-name-base
-                                                                     (+pascal--main-file)))
-                                                     root))
-                                                   +pascal-run-args))
-                                       " ")))))
+  ;; Which binary is known once the build is done: the newer of the two
+  ;; places, as `+pascal-program' picks; bin/ was assumed, and a Lazarus
+  ;; project that builds beside its file found nothing there.
+  (pcase-let ((`(,bin ,beside) (mapcar #'shell-quote-argument (+pascal--program-candidates))))
+    (+pascal--compile "build"
+                      (concat (+pascal-build-command)
+                              (format " && p=%s && { [ %s -nt %s ] || p=%s; } && \"$p\""
+                                      bin bin beside beside)
+                              (if (or (null +pascal-run-args) (string-empty-p +pascal-run-args))
+                                  ""
+                                (concat " " +pascal-run-args))))))
 
 ;;;###autoload
 (defun +pascal-tests-file ()
@@ -286,13 +291,11 @@ already compiled into lib/ are not compiled again."
   (let ((root (+pascal-root)))
     (+pascal--compile
      "clean"
-     (if (eq (+pascal-project-kind) 'lazarus)
-         (string-join (list "lazbuild" "--build-all"
-                            (shell-quote-argument (+pascal--main-file)))
-                      " ")
-       (format "rm -rf %s %s"
-               (shell-quote-argument (expand-file-name "lib" root))
-               (shell-quote-argument (expand-file-name "bin" root)))))))
+     ;; A Lazarus project too: lazbuild has no clean, and --build-all,
+     ;; what ran here, builds everything again.
+     (format "rm -rf %s %s"
+             (shell-quote-argument (expand-file-name "lib" root))
+             (shell-quote-argument (expand-file-name "bin" root))))))
 
 ;;;###autoload
 (defun +pascal/debug ()
