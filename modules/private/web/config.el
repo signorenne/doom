@@ -131,9 +131,10 @@ buffer's `exec-path'."
 ;; An abbreviation expands into the tags it stands for: div.card>p*3
 ;; becomes the markup. Doom turns it on for html and css; Svelte and TSX
 ;; are markup too.
-(after! emmet-mode
-  (add-hook 'svelte-mode-hook #'emmet-mode)
-  (add-hook 'tsx-ts-mode-hook #'emmet-mode))
+;; At the top level: emmet-mode is autoloaded, and inside `after!' the
+;; hooks waited for a buffer of Doom's to load it first.
+(add-hook 'svelte-mode-hook #'emmet-mode)
+(add-hook 'tsx-ts-mode-hook #'emmet-mode)
 
 
 ;;
