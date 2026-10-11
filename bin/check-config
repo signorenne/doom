@@ -28,7 +28,11 @@ cleanup() {
 trap cleanup EXIT
 emacs --daemon="$name" > "$dir/daemon.log" 2>&1 || {
   echo "the daemon did not start:"; cat "$dir/daemon.log"; exit 1; }
-emacsclient -s "$name" -e "(progn (load \"$here/check-config.el\" nil t) (check-config--run \"$dir/elc/\" \"$dir/report.txt\"))" >/dev/null
+emacsclient -s "$name" -e "(progn (load \"$here/check-config.el\" nil t) (check-config--run \"$dir/elc/\" \"$dir/report.txt\"))" >/dev/null || {
+  echo "the checks stopped with an error before the end"; exit 1; }
+# The report is written once every check is done: none means one died,
+# and the greps below would have read nothing and passed.
+[ -s "$dir/report.txt" ] || { echo "the checks wrote no report"; exit 1; }
 cat "$dir/report.txt"
 grep -iE 'error|void' "$dir/daemon.log" | grep -v 'lexical-binding' && exit 1
 ! grep -qE '^[0-9]+ files, [1-9]|^ +[^ ].*(Error|failed to compile| grew: )|problem\(s\)|out of date' "$dir/report.txt"
