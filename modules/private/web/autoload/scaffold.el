@@ -5,6 +5,8 @@
 ;; like this month; the house files go on top. Where there is none, the
 ;; whole thing is a template here.
 
+(require 'json)                         ; json-pretty-print-buffer, not autoloaded
+
 (declare-function +core-copy-template "scaffold")
 (declare-function +core-read-new-project "scaffold")
 (declare-function +core-leave-dirvish "dired")
@@ -67,7 +69,7 @@ a generator may have changed its shape since this was written."
     (with-temp-buffer
       (insert-file-contents file)
       (goto-char (point-min))
-      (let* ((manifest (json-parse-buffer :object-type 'alist :array-type 'list))
+      (let* ((manifest (json-parse-buffer :object-type 'alist))
              (existing (alist-get 'scripts manifest)))
         (pcase-dolist (`(,name . ,command) scripts)
           (setf (alist-get (intern name) existing nil nil #'eq) command))
@@ -88,7 +90,7 @@ cannot start at all, whatever the scripts say."
     (with-temp-buffer
       (insert-file-contents file)
       (goto-char (point-min))
-      (let ((manifest (json-parse-buffer :object-type 'alist :array-type 'list)))
+      (let ((manifest (json-parse-buffer :object-type 'alist)))
         (setf (alist-get key manifest nil nil #'eq) value)
         (erase-buffer)
         (insert (json-serialize manifest))
