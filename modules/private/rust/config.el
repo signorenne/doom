@@ -116,7 +116,8 @@
                `(codelldb-rust
                  modes ,+rust-modes
                  ensure ,(lambda (config)
-                           (unless (dape-config-get config 'command)
+                           ;; The command is a path whether it is there or not.
+                           (unless (file-executable-p (dape-config-get config 'command))
                              (user-error "codelldb is not installed: M-x +cpp/install-codelldb")))
                  command ,(expand-file-name
                            "debug-adapters/codelldb/extension/adapter/codelldb"

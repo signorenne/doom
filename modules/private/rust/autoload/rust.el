@@ -331,8 +331,14 @@ answer is asked of cargo rather than guessed."
                     ((or 'nil "dev" "") "debug")
                     ("release" "release")
                     (other other)))
-         (dir (file-name-concat (+rust-root) "target" profile))
-         (names (when-let* ((metadata (+rust--metadata)))
+         (metadata (+rust--metadata))
+         ;; cargo's own target directory, a workspace's or CARGO_TARGET_DIR,
+         ;; and under it the target triple when one is set.
+         (dir (file-name-concat (or (alist-get 'target_directory metadata)
+                                    (file-name-concat (+rust-root) "target"))
+                                (or +rust-target "")
+                                profile))
+         (names (when metadata
                   (mapcan (lambda (package)
                             (mapcar (lambda (target)
                                       (alist-get 'name target))
