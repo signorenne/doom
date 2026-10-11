@@ -325,13 +325,18 @@ def check_ini(text, name):
 
 # XML and property lists
 
-def check_xml(text, name):
+def xml_root(text):
+    """The root element of TEXT, or the place it stops being XML."""
     import xml.etree.ElementTree as ET
     try:
-        root = ET.fromstring(text.encode("utf-8"))
+        return ET.fromstring(text.encode("utf-8"))
     except ET.ParseError as e:
         line, column = e.position
         invalid(line, column + 1, re.sub(r":\s*line \d+, column \d+", "", str(e)))
+
+
+def check_xml(text, name):
+    root = xml_root(text)
     tag = re.sub(r"^\{.*\}", "", root.tag)
     ok(f"Well-formed XML, root <{tag}> (well-formedness only, not checked against a schema)")
 
@@ -342,7 +347,9 @@ def check_plist(data, name):
     except Exception as e:
         if data.startswith(b"bplist"):
             invalid(1, 1, f"a binary property list that does not parse: {e}")
-        check_xml(as_text(data), name)  # say where the XML is broken
+        xml_root(as_text(data))  # say where the XML is broken, when it is
+        # Well-formed, and still no property list: an <integer> of letters.
+        invalid(1, 1, f"well-formed XML, but not a property list: {e}")
     ok("Valid property list, " + ("binary" if data.startswith(b"bplist") else "XML"))
 
 
