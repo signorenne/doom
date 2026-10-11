@@ -1,7 +1,4 @@
-# rustfmt's defaults, said out loud, plus the two this house differs on.
-edition = "2021"
+# rustfmt's defaults but one. The edition is the crate's own, which
+# cargo fmt and the editor read from Cargo.toml; imports_granularity and
+# group_imports are nightly's alone, and on stable each format said so.
 max_width = 100
-
-# Imports grouped and ordered, so a merge does not fight over them.
-imports_granularity = "Crate"
-group_imports = "StdExternalCrate"
