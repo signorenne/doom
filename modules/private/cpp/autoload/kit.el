@@ -658,9 +658,12 @@ not there yet becomes a fresh build directory on the host."
    (let* ((root (+core-project-root))
           (kits (+cpp--kits root))
           (current (+cpp-kit-name (+cpp--kit root)))
+          ;; Where each runs, from what is up: a list is no reason to
+          ;; start every stopped container.
           (rows (append
                  (mapcar (lambda (k)
-                           (+cpp--kit-locate k)
+                           (let ((+container-may-start nil))
+                             (+cpp--kit-locate k))
                            (cons (format "%-28s %-16s %s" (+cpp-kit-name k)
                                          (or (+cpp-kit-build-type k) "")
                                          (+cpp-kit-where k))
