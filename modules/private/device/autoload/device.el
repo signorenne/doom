@@ -37,8 +37,10 @@
 ;;;###autoload
 (defun +device-kill (device program)
   "The shell line that stops PROGRAM on DEVICE, saying nothing when it
-was not running."
-  (+device-run device (format "pkill -x %s || true" (shell-quote-argument program))))
+was not running.  The kernel keeps a process's name to 15 characters,
+so a longer one is matched by those: in full, nothing ever matched."
+  (+device-run device (format "pkill -x %s || true"
+                              (shell-quote-argument (truncate-string-to-width program 15)))))
 
 ;;;###autoload
 (defun +device-copy (device from to)
