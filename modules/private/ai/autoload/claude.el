@@ -7,6 +7,7 @@
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
+(declare-function claude-code-ide-mcp-server-get-session-context "claude-code-ide-mcp-server")
 (declare-function claude-code-ide-make-tool "claude-code-ide-mcp-server")
 
 ;;
@@ -41,6 +42,14 @@ that module is on, else make."
       (format "status: %s\n\n%s" (if running "still running" "finished")
               (string-trim text)))))
 
+(defun +ai--tool-root ()
+  "The project of the Claude session a tool is called for: the package's
+own tools take it from the session, and the buffer current as the call
+arrives is whatever you happen to be looking at, another project's."
+  (or (and (fboundp 'claude-code-ide-mcp-server-get-session-context)
+           (plist-get (claude-code-ide-mcp-server-get-session-context) :project-dir))
+      (+core-project-root 'noerror)))
+
 (defun +ai--tool-build-project (&optional target wait-seconds)
   "Build the project and return what the compiler said.
 TARGET is an optional build target, WAIT-SECONDS how long to wait: the
@@ -48,15 +57,19 @@ wait holds Emacs, so it is short by default and capped, and a slow
 build is polled with emacs_last_compilation.  Modified buffers are
 saved without asking: a y/n prompt while Claude waits would time out
 the tool."
-  (let* ((root (+core-project-root 'noerror))
-         (command (+ai--tool-build-command root target))
-         (wait (min 120 (max 2 (or wait-seconds 20))))
-         (compilation-ask-about-save nil)
-         (buffer (+core-compile "build" command root)))
-    (+ai--tool-wait-for-compilation buffer wait)
-    (concat (format "command: %s\nroot: %s\nbuffer: %s\n"
-                    command (abbreviate-file-name root) (buffer-name buffer))
-            (+ai--tool-compilation-tail buffer))))
+  ;; From a buffer of none of your own, in the session's root: the kit
+  ;; reads the current buffer's settings before the project's file.
+  (with-temp-buffer
+    (setq default-directory (file-name-as-directory (+ai--tool-root)))
+    (let* ((root default-directory)
+           (command (+ai--tool-build-command root target))
+           (wait (min 120 (max 2 (or wait-seconds 20))))
+           (compilation-ask-about-save nil)
+           (buffer (+core-compile "build" command root)))
+      (+ai--tool-wait-for-compilation buffer wait)
+      (concat (format "command: %s\nroot: %s\nbuffer: %s\n"
+                      command (abbreviate-file-name root) (buffer-name buffer))
+              (+ai--tool-compilation-tail buffer)))))
 
 (defun +ai--tool-last-compilation ()
   "The status and tail of the build, test or run that started last,
@@ -68,7 +81,7 @@ whether this tool, a key or a menu started it."
 
 (defun +ai--tool-project-todos ()
   "Return the project's markers, `+core-todo-markers', as file:line:text."
-  (let ((root (+core-project-root 'noerror)))
+  (let ((root (+ai--tool-root)))
     (unless (executable-find "rg") (error "ripgrep (rg) is not installed"))
     (with-temp-buffer
       (let ((default-directory root))
