@@ -40,10 +40,15 @@ the list.  Main itself and the current branch stay."
   (interactive)
   (let* ((main (+git--main))
          (current (magit-get-current-branch))
+         ;; Names alone, and none checked out anywhere: git marks the
+         ;; current branch with * and one in another worktree with +, and
+         ;; "+ name" went to branch -d as a name.
          (merged (seq-remove (lambda (branch)
-                               (or (string-prefix-p "*" branch)
-                                   (member branch (list main current "master" "main"))))
-                             (mapcar #'string-trim (magit-git-lines "branch" "--merged" main)))))
+                               (member branch (list main current "master" "main")))
+                             (seq-remove #'string-empty-p
+                                         (magit-git-lines
+                                          "branch" "--merged" main
+                                          "--format=%(if)%(worktreepath)%(then)%(else)%(refname:short)%(end)")))))
     (cond ((null merged) (message "No branch is merged into %s" main))
           ((y-or-n-p (format "Delete %d merged branch(es): %s? "
                              (length merged) (string-join merged ", ")))
