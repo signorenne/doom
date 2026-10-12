@@ -106,6 +106,16 @@ pushed yet."
       (magit-run-git-async "push" remote (concat ":refs/tags/" tag))
     (message "%s had no tag %s; deleted here" remote tag)))
 
+;;;###autoload
+(defun +git/tag-release ()
+  "A release tag at HEAD, the next version, with this menu's switches:
+magit's own command reads magit's menu, and -a or -s set here made a
+plain tag."
+  (interactive)
+  (require 'magit-tag)
+  (cl-letf (((symbol-function 'magit-tag-arguments) #'+git--tag-args))
+    (call-interactively #'magit-tag-release)))
+
 ;;;###autoload (autoload '+git/tag "private/git/autoload/tag" nil t)
 (transient-define-prefix +git/tag ()
   "Tags: where to put one, and what to do with them."
@@ -117,7 +127,7 @@ pushed yet."
     ("t" "A commit: under the cursor, or by message or hash" +git/tag-create)
     ("b" "The head of a branch"        +git/tag-branch)
     ("h" "HEAD, the commit you are on" +git/tag-head)
-    ("r" "A release, the next version" magit-tag-release)]
+    ("r" "A release, the next version" +git/tag-release)]
    ["Share and remove"
     ("P" "Push a tag"                  magit-push-tag)
     ("x" "Delete a tag here"           magit-tag-delete)
