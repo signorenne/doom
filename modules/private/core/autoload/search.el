@@ -19,6 +19,7 @@
 (declare-function +vertico-file-search "vertico")
 (declare-function projectile-relevant-known-projects "projectile")
 (declare-function consult-line-multi "consult")
+(declare-function consult--convert-regexp "consult")
 (declare-function dired-do-find-regexp-and-replace "dired-aux")
 (declare-function +core-project-root "lib")
 
@@ -91,7 +92,8 @@ It takes extra flags as :args, so they go there."
   (interactive)
   (+core--search-in (ignore-errors (+core-project-root))
                     (when-let* ((word (thing-at-point 'symbol t)))
-                      (regexp-quote word))))
+                      ;; With F the text goes to ripgrep as it is.
+                      (if (+core--search-flag-p "-F") word (regexp-quote word)))))
 
 ;;
 ;;; Replacing
@@ -107,6 +109,11 @@ how it reports no match."
          ;; Lines of context mean nothing when only the names are wanted.
          (flags (seq-remove (lambda (flag) (string-prefix-p "--context=" flag))
                             (+core--search-flags))))
+    ;; The replace reads PATTERN as an Emacs regexp, so ripgrep is given
+    ;; it in its own syntax, as consult gives a search: \( and \| were
+    ;; literal characters to it, and | a choice the replace never made.
+    (unless (or (member "-F" flags) (not (require 'consult nil t)))
+      (setq pattern (consult--convert-regexp pattern 'extended)))
     (mapcar #'expand-file-name
             (ignore-errors
               (apply #'process-lines
@@ -137,8 +144,10 @@ string with F, whole words with w, either case with i."
                (case-fold-search (if (+core--search-flag-p "-i") t case-fold-search)))
     (save-excursion
       (goto-char (point-min))
+      ;; Literal both ways: a backslash in TO is text, not \\1 or \\&.
       (perform-replace (if literal (regexp-quote from) from)
-                       to t t (+core--search-flag-p "-w")))))
+                       (if literal (replace-quote to) to)
+                       t t (+core--search-flag-p "-w")))))
 
 (defun +core--replace-through (directory where)
   "Replace through the files under DIRECTORY that hold the text, asking
@@ -152,7 +161,8 @@ are: one kind of file, one set of names, whole words, either case."
                   (abbreviate-file-name (or directory default-directory)) from))
     (fileloop-initialize-replace
      (if (+core--search-flag-p "-F") (regexp-quote from) from)
-     to files
+     (if (+core--search-flag-p "-F") (replace-quote to) to)
+     files
      (if (+core--search-flag-p "-i") t 'default)
      (+core--search-flag-p "-w"))
     (message "%d file(s) hold it; y and n as usual, ! for the rest of a file"
