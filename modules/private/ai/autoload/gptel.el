@@ -36,12 +36,17 @@ the tools run without confirmation."
     file))
 
 (defun +ai--gptel-read-buffer (name)
-  "Text of buffer NAME, up to 60k characters, when it visits a project file."
-  (let ((buffer (or (get-buffer name) (error "No buffer named %s" name))))
+  "Text of buffer NAME, up to 60k characters, when it visits a file of the
+conversation's project.  The project is taken here, in the conversation's
+buffer, where gptel runs its tools: taken in buffer NAME, every buffer was
+in its own project, and any open file could be read."
+  (let ((buffer (or (get-buffer name) (error "No buffer named %s" name)))
+        (root (+ai--gptel-root)))
     (with-current-buffer buffer
       (unless buffer-file-name
         (error "%s visits no file; only project files are read" name))
-      (+ai--gptel-project-file buffer-file-name)
+      (unless (file-in-directory-p (file-truename buffer-file-name) root)
+        (error "%s is outside the project %s" name (abbreviate-file-name root)))
       (buffer-substring-no-properties (point-min) (min (point-max) 60000)))))
 
 (defun +ai--gptel-read-file (path)
