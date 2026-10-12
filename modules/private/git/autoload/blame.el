@@ -64,7 +64,9 @@ server among them, which then stopped on \"Selecting deleted buffer\"."
   (unless (process-live-p +git--blame-process)
     (let* ((buffer (current-buffer))
            (tick (buffer-chars-modified-tick))
-           (size (line-number-at-pos (point-max)))
+           ;; The whole file, narrowed or not: git blames the file, and
+           ;; its lines are counted from the top of it.
+           (size (save-restriction (widen) (line-number-at-pos (point-max))))
            (chunks nil)
            (err (make-pipe-process :name "git-blame-errors" :buffer nil
                                    :noquery t :filter #'ignore :sentinel #'ignore))
@@ -94,7 +96,9 @@ server among them, which then stopped on \"Selecting deleted buffer\"."
                                     (when (current-idle-time) (+git--blame-show)))
                            (setq +git--blame-failed tick))))
                    (delete-process err))))))
-      (process-send-region +git--blame-process (point-min) (point-max))
+      (save-restriction
+        (widen)
+        (process-send-region +git--blame-process (point-min) (point-max)))
       (process-send-eof +git--blame-process))))
 
 (defun +git--blame-read (out tick size)
@@ -185,7 +189,7 @@ It is drawn at the end of the line too, and is the one to read."
 
 (defun +git--blame-draw ()
   "Put the blame of the line point is on at its end."
-  (let* ((line (line-number-at-pos))
+  (let* ((line (line-number-at-pos nil t))
          (commit (and (< line (length +git--blame-lines))
                       (aref +git--blame-lines line)))
          (info (and commit (gethash commit +git--blame-commits))))
