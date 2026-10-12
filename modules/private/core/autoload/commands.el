@@ -6,6 +6,7 @@
 (defvar consult-fd-args)
 (defvar +core-compile-name)             ; lib.el
 (defvar +core-plain-mode)               ; config.el
+(defvar +core-todo-markers)             ; lib.el
 
 (defvar +core-transparency-alpha 85
   "Opacity (0-100) `+core/toggle-transparency' switches to.")
@@ -107,7 +108,9 @@ sets it up as opening it would have, and a revert keeps that."
 (defun +core/project-todos ()
   "Search the project for TODO, FIXME, HACK, NOTE, REVIEW, BUG and XXX."
   (interactive)
-  (consult-ripgrep (+core-project-root 'noerror) (+core-todo-regexp)))
+  ;; An Emacs regexp: consult turns it into ripgrep's, and ripgrep's own
+  ;; pattern, `+core-todo-regexp', came out of that as literal text.
+  (consult-ripgrep (+core-project-root 'noerror) (regexp-opt +core-todo-markers 'words)))
 
 ;;;###autoload
 (defun +core/find-any-file ()
