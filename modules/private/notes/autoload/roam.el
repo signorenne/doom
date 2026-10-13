@@ -112,8 +112,12 @@ timestamps a day's note carries, which no scan looks for.")
 
 (defun +notes--recent-dailies ()
   "The daily notes of the last `+notes-daily-agenda-days\=' days."
-  (when-let* (((boundp 'org-roam-dailies-directory))
-              (dir (expand-file-name org-roam-dailies-directory
+  ;; daily/, the package's default, until org-roam-dailies is loaded:
+  ;; org-roam does not load it, and the agenda went without the dailies
+  ;; until a dailies command had run.
+  (when-let* ((dir (expand-file-name (if (boundp 'org-roam-dailies-directory)
+                                         org-roam-dailies-directory
+                                       "daily/")
                                      org-roam-directory))
               ((file-directory-p dir))
               (oldest (time-subtract nil (days-to-time
