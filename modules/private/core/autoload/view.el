@@ -155,6 +155,9 @@ says what it made."
   "Show TEXT in the view."
   (with-current-buffer (+core-view--buffer)
     (let ((inhibit-read-only t))
+      ;; A picture drawn here before left its centring overlay, the gap
+      ;; above it, which neither a mode nor erasing takes away.
+      (+core-image-uncenter)
       (unless (derived-mode-p 'special-mode) (special-mode))
       (set-buffer-multibyte t)
       (erase-buffer)
