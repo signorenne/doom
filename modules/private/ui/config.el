@@ -200,7 +200,11 @@ cc-mode walked back through them at every step, 130 ms a line scrolled."
     (when (and (> top (point-min)) (not doom-large-file-p))
       (pcase-let ((`(,from ,to ,tick ,old-top . ,line) +ui--defun-cache))
         (cond
-         ((and from (<= from top) (< top to) (eq tick (buffer-chars-modified-tick)))
+         ;; A function's line holds while the top is past it: with the
+         ;; top on that line it is on screen, and the header doubled it.
+         ;; The entry for no function at all is the top line alone.
+         ((and from (if line (< from top) (<= from top)) (< top to)
+               (eq tick (buffer-chars-modified-tick)))
           line)
          ((and from (eql top old-top))
           (unless (timerp +ui--defun-refresh)
