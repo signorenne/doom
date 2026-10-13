@@ -320,6 +320,15 @@ major mode too, which wipes the buffer's local variables; a mode that
 wants a view gives it one again from its own hook."
   (when +core-view-draw
     (setq +core-view--buffers (max 0 (1- +core-view--buffers)))
+    ;; On show and left without one once the new mode is set up, a
+    ;; picture turned into text: the view goes, or it stayed there.
+    (when (eq +core-view--showing (current-buffer))
+      (let ((buffer (current-buffer)))
+        (run-at-time 0 nil (lambda ()
+                             (when (and (eq +core-view--showing buffer)
+                                        (not (and (buffer-live-p buffer)
+                                                  (buffer-local-value '+core-view-draw buffer))))
+                               (+core-view--close))))))
     (when (zerop +core-view--buffers)
       (remove-hook 'window-selection-change-functions #'+core-view--follow-h)
       (remove-hook 'window-buffer-change-functions #'+core-view--follow-h))))
