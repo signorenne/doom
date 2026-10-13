@@ -187,19 +187,25 @@ has shown nothing for SOURCE yet does the problem take the whole view."
   (+core-view--put-text source (propertize "Reading..." 'face 'shadow))
   (let ((out (generate-new-buffer " *view*")))
     (setq +core-view--process
-          (make-process
-           :name "view" :buffer out :command command :noquery t
-           :connection-type 'pipe :stderr nil
-           :sentinel
-           (lambda (proc _event)
-             (unless (process-live-p proc)
-               (let ((text (with-current-buffer out (buffer-string))))
-                 (kill-buffer out)
-                 (when (and (buffer-live-p source) (eq +core-view--showing source))
-                   (if (zerop (process-exit-status proc))
-                       (+core-view--put-text source (+core-view--decorate text))
-                     (+core-view--put-problem
-                      source (car (split-string text "\n" t))))))))))))
+          (condition-case err
+              (make-process
+               :name "view" :buffer out :command command :noquery t
+               :connection-type 'pipe :stderr nil
+               :sentinel
+               (lambda (proc _event)
+                 (unless (process-live-p proc)
+                   (let ((text (with-current-buffer out (buffer-string))))
+                     (kill-buffer out)
+                     (when (and (buffer-live-p source) (eq +core-view--showing source))
+                       (if (zerop (process-exit-status proc))
+                           (+core-view--put-text source (+core-view--decorate text))
+                         (+core-view--put-problem
+                          source (car (split-string text "\n" t)))))))))
+            ;; A program that cannot start at all, python3 gone: say so,
+            ;; and leave no output buffer behind for each try.
+            (error (kill-buffer out)
+                   (+core-view--put-problem source (error-message-string err))
+                   nil)))))
 
 (defun +core-view--decorate (text)
   "TEXT with its section titles set apart: a line that begins at the
