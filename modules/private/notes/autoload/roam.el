@@ -269,7 +269,10 @@ in the place the heading came from, so the day still reads as a story."
 The map is a roam note of its own, so it shows in the graph and can be
 linked like any other.  Only the list between the markers is rewritten, so
 whatever you write around it stays."
-  (interactive (list (completing-read "Map the notes tagged: " (+notes--roam-tags))))
+  (interactive (progn
+                 ;; Before the tags are read: the list comes from org-roam.
+                 (require 'org-roam)
+                 (list (completing-read "Map the notes tagged: " (+notes--roam-tags)))))
   (require 'org-roam)
   (let ((file (+notes--roam-map-file tag))
         (links (+notes--roam-map-links tag)))
