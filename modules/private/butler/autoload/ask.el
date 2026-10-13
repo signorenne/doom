@@ -217,14 +217,17 @@ with what he found, and answers in a sentence."
           (+butler--ask-claude question nil)
         (setq +butler--answer nil)
         (+butler--show (format "I have nothing on that, %s." +butler-address))))
+     ;; The answer is the first offer, the line the clarity was judged
+     ;; on: past two keyed hits a line of prose that scored best stands
+     ;; aside, and it was said all the same.
      ((+butler--clear-p (setq +butler--offered (+butler--offer hits)))
-      (+butler--answer (car hits) hits))
+      (+butler--answer (car +butler--offered) hits))
      ;; The words leave it open: he says the best of them and lays the
      ;; rest out in a menu, so the answer is there at once and what
      ;; else the question could have meant is a keypress away, with
      ;; Claude among the choices.
      (t (setq +butler--offered-hits hits)
-        (+butler--answer (car hits) hits)
+        (+butler--answer (car +butler--offered) hits)
         ;; A transient prefix expects to have been called as a command.
         (call-interactively #'+butler/choices)))))
 
