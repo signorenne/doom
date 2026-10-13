@@ -37,7 +37,7 @@
      "* PROJ %^{Project}\n:PROPERTIES:\n:CATEGORY: %\\1\n:CREATED: %U\n:END:\n** Goal\n%?\n** Next actions\n*** NEXT \n** Notes\n** Log\n" :prepend t)
     ("h" "Habit" entry
      (file+headline "habits.org" "Habits")
-     "* TODO %^{Habit}\nSCHEDULED: <%(format-time-string \"%Y-%m-%d %a\") .+1d/3d>\n:PROPERTIES:\n:STYLE: habit\n:CREATED: %U\n:END:\n%?")
+     "* TODO %^{Habit}\nSCHEDULED: <%<%Y-%m-%d %a> .+1d/3d>\n:PROPERTIES:\n:STYLE: habit\n:CREATED: %U\n:END:\n%?")
     ("w" "Web page, from the browser" entry
      (file+headline "reading.org" "Links")
      "* TODO %:description  :web:\n:PROPERTIES:\n:CREATED: %U\n:URL: %:link\n:END:\n%i\n%?" :prepend t)
