@@ -99,7 +99,15 @@ would leave some other buffer in the side window."
 (define-key +core-view-panel-mode-map "q" #'+core/view-close)
 
 (defun +core-view--buffer ()
-  (get-buffer-create +core-view-buffer-name))
+  "The view's buffer, made when there is none.  Killed by hand, it takes
+what it was showing with it, so the next one is drawn rather than left
+blank as unchanged."
+  (or (get-buffer +core-view-buffer-name)
+      (with-current-buffer (get-buffer-create +core-view-buffer-name)
+        (add-hook 'kill-buffer-hook
+                  (lambda () (setq +core-view--showing nil +core-view--tick nil))
+                  nil t)
+        (current-buffer))))
 
 (defun +core-view--window ()
   "The window showing the view, or nil."
