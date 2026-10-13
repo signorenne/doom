@@ -319,11 +319,20 @@ or the enclosing function's first line while it is scrolled off the top."
   (when reset (goto-char (point-min)))
   (flymake-goto-next-error n nil t))
 
+(defun +ui--this-buffer (&rest _)
+  "This buffer, for `next-error-find-buffer-function'."
+  (current-buffer))
+
+;; And this buffer's, not the one ]e walked last: `next-error' asks the
+;; buffer it used before first, and in another file the key went on
+;; through the first file's diagnostics, out of sight.
 (add-hook 'flymake-mode-hook
           (defun +ui--flymake-next-error-h ()
             (if flymake-mode
-                (setq-local next-error-function #'+ui--flymake-next-error)
-              (kill-local-variable 'next-error-function))))
+                (setq-local next-error-function #'+ui--flymake-next-error
+                            next-error-find-buffer-function #'+ui--this-buffer)
+              (kill-local-variable 'next-error-function)
+              (kill-local-variable 'next-error-find-buffer-function))))
 
 ;; The indent guides would cost four milliseconds a scroll step on a big
 ;; frame, but switching them off while the wheel turns refontifies the
