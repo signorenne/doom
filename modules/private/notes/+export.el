@@ -34,7 +34,10 @@ visibly but does not hold up the window.")
       ;; later for nothing.
       (org-indent-add-properties (point-min) (point-max))
       (setq org-indent-agentized-buffers
-            (delq (current-buffer) org-indent-agentized-buffers)))))
+            (delq (current-buffer) org-indent-agentized-buffers))
+      ;; What the agent runs once it has done a buffer: org-modern-indent
+      ;; waits for it to draw the blocks, and off the queue it never came.
+      (run-hook-with-args 'org-indent-post-buffer-init-functions (current-buffer)))))
 
 ;; Org looks for LaTeX to colour with no bound on the search: from the
 ;; line being coloured to the next fragment, which in a file with few is
