@@ -282,6 +282,8 @@ text, one per line."
   (let ((file (car (+core-file-at-point t))))
     (when (file-directory-p file)
       (user-error "%s is a directory" (file-name-nondirectory file)))
+    (unless (file-exists-p file)
+      (user-error "%s is not on disk yet; save it first" (file-name-nondirectory file)))
     (when (> (file-attribute-size (file-attributes file)) (* 4 1024 1024))
       (user-error "%s is over 4 MB; open it instead" (file-name-nondirectory file)))
     (with-temp-buffer
