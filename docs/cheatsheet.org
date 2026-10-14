@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-09-29 15:19
+#+generated: 2026-10-03 21:09
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2536,6 +2536,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC X~              | Org Capture                  |
 | ~SPC `~              | Switch to last buffer        |
 | ~SPC a~              | Actions                      |
+| ~SPC k~              | project                      |
 | ~SPC override-state~ | all                          |
 | ~SPC u~              | Universal argument           |
 | ~SPC x~              | Pop up scratch buffer        |
@@ -2754,7 +2755,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC h 4 s~   | help-find-source                 |
 | ~SPC h ?~     | help-for-help                    |
 | ~SPC h A~     | apropos-documentation            |
-| ~SPC h C~     | Check the config's commands      |
+| ~SPC h C~     | describe-coding-system           |
 | ~SPC h C-\~   | describe-input-method            |
 | ~SPC h C-a~   | about-emacs                      |
 | ~SPC h C-c~   | describe-coding-system           |
@@ -2777,7 +2778,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC h J~     | Dismiss the butler               |
 | ~SPC h K~     | Info-goto-emacs-key-command-node |
 | ~SPC h L~     | describe-language-environment    |
-| ~SPC h M~     | Private module README            |
+| ~SPC h M~     | doom/describe-active-minor-mode  |
 | ~SPC h O~     | +lookup/online                   |
 | ~SPC h P~     | find-library                     |
 | ~SPC h R~     | info-display-manual              |
@@ -2794,7 +2795,9 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC h b m~   | which-key-show-major-mode        |
 | ~SPC h b t~   | which-key-show-top-level         |
 | ~SPC h c~     | describe-key-briefly             |
+| ~SPC h d C~   | Check the config's commands      |
 | ~SPC h d L~   | doom/help-search-loaded-files    |
+| ~SPC h d M~   | Private module README            |
 | ~SPC h d N~   | doom/help-search-news            |
 | ~SPC h d S~   | doom/help-search                 |
 | ~SPC h d b~   | doom/report-bug                  |
@@ -2855,71 +2858,6 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC i s~ | Snippet             |
 | ~SPC i u~ | Unicode             |
 | ~SPC i y~ | From clipboard      |
-
-** SPC k: kit: build, run, fix
-| Key       | What it does                             |
-|-----------+------------------------------------------|
-| ~SPC k .~   | Fix it: the quickfix at point            |
-| ~SPC k ?~   | Which kit, and why                       |
-| ~SPC k A~   | Disassemble at point                     |
-| ~SPC k B~   | Build a target                           |
-| ~SPC k D~   | Debug on the device                      |
-| ~SPC k E~   | Previous problem                         |
-| ~SPC k G~   | Generate the presets                     |
-| ~SPC k H~   | Other file of the project                |
-| ~SPC k I~   | Project status                           |
-| ~SPC k K~   | Pick the kit                             |
-| ~SPC k N~   | New Qt MVVM app                          |
-| ~SPC k P~   | Package                                  |
-| ~SPC k R~   | Run with arguments                       |
-| ~SPC k S~   | Run a project script                     |
-| ~SPC k SPC~ | Kit menu: what you do                    |
-| ~SPC k T~   | Test at point                            |
-| ~SPC k U~   | Deploy to the device                     |
-| ~SPC k Y~   | Kit family                               |
-| ~SPC k a~   | Assembly, live                           |
-| ~SPC k b~   | Build                                    |
-| ~SPC k c~   | Configure                                |
-| ~SPC k d~   | Debug                                    |
-| ~SPC k e~   | Next problem                             |
-| ~SPC k f~   | clang-format this buffer                 |
-| ~SPC k g F~ | clang-format the project                 |
-| ~SPC k g T~ | clang-tidy this file, apply the fixes    |
-| ~SPC k g p~ | clang-tidy the project                   |
-| ~SPC k g t~ | clang-tidy this file                     |
-| ~SPC k i~   | Install                                  |
-| ~SPC k j~   | Attach to a gdb server                   |
-| ~SPC k l b~ | Run the kit in a container               |
-| ~SPC k l c~ | Write .clangd                            |
-| ~SPC k l e~ | The server's log                         |
-| ~SPC k l i~ | Inlay hints                              |
-| ~SPC k l l~ | Link compile_commands.json into the root |
-| ~SPC k l r~ | Restart it                               |
-| ~SPC k l s~ | Switch server: clangd, ccls              |
-| ~SPC k m~   | The project's panel                      |
-| ~SPC k n~   | New project                              |
-| ~SPC k o~   | Copy the package out                     |
-| ~SPC k p B~ | Boards                                   |
-| ~SPC k p H~ | PlatformIO Home                          |
-| ~SPC k p L~ | Install a library                        |
-| ~SPC k p U~ | Update the packages                      |
-| ~SPC k p b~ | Build                                    |
-| ~SPC k p c~ | Clean                                    |
-| ~SPC k p d~ | Debug (gdb)                              |
-| ~SPC k p e~ | Environment                              |
-| ~SPC k p i~ | compile_commands.json                    |
-| ~SPC k p l~ | Devices                                  |
-| ~SPC k p m~ | Serial monitor                           |
-| ~SPC k p n~ | New project                              |
-| ~SPC k p t~ | Test                                     |
-| ~SPC k p u~ | Upload                                   |
-| ~SPC k r~   | Run                                      |
-| ~SPC k s~   | Default target                           |
-| ~SPC k t~   | Test                                     |
-| ~SPC k u~   | A test executable                        |
-| ~SPC k w~   | Write the setup to .dir-locals.el        |
-| ~SPC k x~   | Build, then run                          |
-| ~SPC k y~   | Build type                               |
 
 ** SPC l: LLM: Claude, agents, gptel
 | Key       | What it does             |
@@ -3260,6 +3198,170 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC w w~       | evil-window-next                  |
 | ~SPC w x~       | evil-window-exchange              |
 | ~SPC w /~       | evil-window-set-width             |
+
+** SPC k: outside a project
+| Key     | What it does          |
+|---------+-----------------------|
+| ~SPC k D~ | Forget a project      |
+| ~SPC k f~ | A file in any project |
+| ~SPC k g~ | Clone a repository    |
+| ~SPC k n~ | New project           |
+| ~SPC k o~ | The projects folder   |
+| ~SPC k p~ | Open a project        |
+
+** SPC k: a project no module knows
+| Key       | What it does            |
+|-----------+-------------------------|
+| ~SPC k B~   | Build a target          |
+| ~SPC k D~   | Forget a project        |
+| ~SPC k P~   | Package                 |
+| ~SPC k SPC~ | What the project can do |
+| ~SPC k b~   | Build                   |
+| ~SPC k c~   | Configure               |
+| ~SPC k f~   | A file in any project   |
+| ~SPC k g~   | Clone a repository      |
+| ~SPC k i~   | Install                 |
+| ~SPC k n~   | New project             |
+| ~SPC k o~   | The projects folder     |
+| ~SPC k p~   | Open a project          |
+| ~SPC k r~   | Run                     |
+| ~SPC k t~   | Test                    |
+
+** SPC k: C and C++, PlatformIO
+| Key       | What it does                             |
+|-----------+------------------------------------------|
+| ~SPC k .~   | Fix it: the quickfix at point            |
+| ~SPC k ?~   | Which kit, and why                       |
+| ~SPC k A~   | Disassemble at point                     |
+| ~SPC k B~   | Build a target                           |
+| ~SPC k D~   | Debug on the device                      |
+| ~SPC k E~   | Previous problem                         |
+| ~SPC k G~   | Generate the presets                     |
+| ~SPC k H~   | Other file of the project                |
+| ~SPC k I~   | Project status                           |
+| ~SPC k K~   | Pick the kit                             |
+| ~SPC k N~   | New Qt MVVM app                          |
+| ~SPC k P~   | Package                                  |
+| ~SPC k R~   | Run with arguments                       |
+| ~SPC k S~   | Run a project script                     |
+| ~SPC k SPC~ | Kit menu: what you do                    |
+| ~SPC k T~   | Test at point                            |
+| ~SPC k U~   | Deploy to the device                     |
+| ~SPC k Y~   | Kit family                               |
+| ~SPC k a~   | Assembly, live                           |
+| ~SPC k b~   | Build                                    |
+| ~SPC k c~   | Configure                                |
+| ~SPC k d~   | Debug                                    |
+| ~SPC k e~   | Next problem                             |
+| ~SPC k f~   | clang-format this buffer                 |
+| ~SPC k g F~ | clang-format the project                 |
+| ~SPC k g T~ | clang-tidy this file, apply the fixes    |
+| ~SPC k g p~ | clang-tidy the project                   |
+| ~SPC k g t~ | clang-tidy this file                     |
+| ~SPC k i~   | Install                                  |
+| ~SPC k j~   | Attach to a gdb server                   |
+| ~SPC k l b~ | Run the kit in a container               |
+| ~SPC k l c~ | Write .clangd                            |
+| ~SPC k l e~ | The server's log                         |
+| ~SPC k l i~ | Inlay hints                              |
+| ~SPC k l l~ | Link compile_commands.json into the root |
+| ~SPC k l r~ | Restart it                               |
+| ~SPC k l s~ | Switch server: clangd, ccls              |
+| ~SPC k m~   | The project's panel                      |
+| ~SPC k n~   | New project                              |
+| ~SPC k o~   | Copy the package out                     |
+| ~SPC k p B~ | Boards                                   |
+| ~SPC k p H~ | PlatformIO Home                          |
+| ~SPC k p L~ | Install a library                        |
+| ~SPC k p U~ | Update the packages                      |
+| ~SPC k p b~ | Build                                    |
+| ~SPC k p c~ | Clean                                    |
+| ~SPC k p d~ | Debug (gdb)                              |
+| ~SPC k p e~ | Environment                              |
+| ~SPC k p i~ | compile_commands.json                    |
+| ~SPC k p l~ | Devices                                  |
+| ~SPC k p m~ | Serial monitor                           |
+| ~SPC k p n~ | New project                              |
+| ~SPC k p t~ | Test                                     |
+| ~SPC k p u~ | Upload                                   |
+| ~SPC k r~   | Run                                      |
+| ~SPC k s~   | Default target                           |
+| ~SPC k t~   | Test                                     |
+| ~SPC k u~   | A test executable                        |
+| ~SPC k w~   | Write the setup to .dir-locals.el        |
+| ~SPC k x~   | Build, then run                          |
+| ~SPC k y~   | Build type                               |
+
+** SPC k: Rust
+| Key     | What it does           |
+|---------+------------------------|
+| ~SPC k B~ | Benchmarks             |
+| ~SPC k C~ | Clean                  |
+| ~SPC k D~ | Documentation          |
+| ~SPC k F~ | No default features    |
+| ~SPC k I~ | Project status         |
+| ~SPC k L~ | Clippy, fixing         |
+| ~SPC k R~ | Run with arguments     |
+| ~SPC k T~ | Target triple          |
+| ~SPC k U~ | Update the lock file   |
+| ~SPC k Y~ | dev against release    |
+| ~SPC k a~ | Run arguments, kept    |
+| ~SPC k b~ | Build                  |
+| ~SPC k c~ | Check, the fast one    |
+| ~SPC k d~ | Debug                  |
+| ~SPC k e~ | Expand the macros      |
+| ~SPC k f~ | Features               |
+| ~SPC k i~ | Install                |
+| ~SPC k l~ | Clippy                 |
+| ~SPC k m~ | The panel: what is set |
+| ~SPC k n~ | New project            |
+| ~SPC k p~ | Workspace member       |
+| ~SPC k r~ | Run                    |
+| ~SPC k t~ | Test                   |
+| ~SPC k u~ | Test at point          |
+| ~SPC k v~ | Cargo.toml             |
+| ~SPC k y~ | Profile                |
+
+** SPC k: Pascal: Free Pascal and Lazarus
+| Key     | What it does           |
+|---------+------------------------|
+| ~SPC k C~ | Clean                  |
+| ~SPC k I~ | Project status         |
+| ~SPC k R~ | Run with arguments     |
+| ~SPC k T~ | Target                 |
+| ~SPC k a~ | Run arguments, kept    |
+| ~SPC k b~ | Build                  |
+| ~SPC k d~ | Debug                  |
+| ~SPC k m~ | The panel: what is set |
+| ~SPC k n~ | New project            |
+| ~SPC k r~ | Run                    |
+| ~SPC k s~ | Which program          |
+| ~SPC k t~ | Test                   |
+| ~SPC k v~ | The project file       |
+| ~SPC k w~ | Widget set             |
+| ~SPC k x~ | Build, then run        |
+| ~SPC k y~ | Build mode             |
+
+** SPC k: Web
+| Key     | What it does             |
+|---------+--------------------------|
+| ~SPC k I~ | Project status           |
+| ~SPC k M~ | Package manager          |
+| ~SPC k P~ | Package the Electron app |
+| ~SPC k T~ | Test, and keep watching  |
+| ~SPC k b~ | Build                    |
+| ~SPC k c~ | Types, without building  |
+| ~SPC k d~ | Debug                    |
+| ~SPC k i~ | Install                  |
+| ~SPC k l~ | Lint                     |
+| ~SPC k m~ | The panel: what is set   |
+| ~SPC k n~ | New project              |
+| ~SPC k o~ | What has moved on        |
+| ~SPC k p~ | package.json             |
+| ~SPC k r~ | Dev server               |
+| ~SPC k s~ | Any script               |
+| ~SPC k t~ | Test                     |
+| ~SPC k v~ | Preview the build        |
 # END GENERATED-KEYS
 
 * Reference: this config's commands
@@ -3268,6 +3370,8 @@ bound.
 # BEGIN GENERATED-COMMANDS
 
 ** Core
+- ~+core/build-and-run~ (~SPC k x~) :: Build this project, then run it when
+  the build worked.
 - ~+core/build-panel~ (~SPC k m~) :: The panel of what this project's build
   depends on.
 - ~+core/copy-file-contents~ (~y t~) :: Copy the whole text of this file to
@@ -3301,6 +3405,8 @@ bound.
   buffer, then offer to restart.
 - ~+core/doom-upgrade~ (~SPC h r u~) :: Update Doom and its packages, then
   rebuild them.
+- ~+core/file-own-mode~ :: Give a file opened as plain text the major mode
+  it would have had.
 - ~+core/files-from-clipboard~ (~y v~) :: Copy the files on the system
   clipboard into this directory.
 - ~+core/files-to-clipboard~ (~y c~) :: Put the marked files, or this file,
@@ -3323,6 +3429,8 @@ bound.
   here can make: the language, then its templates.
 - ~+core/open-externally~ (~SPC f x~) :: Open FILE with the desktop's
   default application.
+- ~+core/open-projects-dir~ (~SPC k o~) :: Open the folder new projects go
+  in, to pick one by hand.
 - ~+core/project-todos~ (~SPC p t~) :: Search the project for TODO, FIXME,
   HACK, NOTE, REVIEW, BUG and XXX.
 - ~+core/quick-access-add~ (~SPC m b~) :: Add the directory here to the b
@@ -3341,6 +3449,8 @@ bound.
   earlier, back where they came from.
 - ~+core/run~ (~SPC k r~) :: Run what this project builds, however this kind
   of project is run.
+- ~+core/run-with-args~ (~SPC k R~) :: Run what this project builds once,
+  with arguments asked for.
 - ~+core/search-menu~ (~SPC s SPC~) :: Find text, and change it, with what
   to look for set before you look.
 - ~+core/toggle-transparency~ (~SPC t T~) :: Toggle background transparency
@@ -3401,8 +3511,8 @@ bound.
 ** C and C++
 - ~+cpp/assembly~ (~SPC k a~) :: Show the assembly this file compiles to,
   beside it, and keep it fresh.
-- ~+cpp/build-and-run~ (~SPC k x~) :: Build the project and run it when the
-  build succeeded.
+- ~+cpp/build-and-run~ :: Build the project and run it when the build
+  succeeded.
 - ~+cpp/build-type~ (~SPC k y~) :: Build as TYPE from now on: Debug,
   Release, RelWithDebInfo or MinSizeRel.
 - ~+cpp/cmake-clean~ :: Build the clean target.
@@ -3485,7 +3595,7 @@ bound.
 - ~+cpp/run-script~ (~SPC k S~) :: Run SCRIPT, one of the project's own,
   with ARGS, where the kit runs and with its SDK environment: a deploy
   script, a build_arm.sh, a tester.
-- ~+cpp/run-with-args~ (~SPC k R~) :: Run a project executable with ARGS.
+- ~+cpp/run-with-args~ :: Run a project executable with ARGS.
 - ~+cpp/set-build-target~ (~SPC k s~) :: Build TARGET by default from now
   on.
 - ~+cpp/set-container~ (~SPC k l b~) :: Run this project's kit inside the
@@ -3548,96 +3658,108 @@ bound.
   board.
 
 ** Rust
-- ~+rust/bench~ :: Run the project's benchmarks.
-- ~+rust/build~ :: Build the project with the flags it is set to.
-- ~+rust/check~ (~SPC m k c~) :: Check the project without building it,
-  which is the fast one.
-- ~+rust/clean~ :: Remove what the build made.
-- ~+rust/clippy~ (~SPC m k l~) :: Run clippy over the project.
-- ~+rust/clippy-fix~ (~SPC m k L~) :: Run clippy and apply the fixes it is
+- ~+rust/bench~ (~SPC k B~) :: Run the project's benchmarks.
+- ~+rust/build~ (~SPC k b~) :: Build the project with the flags it is set
+  to.
+- ~+rust/check~ (~SPC k c~) :: Check the project without building it, which
+  is the fast one.
+- ~+rust/clean~ (~SPC k C~) :: Remove what the build made.
+- ~+rust/clippy~ (~SPC k l~) :: Run clippy over the project.
+- ~+rust/clippy-fix~ (~SPC k L~) :: Run clippy and apply the fixes it is
   sure of.
-- ~+rust/debug~ :: Debug what this project builds, with codelldb.
-- ~+rust/doc~ (~SPC m k d~) :: Build the project's documentation and open
-  it.
-- ~+rust/expand~ (~SPC m k e~) :: Show the file with its macros expanded, if
+- ~+rust/debug~ (~SPC k d~) :: Debug what this project builds, with
+  codelldb.
+- ~+rust/doc~ (~SPC k D~) :: Build the project's documentation and open it.
+- ~+rust/expand~ (~SPC k e~) :: Show the file with its macros expanded, if
   cargo-expand is installed.
-- ~+rust/menu~ :: What a cargo build depends on, and the files behind it.
+- ~+rust/menu~ (~SPC k m~) :: What a cargo build depends on, and the files
+  behind it.
 - ~+rust/new-project~ :: Start cargo project NAME of KIND in DIR, and open
   it.
-- ~+rust/open-cargo-toml~ (~SPC m k v~) :: Open the project's Cargo.toml.
-- ~+rust/project-status~ :: Say what is set up here and what is missing.
-- ~+rust/run~ :: Run what the project builds, with the arguments it is set
-  to.
-- ~+rust/run-with-args~ :: Run the project once with ARGS, without writing
-  them down.
-- ~+rust/set-features~ :: Choose the features to build with, kept in
+- ~+rust/open-cargo-toml~ (~SPC k v~) :: Open the project's Cargo.toml.
+- ~+rust/project-status~ (~SPC k I~) :: Say what is set up here and what is
+  missing.
+- ~+rust/run~ (~SPC k r~) :: Run what the project builds, with the arguments
+  it is set to.
+- ~+rust/run-with-args~ (~SPC k R~) :: Run the project once with ARGS,
+  without writing them down.
+- ~+rust/set-features~ (~SPC k f~) :: Choose the features to build with,
+  kept in .dir-locals.el.
+- ~+rust/set-member~ (~SPC k p~) :: Build only workspace member MEMBER, or
+  the whole workspace.
+- ~+rust/set-no-default-features~ (~SPC k F~) :: Build with no default
+  features, or back to the defaults.
+- ~+rust/set-profile~ (~SPC k y~) :: Build with PROFILE from now on, kept in
   .dir-locals.el.
-- ~+rust/set-member~ :: Build only workspace member MEMBER, or the whole
-  workspace.
-- ~+rust/set-no-default-features~ :: Build with no default features, or back
-  to the defaults.
-- ~+rust/set-profile~ :: Build with PROFILE from now on, kept in
-  .dir-locals.el.
-- ~+rust/set-run-args~ :: Keep ARGS for the program, so SPC k r passes them
-  every time.
-- ~+rust/set-target~ :: Build for TARGET from now on.
-- ~+rust/test~ :: Run the project's tests with the flags it is set to.
-- ~+rust/test-at-point~ (~SPC m k u~) :: Run the test the cursor is in, and
-  no other.
-- ~+rust/toggle-profile~ :: Swap between dev and release, the two anyone
-  switches between.
-- ~+rust/update~ :: Update the locked dependencies.
+- ~+rust/set-run-args~ (~SPC k a~) :: Keep ARGS for the program, so SPC k r
+  passes them every time.
+- ~+rust/set-target~ (~SPC k T~) :: Build for TARGET from now on.
+- ~+rust/test~ (~SPC k t~) :: Run the project's tests with the flags it is
+  set to.
+- ~+rust/test-at-point~ (~SPC k u~) :: Run the test the cursor is in, and no
+  other.
+- ~+rust/toggle-profile~ (~SPC k Y~) :: Swap between dev and release, the
+  two anyone switches between.
+- ~+rust/update~ (~SPC k U~) :: Update the locked dependencies.
 
 ** Pascal
-- ~+pascal/build~ :: Build the project with what it is set to.
-- ~+pascal/build-and-run~ (~SPC m k x~) :: Build, and run it when the build
+- ~+pascal/build~ (~SPC k b~) :: Build the project with what it is set to.
+- ~+pascal/build-and-run~ (~SPC k x~) :: Build, and run it when the build
   worked.
-- ~+pascal/clean~ (~SPC m k C~) :: Remove what the build made.
-- ~+pascal/debug~ :: Debug what this project builds, with gdb.
-- ~+pascal/menu~ :: What a Pascal build depends on, and the files behind it.
+- ~+pascal/clean~ (~SPC k C~) :: Remove what the build made.
+- ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, with gdb,
+  given the run arguments.
+- ~+pascal/menu~ (~SPC k m~) :: What a Pascal build depends on, and the
+  files behind it.
 - ~+pascal/new-project~ :: Start Pascal project NAME of KIND in DIR, and
   open it.
-- ~+pascal/open-project-file~ (~SPC m k v~) :: Open the .lpi, .lpr or .dproj
+- ~+pascal/open-project-file~ (~SPC k v~) :: Open the .lpi, .lpr or .dproj
   this project is built from.
-- ~+pascal/project-status~ (~SPC m k I~) :: Say what is set up here and what
+- ~+pascal/project-status~ (~SPC k I~) :: Say what is set up here and what
   is missing.
-- ~+pascal/run~ :: Run what the project builds, with the arguments it is set
-  to.
-- ~+pascal/run-with-args~ :: Run the program once with ARGS, without writing
-  them down.
-- ~+pascal/set-build-mode~ (~SPC m k y~) :: Build with MODE from now on,
-  kept in .dir-locals.el.
-- ~+pascal/set-main~ (~SPC m k s~) :: Build FILE from now on, for a project
+- ~+pascal/run~ (~SPC k r~) :: Run what the project builds, with the
+  arguments it is set to.
+- ~+pascal/run-with-args~ (~SPC k R~) :: Run the program once with ARGS,
+  without writing them down.
+- ~+pascal/set-build-mode~ (~SPC k y~) :: Build with MODE from now on, kept
+  in .dir-locals.el.
+- ~+pascal/set-main~ (~SPC k s~) :: Build FILE from now on, for a project
   that holds more than one program.
-- ~+pascal/set-run-args~ :: Keep ARGS for the program, so SPC k r passes
-  them every time.
-- ~+pascal/set-target~ :: Build for TARGET, written CPU-OS.
-- ~+pascal/set-widgetset~ (~SPC m k w~) :: Build the LCL against WIDGETSET.
+- ~+pascal/set-run-args~ (~SPC k a~) :: Keep ARGS for the program, so SPC k
+  r passes them every time.
+- ~+pascal/set-target~ (~SPC k T~) :: Build for TARGET, written CPU-OS.
+- ~+pascal/set-widgetset~ (~SPC k w~) :: Build the LCL against WIDGETSET.
+- ~+pascal/test~ (~SPC k t~) :: Build the tests and run them all.
 
 ** Web
-- ~+web/build~ :: Build the project.
-- ~+web/check~ (~SPC m k c~) :: Check the types without building:
+- ~+web/build~ (~SPC k b~) :: Build the project.
+- ~+web/check~ (~SPC k c~) :: Check the types without building:
   svelte-check, or tsc.
-- ~+web/debug~ :: Debug the project: the Electron main process, or node.
-- ~+web/dev~ (~SPC m k r~) :: Start the project's dev server, and leave it
+- ~+web/debug~ (~SPC k d~) :: Debug the project: the Electron main process,
+  or node.
+- ~+web/dev~ (~SPC k r~) :: Start the project's dev server, and leave it
   running.
-- ~+web/install~ (~SPC m k i~) :: Install what the manifest asks for.
-- ~+web/lint~ (~SPC m k l~) :: Run the project's linter.
-- ~+web/menu~ :: What this node project is built with, and what it can be
-  told to do.
+- ~+web/install~ (~SPC k i~) :: Install what the manifest asks for.
+- ~+web/install-js-debug~ :: Download js-debug, the debugger VS Code uses
+  for node and Electron, where dape keeps its adapters; SPC k d uses it
+  afterwards.
+- ~+web/lint~ (~SPC k l~) :: Run the project's linter.
+- ~+web/menu~ (~SPC k m~) :: What this node project is built with, and what
+  it can be told to do.
 - ~+web/new-project~ :: Start node project NAME of KIND in DIR, and open it.
-- ~+web/open-manifest~ (~SPC m k p~) :: Open the project's package.json.
-- ~+web/outdated~ :: Say which dependencies have moved on.
-- ~+web/package~ :: Package the Electron application for TARGET.
-- ~+web/preview~ (~SPC m k v~) :: Serve what the build made, as it will be
+- ~+web/open-manifest~ (~SPC k p~) :: Open the project's package.json.
+- ~+web/outdated~ (~SPC k o~) :: Say which dependencies have moved on.
+- ~+web/package~ (~SPC k P~) :: Package the Electron application for TARGET.
+- ~+web/preview~ (~SPC k v~) :: Serve what the build made, as it will be
   served for real.
-- ~+web/project-status~ :: Say what is installed and what this project is.
-- ~+web/run-script~ (~SPC m k s~) :: Run any SCRIPT the manifest defines.
-- ~+web/set-manager~ :: Build with MANAGER from now on, kept in
+- ~+web/project-status~ (~SPC k I~) :: Say what is installed and what this
+  project is.
+- ~+web/run-script~ (~SPC k s~) :: Run any SCRIPT the manifest defines.
+- ~+web/set-manager~ (~SPC k M~) :: Build with MANAGER from now on, kept in
   .dir-locals.el.
-- ~+web/test~ :: Run the project's tests.
-- ~+web/test-watch~ :: Run the tests and keep running them as the files
-  change.
+- ~+web/test~ (~SPC k t~) :: Run the project's tests.
+- ~+web/test-watch~ (~SPC k T~) :: Run the tests and keep running them as
+  the files change.
 
 ** UML
 - ~+uml/export~ (~SPC m e~) :: Write this diagram to FILE as FORMAT.
@@ -3686,6 +3808,9 @@ bound.
 - ~+git/tag-delete-everywhere~ :: Delete TAG here and, when ON-REMOTE, on
   REMOTE as well.
 - ~+git/tag-head~ :: Tag HEAD, the commit checked out, as NAME.
+- ~+git/tag-release~ :: A release tag at HEAD, the next version, with this
+  menu's switches: magit's own command reads magit's menu, and -a or -s set
+  here made a plain tag.
 - ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
   commit again differently.
 
@@ -3762,14 +3887,14 @@ bound.
 - ~+docs/cheatsheet-regenerate~ (~g r~) :: Rebuild the key and command
   tables in the cheat sheet.
 - ~+docs/cheatsheet-search~ (~?~) :: Jump to a cheat sheet heading.
-- ~+docs/check-autoloads~ (~SPC h C~) :: Check that every function the
+- ~+docs/check-autoloads~ (~SPC h d C~) :: Check that every function the
   config refers to is callable now.
 - ~+docs/check-keys~ :: Check that every private menu holds up, the leader
   has no double and no unmeant shadow, and every documented key is bound,
   the leader's and the rest; see '+docs-menu-problems',
   '+docs-leader-problems', '+docs-key-problems' and
   '+docs-binding-problems'.
-- ~+docs/module-readme~ (~SPC h M~) :: Open the README of the private
+- ~+docs/module-readme~ (~SPC h d M~) :: Open the README of the private
   MODULE.
 
 ** Butler
