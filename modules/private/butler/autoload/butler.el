@@ -602,9 +602,14 @@ that size, not asked for it.")
 
 ;; Autoloaded: called from menu.el.
 ;;;###autoload
+(defvar +butler--said-footer nil
+  "The footer of what he last said, for him to say it again whole: a
+redraw without it, when a menu closed, lost the corner and a row.")
+
 (defun +butler--show (text &optional footer)
   "Put TEXT in his bubble, on screen, FOOTER in its corner."
-  (setq +butler--said text)
+  (setq +butler--said text
+        +butler--said-footer footer)
   (with-current-buffer (get-buffer-create "*butler*")
     (unless (derived-mode-p '+butler-mode) (+butler-mode))
     (let ((inhibit-read-only t))
@@ -654,7 +659,7 @@ and he was placed by that, a gap under him or a corner cut off."
 (defun +butler--redisplay ()
   "Show him again where he stands now, saying what he last said."
   (when (+butler--on-screen-p)
-    (+butler--show +butler--said)))
+    (+butler--show +butler--said +butler--said-footer)))
 
 ;; Autoloaded: called from menu.el.
 ;;;###autoload
