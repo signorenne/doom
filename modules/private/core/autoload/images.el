@@ -30,6 +30,75 @@ buffer's text resets the variables, and the overlay outlives both."
   (let ((spec (ignore-errors (image-get-display-property))))
     (and (eq (car-safe spec) 'image) spec)))
 
+;; Autoloaded: the file manager's preview reads it as well.
+;;;###autoload
+(defun +core--image-header-size (file)
+  "The (WIDTH . HEIGHT) of FILE read off its header, a PNG or a JPEG,
+else nil. Asking Emacs decodes the whole picture only to learn that, and
+it is decoded again to be drawn: a quarter second for a large one."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally file nil 0 65536)
+    (let ((byte (lambda (i) (or (char-after i) 0)))
+          (word (lambda (i) (logior (ash (or (char-after i) 0) 8)
+                                    (or (char-after (1+ i)) 0)))))
+      (cond
+       ((and (> (buffer-size) 24)
+             (equal (buffer-substring 1 9) "\211PNG\r\n\032\n")
+             (equal (buffer-substring 13 17) "IHDR"))
+        (cons (logior (ash (funcall word 17) 16) (funcall word 19))
+              (logior (ash (funcall word 21) 16) (funcall word 23))))
+       ((equal (buffer-substring 1 (min 3 (point-max))) "\377\330")
+        ;; The segments, to the first start of frame: its height, then
+        ;; its width, after the length and the precision.
+        (let ((pos 3) size)
+          (while (and (not size) (< (+ pos 8) (point-max))
+                      (= (funcall byte pos) #xff))
+            (let ((marker (funcall byte (1+ pos))))
+              (cond ((= marker #xff) (setq pos (1+ pos)))
+                    ((or (= marker 1) (<= #xd0 marker #xd9)) (setq pos (+ pos 2)))
+                    ((memq marker '(#xc0 #xc1 #xc2 #xc3 #xc5 #xc6 #xc7
+                                    #xc9 #xca #xcb #xcd #xce #xcf))
+                     (setq size (cons (funcall word (+ pos 7))
+                                      (funcall word (+ pos 5)))))
+                    (t (setq pos (+ pos 2 (funcall word (+ pos 2))))))))
+          size))))))
+
+(defun +core--image-shown-size (spec)
+  "The size SPEC is drawn at, (WIDTH . HEIGHT) in pixels, worked out from
+the picture's own size off its header and the spec's sizes, or nil for
+a picture whose header is not read, a rotation or a scale. `image-size'
+decodes the whole picture to answer, and the centring asked after each
+resize: 0.4 s a time for a 15 megapixel PNG, four times as it opened."
+  (let ((props (cdr spec)))
+    (when-let* ((file (plist-get props :file))
+                ((memq (plist-get props :scale) '(nil 1 1.0)))
+                ((memq (plist-get props :rotation) '(nil 0 0.0)))
+                (size (+core--image-header-size file))
+                ((> (car size) 0))
+                ((> (cdr size) 0)))
+      (let* ((iw (car size))
+             (ih (cdr size))
+             (dw (plist-get props :width))
+             (dh (plist-get props :height))
+             (mw (plist-get props :max-width))
+             (mh (plist-get props :max-height))
+             ;; Emacs's scale_image_size: the other side from the
+             ;; picture's own, rounded up.
+             (scale (lambda (side from to) (ceiling (* side to) from)))
+             w h)
+        (when (and (or (null dw) (natnump dw)) (or (null dh) (natnump dh)))
+          ;; As Emacs sizes it: a width or a height given keeps the
+          ;; shape, then the maxima shrink it to fit.
+          (cond ((and dw dh) (setq w dw h dh))
+                (dw (setq w dw h (funcall scale dw iw ih)))
+                (dh (setq h dh w (funcall scale dh ih iw)))
+                (t (setq w iw h ih)))
+          (unless (and dw dh)
+            (when (and (natnump mw) (< mw w)) (setq w mw h (funcall scale mw iw ih)))
+            (when (and (natnump mh) (< mh h)) (setq h mh w (funcall scale mh ih iw))))
+          (cons w h))))))
+
 ;;;###autoload
 (defun +core-image-center ()
   "Put the picture in the middle of its window instead of the corner.
@@ -38,7 +107,8 @@ the line; the height goes in an overlay above it."
   (when (derived-mode-p 'image-mode)
     (when-let* ((window (get-buffer-window (current-buffer) t))
                 (spec (+core--image-spec))
-                (size (ignore-errors (image-size spec t))))
+                (size (or (+core--image-shown-size spec)
+                          (ignore-errors (image-size spec t)))))
       (let* ((edges (window-inside-pixel-edges window))
              (left (max 0 (floor (- (- (nth 2 edges) (nth 0 edges)) (car size)) 2)))
              (top (max 0 (floor (- (- (nth 3 edges) (nth 1 edges)) (cdr size)) 2)))

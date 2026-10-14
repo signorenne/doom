@@ -7,6 +7,7 @@
 ;; go often, the keys being the first letter of where you are going.
 
 (declare-function dirvish-yank--get-srcs "dirvish-yank")
+(declare-function +core--image-header-size "images")
 
 ;; The mouse: a file dragged out of the listing lands in Dolphin, a
 ;; browser's upload box or a chat, and a right click is a menu of what
@@ -173,38 +174,6 @@ drawing it took a fifth of a second.
 Emacs scales it to the pane as it draws, so one thumbnail serves every
 width: resizing the frame redraws from the file already there instead of
 making another, and the preview does not blink while ImageMagick runs.")
-
-  (defun +core--image-header-size (file)
-    "The (WIDTH . HEIGHT) of FILE read off its header, a PNG or a JPEG,
-else nil. Asking Emacs decodes the whole picture only to learn that, and
-it is decoded again to be drawn: a quarter second for a large one."
-    (with-temp-buffer
-      (set-buffer-multibyte nil)
-      (insert-file-contents-literally file nil 0 65536)
-      (let ((byte (lambda (i) (or (char-after i) 0)))
-            (word (lambda (i) (logior (ash (or (char-after i) 0) 8)
-                                      (or (char-after (1+ i)) 0)))))
-        (cond
-         ((and (> (buffer-size) 24)
-               (equal (buffer-substring 1 9) "\211PNG\r\n\032\n")
-               (equal (buffer-substring 13 17) "IHDR"))
-          (cons (logior (ash (funcall word 17) 16) (funcall word 19))
-                (logior (ash (funcall word 21) 16) (funcall word 23))))
-         ((equal (buffer-substring 1 (min 3 (point-max))) "\377\330")
-          ;; The segments, to the first start of frame: its height, then
-          ;; its width, after the length and the precision.
-          (let ((pos 3) size)
-            (while (and (not size) (< (+ pos 8) (point-max))
-                        (= (funcall byte pos) #xff))
-              (let ((marker (funcall byte (1+ pos))))
-                (cond ((= marker #xff) (setq pos (1+ pos)))
-                      ((or (= marker 1) (<= #xd0 marker #xd9)) (setq pos (+ pos 2)))
-                      ((memq marker '(#xc0 #xc1 #xc2 #xc3 #xc5 #xc6 #xc7
-                                      #xc9 #xca #xcb #xcd #xce #xcf))
-                       (setq size (cons (funcall word (+ pos 7))
-                                        (funcall word (+ pos 5)))))
-                      (t (setq pos (+ pos 2 (funcall word (+ pos 2))))))))
-            size))))))
 
   (defun +core--preview-image (file w h)
     "FILE drawn to fill W by H, enlarged when it is smaller than that.
