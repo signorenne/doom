@@ -258,7 +258,10 @@ line, or the README."
     (user-error "%s: I have not answered anything yet, %s" +butler-name +butler-address))
   (pcase-let ((`(,file . ,line) +butler--answer))
     (if (equal file +docs-cheatsheet-file)
-        (progn (unless (get-buffer-window (get-file-buffer file))
+        ;; get-buffer-window of no buffer is the selected window, so a
+        ;; sheet not open at all was opened bare, without its own mode.
+        (progn (unless (when-let* ((buffer (get-file-buffer file)))
+                         (get-buffer-window buffer))
                  (+docs/cheatsheet))
                (pop-to-buffer (find-file-noselect file)))
       (find-file file))
