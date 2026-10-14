@@ -466,6 +466,55 @@ it tells the server the file is open."
                  (mapcar (lambda (block) (* block +core-inlay-block-lines))
                          (sort blocks :key (lambda (block) (abs (- block here))))))))
 
+;; Asked for once, the hints of text changed off screen were lost with it
+;; and never asked for again: a format on save, a rename, a revert after
+;; git, and that part of the file had no hints until it was edited. The
+;; changed text is kept between two markers, and once the keys rest its
+;; blocks are asked for, on screen or not.
+(defvar-local +core--inlay-dirty nil
+  "(BEG . END), markers round the text changed since its hints were
+asked for, or nil.")
+
+(defvar-local +core--inlay-dirty-timer nil
+  "The one-shot that asks for the changed text's hints.")
+
+(defun +core--inlay-dirty-clear ()
+  "Forget the changed text."
+  (when +core--inlay-dirty
+    (set-marker (car +core--inlay-dirty) nil)
+    (set-marker (cdr +core--inlay-dirty) nil)
+    (setq +core--inlay-dirty nil)))
+
+(defun +core--inlay-dirty-h (beg end _length)
+  "Count BEG to END among the text whose hints are to be asked for."
+  (when (bound-and-true-p eglot-inlay-hints-mode)
+    (if +core--inlay-dirty
+        (progn (when (< beg (car +core--inlay-dirty))
+                 (set-marker (car +core--inlay-dirty) beg))
+               (when (> end (cdr +core--inlay-dirty))
+                 (set-marker (cdr +core--inlay-dirty) end)))
+      (setq +core--inlay-dirty (cons (copy-marker beg) (copy-marker end t))))
+    (unless (timerp +core--inlay-dirty-timer)
+      (setq +core--inlay-dirty-timer
+            ;; At rest already, a revert or a formatter's answer: an idle
+            ;; timer would wait for the next rest.
+            (if (current-idle-time)
+                (run-at-time 0.6 nil #'+core--inlay-refresh-dirty (current-buffer))
+              (run-with-idle-timer 0.6 nil #'+core--inlay-refresh-dirty (current-buffer)))))))
+
+(defun +core--inlay-refresh-dirty (buffer)
+  "Ask for the hints of BUFFER's changed text, the blocks that hold it."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq +core--inlay-dirty-timer nil)
+      (when-let* ((dirty +core--inlay-dirty))
+        (let ((first (/ (1- (line-number-at-pos (car dirty) t)) +core-inlay-block-lines))
+              (last (/ (1- (line-number-at-pos (cdr dirty) t)) +core-inlay-block-lines)))
+          (+core--inlay-dirty-clear)
+          (+core--inlay-send buffer +core--inlay-round
+                             (mapcar (lambda (block) (* block +core-inlay-block-lines))
+                                     (number-sequence first last))))))))
+
 (after! eglot
   (defadvice! +core--inlay-hints-on-edit-a (fn from to)
     "Ask for the hints of FROM to TO when the buffer changed since they
@@ -480,16 +529,24 @@ asks again for it."
       (funcall fn from to))
      ((not (eql +core--inlay-tick (buffer-chars-modified-tick)))
       (setq +core--inlay-tick (buffer-chars-modified-tick))
-      (let ((window (get-buffer-window)))
-        (funcall fn
-                 (if window (min from (window-start window)) from)
-                 (if window (max to (window-end window t)) to))))))
+      (let* ((window (get-buffer-window))
+             (from (if window (min from (window-start window)) from))
+             (to (if window (max to (window-end window t)) to)))
+        ;; Changed on screen only: this request covers it.
+        (when (and +core--inlay-dirty
+                   (<= from (car +core--inlay-dirty))
+                   (<= (cdr +core--inlay-dirty) to))
+          (+core--inlay-dirty-clear))
+        (funcall fn from to)))))
 
   (add-hook! 'eglot-inlay-hints-mode-hook
     (defun +core--inlay-hints-whole-h ()
       "Ask for the whole buffer's hints as they come on."
-      (when eglot-inlay-hints-mode
-        (+core--inlay-hints-all)))))
+      (if eglot-inlay-hints-mode
+          (progn (add-hook 'after-change-functions #'+core--inlay-dirty-h nil t)
+                 (+core--inlay-hints-all))
+        (remove-hook 'after-change-functions #'+core--inlay-dirty-h t)))))
+
 
 ;; Its "a fix is available" mark asks the server about the expression
 ;; around point, and tree-sitter finds that expression by walking its

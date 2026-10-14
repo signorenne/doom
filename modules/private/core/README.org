@@ -436,8 +436,10 @@ What keeps it that way:
   the whole file when they come on, in blocks of 300 lines from the one
   on screen, and for the screen again after an edit; eglot asked a
   screen at a time as each part was first drawn, so scrolling sent a
-  request at every page and the text moved as the names came in. ~SPC k
-  l i~ twice asks for the whole file again.
+  request at every page and the text moved as the names came in. Text
+  changed off screen, by a format on save, a rename or a revert, has
+  its blocks asked for again once the keys rest. ~SPC k l i~ twice asks
+  for the whole file again.
 - The header line finds the function around the window's top in the
   syntax tree, as many steps as the tree is deep, not by moving to the
   start and end of a defun past every sibling.
