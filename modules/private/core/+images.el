@@ -16,9 +16,15 @@
 ;; and `image-mode' prefers ImageMagick for every type not named in
 ;; `imagemagick-types-inhibit'. This Emacs is built with librsvg (RSVG
 ;; in `system-configuration-features'), which reads the file properly,
-;; so SVG goes there and the raster formats keep ImageMagick.
+;; so SVG goes there.
 (after! image
-  (add-to-list 'imagemagick-types-inhibit 'SVG))
+  (add-to-list 'imagemagick-types-inhibit 'SVG)
+  ;; And the raster formats Emacs reads itself go to its own readers:
+  ;; ImageMagick took 11 s to show a 15 megapixel PNG that libpng reads
+  ;; in a third of one. What Emacs cannot read, BMP, PSD, HEIC, keeps
+  ;; ImageMagick, and image-mode still turns a JPEG by its EXIF.
+  (dolist (type '(PNG JPG JPEG JPE GIF TIF TIFF WEBP XPM XBM PBM PGM PPM PNM))
+    (add-to-list 'imagemagick-types-inhibit type)))
 
 ;; An image file opens at the size of the window, small ones enlarged:
 ;; a 66 pixel telltale is there to be looked at, not squinted at. The
