@@ -108,14 +108,24 @@ the cheat sheet."
 
 (defun +butler--wrap (text)
   "TEXT as lines no wider than `+butler-bubble-width', the breaks it
-already has kept: an answer of two keys is two lines."
+already has kept: an answer of two keys is two lines.  A word wider
+than that, a link or a path, is cut where the bubble ends: filling
+cannot break it, and it pushed the bubble's right side out."
   (mapcan (lambda (paragraph)
             (with-temp-buffer
               (insert paragraph)
               (let ((fill-column +butler-bubble-width))
                 (fill-region (point-min) (point-max)))
-              (split-string (buffer-string) "\n")))
+              (mapcan #'+butler--cut (split-string (buffer-string) "\n"))))
           (split-string text "\n")))
+
+(defun +butler--cut (line)
+  "LINE in pieces no longer than `+butler-bubble-width'."
+  (let (pieces)
+    (while (> (length line) +butler-bubble-width)
+      (push (substring line 0 +butler-bubble-width) pieces)
+      (setq line (substring line +butler-bubble-width)))
+    (nreverse (cons line pieces))))
 
 (defun +butler--short-footer (footer width)
   "FOOTER in WIDTH columns: a long chain of sections cut back to the
