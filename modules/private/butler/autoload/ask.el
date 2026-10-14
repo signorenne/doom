@@ -186,6 +186,9 @@ line, which is signed in already."
                   (cond ((stringp response)
                          (+butler--show (string-trim response) "Claude"))
                         ((eq response 'abort))
+                        ;; Thinking, or a tool called on the way: the
+                        ;; answer is still to come.
+                        ((consp response))
                         (t (+butler--show (format "I could not reach Claude, %s: %s"
                                                   +butler-address
                                                   (or (plist-get info :status) "no answer"))))))))
