@@ -633,7 +633,11 @@ redraw without it, when a menu closed, lost the corner and a row.")
       ;; drag him.
       (let ((posframe-mouse-banish-function #'ignore))
         (+butler--float))
-    (display-buffer "*butler*"))
+    ;; In a terminal, a window as tall as what he says: the popup's own
+    ;; size, nine rows, cut a long answer off, its last line with it,
+    ;; and a window already up kept the size it had.
+    (when-let* ((window (display-buffer "*butler*")))
+      (fit-window-to-buffer window)))
   (+butler--start-moving))
 
 (defun +butler--float ()

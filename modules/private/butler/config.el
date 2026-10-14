@@ -277,9 +277,10 @@ their own.  Kept by savehist, so he is found where he was left.")
 (setq +ui-dashboard-greeting-function #'+butler--dashboard-greeting)
 (add-hook '+ui-dashboard-tick-hook #'+butler--dashboard-tick-h)
 
-;; In a terminal he takes a window at the bottom; q closes it like any
-;; popup. In the GUI he floats in a child frame instead, see the autoloads.
-(set-popup-rule! "^\\*butler\\*" :side 'bottom :size 9 :select nil :quit t)
+;; In a terminal he takes a window at the bottom, as tall as what he
+;; says; q closes it like any popup. In the GUI he floats in a child
+;; frame instead, see the autoloads.
+(set-popup-rule! "^\\*butler\\*" :side 'bottom :size #'fit-window-to-buffer :select nil :quit t)
 ;; What he said in full, when the bubble could not hold it: an ordinary
 ;; buffer, which scrolls and searches like any other.
 (set-popup-rule! "^\\*butler says\\*" :side 'bottom :size 0.4 :select t :quit t)
