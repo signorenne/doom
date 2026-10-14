@@ -41,11 +41,15 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (set-popup-rule! "^cheatsheet\\.org$"
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
+;; The other two under Doom's own help about itself, SPC h d, beside its
+;; private config and its modules: SPC h is Emacs's help map, so on M and
+;; C they took C-h M and C-h C, Doom's minor mode help and the coding
+;; systems, as well.
 (map! :leader
       (:prefix "h"
        :desc "Cheat sheet"           "/" #'+docs/cheatsheet
-       :desc "Private module README" "M" #'+docs/module-readme
-       :desc "Check the config's commands" "C" #'+docs/check-autoloads))
+       :desc "Private module README" "d M" #'+docs/module-readme
+       :desc "Check the config's commands" "d C" #'+docs/check-autoloads))
 
 ;; Its own form: inside the :leader block above this would bind SPC <f12>.
 (map! :g "<f12>" #'+docs/cheatsheet)

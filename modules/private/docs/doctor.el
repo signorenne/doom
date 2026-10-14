@@ -6,7 +6,7 @@
 ;; another file it must carry a cookie, or the reference is void in a
 ;; fresh session. That class of mistake has happened twice; it is
 ;; cheap to catch here. The scan lives in autoload/check.el, which
-;; SPC h C runs in the session as well; it needs nothing but Emacs.
+;; SPC h d C runs in the session as well; it needs nothing but Emacs.
 
 (load (file-name-concat doom-user-dir "modules/private/docs/autoload/check.el")
       nil 'nomessage)

@@ -310,7 +310,7 @@ Three habits keep the config sound, each backed by a check:
 - A function bound, hooked, advised or listed in =config.el= but defined
   in =autoload/= needs its =;;;###autoload= cookie, or the first use is
   void in a fresh Emacs; =doom sync= does not notice. =doom doctor=
-  reads the modules for that, and =SPC h C= asks the running session.
+  reads the modules for that, and =SPC h d C= asks the running session.
 - A commit is one change, =type(scope): what=, no trailer. The what is
   written in the imperative, as an instruction to the code: =add=, =drop=,
   =keep=, =stop=, =say=, =make=. The scope is never left off: it is the

@@ -38,12 +38,12 @@ no private module owns, none at present.
 | Key                | Command                       | What it does                     |
 |--------------------+-------------------------------+----------------------------------|
 | ~F12~ or ~SPC h /~ | ~+docs/cheatsheet~            | open or close it; ~C-u~ picks a heading, ~C-u C-u~ searches the text |
-| ~SPC h M~          | ~+docs/module-readme~         | open a module's README           |
+| ~SPC h d M~        | ~+docs/module-readme~         | open a module's README           |
 | ~s~ or ~?~         | ~+docs/cheatsheet-search~     | jump to a heading                |
 | ~S~                | ~+docs/cheatsheet-find~       | search the text, words in any order |
 | ~gr~               | ~+docs/cheatsheet-regenerate~ | rebuild the references           |
 | ~q~                | ~+popup/close~                | close the sheet                  |
-| ~SPC h C~          | ~+docs/check-autoloads~       | is every function referred to callable |
+| ~SPC h d C~        | ~+docs/check-autoloads~       | is every function referred to callable |
 
 =F12= is bound globally, not under the leader, so it works in every state
 and every mode.
@@ -65,9 +65,9 @@ cookied, or the first use is a void function. =autoload/check.el= reads
 every private file for the definitions and the quoted references, under
 this config's own prefixes, and reports a name defined nowhere or used
 from another file without its cookie; a reference from the file that
-defines the name needs none. =doom doctor= runs that scan, =SPC h C= runs
+defines the name needs none. =doom doctor= runs that scan, =SPC h d C= runs
 it and then asks the session whether each name is callable, and
-=bin/check-config= runs =SPC h C= in a fresh daemon.
+=bin/check-config= runs =SPC h d C= in a fresh daemon.
 
 =autoload/keys.el= checks two more things the same script runs. Every
 private menu is set up under transient's conflict detection, which

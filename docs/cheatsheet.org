@@ -60,7 +60,7 @@ back. The window a program left behind takes either, =q= or =ESC=. In a menu
 that used =q= for a command of its own, that command is on =Q=: quit dired,
 quit calc, bury magit.
 
-Each module keeps its own notes, reachable with =SPC h M=:
+Each module keeps its own notes, reachable with =SPC h d M=:
 [[file:../modules/private/ai/README.org][ai]],
 [[file:../modules/private/butler/README.org][butler]],
 [[file:../modules/private/container/README.org][container]],
@@ -128,12 +128,12 @@ A frame closes with ~SPC q f~ and the daemon lives on; closing the last
 frame of a daemon leaves Emacs running, which is the point of it.
 
 ** Open the config
-| Key     | What it opens                |
-|---------+------------------------------|
-| ~SPC f p~ | a file of the private config |
-| ~SPC f P~ | the private config directory |
-| ~F12~     | this sheet                   |
-| ~SPC h M~ | a module README              |
+| Key       | What it opens                |
+|-----------+------------------------------|
+| ~SPC f p~   | a file of the private config |
+| ~SPC f P~   | the private config directory |
+| ~F12~       | this sheet                   |
+| ~SPC h d M~ | a module README              |
 
 ** Help
 | Key       | What it describes                           |
