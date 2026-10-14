@@ -42,6 +42,16 @@
         svelte-display-submode-name t))
 
 
+;; In front of web-mode, which Doom's :lang web gives .svelte too: the
+;; :mode above found svelte-mode's own entry already in the list, so it
+;; moved nothing, and every Svelte file opened in web-mode, without its
+;; server.
+(setq auto-mode-alist
+      (cons '("\\.svelte\\'" . svelte-mode)
+            (seq-remove (lambda (entry) (equal (car entry) "\\.svelte\\'"))
+                        auto-mode-alist)))
+
+
 ;;
 ;;; The servers
 
