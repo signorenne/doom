@@ -26,17 +26,40 @@ minutes rather than seconds.")
 (defun +web--run (dir command &rest args)
   "Run COMMAND with ARGS in DIR, or raise what it said.
 The output is the useful part when a generator refuses, so it is
-carried out rather than left in a buffer nobody opens."
-  (let ((default-directory (file-name-as-directory dir)))
-    (with-temp-buffer
-      (unless (zerop (or (apply #'call-process command nil t nil args) 1))
-        (user-error "%s: %s" command
-                    (string-trim
-                     (replace-regexp-in-string
-                      "[ \t\n]+" " "
-                      (buffer-substring-no-properties
-                       (max (point-min) (- (point-max) 600)) (point-max))))))
-      t)))
+carried out rather than left in a buffer nobody opens.  Given up after
+`+web-scaffold-timeout' seconds, the time so far in the echo area
+meanwhile: a step had no limit and said nothing while it ran."
+  (let* ((default-directory (file-name-as-directory dir))
+         (start (float-time))
+         (label (string-join (cons command (seq-take args 2)) " "))
+         (buffer (generate-new-buffer " *web-scaffold*"))
+         (process (make-process :name "web-scaffold" :buffer buffer
+                                :command (cons command args)
+                                :connection-type 'pipe :noquery t
+                                :sentinel #'ignore)))
+    (unwind-protect
+        (progn
+          ;; Nothing to read: a step that asks gets the end of its input,
+          ;; as it did from call-process, and does not wait for an answer.
+          (process-send-eof process)
+          (while (and (process-live-p process)
+                      (< (- (float-time) start) +web-scaffold-timeout))
+            (accept-process-output process 1)
+            (message "%s, %ds" label (round (- (float-time) start))))
+          (when (process-live-p process)
+            (user-error "%s ran %ds and was stopped; +web-scaffold-timeout gives it more"
+                        label +web-scaffold-timeout))
+          (unless (zerop (process-exit-status process))
+            (user-error "%s: %s" command
+                        (with-current-buffer buffer
+                          (string-trim
+                           (replace-regexp-in-string
+                            "[ \t\n]+" " "
+                            (buffer-substring-no-properties
+                             (max (point-min) (- (point-max) 600)) (point-max)))))))
+          t)
+      (when (process-live-p process) (delete-process process))
+      (kill-buffer buffer))))
 
 (defun +web--sv-create (parent name &rest add)
   "Run the Svelte generator in PARENT for NAME with the ADD add-ons.
