@@ -159,8 +159,12 @@ minimap. Past it the minimap shows the colours of what has been seen.")
             (run-with-idle-timer (or delay +ui-minimap-idle) nil #'+ui--minimap-catch-up)))))
 
 (defun +ui--minimap-moved-h (&rest _)
-  "A command ran or a window changed: catch up once the keys stop."
-  (+ui--minimap-later))
+  "A command ran or a window changed: catch up once the keys stop.
+Only while the minimap is on show: its window gone with a workspace or
+the side windows, every command still set a timer, a redisplay each.
+Its buffer gone, the hooks go too."
+  (cond ((+ui--minimap-window) (+ui--minimap-later))
+        ((not (get-buffer +ui--minimap-name)) (+ui--minimap-hooks nil))))
 
 (defun +ui--minimap-hooks (on)
   (let ((fn (if on #'add-hook #'remove-hook)))
