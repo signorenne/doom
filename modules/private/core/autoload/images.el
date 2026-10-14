@@ -64,6 +64,8 @@ it is decoded again to be drawn: a quarter second for a large one."
                     (t (setq pos (+ pos 2 (funcall word (+ pos 2))))))))
           size))))))
 
+;; Autoloaded: the fit in +images.el asks it before any of this is loaded.
+;;;###autoload
 (defun +core--image-shown-size (spec)
   "The size SPEC is drawn at, (WIDTH . HEIGHT) in pixels, worked out from
 the picture's own size off its header and the spec's sizes, or nil for

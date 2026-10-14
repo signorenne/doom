@@ -5,6 +5,12 @@
 ;; it and step to the next file in the directory.
 
 (defvar +core-plain-mode)                ; config.el
+(defvar image-transform-resize)
+(defvar image-transform-rotation)
+(defvar image-transform-scale)
+(defvar image--transform-smoothing)
+(defvar image-auto-resize-max-scale-percent)
+(declare-function +core--image-shown-size "images")
 (declare-function +core-image-center "images")
 (declare-function +core-image-uncenter "images")
 (declare-function +core--image-center-h "images")
@@ -83,6 +89,38 @@ has no cursor."
          (not (and (null filename)
                    (when-let* ((type (image-type-from-buffer)))
                      (image-type-available-p type))))))
+
+  ;; A fit asks image-size three times, and each time it decodes the
+  ;; picture: whether the fit stays within its enlargement limit, then
+  ;; for transform properties a fit does not use, then for a check that
+  ;; checks nothing for a fit. Opening a picture beside its inspector
+  ;; fits it twice, the second for the narrower window, so a 15 MP PNG
+  ;; was decoded at a size never shown. The first is answered from the
+  ;; picture's header where that is read; the other two are not asked
+  ;; for a fit. What is drawn is then the only decode.
+  (defadvice! +core--image-limits-by-header-a (fn image)
+    :around #'image--scale-within-limits-p
+    (if-let* (((bound-and-true-p image-auto-resize-max-scale-percent))
+              (size (+core--image-shown-size image))
+              (scale (/ image-auto-resize-max-scale-percent 100)))
+        (or (<= (plist-get (cdr image) :max-width) (* (car size) scale))
+            (<= (plist-get (cdr image) :max-height) (* (cdr size) scale)))
+      (funcall fn image)))
+
+  (defadvice! +core--image-fit-without-size-a (fn spec)
+    :around #'image-transform-properties
+    (if (and (eq image-transform-resize 'fit-window)
+             (zerop image-transform-rotation))
+        (progn (setq image-transform-scale 1.0)
+               (and image--transform-smoothing
+                    (list :transform-smoothing
+                          (string= image--transform-smoothing "smooth"))))
+      (funcall fn spec)))
+
+  (defadvice! +core--image-fit-unchecked-a (fn)
+    :around #'image-transform-check-size
+    (unless (eq image-transform-resize 'fit-window)
+      (funcall fn)))
 
   (defadvice! +core--image-uncenter-a (&rest _)
     :before #'image-toggle-display
