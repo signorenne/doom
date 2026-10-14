@@ -205,6 +205,7 @@ Its buffer gone, the hooks go too."
   (interactive "e")
   (when-let* ((pos (posn-point (event-start event)))
               (source +ui--minimap-source)
+              ((buffer-live-p source))
               (window (get-buffer-window source)))
     (select-window window)
     (goto-char (min pos (point-max)))
