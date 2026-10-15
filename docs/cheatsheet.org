@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-03 21:09
+#+generated: 2026-10-13 15:36
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2194,8 +2194,10 @@ Images dropped on a buffer are downloaded and attached.
 | ~SPC t p~   | present the file as slides                   |
 
 * Notes and roam
-Roam is the note graph in =~/org/roam=; the dailies are the journal.
-[[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says how to work with it day to day.
+Roam is the note graph in the knowledge repository,
+=~/projects/personal/knowledge=; the dailies are the journal.
+[[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says how to work with it day to day; the
+repository's =meta/WORKFLOWS.org= holds its procedures and checks.
 
 ** The loop
 | Key         | What it does                        |
@@ -2243,9 +2245,9 @@ Roam is the note graph in =~/org/roam=; the dailies are the journal.
 | ~SPC m M M~ | mind map of this file              |
 | ~SPC m M t~ | of the tree at point, ~b~ the branch |
 
-A map is a note in =roam/maps/=; only the list between =# BEGIN MAP= and
-=# END MAP= is rewritten, so your own text around it stays. Mind maps are
-rendered with graphviz into =~/org/maps=.
+A map is a note in =resources/collections/tags/=; only the list between
+=# BEGIN MAP= and =# END MAP= is rewritten, so your own text around it
+stays. Mind maps are rendered with graphviz into =~/org/maps=.
 
 ** Cards and sources
 | Key       | What it does                          |
@@ -2260,8 +2262,9 @@ rendered with graphviz into =~/org/maps=.
 A paper's note is made from a template of its own, not the one ~SPC n r n~
 offers under "reference": citar has just handed over the citation key, so
 that template takes it rather than asking you to type it again. The note
-lands in =refs/= named for the key, with =#+source: [cite:@key]= in its head,
-which is how citar finds it again later. The "reference" kind you pick by
+lands in =resources/sources/papers/= named for the key, with
+=#+source: [cite:@key]= in its head, which is how citar finds it again
+later. The "reference" kind you pick by
 hand still asks, because there is nothing to ask instead.
 
 ** Keeping the graph healthy
@@ -2271,10 +2274,11 @@ hand still asks, because there is nothing to ask instead.
 | ~SPC n r h~ | which notes carry tasks               |
 | ~SPC n r s~ | resync the database                   |
 
-A task written inside a note reaches the agenda by itself. =~/org= is a git
+A task in the inbox, a project or an area reaches the agenda by itself;
+one written inside a knowledge or source note does not. =~/org= is a git
 repository: it commits itself after ten minutes idle and on exit, ~SPC n g~
 commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows what
-changed.
+changed. The knowledge repository is never committed automatically.
 
 * AI
 The [[file:../modules/private/ai/README.org][ai README]] explains the three tools and when each one fits. ~SPC l SPC~
@@ -2352,10 +2356,10 @@ and project tools. =/mcp= lists them all.
 | =emacs_notes_read=       | one note, by title or id           |
 | =emacs_notes_links=      | what points at a note              |
 | =emacs_notes_append=     | adds to today's note               |
-| =emacs_notes_draft=      | leaves a draft in roam/drafts      |
+| =emacs_notes_draft=      | leaves a draft in capture/drafts   |
 
 It reads the graph freely and writes only into the day or into
-=roam/drafts=; promoting a draft is yours. See [[file:org-roam-guide.org][the roam guide]].
+=capture/drafts/=; promoting a draft is yours. See [[file:org-roam-guide.org][the roam guide]].
 
 ** Agent shell
 A plain Emacs buffer that talks to an agent over ACP, with native diffs and
@@ -2904,19 +2908,19 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n a~     | Org agenda                     |
 | ~SPC n b~     | Bibliographic notes            |
 | ~SPC n c~     | Toggle last org-clock          |
-| ~SPC n d I~   | Ideas                          |
-| ~SPC n d M~   | Maps (dired)                   |
+| ~SPC n d I~   | Legacy ideas                   |
+| ~SPC n d M~   | Legacy maps (dired)            |
 | ~SPC n d P~   | Browser capture setup          |
-| ~SPC n d a~   | AI sessions                    |
-| ~SPC n d b~   | Bootstrap ~/org                |
+| ~SPC n d a~   | Legacy AI sessions             |
+| ~SPC n d b~   | Create missing documents       |
 | ~SPC n d d~   | Choose document                |
-| ~SPC n d h~   | Habits                         |
+| ~SPC n d h~   | Legacy habits                  |
 | ~SPC n d i~   | Inbox                          |
-| ~SPC n d n~   | Snippets                       |
+| ~SPC n d n~   | Legacy snippets                |
 | ~SPC n d p~   | Projects                       |
-| ~SPC n d r~   | Reading                        |
-| ~SPC n d s~   | Someday                        |
-| ~SPC n d t~   | Todo                           |
+| ~SPC n d r~   | Legacy reading                 |
+| ~SPC n d s~   | Legacy someday                 |
+| ~SPC n d t~   | Legacy todo                    |
 | ~SPC n d w~   | Writing mode                   |
 | ~SPC n e~     | Org noter                      |
 | ~SPC n f~     | Find file in notes             |
@@ -2976,6 +2980,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o P~   | Find file in project sidebar |
 | ~SPC o R~   | REPL (same window)           |
 | ~SPC o T~   | Open vterm here              |
+| ~SPC o a L~ | Legacy tasks                 |
 | ~SPC o a a~ | Agenda                       |
 | ~SPC o a i~ | Inbox                        |
 | ~SPC o a m~ | Tags search                  |
@@ -3834,7 +3839,7 @@ bound.
 - ~+notes/next-actions~ (~SPC o a n~) :: Every NEXT task.
 - ~+notes/open-document~ (~SPC n d d~) :: Open document NAME, creating it
   from its template when missing.
-- ~+notes/projects~ (~SPC o a p~) :: Every PROJ task.
+- ~+notes/projects~ (~SPC o a p~) :: Open actions of the active projects.
 - ~+notes/protocol-bookmarklets~ :: Show the bookmarklets that send the
   current page to Emacs.
 - ~+notes/query~ (~SPC n q~) :: Find a heading by an org-ql query: in this
@@ -3866,7 +3871,8 @@ bound.
   Emacs bridge.
 - ~+ai/install-claude-hooks~ (~SPC l h~) :: Tell Claude Code to notify Emacs
   when it stops or needs input.
-- ~+ai/log-session~ (~SPC l L~) :: Write a session note into ~/org/ai.org.
+- ~+ai/log-session~ (~SPC l L~) :: Write a session note into the owning
+  project's Progress, or the inbox.
 - ~+ai/menu~ (~SPC l SPC~) :: AI hub: Claude Code IDE, agent shells, gptel
   and agent management.
 - ~+ai/new-slash-command~ (~SPC l n~) :: Create the slash command NAME

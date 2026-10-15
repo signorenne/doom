@@ -2,18 +2,25 @@
 #+subtitle: documents, capture, agenda and roam
 
 * Description
-A GTD-style setup on Doom's =:lang org=:
+Zettelkasten knowledge and PARA work share one Org-roam graph, the
+repository at =/home/n7/projects/personal/knowledge= (~+notes-knowledge-dir~).
+Its inbox and project files own new tasks; the legacy ~org-directory~, its
+GTD documents and the reference library keep their own root.
 
-- fixed documents under =~/org=, created from =templates/org=: inbox, todo,
-  projects, snippets, ideas, reading, someday, habits, ai and a mind map.
-  See ~+notes-documents~. Notes and meetings are roam notes, below.
-- captures that write into them, including the region as a code snippet and
-  a bug report with a link back to the line,
+- the knowledge inbox =inbox.org= and one =projects/<slug>/index.org= per
+  bounded outcome, with Goal, Completion criteria, Next actions, Decisions,
+  Progress and Knowledge and sources,
+- the fixed legacy documents under ~org-directory~, created from
+  =templates/org=: todo, snippets, ideas, reading, someday, habits, ai and
+  a mind map. See ~+notes-documents~. They stay readable and receive no
+  new captures,
+- captures that write into the inbox or the owning project, including the
+  region as a code snippet and a bug report with a link back to the line,
 - an [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] dashboard and a weekly review, plus [[https://github.com/alphapapa/org-ql][org-ql]] queries,
 - org-roam for lasting notes, with dailies as the journal, [[https://github.com/jgru/consult-org-roam][consult-org-roam]]
   for search and backlinks, and [[https://github.com/org-roam/org-roam-ui][org-roam-ui]] for the graph,
 - maps of content, a graph review and note tasks in the agenda, see
-  [[file:../../../docs/org-roam-guide.org][the roam guide]],
+  [[file:../../../docs/org-roam-guide.org][the roam guide]] and the repository's =meta/WORKFLOWS.org=,
 - mind maps through graphviz, exports to GFM, Pandoc and LaTeX, and a
   writing mode.
 
@@ -24,11 +31,14 @@ under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
 agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
 
 ** Documents
+~i~ and ~p~ open the knowledge repository; the others are the legacy
+documents under ~org-directory~.
+
 | Key       | What it opens                         |
 |-----------+---------------------------------------|
-| ~SPC n d b~ | create the documents that are missing |
+| ~SPC n d b~ | create the documents that are missing   |
 | ~SPC n d d~ | pick a document                       |
-| ~SPC n d i~ | inbox, ~t~ todo, ~p~ projects, ~n~ snippets |
+| ~SPC n d i~ | inbox, ~t~ todo, ~p~ projects index, ~n~ snippets |
 | ~SPC n d I~ | ideas, ~r~ reading, ~s~ someday, ~h~ habits |
 | ~SPC n d a~ | AI sessions, ~M~ maps                     |
 | ~SPC n r d t~ | today's daily note, Doom's key          |
@@ -39,36 +49,57 @@ agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
 |-----+---------------------+-------------------|
 | ~t~   | todo, with a link back | inbox          |
 | ~T~   | todo with a date    | inbox             |
-| ~i~   | idea                | ideas             |
-| ~l~   | link from clipboard | reading           |
-| ~r~   | book or article     | reading           |
-| ~c~   | the region, as code | snippets          |
+| ~i~   | idea                | inbox             |
+| ~l~   | link from clipboard | inbox             |
+| ~r~   | book or article     | inbox             |
+| ~c~   | the region, as code | inbox             |
 | ~b~   | bug, with a link    | inbox             |
-| ~P~   | project skeleton    | projects          |
-| ~h~   | habit               | habits            |
-| ~a~   | AI session          | ai, by date       |
+| ~P~   | project outcome     | that project's Goal |
+| ~pt~  | task for a project  | its Next actions, else inbox |
+| ~ot~  | the same as ~pt~      | its Next actions, else inbox |
+| ~h~   | habit               | inbox             |
+| ~w~   | page from the browser | inbox           |
+| ~a~   | AI session          | its project's Progress, else inbox |
+
+Refile each inbox entry once, into the project that owns it. ~P~ creates or
+reuses the project by its outcome title; roam's ~p~ uses the same
+=projects/<slug>/index.org=. ~pt~ and ~ot~ find the owning project from an
+explicit buffer-local ~+notes-project-file~ or the project whose
+=REPOSITORY= names this code repository; several matches, or none, ask for
+a project or the inbox. A code repository is not a project by itself, and
+no capture invents one.
 
 ** Agenda
 | Key       | View                                           |
 |-----------+------------------------------------------------|
 | ~SPC o a x~ | dashboard: today, habits, then everything open |
 | ~SPC o a w~ | weekly review                                  |
-| ~SPC o a n~ | next actions, ~p~ projects, ~i~ inbox              |
+| ~SPC o a n~ | next actions, ~p~ active projects, ~i~ inbox       |
+| ~SPC o a L~ | the legacy task files, labelled as such         |
 | ~SPC n q~   | org-ql find: in this note, else in the agenda  |
 | ~SPC n Q~   | org-ql search, into a buffer of what it found  |
 | ~C-o~       | the agenda's own menu                          |
 
+A project file with no tasks yet is still a refile target. Archives under
+=archives/= stay in the graph, so they can be found and linked, but leave
+the dashboard, project capture and refile; a paused task keeps its state.
+
 ** Roam
-[[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens it.
-A note is one of nine kinds, each a directory under =roam/= and a set of
+[[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
+it. The repository's =meta/WORKFLOWS.org= holds its procedures and the
+checks to run. A note is one of nine kinds, each a set of
 headings that say what to write: concept (in one sentence, how it works,
 example, where it bites), solution (symptom, cause, fix, how to verify,
 applies to), howto (when, steps, gotchas), hardware (a board or part:
 pinout, toolchain, gotchas), reference (a source: key points, quotes, my
-take), question, project (goal, status, decisions, log, with the
-repository and the kit in its head), person, meeting. The finder shows
-the kind beside the title. ~SPC n r n~ picks one; ~c n~ and ~c m~ in the
-menu make a concept and a meeting straight away.
+take), question, project (goal, completion criteria, next actions,
+decisions, progress, with the repository and the kit in its head),
+person, meeting. Concept, solution, howto, hardware and question ask for
+their subject directory under =resources/wiki/=; a reference goes to
+=resources/sources/manuals/= with its URL in =ROAM_REFS=, a project to
+=projects/=, a person to =resources/wiki/people/=, a meeting and the
+dailies to =capture/journal/=. ~SPC n r n~ picks one; ~c n~ and ~c m~ in
+the menu make a concept and a meeting straight away.
 
 | Key         | What it does                                   |
 |-------------+------------------------------------------------|
@@ -83,11 +114,16 @@ menu make a concept and a meeting straight away.
 | ~SPC n r u~   | the graph in a browser                         |
 
 A task written inside a note reaches the agenda: before an agenda or a
-refile the notes are scanned for open keywords (the ones in
+refile the inbox, =projects/=, =areas/= and the journal
+(=capture/journal/=) are scanned for open keywords (the ones in
 ~org-todo-keywords~) and those files join ~+notes-agenda-base-files~ in
-~org-agenda-files~; the dashboard's Tasks group shows them. A view that
-binds its own file list, the inbox, keeps it. Daily notes are agenda
-files but not refile targets.
+~org-agenda-files~; the dashboard's Tasks group shows them. A task typed
+into a daily note stays in view, whatever its date, until it is refiled
+into its project. =archives/=, sources, drafts and knowledge pages are
+not scanned, so a code example never becomes a task. A view that binds its
+own file list, the inbox, keeps it. Recent daily notes are agenda files
+for their dates but not refile targets. =.private/=, =.cache/= and =.git/=
+never become nodes.
 
 ** Studying, sources and keeping it
 | Key         | What it does                                       |
@@ -101,19 +137,27 @@ files but not refile targets.
 | ~SPC n SPC H~ | what changed in the notes, ~V~ makes them a repository |
 
 Cards are headings tagged =:fc:= in the notes themselves, scheduled through
-their own properties. The bibliography is =~/org/refs.bib= with the PDFs in
-=~/org/papers=; citar writes its notes into =roam/refs=, so a cited paper
-and the note about it are the same thing. =~/org= is a git repository and
+their own properties; the review reads the cards under ~org-directory~ only,
+so cards in the knowledge repository wait until ~org-fc-directories~ includes
+it. The bibliography is =research/academic/references.bib=
+under ~org-directory~, with the PDFs in =research/academic/papers/=; citar
+writes its notes into the knowledge repository as
+=resources/sources/papers/<citekey>.org=, so a cited paper and the note
+about it are the same thing. ~org-directory~ is a git repository and
 commits itself after ~+notes-commit-idle~ seconds of idle time and when
 Emacs exits, never while a rebase or merge is waiting, and says so when a
 commit fails. ~SPC n G~ pulls and pushes in the background; a conflict
-stops it with a message and magit finishes it. The org-roam database and
-the card review log are caches outside the repository, so only the files
-travel between machines; the database is rebuilt after the pull, so the
-finder knows the notes the other machine wrote.
+stops it with a message and magit finishes it. The knowledge repository is
+never committed automatically. The org-roam database
+(=org-roam-knowledge.db= under Doom's cache) and the card review log are
+caches outside the repositories, so only the files travel between
+machines; the database is rebuilt after the pull, so the finder knows the
+notes the other machine wrote.
 
-Maps live in =roam/maps/=. A map is a note of its own, so it shows in the
-graph; only the list between =# BEGIN MAP= and =# END MAP= is regenerated.
+Maps live in =resources/collections/tags/=. A map is a note of its own, so
+it shows in the graph; only the list between =# BEGIN MAP= and =# END MAP=
+is regenerated. Authored subject indexes and collections are other files
+and are never regenerated.
 
 ** In an org buffer
 | Key       | What it does                   |
@@ -123,12 +167,21 @@ graph; only the list between =# BEGIN MAP= and =# END MAP= is regenerated.
 | ~SPC m W~   | writing mode                   |
 
 * Workflow
-1. Capture into the inbox, from anywhere.
-2. Empty it: refile with ~SPC m r r~, set NEXT, give it a date.
+1. Capture into the inbox, from anywhere, or straight into the project
+   that owns the task.
+2. Empty it: refile with ~SPC m r r~ into its project, set NEXT, give it a date.
 3. Work from ~SPC o a x~, write the day down in the daily note.
 4. Review weekly with ~SPC o a w~.
-5. What you want to keep goes to roam: promote a heading with ~SPC m m e~,
-   link it with ~SPC n r i~, tag it, then rebuild its map with ~SPC n r m~.
+5. What you want to keep goes to roam: promote a heading with ~SPC m m e~
+   into its subject directory, link it with ~SPC n r i~, tag it, then
+   rebuild its map with ~SPC n r m~.
+6. When a project is done or paused, move it under =archives/projects/=
+   with its ID, review its open tasks rather than marking them done, and
+   leave its reusable notes where they are.
+
+The repository's =meta/WORKFLOWS.org= holds the checks to run after a
+change here, beside ~bin/check-config~. Importing a source is not
+hardware verification, and indexing never runs an Org source block.
 
 * Spelling and style
 Words are checked as you type against British English, which is how
@@ -190,24 +243,32 @@ sheet opens in 0.3 s instead of 1.4 and takes 5 ms a key instead of 19,
 and its colours are the same.
 
 * Configuration
-- ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~.
+- ~+notes-knowledge-dir~, the knowledge and work repository, which is
+  ~org-roam-directory~.
+- ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~; the
+  inbox and projects entries point into the repository, and
+  ~+notes-legacy-documents~ keeps the original destinations for the
+  legacy view.
 - ~+notes-roam-head~, the header every roam note starts with;
   ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
   and first lines.
-- ~+notes-bibliography~ (=~/org/refs.bib=), ~+notes-commit-idle~ (600).
+- ~+notes-bibliography~ (=research/academic/references.bib= under
+  ~org-directory~), ~+notes-commit-idle~ (600).
 - ~+notes-latex-reach~ (4096), how far past the text being coloured org
   looks for LaTeX.
-- ~org-directory~ (=~/org=, from core's ~+core-notes-dir~) and
-  ~org-roam-directory~ (=~/org/roam=).
+- ~org-directory~ (from core's ~+core-notes-dir~), the legacy documents,
+  library and Git helpers.
 - The files: =config.el= (documents, the workflow block, the commit
   timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
-  (citar, org-fc, transclusion), =+export.el=.
+  (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=
+  resolves the inbox and the owning project for every capture.
 - TODO keywords: Doom's, plus NEXT. Tags: ~org-tag-alist~.
 
 * For other modules
 =autoload/write.el= writes into the notes without a capture, in the shape
 the templates give: ~+notes-daily-file~ (today's note, made when
 missing), ~+notes-append-daily~ (an entry under one of its headings),
-~+notes-add-inbox-todo~ (a task, with who wrote it), ~+notes-new-draft~
-(a note in waiting under =roam/drafts=, tagged =:draft:=). The ai module's
-tools go through these, so what Claude leaves looks like what you write.
+~+notes-add-inbox-todo~ (a task in the knowledge inbox, with who wrote
+it), ~+notes-new-draft~ (a note in waiting under =capture/drafts/=, tagged
+=:draft:=). The ai module's tools go through these, so what Claude leaves
+looks like what you write.
