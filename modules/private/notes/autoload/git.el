@@ -14,9 +14,9 @@
     ".orgids"
     ""
     "# Drawn from the org files"
-    "maps/*.png"
-    "maps/*.pdf"
-    "maps/*.svg"
+    "notes/maps/*.png"
+    "notes/maps/*.pdf"
+    "notes/maps/*.svg"
     ""
     "# Agent scratch space"
     ".agent-shell/")

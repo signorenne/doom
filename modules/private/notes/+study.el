@@ -6,7 +6,7 @@
 ;; Citations: one .bib file, the PDFs beside it, and a reference note per
 ;; entry, so a citation in a note and the note about the paper are the same
 ;; thing.
-(defvar +notes-bibliography (file-name-concat org-directory "refs.bib")
+(defvar +notes-bibliography (file-name-concat org-directory "research/academic/references.bib")
   "The BibTeX library citar reads.")
 
 ;; Set before anything loads: Doom copies it into
@@ -18,13 +18,13 @@
   (setq org-cite-global-bibliography (list +notes-bibliography)))
 
 (after! citar
-  (setq citar-library-paths (list (file-name-concat org-directory "papers"))
-        citar-notes-paths (list (file-name-concat org-roam-directory "refs"))
+  (setq citar-library-paths (list (file-name-concat org-directory "research/academic/papers"))
+        citar-notes-paths (list (file-name-concat org-roam-directory "resources/sources/papers"))
         ;; Show what an entry has: a PDF, a note, a link.
         citar-symbol-separator "  "))
 
 (after! citar-org-roam
-  (setq citar-org-roam-subdir "refs"
+  (setq citar-org-roam-subdir "resources/sources/papers"
         citar-org-roam-note-title-template "${author} :: ${title}"
         ;; R, not r: the same note, without the prompt for a source that
         ;; citar has already handed over. See `org-roam-capture-templates'.

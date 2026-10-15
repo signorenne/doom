@@ -39,12 +39,17 @@ day is written under.")
                      org-ql-view--complete-buffers-files))
     (advice-add command :before #'+notes--agenda-files-refresh-h))
 
-  ;; The dailies live in daily/, the package's default.
-  (setq ;; Where an extracted heading goes: a concept unless the prompt is
-        ;; given another kind's directory. The root holds no notes; every
-        ;; kind has its directory and the file is named by the slug.
-        org-roam-extract-new-file-path "concepts/${slug}.org"
-        ;; One template per kind of note, each a directory, a tag, and the
+  ;; Journal and knowledge capture share the repository graph root.
+  ;; org-roam matches these against the path relative to that root, so a
+  ;; top-level .private/ must match at the start as well as after a slash.
+  ;; Private progress, caches and Git internals never become nodes.
+  (setq org-roam-file-exclude-regexp
+        '("\\(?:\\`\\|/\\)\\.\\(?:private\\|cache\\|git\\)/")
+        org-roam-dailies-directory "capture/journal/"
+        ;; Plain org-roam-extract-subtree also files under resources/wiki;
+        ;; +notes/roam-extract asks for the subject directory instead.
+        org-roam-extract-new-file-path "%(+notes--roam-path \"resources/wiki/${slug}.org\")"
+        ;; One template per kind; knowledge chooses a subject home. The
         ;; headings that say what to write: an empty note is still a shape
         ;; to fill. The finder shows the directory as the note's type. The
         ;; head holds the properties, the title and the tags only: org-roam
@@ -53,29 +58,28 @@ day is written under.")
         org-roam-capture-templates
         `(("c" "concept: what a thing is" plain
            "* In one sentence\n%?\n\n* How it works\n\n* Example\n\n* Where it bites\n\n* Related\n\n* Sources\n"
-           :target (file+head "concepts/${slug}.org"
+           :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":concept:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("s" "solution: a bug and its fix" plain
            "* Symptom\n%?\n\n* Cause\n\n* Fix\n\n* How to verify\n\n* Applies to\nBoard, SDK, compiler, version.\n"
-           :target (file+head "solutions/${slug}.org"
+           :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":fix:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("h" "howto: a procedure" plain
            "* When\n%?\n\n* Steps\n\n* Gotchas\n\n* Sources\n"
-           :target (file+head "howtos/${slug}.org"
+           :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":howto:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("b" "hardware: a board, a part, a probe" plain
            "* What it is\n%?\n\n* Pinout and links\n\n* Toolchain\n\n* Gotchas\n"
-           :target (file+head "hardware/${slug}.org"
+           :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":hardware:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("r" "reference: a source" plain
            "* Key points\n%?\n\n* Quotes\n\n* My take\n"
-           :target (file+head "refs/${slug}.org"
-                              ,(concat +notes-roam-head ":ref:\n"
-                                       "#+source: %^{Source, a URL or citation}\n\n"))
+           :target (file+head "%(+notes--roam-path \"resources/sources/manuals/${slug}.org\")"
+                              ,(concat (replace-regexp-in-string ":END:" ":ROAM_REFS: ${ref}\n:END:" +notes-roam-head t t) ":ref:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ;; The one citar fills. `r' asks for the source because there
           ;; is nothing to ask instead; here citar has just handed over
@@ -84,29 +88,29 @@ day is written under.")
           ;; is how citar finds the note again.
           ("R" "reference: a source citar already knows" plain
            "* Key points\n%?\n\n* Quotes\n\n* My take\n"
-           :target (file+head "refs/${citar-citekey}.org"
+           :target (file+head "%(+notes--roam-path \"resources/sources/papers/${citar-citekey}.org\")"
                               ,(concat +notes-roam-head ":ref:\n"
                                        "#+source: [cite:@${citar-citekey}]\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("q" "question: something to work out" plain
            "* Answer in one line\n%?\n\n* What I do not understand\n\n* What I tried\n\n* Answer\n"
-           :target (file+head "questions/${slug}.org"
+           :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":question:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("p" "project" plain
-           "* Goal\n%?\n\n* Status\n\n* Decisions\n\n* Log\n"
-           :target (file+head "projects/${slug}.org"
+           "* Goal\n%?\n\n* Completion criteria\n\n* Next actions\n\n* Decisions\n\n* Progress\n\n* Knowledge and sources\n"
+           :target (file+head "${+notes--roam-project-path}"
                               ,(concat +notes-roam-head ":project:\n"
                                        "#+repository: \n#+kit: \n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("P" "person" plain
            "* Context\n%?\n\n* Notes\n"
-           :target (file+head "people/${slug}.org"
+           :target (file+head "%(+notes--roam-path \"resources/wiki/people/${slug}.org\")"
                               ,(concat +notes-roam-head ":person:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("m" "meeting" plain
            "* Attendees\n%?\n\n* Agenda\n\n* Notes\n\n* Actions\n"
-           :target (file+head "meetings/%<%Y%m%d>-${slug}.org"
+           :target (file+head "%(+notes--roam-path \"capture/journal/%<%Y%m%d>-${slug}.org\")"
                               ,(concat +notes-roam-head ":meeting:\n\n"))
            :unnarrowed t :empty-lines-before 1))
         ;; A journal entry is a heading under * Journal, named for what it
@@ -127,7 +131,7 @@ day is written under.")
   (setq org-roam-capture-ref-templates
         `(("w" "web page" plain
            "* Key points\n%?\n\n* Quotes\n%i\n\n* My take\n"
-           :target (file+head "refs/${slug}.org"
+           :target (file+head "%(+notes--roam-path \"resources/sources/websites/${slug}.org\")"
                               ,(concat +notes-roam-head ":ref:\n"
                                        "#+source: ${ref}\n\n"))
            :unnarrowed t :empty-lines-before 1))))

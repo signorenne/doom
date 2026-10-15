@@ -124,7 +124,7 @@ refiling treats it the same.  Returns the file."
   (require 'org)
   (+notes-ensure-documents)
   (+notes--append-under
-   (expand-file-name "inbox.org" org-directory) "Inbox"
+   (+notes--inbox-file) "Inbox"
    (format "** TODO %s\n:PROPERTIES:\n:CREATED: %s\n%s:END:\n%s"
            title
            (+notes--stamp)
@@ -139,7 +139,7 @@ refiling treats it the same.  Returns the file."
 
 ;;;###autoload
 (defun +notes-new-draft (title text &optional tags source)
-  "Write a draft note called TITLE holding TEXT into roam/drafts, tagged
+  "Write a draft note called TITLE holding TEXT into capture/drafts, tagged
 TAGS, a list of strings, and draft, with SOURCE as a property.  A draft
 is a note in waiting: it is read and promoted by hand.  Refuses to
 overwrite one.  Returns the file."
@@ -147,7 +147,7 @@ overwrite one.  Returns the file."
   (when (or (null title) (string-empty-p (string-trim title)))
     (error "A draft needs a title"))
   (let* ((slug (org-roam-node-slug (org-roam-node-create :title title)))
-         (dir (expand-file-name "drafts" org-roam-directory))
+         (dir (expand-file-name "capture/drafts" org-roam-directory))
          (file (expand-file-name (format "%s.org" slug) dir))
          (tags (seq-uniq (cons "draft" (or tags nil)))))
     (when (file-exists-p file)

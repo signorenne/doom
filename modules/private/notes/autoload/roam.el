@@ -56,6 +56,22 @@ added there is found in the notes as well."
                          keywords "|")
               ") "))))
 
+(defun +notes--active-task-file-p (file)
+  "Whether FILE belongs to an active task context, outside archives.
+The journal counts: a task typed into a daily note stays in view until it
+is refiled into its project. Knowledge, sources and drafts never hold tasks."
+  (let ((root (expand-file-name org-roam-directory)))
+    (and (file-in-directory-p file root)
+         (not (file-in-directory-p file (expand-file-name "archives/" root)))
+         (or (equal (expand-file-name file) (+notes--inbox-file))
+             (file-in-directory-p file (expand-file-name "projects/" root))
+             (file-in-directory-p file (expand-file-name "areas/" root))
+             (file-in-directory-p file (expand-file-name
+                                        (if (boundp 'org-roam-dailies-directory)
+                                            org-roam-dailies-directory
+                                          "capture/journal/")
+                                        root))))))
+
 (defun +notes--roam-scan-todo-files ()
   "Roam files holding at least one task, by scanning the files themselves.
 The org-roam database is not read here on purpose: this runs from
@@ -68,16 +84,18 @@ database."
           (with-temp-buffer
             (let ((default-directory dir))
               (call-process "rg" nil t nil "--files-with-matches"
-                            "--glob" "*.org"
+                            "--glob" "*.org" "--glob" "!archives/**"
                             (+notes--roam-todo-regexp) "."))
-            (mapcar (lambda (f) (expand-file-name f dir))
-                    (split-string (buffer-string) "\n" t)))
+            (seq-filter #'+notes--active-task-file-p
+                        (mapcar (lambda (f) (expand-file-name f dir))
+                                (split-string (buffer-string) "\n" t))))
         (let ((regexp (+notes--roam-todo-regexp 'emacs)))
           (seq-filter
            (lambda (file)
-             (with-temp-buffer
-               (insert-file-contents file)
-               (re-search-forward regexp nil t)))
+             (and (+notes--active-task-file-p file)
+                  (with-temp-buffer
+                    (insert-file-contents file)
+                    (re-search-forward regexp nil t))))
            (directory-files-recursively dir "\\.org\\'")))))))
 
 (defun +notes--roam-todo-files ()
@@ -112,12 +130,12 @@ timestamps a day's note carries, which no scan looks for.")
 
 (defun +notes--recent-dailies ()
   "The daily notes of the last `+notes-daily-agenda-days\=' days."
-  ;; daily/, the package's default, until org-roam-dailies is loaded:
-  ;; org-roam does not load it, and the agenda went without the dailies
-  ;; until a dailies command had run.
+  ;; capture/journal/, the value +roam.el sets, until org-roam-dailies is
+  ;; loaded: org-roam does not load it, and the agenda went without the
+  ;; dailies until a dailies command had run.
   (when-let* ((dir (expand-file-name (if (boundp 'org-roam-dailies-directory)
                                          org-roam-dailies-directory
-                                       "daily/")
+                                       "capture/journal/")
                                      org-roam-directory))
               ((file-directory-p dir))
               (oldest (time-subtract nil (days-to-time
@@ -140,19 +158,17 @@ it is."
             (equal org-agenda-files +notes-agenda-base-files)
             (equal org-agenda-files +notes--agenda-files-last))
     (setq +notes--agenda-files-last
-          (append +notes-agenda-base-files
-                  (+notes--recent-dailies)
-                  (seq-remove #'+notes--under-base-p (+notes--roam-todo-files)))
+          (delete-dups
+           (append (seq-filter #'+notes--active-task-file-p +notes-agenda-base-files)
+                   (+notes--project-files)
+                   (+notes--recent-dailies)
+                   (seq-remove #'+notes--under-base-p (+notes--roam-todo-files))))
           org-agenda-files +notes--agenda-files-last)))
 
 ;;;###autoload
 (defun +notes--refile-files ()
-  "Where a refile may go: the agenda files without the daily notes."
-  (+notes--agenda-files-refresh-h)
-  (let ((daily (expand-file-name "daily" org-roam-directory)))
-    (seq-remove (lambda (file)
-                  (file-in-directory-p (expand-file-name file) daily))
-                (org-agenda-files))))
+  "The inbox and active projects, including projects with no TODOs."
+  (delete-dups (cons (+notes--inbox-file) (+notes--project-files))))
 
 ;;;###autoload
 (defun +notes/roam-todo-files ()
@@ -200,7 +216,9 @@ in the place the heading came from, so the day still reads as a story."
           (kill-ring kill-ring)
           (kill-ring-yank-pointer kill-ring-yank-pointer)
           (interprogram-cut-function nil))
-      (org-roam-extract-subtree))
+      (let ((org-roam-extract-new-file-path
+             (+notes--roam-subject-path (org-roam-node-create :title title))))
+        (org-roam-extract-subtree)))
     ;; The new note is the org buffer that was not open before.
     (let ((target (seq-find (lambda (b) (and (not (memq b before))
                                              (buffer-file-name b)
@@ -250,7 +268,9 @@ in the place the heading came from, so the day still reads as a story."
 
 (defun +notes--roam-map-file (tag)
   "Path of the map note for TAG."
-  (expand-file-name (format "maps/%s.org" tag) org-roam-directory))
+  ;; Generated maps have their own directory, so a tag that shares a name
+  ;; with an authored collection never writes into it.
+  (expand-file-name (format "resources/collections/tags/%s.org" tag) org-roam-directory))
 
 (defun +notes--roam-map-links (tag)
   "The link list for the map of TAG."

@@ -3,6 +3,7 @@
 (require 'transient)
 
 (defvar +notes-documents)
+(declare-function org-agenda "org-agenda")
 (declare-function +notes--capture-templates "+capture")
 (declare-function org-capture "org-capture")
 (declare-function org-roam-capture "org-roam-capture")
@@ -16,7 +17,7 @@
   "Number of TODO entries in the inbox, or nil when there is no inbox.
 Counted again only when the file has changed: the menu asks on every
 redraw, and read the whole inbox each time."
-  (let ((file (expand-file-name "inbox.org" org-directory)))
+  (let ((file (+notes--inbox-file)))
     (when (file-readable-p file)
       (let ((key (list file (file-attribute-modification-time
                              (file-attributes file)))))
@@ -67,7 +68,7 @@ org-protocol fills it; the bookmarklets entry covers it."
   (let ((count (+notes--inbox-count))
         (nodes (+notes--roam-count)))
     (format "%s   inbox: %s   roam: %s"
-            (propertize (abbreviate-file-name org-directory) 'face 'bold)
+            (propertize (abbreviate-file-name org-roam-directory) 'face 'bold)
             (cond ((null count) "no documents yet (d b)")
                   ((zerop count) "empty")
                   (t (format "%d to refile" count)))
@@ -85,10 +86,10 @@ org-protocol fills it; the bookmarklets entry covers it."
   [:description +notes--menu-description
    ["Documents (d)"
     ("d i" "Inbox"        (lambda () (interactive) (+notes/open-document "inbox")))
-    ("d t" "Todo"         (lambda () (interactive) (+notes/open-document "todo")))
+    ("d t" "Legacy todo"  (lambda () (interactive) (+notes/open-document "todo")))
     ("d p" "Projects"     (lambda () (interactive) (+notes/open-document "projects")))
-    ("d n" "Snippets"     (lambda () (interactive) (+notes/open-document "notes")))
-    ("d r" "Reading"      (lambda () (interactive) (+notes/open-document "reading")))
+    ("d n" "Legacy snippets" (lambda () (interactive) (+notes/open-document "notes")))
+    ("d r" "Legacy reading" (lambda () (interactive) (+notes/open-document "reading")))
     ("d d" "Any document" +notes/open-document)
     ("d j" "Today's daily note" org-roam-dailies-goto-today)
     ("d w" "Writing mode" +notes/writing-mode)
@@ -100,6 +101,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a n" "Next actions"   +notes/next-actions)
     ("a p" "Projects"       +notes/projects)
     ("a i" "Inbox"          +notes/inbox)
+    ("a L" "Legacy tasks"   (lambda () (interactive) (org-agenda nil "L")))
     ("a t" "Todo list"      org-todo-list)
     ("a q" "Query (org-ql)" +notes/query)]]
   [["Roam (r)"

@@ -70,8 +70,15 @@
                         (org-agenda-start-day nil)))
             (todo "WAIT|HOLD"
                   ((org-agenda-overriding-header "Waiting or on hold")))
-            (todo "PROJ"
-                  ((org-agenda-overriding-header "Projects, still alive?")))
+            ;; A project is stuck when its * Next actions holds no NEXT or
+            ;; STRT task. The prefix names the project: every project
+            ;; file is called index.org, so its category says nothing.
+            (stuck ""
+                   ((org-agenda-overriding-header "Projects without a next action")
+                    (org-agenda-files (+notes--project-files))
+                    (org-stuck-projects
+                     '("+LEVEL=1+ITEM=\"Next actions\"" ("NEXT" "STRT") nil ""))
+                    (org-agenda-prefix-format "  %(+notes--project-title buffer-file-name) ")))
             ;; A tags-todo block honours the ignore options only when told.
             (tags-todo "+TODO=\"TODO\""
                        ((org-agenda-overriding-header "Unscheduled tasks")
@@ -79,11 +86,16 @@
                         (org-agenda-todo-ignore-scheduled t)
                         (org-agenda-todo-ignore-deadlines t)))))
           ("n" "Next actions" todo "NEXT")
-          ("p" "Projects" todo "PROJ")
+          ("p" "Active project context"
+           ((alltodo "" ((org-agenda-files (+notes--project-files))
+                         (org-agenda-overriding-header "Active project actions")))))
+          ("L" "Legacy tasks (existing Org/GTD files)"
+           ((alltodo "" ((org-agenda-files +notes-legacy-agenda-files)
+                         (org-agenda-overriding-header "Legacy tasks")))))
           ("i" "Inbox"
            ((alltodo ""
                      ((org-agenda-files
-                       (list ,(file-name-concat org-directory "inbox.org")))
+                       (list ,(+notes--inbox-file)))
                       (org-agenda-overriding-header "Inbox"))))))))
 
 (use-package! org-ql

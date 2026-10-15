@@ -30,7 +30,7 @@
 
 ;;;###autoload
 (defun +notes/projects ()
-  "Every PROJ task."
+  "Open actions of the active projects."
   (interactive)
   (+notes--agenda "p"))
 
