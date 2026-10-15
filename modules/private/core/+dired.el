@@ -86,6 +86,86 @@ the next session by savehist.")
     (cl-letf (((symbol-function 'doom-set-jump-h) #'ignore))
       (apply fn args)))
 
+  ;; The icons and sizes are overlays, and before every redraw dirvish
+  ;; deleted them all and made them again, a hundred lines of them. Any
+  ;; overlay change has Emacs lay the whole window out afresh, so a
+  ;; listing on screen kept a third of a core busy doing nothing, and a
+  ;; C-d cost 40 to 70 ms. A redraw that finds the window as the last one
+  ;; left it keeps what is there, and one where only the cursor moved
+  ;; draws the line it left and the line it is on, for the highlight.
+  ;; dirvish's own calls, as when an answer from git arrives, draw all.
+  (defvar-local +core--dirvish-drawn nil
+    "(POINT . KEY): where the cursor was when this listing was last drawn,
+and what else the drawing depended on.")
+  (defvar +core--dirvish-in-redraw nil)
+  (defvar dirvish--props)
+  (declare-function dirvish--render-attrs "dirvish")
+  (declare-function dirvish-pre-redisplay-h "dirvish")
+
+  (declare-function dirvish--apply-hiding-p "dirvish")
+  (defvar dirvish-hide-cursor)
+
+  (defun +core--dirvish-draw-key (window selected)
+    "What drawing WINDOW's attributes depends on but the cursor.
+SELECTED is the window dirvish draws as selected. The first element says
+whether the cursor's line is highlighted, the one thing it changes."
+    (with-current-buffer (window-buffer window)
+      (list (and (dirvish--apply-hiding-p dirvish-hide-cursor) t)
+            window (window-start window)
+            (buffer-modified-tick) (window-width window)
+            (frame-height (window-frame window))
+            (eq window (or selected (frame-selected-window)))
+            buffer-invisibility-spec
+            (assq :attrs dirvish--props) (assq :gui dirvish--props)
+            (assq :narrow-info dirvish--props))))
+
+  (defun +core--dirvish-line-end (pos)
+    "The end of POS's line and its newline, or nil on the last line."
+    (save-excursion
+      (goto-char pos)
+      (let ((end (1+ (line-end-position))))
+        (and (<= end (point-max)) end))))
+
+  (defun +core--dirvish-draw-line (fn window selected pos cursor)
+    "Have FN draw the attributes of the line at POS alone.
+The buffer is narrowed to that line, which holds all its overlays; when
+CURSOR is nil, point goes past the line so it is drawn unhighlighted."
+    (save-excursion
+      (save-restriction
+        (goto-char pos)
+        (narrow-to-region (line-beginning-position) (+core--dirvish-line-end pos))
+        (unless cursor (goto-char (point-max)))
+        (funcall fn window selected))))
+
+  (defadvice! +core--dirvish-in-redraw-a (fn window)
+    :around #'dirvish-pre-redisplay-h
+    (let ((+core--dirvish-in-redraw t))
+      (funcall fn window)))
+
+  (defadvice! +core--dirvish-draw-changed-a (fn window &optional selected)
+    :around #'dirvish--render-attrs
+    (let* ((buffer (window-buffer window))
+           (drawn (buffer-local-value '+core--dirvish-drawn buffer))
+           (same (and +core--dirvish-in-redraw
+                      (equal (cdr drawn) (+core--dirvish-draw-key window selected)))))
+      (with-selected-window window
+        (let ((old (car drawn)) (here (point)))
+          (cond
+           ((and same (or (not (cadr drawn))
+                          (= (line-beginning-position)
+                             (save-excursion (goto-char old) (line-beginning-position))))))
+           ;; Only within what is on show: a cursor gone past it, as after
+           ;; G, has Emacs scroll to lines drawn around the old one.
+           ((and same (>= here (window-start window)) (< here (window-end window))
+                 (+core--dirvish-line-end old) (+core--dirvish-line-end here))
+            (+core--dirvish-draw-line fn window selected old nil)
+            (+core--dirvish-draw-line fn window selected here t))
+           (t (funcall fn window selected)))
+          ;; Read after drawing: drawing can set text properties, which
+          ;; moves the buffer's tick.
+          (setq +core--dirvish-drawn
+                (cons here (+core--dirvish-draw-key window selected)))))))
+
   (defvar +core--peek-root nil
     "The directory the preview beside the minibuffer expands a
 project-relative candidate against.  The project of the buffer the

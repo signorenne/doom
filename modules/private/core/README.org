@@ -382,8 +382,15 @@ README (code blocks, LaTeX).
 
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
-  redisplay, and with dirvish on screen a redisplay costs some 20 ms. The
-  dashboard animation stops off screen; the butler wakes once per step.
+  redisplay, which in a busy window costs tens of ms. The dashboard
+  animation stops off screen; the butler wakes once per step.
+- A dirvish listing draws its icons and sizes again only where something
+  changed, the line the cursor left and the one it is on when only the
+  cursor moved. It made them all again before every redraw, and any
+  overlay change lays the window out afresh, so a listing on screen kept
+  a third of a core busy doing nothing. At load 25: idle 16 ms in every
+  40 to 1, =C-d= 31 to 64 ms to 13 to 28, a held =j= 24 to 31 to 10 to
+  18, a step with its preview 93 to 116 to 48.
 - ~eglot-sync-connect~ is nil: the buffer comes back at once, the server
   attaches when ready, instead of a one second wait on every first open.
   A second file of the project opened while its server is still on its
