@@ -399,6 +399,10 @@ namespace, class or enum body in and keep case labels on the switch;
 what you type lands where clang-format would put it, and clang-format
 on save settles the rest.
 
+Doom's own cc-mode style lines a closing paren up with a function that
+reads a variable it was never given, so TAB on such a line failed in
+cc-mode; this module gives it the name it reads.
+
 * Hierarchies
 ~SPC c h~ asks the server who calls the function under the cursor and what
 it calls in turn; ~SPC c T~ asks what a class derives from and what derives

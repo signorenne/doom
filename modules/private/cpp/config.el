@@ -528,6 +528,20 @@ function, so `c-ts-mode-set-style' installs them."
 
 (add-hook 'c-ts-base-mode-hook #'+cpp--indent-from-project-h)
 
+;; Doom's style lines a closing paren up with this function, whose
+;; argument is spelt `langlem' and whose body reads `langelem': in a
+;; cc-mode buffer, TAB on a line that closes an argument list signalled
+;; a void variable. The same function with the name it reads.
+(declare-function c-langelem-pos "cc-defs")
+(declare-function c-lineup-arglist "cc-align")
+(defadvice! +cpp--lineup-arglist-close-a (langelem)
+  :override #'+cc-lineup-arglist-close
+  (when (save-excursion
+          (save-match-data
+            (skip-chars-backward " \t\n" (c-langelem-pos langelem))
+            (memq (char-before) (list ?, ?\( ?\;))))
+    (c-lineup-arglist langelem)))
+
 ;; QML indents by `qml-ts-mode-indent-offset', which the mode reads once
 ;; when the package loads and writes into every one of its indent rules,
 ;; so setting it afterwards, or from .editorconfig, changes nothing and
