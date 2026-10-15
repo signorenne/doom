@@ -643,6 +643,32 @@ MANAGED-MODES on its way already."
   (set-tree-sitter! 'sh-mode 'bash-ts-mode
     '((bash :url "https://github.com/tree-sitter/tree-sitter-bash"))))
 
+;; yasnippet reads a mode's snippets the first time the mode is used, a
+;; file at a time: for each, Emacs asked editorconfig the file's coding,
+;; and editorconfig looked for .editorconfig files up every directory,
+;; and yasnippet looked up the tree for a .yas-make-groups. Two thirds of
+;; it went there, half the cost of the first Elisp file of a session. The
+;; snippets are UTF-8, and a directory's groups file is looked for once.
+(defvar +core--yas-groups nil
+  "While snippets load, (DIRECTORY . NAME) to where NAME was found above.")
+
+(after! yasnippet
+  (defadvice! +core--yas-load-quickly-a (fn directory mode)
+    :around #'yas--load-directory-2
+    (if +core--yas-groups
+        (funcall fn directory mode)
+      (let ((+core--yas-groups (make-hash-table :test #'equal))
+            (coding-system-for-read 'utf-8)
+            (find (symbol-function 'locate-dominating-file)))
+        (cl-letf (((symbol-function 'locate-dominating-file)
+                   (lambda (file name)
+                     (let* ((key (cons (file-name-directory (expand-file-name file)) name))
+                            (hit (gethash key +core--yas-groups 'none)))
+                       (if (eq hit 'none)
+                           (puthash key (funcall find file name) +core--yas-groups)
+                         hit)))))
+          (funcall fn directory mode))))))
+
 ;; yasnippet-capf looks for a snippet key by scanning the buffer from its
 ;; first character to point each time completion is tried, unless told
 ;; how far to look: most of the typing cost in a long org file. A key is
