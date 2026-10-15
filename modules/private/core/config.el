@@ -191,6 +191,53 @@ PDF's, an archive's, is left alone."
 ;; And the keys that read a buffer, once nothing is listening.
 (add-hook 'compilation-finish-functions #'+core--run-finished-h)
 
+;; Builds start below the editor. At load 30 on twelve cores Emacs had
+;; under half a core, and every key waited its turn behind the compilers.
+;; A compilation starts under nice unless it runs a program or a
+;; benchmark, whose speed is the point, or takes input; a search is not
+;; a compilation here and keeps its pace. The command reads as it did.
+(defvar +core-build-niceness 10
+  "The nice value builds start at, so typing goes first when the cores
+are short.  nil starts them at the editor's own priority.")
+
+(defvar +core--compiling)
+(defvar +core--compile-type nil
+  "The type of the projection command starting: `build', `run' and so on.")
+(defvar +core--recompiling nil)
+(defvar-local +core--compile-run nil
+  "Non-nil in a compilation buffer whose command runs a program, so a
+re-run starts it at the editor's priority again.")
+(put '+core--compile-run 'permanent-local t)
+
+(defadvice! +core--projection-type-a (fn project command type &rest args)
+  :around #'projection-commands--run-command-for-type
+  (let ((+core--compile-type type))
+    (apply fn project command type args)))
+
+(defadvice! +core--recompiling-a (fn &rest args)
+  :around #'recompile
+  (let ((+core--recompiling t))
+    (apply fn args)))
+
+(defadvice! +core--nice-build-a (fn name buffer command)
+  :around #'start-file-process-shell-command
+  (let ((buf (and buffer (get-buffer buffer))))
+    (if (not (and buf (eq (buffer-local-value 'major-mode buf) 'compilation-mode)))
+        (funcall fn name buffer command)
+      (let* ((started (bound-and-true-p +core--compiling))
+             (run (cond (started (string-match-p "\\`\\(run\\|bench\\)" started))
+                        (+core--compile-type (eq +core--compile-type 'run))
+                        (+core--recompiling (buffer-local-value '+core--compile-run buf))))
+             (nice (and +core-build-niceness (not run)
+                        (not (file-remote-p default-directory))
+                        (executable-find "nice"))))
+        (with-current-buffer buf
+          (setq +core--compile-run (and run t)))
+        (if nice
+            (start-file-process name buffer nice "-n" (number-to-string +core-build-niceness)
+                                shell-file-name shell-command-switch command)
+          (funcall fn name buffer command))))))
+
 ;; A program's output was a plain window beside the source, not one of
 ;; Doom's popups like the build's: the cursor stayed in the source and ESC
 ;; left it standing. It opens as a popup on the right now, the cursor in

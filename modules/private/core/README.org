@@ -282,6 +282,12 @@ files section has the detail.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file
   tree-sitter cannot parse opens in the older mode; Doom's
   ~doom-large-file-size-alist~ (1 MB) says what is large.
+- ~+core-build-niceness~ (10): builds start under =nice= at this value,
+  so typing goes first when the cores are short. Every compilation is a
+  build but a run (a =*run...*= buffer, projection's run), a benchmark
+  and one that takes input; a search is not a compilation here. A re-run
+  with =g= keeps what the first run was. The command reads as written.
+  nil starts builds at the editor's own priority.
 
 * The shared library
 =autoload/lib.el= holds what the other private modules ask core for, one
@@ -379,6 +385,15 @@ in a 2 MB C header from 1.8 s to 7 ms, and it opens in 0.5 s, not 2.3.
 Typing in a 230 line code block of a markdown post, 28 to 22. What
 changed is below, in the ui README (hl-line, colouring) and in the notes
 README (code blocks, LaTeX).
+
+On 2026-10-04, under the load this machine usually has, 20 to 30 on
+twelve cores with builds running: no cgroup shares the CPU out, so the
+editor's thread competed with every compiler's and got under half a
+core. Wall time ran two to two and a half times the CPU time, opening
+files included, and a key's CPU about doubled against a quiet machine.
+Builds Emacs starts run under =nice= since, see ~+core-build-niceness~;
+dired and the C++ test files, the two that fell behind, are below and in
+the cpp README.
 
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
