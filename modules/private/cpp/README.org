@@ -277,6 +277,20 @@ exists, which server is running, and the versions of clangd, cmake, gdb
 and clang-tidy. =z= is the usual repair: it configures, relinks
 =compile_commands.json= and restarts the server.
 
+* Test files
+A file of doctest, Catch2 or GoogleTest cases, any line that opens with
+=TEST_CASE(=, =TEST(=, =TEST_F(= or the like, opens in the classic
+=c++-mode= instead of tree-sitter's. The C++ grammar cannot read those
+macros: it folds every case into one broken node and parses all of it
+again at each key, 20 to 56 ms in a doctest file of 67 cases where the
+same code written as functions takes 1.4, and under load typing fell
+behind. In cc-mode a key costs about half; a half page scrolled costs
+two and a half times more, and the colours differ a little. clangd,
+formatting, the keys and the project's indentation are the same. While
+Emacs waits after starting it sets cc-mode up too when C++ is among the
+latest files, so the first test file of a session opens in a third of a
+second, not two and a half.
+
 * Running one test
 =SPC k T= runs only the test the cursor is in. It reads
 the framework from the includes, then the case name out of the buffer:
@@ -397,7 +411,8 @@ step in from the switch. A project without one gets K&R by four. This
 fills the holes in Emacs's own C++ rules, which push the brace of a
 namespace, class or enum body in and keep case labels on the switch;
 what you type lands where clang-format would put it, and clang-format
-on save settles the rest.
+on save settles the rest. A test file, which opens in cc-mode (see Test
+files), gets the same width, tabs, namespaces and case labels.
 
 Doom's own cc-mode style lines a closing paren up with a function that
 reads a variable it was never given, so TAB on such a line failed in

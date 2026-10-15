@@ -511,22 +511,33 @@ function, so `c-ts-mode-set-style' installs them."
        '(((node-is "case_statement") standalone-parent c-ts-indent-offset)))
      (alist-get 'cpp (c-ts-mode--simple-indent-rules 'cpp style)))))
 
+(declare-function c-set-offset "cc-styles")
+
 (defun +cpp--indent-from-project-h ()
   "Indent this buffer the way its project's .clang-format says."
-  (when (and (derived-mode-p 'c++-ts-mode) (fboundp 'c-ts-mode--simple-indent-rules))
+  (when (or (derived-mode-p 'c++-mode)
+            (and (derived-mode-p 'c++-ts-mode) (fboundp 'c-ts-mode--simple-indent-rules)))
     (let* ((dir (locate-dominating-file default-directory ".clang-format"))
            (file (and dir (expand-file-name ".clang-format" dir)))
            (values (and file (+cpp--clang-format-values file))))
       (setq +cpp--indent-plan (+cpp--indent-plan file))
-      ;; Renamed in Emacs 31; the old name still works and warns.
-      (setq-local c-ts-indent-offset (nth 1 +cpp--indent-plan))
       (when-let* ((tabs (cdr (assoc "UseTab" values))))
         (setq-local indent-tabs-mode (not (equal tabs "Never"))))
       (when-let* ((tab (cdr (assoc "TabWidth" values))))
         (setq-local tab-width (string-to-number tab)))
-      (c-ts-mode-set-style #'+cpp--indent-rules))))
+      (pcase-let ((`(,_style ,offset ,namespaces ,cases) +cpp--indent-plan))
+        (if (derived-mode-p 'c++-ts-mode)
+            (progn
+              ;; Renamed in Emacs 31; the old name still works and warns.
+              (setq-local c-ts-indent-offset offset)
+              (c-ts-mode-set-style #'+cpp--indent-rules))
+          ;; A test file, in cc-mode: the same width, namespaces, labels.
+          (setq-local c-basic-offset offset)
+          (c-set-offset 'innamespace (if namespaces '+ 0))
+          (c-set-offset 'case-label (if cases '+ 0)))))))
 
 (add-hook 'c-ts-base-mode-hook #'+cpp--indent-from-project-h)
+(add-hook 'c++-mode-hook #'+cpp--indent-from-project-h)
 
 ;; Doom's style lines a closing paren up with this function, whose
 ;; argument is spelt `langlem' and whose body reads `langelem': in a
@@ -541,6 +552,49 @@ function, so `c-ts-mode-set-style' installs them."
             (skip-chars-backward " \t\n" (c-langelem-pos langelem))
             (memq (char-before) (list ?, ?\( ?\;))))
     (c-lineup-arglist langelem)))
+
+;; A test file stays in classic c++-mode. Its cases are macros the C++
+;; grammar cannot read, TEST_CASE("name") { } or TEST(Suite, Name) { },
+;; and it folds them into one broken node it parses again whole at every
+;; key: 20 to 56 ms a keystroke in a doctest file of 67 cases against
+;; 1.4 for the same code as functions, and under load typing fell
+;; behind. cc-mode reads a macro like any other code. Only the buffer
+;; being set up is affected: the remap is changed for that call alone.
+(defconst +cpp-test-case-regexp
+  (rx bol (* blank)
+      (or "TEST_CASE" "TEST_CASE_FIXTURE" "TEST_CASE_TEMPLATE" "TEST_CASE_METHOD"
+          "TEMPLATE_TEST_CASE" "SCENARIO" "TEST_SUITE"
+          "TEST" "TEST_F" "TEST_P" "TYPED_TEST" "TYPED_TEST_P")
+      (* blank) "(")
+  "The start of a doctest, Catch2 or GoogleTest test case.")
+
+(defun +cpp--test-file-p ()
+  "Non-nil when this buffer holds test cases written with a framework's macros."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((case-fold-search nil))
+        (re-search-forward +cpp-test-case-regexp
+                           (min (point-max) (* 512 1024)) t)))))
+
+(defadvice! +cpp--tests-in-cc-mode-a (fn &optional mode keep)
+  :around #'set-auto-mode-0
+  (if (and (memq mode '(c++-mode c++-ts-mode +cc-c-c++-objc-mode))
+           (+cpp--test-file-p))
+      (let ((major-mode-remap-alist `((c++-mode . c++-mode) (c++-ts-mode . c++-mode)
+                                      ,@major-mode-remap-alist)))
+        (funcall fn mode keep))
+    (funcall fn mode keep)))
+
+;; Where C++ is among the modes set up while Emacs waits, the classic
+;; mode is too: the first test file of a session loaded cc-mode as it
+;; opened, 0.96 s against 0.34.
+(defadvice! +cpp--warm-classic-too-a (modes)
+  :filter-return #'+core--recent-file-modes
+  (if (and (memq 'c++-ts-mode modes) (not (memq 'c++-mode modes)))
+      (append modes '(c++-mode))
+    modes))
 
 ;; QML indents by `qml-ts-mode-indent-offset', which the mode reads once
 ;; when the package loads and writes into every one of its indent rules,
