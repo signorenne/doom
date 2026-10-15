@@ -67,19 +67,24 @@ caller can ask again precisely."
 ;;; Reading
 
 (defun +ai--notes-search (query)
-  "Lines matching QUERY anywhere under `org-directory'."
+  "Lines matching QUERY in the knowledge graph and the legacy `org-directory'.
+ripgrep skips hidden and ignored paths, so private progress and caches
+stay out of the answer."
   (require 'org)
   (unless (executable-find "rg") (error "ripgrep (rg) is not installed"))
-  (with-temp-buffer
-    (let ((default-directory (file-name-as-directory
-                              (expand-file-name org-directory))))
-      (call-process "rg" nil t nil "--line-number" "--no-heading"
-                    "--color=never" "--smart-case" "--glob" "*.org"
-                    "--max-count" "5" "-e" query "."))
-    (if (= (point-min) (point-max))
-        (format "Nothing matches %s in %s" query
-                (abbreviate-file-name org-directory))
-      (+ai--notes-truncate (buffer-string)))))
+  (let ((roots (seq-uniq
+                (seq-filter #'file-directory-p
+                            (mapcar (lambda (dir) (file-name-as-directory (expand-file-name dir)))
+                                    (delq nil (list (bound-and-true-p org-roam-directory)
+                                                    org-directory)))))))
+    (with-temp-buffer
+      (apply #'call-process "rg" nil t nil "--line-number" "--no-heading"
+             "--color=never" "--smart-case" "--glob" "*.org"
+             "--max-count" "5" "-e" query roots)
+      (if (= (point-min) (point-max))
+          (format "Nothing matches %s in %s" query
+                  (mapconcat #'abbreviate-file-name roots ", "))
+        (+ai--notes-truncate (buffer-string))))))
 
 (defun +ai--notes-list (&optional tag since)
   "Notes in the graph, filtered by TAG and by SINCE, a YYYY-MM-DD date."
@@ -177,7 +182,7 @@ Drafts live apart from the graph until they are read and promoted."
    :function #'+ai--notes-add-todo
    :name "emacs_org_add_todo"
    :description
-   (concat "Add a TODO to the user's Org inbox (~/org/inbox.org). Use it "
+   (concat "Add a TODO to the knowledge repository's inbox. Use it "
            "when they ask to remember or follow up on something.")
    :args '((:name "title" :type string
             :description "Short imperative task title")
@@ -188,8 +193,9 @@ Drafts live apart from the graph until they are read and promoted."
    :function #'+ai--notes-search
    :name "emacs_notes_search"
    :description
-   (concat "Search the user's Org notes in ~/org, including the org-roam "
-           "graph, and return matching lines as file:line:text. Use it "
+   (concat "Search the user's Org notes, the knowledge repository that is "
+           "the org-roam graph and the legacy Org directory, and return "
+           "matching lines as file:line:text. Use it "
            "before answering anything about what they already know, wrote "
            "or decided.")
    :args '((:name "query" :type string
@@ -245,7 +251,7 @@ Drafts live apart from the graph until they are read and promoted."
    :function #'+ai--notes-draft
    :name "emacs_notes_draft"
    :description
-   (concat "Write a new note as a draft in roam/drafts, tagged :draft:. Use "
+   (concat "Write a new note as a draft in capture/drafts, tagged :draft:. Use "
            "it when the user asks for a note on a subject. They review and "
            "promote it; do not treat a draft as part of the graph.")
    :args '((:name "title" :type string

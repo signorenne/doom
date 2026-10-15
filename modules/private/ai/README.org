@@ -13,7 +13,7 @@ Three ways to work with an agent, all under =SPC l=:
   =emacs_project_todos=, and with the notes module on, the notes
   (=emacs_notes_search=, =_list=, =_read=, =_links= to read the graph,
   =emacs_org_add_todo= into the inbox, =emacs_notes_append= into today's
-  daily note, =emacs_notes_draft= for a new note under =roam/drafts=; it
+  daily note, =emacs_notes_draft= for a new note under =capture/drafts= in the knowledge repository; it
   never rewrites an existing note, and what it writes goes through that
   module's writers, so it has the shape of a capture).
 - [[https://github.com/xenodium/agent-shell][agent-shell]]: the same agent in a normal Emacs buffer, over ACP, with
@@ -44,7 +44,7 @@ Three ways to work with an agent, all under =SPC l=:
 | ~SPC l S~   | ~+ai/open-claude-settings~     | ~/.claude/settings.json            |
 | ~SPC l n~   | ~+ai/new-slash-command~        | new .claude/commands/NAME.md       |
 | ~SPC l h~   | ~+ai/install-claude-hooks~     | let Claude notify Emacs            |
-| ~SPC l L~   | ~+ai/log-session~              | write a note into ~/org/ai.org     |
+| ~SPC l L~   | ~+ai/log-session~              | log the session in its project     |
 
 In a Claude buffer the keys go to Claude, so a second set goes through ~C-c~,
 which vterm leaves to Emacs (~M-SPC~, Doom's usual leader there, is KRunner's

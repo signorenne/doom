@@ -189,7 +189,7 @@ Writes to ~/.claude/settings.json, keeping a .bak copy.  Safe to re-run."
 
 ;;;###autoload
 (defun +ai/log-session ()
-  "Write a session note into ~/org/ai.org."
+  "Write a session note into the owning project's Progress, or the inbox."
   (interactive)
   (require 'org-capture)
   (org-capture nil "a"))
