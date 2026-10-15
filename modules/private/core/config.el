@@ -10,8 +10,9 @@
 
 ;; The two directories the other modules build on: the notes, and where
 ;; projects live. Set here, before the org module reads them.
-(defvar +core-notes-dir "~/org/"
-  "Where the notes live; the org module sets `org-directory' from it.")
+(defvar +core-notes-dir "~/projects/personal/working_cpplibs/knowledge_base/"
+  "Where the notes live; the org module sets `org-directory' from it.
+~/org is a symlink to it, kept for anything that still names the old path.")
 (defvar +core-projects-dir "~/projects/"
   "Where projects live: quick access in the file manager, new scaffolds.")
 
