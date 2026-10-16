@@ -20,7 +20,7 @@
 (defvar +butler-nudge-step)
 (defvar +butler-quips)
 (defvar +butler-dashboard-say-ticks)
-(defvar +doom-dashboard-name)
+(defvar +dashboard-name)
 (defvar +butler-greetings)
 (defvar +butler-address)
 (defvar +butler--said)
@@ -485,8 +485,8 @@ and nothing else on the dashboard moves."
   "Have him say something else on the dashboard, in place of what he
 said before.  The block is the same size, so the dashboard does not
 shift under it."
-  (when-let* ((buffer (and (boundp '+doom-dashboard-name)
-                           (get-buffer +doom-dashboard-name))))
+  (when-let* ((buffer (and (boundp '+dashboard-name)
+                           (get-buffer +dashboard-name))))
     (with-current-buffer buffer
       (save-excursion
         (goto-char (point-min))

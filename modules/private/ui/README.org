@@ -57,7 +57,7 @@ A child frame, the butler's bubble or a completion popup, is the
 selected frame while the window hooks run for it, and the dashboard was
 then padded for a seven row window: the centring was lost and, nothing
 else resizing the real window, it never came back. A child frame
-changing size says nothing about the dashboard, so ~+doom-dashboard-resize-h~
+changing size says nothing about the dashboard, so ~+dashboard-resize-h~
 is skipped while one is selected; the real frame's own resizes still
 run it, margins and all.
 
@@ -79,8 +79,8 @@ selected or lit up: the cursor is hidden, the mouse does not highlight the
 entries as it passes, and a drag selects nothing. Clicking an entry, or
 ~RET~ on it, still opens it.
 
-A picture instead of the banner wants ~doom-dashboard-widget-banner~
-back in ~+doom-dashboard-functions~ and ~fancy-splash-image~ pointed at
+A picture instead of the banner wants ~+dashboard-widget-banner~
+back in ~+dashboard-functions~ and ~fancy-splash-image~ pointed at
 it.
 
 * Keybindings
@@ -179,4 +179,4 @@ Colouring had its own waste:
   none is written at the end of its line; the underline, the fringe and
   the popup still show them.
 - The fonts themselves are in =$DOOMDIR/config.el=; ~SPC h r f~ reloads them.
-- Dashboard entries: ~+doom-dashboard-menu-sections~.
+- Dashboard entries: ~+dashboard-menu-sections~.

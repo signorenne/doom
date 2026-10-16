@@ -28,7 +28,7 @@
  ;; Appearance
  :ui
  doom              ; Doom Emacs visuals
- doom-dashboard    ; startup dashboard
+ dashboard         ; startup dashboard
  ;;doom-quit         ; custom quit prompt/message
  ;;(emoji +unicode)  ; Emacs 31 already inserts emoji with C-x 8 e
  hl-todo           ; highlight TODO/FIXME/NOTE/...

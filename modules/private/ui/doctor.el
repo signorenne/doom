@@ -6,8 +6,8 @@
 ;; rather than broken, so these are assertions where the module is the
 ;; point and warnings where it is an addition.
 
-(assert! (modulep! :ui doom-dashboard)
-         "This module draws the dashboard's banner, greeting and entries: enable (:ui doom-dashboard)")
+(assert! (modulep! :ui dashboard)
+         "This module draws the dashboard's banner, greeting and entries: enable (:ui dashboard)")
 
 (unless (modulep! :ui zen)
   (warn! "No (:ui zen): SPC t z and the one-font setting here do nothing"))
