@@ -9,8 +9,9 @@
 ;; Read by Doom when org and org-roam load. org-directory, the legacy
 ;; documents and library, comes from core; the graph is the knowledge
 ;; and work repository.
-(defvar +notes-knowledge-dir "/home/n7/projects/personal/knowledge"
-  "Root of the personal knowledge and work repository.")
+(defvar +notes-knowledge-dir +core-notes-dir
+  "Root of the personal knowledge and work repository; init.el sets it.
+Unset, it is `+core-notes-dir', so the documents and the graph share a root.")
 (setq org-directory (directory-file-name +core-notes-dir)
       org-roam-directory (directory-file-name +notes-knowledge-dir)
       org-roam-db-location (expand-file-name "org-roam-knowledge.db" doom-cache-dir))

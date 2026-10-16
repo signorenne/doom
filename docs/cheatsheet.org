@@ -2195,7 +2195,7 @@ Images dropped on a buffer are downloaded and attached.
 
 * Notes and roam
 Roam is the note graph in the knowledge repository,
-=~/projects/personal/knowledge=; the dailies are the journal.
+~+notes-knowledge-dir~ (set in =init.el=); the dailies are the journal.
 [[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says how to work with it day to day; the
 repository's =meta/WORKFLOWS.org= holds its procedures and checks.
 

@@ -274,10 +274,9 @@ files section has the detail.
 - ~+core-transparency-alpha~, 85 by default.
 - ~corfu-auto~ is on, 0.15 s after two characters, ~corfu-preselect~ is
   ~first~ so ~RET~ takes the candidate; ~SPC t a~ makes it manual, ~C-SPC~.
-- ~+core-notes-dir~ (=~/projects/personal/working_cpplibs/knowledge_base/=,
-  which =~/org= links to) and ~+core-projects-dir~ (=~/projects/=):
-  where the notes and the projects live; the notes module and the C++
-  scaffolds read them.
+- ~+core-notes-dir~ (=~/org/=, set for this machine in =init.el=) and
+  ~+core-projects-dir~ (=~/projects/=): where the notes and the projects
+  live; the notes module and the C++ scaffolds read them.
 - ~+core-undo-flash-time~ (0.3 s), how long the lines an undo changed stay
   lit; 0 lights none. ~vundo-window-max-height~ is 10 lines.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file

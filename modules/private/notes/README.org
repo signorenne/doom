@@ -3,7 +3,7 @@
 
 * Description
 Zettelkasten knowledge and PARA work share one Org-roam graph, the
-repository at =/home/n7/projects/personal/knowledge= (~+notes-knowledge-dir~).
+repository in ~+notes-knowledge-dir~, set for this machine in =init.el=.
 Its inbox and project files own new tasks; the legacy ~org-directory~, its
 GTD documents and the reference library keep their own root.
 
@@ -244,7 +244,11 @@ and its colours are the same.
 
 * Configuration
 - ~+notes-knowledge-dir~, the knowledge and work repository, which is
-  ~org-roam-directory~.
+  ~org-roam-directory~, and ~+core-notes-dir~, which is ~org-directory~.
+  Both are set in =init.el=, before any module or ~doom doctor~ reads
+  them; unset, both are =~/org=, one root for the documents and the
+  graph. A folder that is missing is made on first use, with
+  ~+notes-directories~ and ~+notes-knowledge-directories~ inside.
 - ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~; the
   inbox and projects entries point into the repository, and
   ~+notes-legacy-documents~ keeps the original destinations for the
