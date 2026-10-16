@@ -49,7 +49,9 @@ the next session by savehist.")
 ;; Git state is one keypress away in magit.
 (after! dirvish
   (setq dirvish-default-layout '(0 0 0.45)
-        dirvish-attributes '(subtree-state nerd-icons collapse file-size)
+        ;; Read from the file attributes dired already has, no process.
+        dirvish-attributes '(subtree-state nerd-icons collapse
+                             file-time file-modes file-size)
         dirvish-use-header-line 'global
         dirvish-header-line-format '(:left (path) :right (free-space))
         dirvish-use-mode-line t
