@@ -146,13 +146,29 @@ symbol; the library is loaded so the advice is in place to look at."
                  (setq def (advice--cdr def)))))))))
     problems))
 
+;; A question asked in the daemon waits for an answer no one can give,
+;; and the check waited with it, for good: vterm offers to compile its
+;; module when it loads without one. It fails now, naming the question.
+(defconst check-config--questions
+  '(read-from-minibuffer read-key y-or-n-p yes-or-no-p)
+  "What asks the user something, behind every prompt there is.")
+
+(defun check-config--refuse-question (&optional prompt &rest _)
+  "Signal that PROMPT was asked, rather than wait for an answer."
+  (error "check-config: the daemon was asked %S" prompt))
+
 (defun check-config--run (out log)
   "Compile into OUT and write the report to LOG."
+  (dolist (fn check-config--questions)
+    (advice-add fn :before #'check-config--refuse-question))
   (let* (;; Asked before anything is compiled: compiling defines every
          ;; command in the config, and a command defined here but not in
          ;; the session the sheet was generated from would read as drift.
+         ;; An error is a finding, a refused question among them: let
+         ;; go, it read as a sheet up to date.
          (stale (and (fboundp '+docs-sheet-stale-p)
-                     (ignore-errors (+docs-sheet-stale-p))))
+                     (condition-case err (+docs-sheet-stale-p)
+                       (error (list 'error err)))))
          (root doom-user-dir)
          (files (append (list (expand-file-name "init.el" root)
                               (expand-file-name "config.el" root))
@@ -203,9 +219,10 @@ symbol; the library is loaded so the advice is in place to look at."
           (insert (format "  %S every %S s\n" (timer--function tm) (timer--repeat-delay tm)))))
       (insert "\nthe sheet's generated tables: ")
       (insert (if (fboundp '+docs-sheet-stale-p)
-                  (if stale
-                      "out of date, press gr in the sheet"
-                    "say what the config binds today")
+                  (pcase stale
+                    (`(error ,err) (format "1 problem(s): the check stopped, %S" err))
+                    ('nil "say what the config binds today")
+                    (_ "out of date, press gr in the sheet"))
                 "no +docs-sheet-stale-p, the docs module is off")
               "\n")
 
