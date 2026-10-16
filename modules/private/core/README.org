@@ -280,8 +280,8 @@ files section has the detail.
 - ~+core-undo-flash-time~ (0.3 s), how long the lines an undo changed stay
   lit; 0 lights none. ~vundo-window-max-height~ is 10 lines.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file
-  tree-sitter cannot parse opens in the older mode; Doom's
-  ~doom-large-file-size-alist~ (1 MB) says what is large.
+  tree-sitter cannot parse opens in the older mode;
+  ~+core-large-file-size~ (1 MB) says what is large.
 - ~+core-build-niceness~ (10): builds start under =nice= at this value,
   so typing goes first when the cores are short. Every compilation is a
   build but a run (a =*run...*= buffer, projection's run), a benchmark
