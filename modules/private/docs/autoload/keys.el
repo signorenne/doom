@@ -167,7 +167,9 @@ in which-key, Doom's word and ours.  Nil when all is well."
                        problems)))
              by-command)
     (dolist (entry which-key-replacement-alist)
-      (let ((key-regexp (car-safe (car entry))) (description (cdr (cdr entry))))
+      ;; An entry can hold a function in place of (KEY . DESCRIPTION):
+      ;; Doom's, which trims its prefixes from every command's name.
+      (let ((key-regexp (car-safe (car entry))) (description (cdr-safe (cdr entry))))
         (when (and (stringp key-regexp) (string-prefix-p "\\`SPC " key-regexp)
                    (stringp description))
           (cl-pushnew description (gethash (substring key-regexp 2 -2) by-key) :test #'equal))))
