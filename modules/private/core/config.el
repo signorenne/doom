@@ -26,24 +26,31 @@
 ;; Install tree-sitter grammars on first use instead of asking.
 (setq treesit-auto-install-grammar 'always)
 
-;; Doom treats a file over a megabyte as large: so-long switches off what
-;; costs most there. It marks the file from `abort-if-file-too-large',
-;; which Emacs 31 calls before the file has a buffer, so the mark went to
-;; the buffer the file was opened from and no file was ever large. It is
-;; made here instead, in the file's own buffer, before Doom's hook reads
-;; it.
-(advice-remove 'abort-if-file-too-large #'doom--prepare-for-large-files-a)
+;; A file over a megabyte is large here: tree-sitter and the header's
+;; function line stand down in it, below. Doom kept that mark once, and
+;; now tells a large file by its lines, for so-long alone, so the mark is
+;; made here, in the file's own buffer, as it opens.
+(defvar +core-large-file-size (* 1024 1024)
+  "Past this size, in bytes, a file opened is large: `+core-large-file-p'.")
+
+(defvar +core-large-file-excluded-modes
+  '(so-long-mode special-mode archive-mode tar-mode jka-compr
+    git-commit-mode image-mode doc-view-mode doc-view-mode-maybe
+    ebrowse-tree-mode pdf-view-mode tags-table-mode)
+  "Modes a file keeps at any size: a picture's, a PDF's, an archive's,
+which show something other than the text.")
+
+(defvar-local +core-large-file-p nil
+  "The size of this buffer's file when it is large, else nil.")
 
 (add-hook! 'find-file-hook :depth -95
   (defun +core--mark-large-file-h ()
-    "Mark the file just opened as large when it is, for Doom's hook."
-    (when-let* (((not doom-inhibit-large-file-detection))
-                (file buffer-file-name)
+    "Mark the file just opened as large when it is."
+    (when-let* ((file buffer-file-name)
                 ((not (file-remote-p file)))
-                (size (file-attribute-size (file-attributes file)))
-                (limit (assoc-default file doom-large-file-size-alist #'string-match-p)))
-      (when (> size (* 1024 1024 limit))
-        (setq-local doom-large-file-p size)))))
+                (size (file-attribute-size (file-attributes file))))
+      (when (> size +core-large-file-size)
+        (setq-local +core-large-file-p size)))))
 
 ;; Tree-sitter reparses what an edit touched, which in most files is a
 ;; function; but in a file that is one declaration, an image as a C array
@@ -66,7 +73,7 @@
     (when-let* (((treesit-parser-list))
                 (classic (+core--classic-mode major-mode))
                 ((fboundp classic))
-                ((or doom-large-file-p
+                ((or +core-large-file-p
                      (and (> (buffer-size) +core-treesit-unparsed-max)
                           (equal (treesit-node-type (treesit-buffer-root-node)) "ERROR")))))
       (funcall classic)
@@ -108,9 +115,9 @@
   "Past this size a file opens as plain text, without its major mode.")
 
 (defvar +core-plain-file-keep-modes '(org-mode)
-  "Modes a file keeps at any size, besides Doom's own list: org's agenda
-and refile refuse a file that is not in org-mode, and the agenda reads
-every file of the notes.")
+  "Modes a file keeps at any size, besides `+core-large-file-excluded-modes':
+org's agenda and refile refuse a file that is not in org-mode, and the
+agenda reads every file of the notes.")
 
 (defvar-local +core-plain-mode nil
   "The mode a file opened as plain text would have had, or t once it has
@@ -138,15 +145,15 @@ it, which a revert keeps.")
 (defadvice! +core--plain-big-file-a (fn mode &rest args)
   "Set a file past its size limit up in `fundamental-mode', not MODE.
 The limit is `+core-plain-file-size', `+core-plain-preview-size' in a
-preview. Doom's list of the modes a large file keeps, a picture's, a
-PDF's, an archive's, is left alone."
+preview. The modes a large file keeps, a picture's, a PDF's, an
+archive's, `+core-large-file-excluded-modes', are left alone."
   :around #'set-auto-mode-0
   (let ((limit (if +core--previewing +core-plain-preview-size +core-plain-file-size)))
     (if (and mode
              buffer-file-name
              (not (eq +core-plain-mode t))
              (> (buffer-size) limit)
-             (not (memq mode doom-large-file-excluded-modes))
+             (not (memq mode +core-large-file-excluded-modes))
              (not (memq mode +core-plain-file-keep-modes)))
         (progn (setq +core-plain-mode mode)
                (apply fn #'fundamental-mode args))
@@ -333,7 +340,7 @@ the one most of them open in first, the latest first among equals."
                     ((symbolp mode))
                     ;; A picture's or an archive's mode is nothing without
                     ;; the file to show.
-                    ((not (memq mode (cons 'fundamental-mode doom-large-file-excluded-modes)))))
+                    ((not (memq mode (cons 'fundamental-mode +core-large-file-excluded-modes)))))
           (push mode modes))))
     (setq modes (nreverse modes))
     (seq-take (sort (seq-uniq modes)
