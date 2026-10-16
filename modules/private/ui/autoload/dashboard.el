@@ -6,21 +6,24 @@
 ;; date as it would be announced. Plain characters only, so a terminal
 ;; frame draws what the GUI does; only the size of the type differs.
 
-(defvar +doom-dashboard--width)
-(defvar +doom-dashboard-name)
+(defvar +dashboard-name)
 (defvar +ui-banner-name)                  ; config.el
 (defvar +ui-dashboard-greeting-function)  ; config.el
 (defvar +ui-dashboard-tick-hook)
 (declare-function doom-color "doom-themes")
 (declare-function doom-blend "doom-themes")
 
-;; The two things read from Doom's dashboard, behind one helper each: the
-;; width it lays out in and its centring, with a fallback when a Doom
-;; upgrade renames either.
+;; The local widgets keep the old dashboard's 80-column block, then hand
+;; its horizontal alignment to Doom's current dashboard API.
 
 (defun +ui--dashboard-width ()
   "The columns the dashboard is laid out in."
-  (if (boundp '+doom-dashboard--width) +doom-dashboard--width 80))
+  80)
+
+(defun +ui--dashboard-centre-from (start)
+  "Centre the dashboard text inserted since START with Doom's layout."
+  (let ((text (delete-and-extract-region start (point))))
+    (+dashboard-insert (string-remove-suffix "\n" text))))
 
 (defun +ui--centre (text)
   "TEXT centred in the dashboard, as Doom centres its own lines."
@@ -30,7 +33,7 @@
 
 (defun +ui--dashboard-frame ()
   "The frame showing the dashboard, else the selected one."
-  (if-let* ((window (get-buffer-window +doom-dashboard-name 'visible)))
+  (if-let* ((window (get-buffer-window +dashboard-name 'visible)))
       (window-frame window)
     (selected-frame)))
 
@@ -320,14 +323,16 @@ the ripple and the wave know where the letters start."
   (+ui--runs)
   ;; At the current tick, so a reload of the dashboard does not restart
   ;; the ripple with a jump.
-  (dolist (row (+ui--frame +ui--tick))
-    (let* ((centred (+ui--centre row))
-           (offset (- (length centred) (length row)))
-           (start (point)))
-      (insert centred "\n")
-      (add-text-properties start (1- (point))
-                           (list 'face 'doom-dashboard-banner
-                                 '+ui-banner offset))))
+  (let ((block-start (point)))
+    (dolist (row (+ui--frame +ui--tick))
+      (let* ((centred (+ui--centre row))
+             (offset (- (length centred) (length row)))
+             (start (point)))
+        (insert centred "\n")
+        (add-text-properties start (1- (point))
+                             (list 'face '+dashboard-banner
+                                   '+ui-banner offset))))
+    (+ui--dashboard-centre-from block-start))
   (+ui--colour-banner +ui--tick))
 
 
@@ -335,15 +340,15 @@ the ripple and the wave know where the letters start."
 ;;; The greeting
 
 (defface +ui-greeting
-  '((t :inherit doom-dashboard-footer :weight bold))
+  '((t :inherit +dashboard-footer :weight bold))
   "The greeting above the date. It keeps the normal size, since a bubble
 drawn in characters round it would break with larger type."
-  :group 'doom-dashboard)
+  :group '+dashboard)
 
 (defface +ui-date
-  '((t :inherit doom-dashboard-loaded :height 1.15))
+  '((t :inherit +dashboard-loaded :height 1.15))
   "The date under the greeting."
-  :group 'doom-dashboard)
+  :group '+dashboard)
 
 (defun +ui--centre-scaled (text scale)
   "TEXT centred in the dashboard when drawn SCALE times the normal width.
@@ -379,15 +384,17 @@ the clock may fire while a terminal client is selected."
   "Dashboard widget: the greeting `+ui-dashboard-greeting-function'
 inserts, when a module set one, a blank line, then the date. The date
 line is marked so the clock can be kept."
-  (insert "\n")
-  (when +ui-dashboard-greeting-function
-    (funcall +ui-dashboard-greeting-function (+ui--dashboard-width)))
-  (insert "\n")
-  (let ((start (point)))
-    (insert (+ui--centre-scaled (+ui--greeting-date) 1.15))
-    (add-text-properties start (point)
-                         '(face +ui-date +ui-clock t)))
-  (insert "\n")
+  (let ((block-start (point)))
+    (insert "\n")
+    (when +ui-dashboard-greeting-function
+      (funcall +ui-dashboard-greeting-function (+ui--dashboard-width)))
+    (insert "\n")
+    (let ((start (point)))
+      (insert (+ui--centre-scaled (+ui--greeting-date) 1.15))
+      (add-text-properties start (point)
+                           '(face +ui-date +ui-clock t)))
+    (insert "\n")
+    (+ui--dashboard-centre-from block-start))
   (+ui--dashboard-animate))
 
 
@@ -440,7 +447,7 @@ can, and `+ui--dashboard-shown-h' starts them again."
 A daemon's initial frame is `terminal-frame': it counts as visible and
 always shows the dashboard, so it is not a viewer, or the ticks would run
 with no client frame open."
-  (when-let* ((buffer (get-buffer +doom-dashboard-name)))
+  (when-let* ((buffer (get-buffer +dashboard-name)))
     (seq-some (lambda (window)
                 (not (eq (window-frame window) terminal-frame)))
               (get-buffer-window-list buffer nil 'visible))))
@@ -456,7 +463,7 @@ animation starts again."
 (defun +ui--dashboard-tick ()
   "One step: the ripple and the wave move on, the clock every second or so.
 Only while the dashboard is on screen: out of sight, the ticks stop."
-  (let ((buffer (get-buffer +doom-dashboard-name)))
+  (let ((buffer (get-buffer +dashboard-name)))
     (cond
      ((not (and (buffer-live-p buffer) (+ui--dashboard-visible-p)))
       (when (timerp +ui--dashboard-timer) (cancel-timer +ui--dashboard-timer))

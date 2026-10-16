@@ -47,13 +47,13 @@
 ;; than its window can never show its top: the view snaps back to a button.
 ;; Scrolling commands are let through; the next j or k lands on a button.
 ;; Guarded: defadvice! on a renamed Doom function installs silently.
-(if (fboundp '+doom-dashboard-reposition-point-h)
+(if (fboundp '+dashboard-reposition-point-h)
     (defadvice! +ui--dashboard-let-scroll-a (fn &rest args)
-      :around #'+doom-dashboard-reposition-point-h
+      :around #'+dashboard-reposition-point-h
       (unless (and (symbolp this-command)
                    (string-match-p "scroll" (symbol-name this-command)))
         (apply fn args)))
-  (warn "+doom-dashboard-reposition-point-h is gone; the dashboard cannot scroll"))
+  (warn "+dashboard-reposition-point-h is gone; the dashboard cannot scroll"))
 
 ;; Doom pads the dashboard down the window to centre it, and measures the
 ;; window with `get-buffer-window', which answers for the selected frame.
@@ -63,12 +63,12 @@
 ;; else resizing the real window, it never comes back. A child frame
 ;; changing size says nothing about the dashboard, so it is left alone.
 ;; Guarded: defadvice! on a renamed Doom function installs silently.
-(if (fboundp '+doom-dashboard-resize-h)
+(if (fboundp '+dashboard-resize-h)
     (defadvice! +ui--dashboard-keep-centred-a (fn &rest args)
-      :around #'+doom-dashboard-resize-h
+      :around #'+dashboard-resize-h
       (unless (frame-parent (selected-frame))
         (apply fn args)))
-  (warn "+doom-dashboard-resize-h is gone; the dashboard may lose its centring"))
+  (warn "+dashboard-resize-h is gone; the dashboard may lose its centring"))
 
 ;; The animation stops when the dashboard leaves the screen and starts
 ;; again when it comes back; a tick is a redisplay, and ten a second for
@@ -80,7 +80,7 @@
 ;; entry; no region from a drag. Clicks and RET still open the entries.
 ;; evil sets the cursor from its state's spec on every change, so that spec
 ;; is the one to blank; a bar of zero width is the shape it accepts.
-(add-hook! '+doom-dashboard-mode-hook
+(add-hook! '+dashboard-mode-hook
   (defun +ui--dashboard-quiet-h ()
     ;; mouse-highlight as a buffer local holds in the selected window
     ;; only, which the dashboard is whenever it is shown.
@@ -90,9 +90,9 @@
 
 ;; evil binds the drag itself in its normal state, above the mode map, so
 ;; the quiet has to be told to that state. The map exists by now: Doom
-;; loads its own modules before this one, and doom-dashboard is not a
+;; loads its own modules before this one, and dashboard is not a
 ;; feature one could wait for.
-(map! :map +doom-dashboard-mode-map
+(map! :map +dashboard-mode-map
       :nm [down-mouse-1] #'ignore
       :nm [drag-mouse-1] #'ignore
       :nm [down-mouse-3] #'ignore
@@ -121,36 +121,36 @@ draws on the dashboard moves on from here, inside
 ;; points, each showing its current key. Doom skips entries whose
 ;; command isn't defined. Our banner stands in for Doom's widget, the
 ;; way its README says to, so a terminal frame and the GUI draw the
-;; same thing; a picture would want `doom-dashboard-widget-banner' back
+;; same thing; a picture would want `+dashboard-widget-banner' back
 ;; and `fancy-splash-image' pointed at it.
-(when (modulep! :ui doom-dashboard)
-  (setq +doom-dashboard-functions '(+ui-dashboard-banner
-                                    +ui-dashboard-greeting ; a module's, else the date
-                                    doom-dashboard-widget-shortmenu)
-        +doom-dashboard-menu-sections
+(when (modulep! :ui dashboard)
+  (setq +dashboard-functions '(+ui-dashboard-banner
+                               +ui-dashboard-greeting ; a module's, else the date
+                               +dashboard-widget-shortmenu)
+        +dashboard-menu-sections
         '(("Recently opened files"
-           :icon (nerd-icons-faicon "nf-fa-file_text" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-faicon "nf-fa-file_text" :face '+dashboard-menu-title)
            :action recentf-open-files)
           ("Open project"
-           :icon (nerd-icons-octicon "nf-oct-briefcase" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-briefcase" :face '+dashboard-menu-title)
            :action projectile-switch-project)
           ("Agenda dashboard"
-           :icon (nerd-icons-octicon "nf-oct-calendar" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-calendar" :face '+dashboard-menu-title)
            :action +notes/dashboard)
           ("Org documents"
-           :icon (nerd-icons-octicon "nf-oct-book" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-book" :face '+dashboard-menu-title)
            :action +notes/open-document)
           ("AI hub"
-           :icon (nerd-icons-mdicon "nf-md-robot" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-mdicon "nf-md-robot" :face '+dashboard-menu-title)
            :action +ai/menu)
           ("Build kit"
-           :icon (nerd-icons-octicon "nf-oct-tools" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-tools" :face '+dashboard-menu-title)
            :action +cpp/menu)
           ("Cheat sheet"
-           :icon (nerd-icons-octicon "nf-oct-question" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-question" :face '+dashboard-menu-title)
            :action +docs/cheatsheet)
           ("Open private config"
-           :icon (nerd-icons-octicon "nf-oct-gear" :face 'doom-dashboard-menu-title)
+           :icon (nerd-icons-octicon "nf-oct-gear" :face '+dashboard-menu-title)
            :action doom/open-private-config))))
 
 
