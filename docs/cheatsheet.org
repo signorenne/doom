@@ -113,7 +113,7 @@ To add a module, create =modules/private/<name>/= and add its name to the
 | ~SPC h r e~       | reload the shell environment                |
 | ~SPC h r d~       | run doom doctor                             |
 | ~SPC h r u~       | run doom upgrade                            |
-| ~SPC q r~         | restart Emacs, ~SPC q R~ restores the session |
+| ~SPC q r~         | restart Emacs, ~SPC q l~ restores the session |
 
 ** Leaving Emacs
 | Key     | What it does                                |
@@ -121,7 +121,7 @@ To add a module, create =modules/private/<name>/= and add its name to the
 | ~SPC q q~ | quit Emacs, saving what is open             |
 | ~SPC q Q~ | quit without saving                         |
 | ~SPC q K~ | quit and stop the daemon with it            |
-| ~SPC q r~ | restart Emacs, ~SPC q R~ restores the session |
+| ~SPC q r~ | restart Emacs, ~SPC q l~ restores the session |
 | ~SPC q d~ | restart the server, the frames left alone   |
 
 A frame closes with ~SPC q f~ and the daemon lives on; closing the last
