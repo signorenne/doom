@@ -279,7 +279,7 @@ or the enclosing function's first line while it is scrolled off the top."
 ;; most severe one; flymake is the checker (init.el, +flymake), eglot
 ;; reports into it directly.
 (after! flymake
-  (setq flymake-show-diagnostics-at-end-of-line 'short))
+  (setq flymake-inline-diagnostics 'short))
 
 ;; flymake rewrites the text at the end of every line with a diagnostic
 ;; at each report: 1 607 lines of it in a file a server found 2 896
@@ -295,18 +295,18 @@ or the enclosing function's first line while it is scrolled off the top."
 
 (defun +ui--flymake-eol-within-reason-a (fn backend token report-action &rest args)
   "Hold the end-of-line text back while a report is too long for it."
-  (when (and (listp report-action) (default-value 'flymake-show-diagnostics-at-end-of-line))
+  (when (and (listp report-action) (default-value 'flymake-inline-diagnostics))
     (if (> (length report-action) +ui-flymake-eol-max)
         (unless +ui--flymake-eol-held
           (setq +ui--flymake-eol-held t)
-          (setq-local flymake-show-diagnostics-at-end-of-line nil)
+          (setq-local flymake-inline-diagnostics nil)
           (save-restriction
             (widen)
             (dolist (o (overlays-in (point-min) (point-max)))
               (when (overlay-get o 'flymake--eol-overlay) (delete-overlay o)))))
       (when +ui--flymake-eol-held
         (setq +ui--flymake-eol-held nil)
-        (kill-local-variable 'flymake-show-diagnostics-at-end-of-line))))
+        (kill-local-variable 'flymake-inline-diagnostics))))
   (apply fn backend token report-action args))
 
 (after! flymake
