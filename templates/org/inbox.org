@@ -1,10 +1,11 @@
+:PROPERTIES:
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
+:END:
 #+title: Inbox
 #+filetags: :inbox:
-#+startup: overview
-#+created: {{DATE}}
-
-Everything you capture lands here, with SPC X or SPC n n t. Empty it often:
-refile with SPC m r into todo.org, projects.org or notes.org, give it a date,
-or kill it.
 
 * Inbox
+Unclassified tasks and ideas enter here, with SPC X or SPC n n t. Refile
+each action once into the project that owns it (SPC m r r); promote what
+is worth keeping into a note of its own.

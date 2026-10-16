@@ -1,19 +1,10 @@
-#+title: Projects
-#+filetags: :project:
-#+startup: overview
-#+created: {{DATE}}
-
-One PROJ heading per project (capture with SPC n n P). Keep a NEXT action
-under every live project; the weekly review (SPC o a w) lists them.
-
-* Projects
-** PROJ Example project
 :PROPERTIES:
-:CATEGORY: example
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
 :END:
-*** Goal
-What "done" looks like.
-*** Next actions
-**** NEXT Replace this example with a real first step
-*** Notes
-*** Log
+#+title: Active projects
+#+filetags: :map:
+
+Each project is a projects/<slug>/index.org of its own, made with SPC n n
+P, and owns its actions, progress and decisions. This index links to them;
+no task is copied here.

@@ -52,6 +52,14 @@ Inbox and projects are repointed below into the knowledge repository.")
                            "research/academic/papers" "research/resources" ".attach")
   "Subdirectories of `org-directory' created by `+notes/bootstrap'.")
 
+(defvar +notes-knowledge-directories
+  '("projects" "areas" "archives/projects" "archives/areas"
+    "capture/journal" "capture/drafts" "resources/wiki" "resources/wiki/people"
+    "resources/sources/papers" "resources/sources/manuals"
+    "resources/sources/websites" "resources/collections/tags" "assets")
+  "Subdirectories of `org-roam-directory', the PARA layout the captures
+write into, created with the others.")
+
 (defvar +notes-templates-dir (file-name-concat doom-user-dir "templates/org/")
   "Where the starter documents are copied from.")
 

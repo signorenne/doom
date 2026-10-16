@@ -2,6 +2,8 @@
 
 (defvar +notes-documents)
 (defvar +notes-directories)
+(defvar +notes-knowledge-directories)
+(declare-function org-id-new "org-id")
 (defvar +notes-templates-dir)
 (defvar +notes-bibliography)
 (defvar-local +notes--writing-mode nil
@@ -9,11 +11,16 @@
 
 ;;;###autoload
 (defun +notes--ensure-directories ()
-  "Create `org-directory' and the subdirectories in `+notes-directories'."
-  (let ((root (expand-file-name org-directory)))
+  "Create `org-directory' with `+notes-directories', and
+`org-roam-directory' with `+notes-knowledge-directories'."
+  (let ((root (expand-file-name org-directory))
+        (graph (expand-file-name org-roam-directory)))
     (make-directory root t)
+    (make-directory graph t)
     (dolist (dir +notes-directories)
       (make-directory (expand-file-name dir root) t))
+    (dolist (dir +notes-knowledge-directories)
+      (make-directory (expand-file-name dir graph) t))
     root))
 
 (defun +notes--document-path (name)
@@ -35,7 +42,15 @@ Return its path when it was created, nil when it was already there."
               (insert-file-contents template)
               (goto-char (point-min))
               (while (search-forward "{{DATE}}" nil t)
-                (replace-match (format-time-string "%Y-%m-%d") t t)))
+                (replace-match (format-time-string "%Y-%m-%d") t t))
+              ;; A document in the graph is a node, so it gets an ID.
+              (require 'org-id)
+              (goto-char (point-min))
+              ;; org-id-new matches strings itself, so it runs before
+              ;; the replacement, not inside it.
+              (while (search-forward "{{ID}}" nil t)
+                (let ((id (save-match-data (org-id-new))))
+                  (replace-match id t t))))
           (insert (format "#+title: %s\n#+filetags: :%s:\n#+startup: overview\n\n"
                           (capitalize name) name))))
       path)))
