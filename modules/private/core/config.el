@@ -632,7 +632,7 @@ asks again for it."
     :override #'eglot--code-action-bounds
     (let (diags bounds)
       (cond ((use-region-p) (list (region-beginning) (region-end)))
-            ((setq diags (eglot--flymake-diagnostics (point)))
+            ((setq diags (eglot--flymake-sniff-diagnostics (point)))
              (list (apply #'min (mapcar #'flymake-diagnostic-beg diags))
                    (apply #'max (mapcar #'flymake-diagnostic-end diags))))
             ((setq bounds (bounds-of-thing-at-point 'symbol))
