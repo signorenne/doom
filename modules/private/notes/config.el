@@ -166,6 +166,22 @@ startup from loading it; .git is a file in a worktree."
 
 (+notes--watch)
 
+;; The pomodoro timer, set up as Doom's org module did with +pomodoro:
+;; its chime through PulseAudio where there is one, and its alerts as the
+;; desktop's notifications, here the way every notification of this
+;; config goes, D-Bus on Linux and Notification Center on a Mac.
+(after! org-pomodoro
+  (setq org-pomodoro-audio-player (or (executable-find "paplay")
+                                      org-pomodoro-audio-player))
+  (alert-define-style '+notes-desktop
+                      :title "The desktop's notifications"
+                      :notifier (lambda (info)
+                                  (+core-os-notify (plist-get info :title)
+                                                   (plist-get info :message))))
+  (unless (seq-find (lambda (rule) (eq (nth 1 rule) '+notes-desktop))
+                    alert-internal-configuration)
+    (alert-add-rule :category "org-pomodoro" :style '+notes-desktop)))
+
 
 ;;
 ;;; File templates
@@ -407,6 +423,10 @@ from the spans of its block found once; the match data set the same."
         :desc "How to work with roam"  "?" #'+notes/roam-guide
         :desc "Graph UI (browser)"     "u" #'org-roam-ui-open
         :desc "Graph UI mode"          "U" #'org-roam-ui-mode))
+      ;; Doom's key for it, kept since its org module stopped bringing
+      ;; the timer; packages.el brings it now.
+      (:prefix "t"
+       :desc "Pomodoro timer"          "t" #'org-pomodoro)
       (:prefix "o"
        (:prefix "a"
         :desc "Dashboard"             "x" #'+notes/dashboard
