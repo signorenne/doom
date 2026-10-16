@@ -126,7 +126,7 @@
  markdown
  (python +lsp +tree-sitter) ; pyright, basedpyright or pylsp when installed
  (rust +lsp +tree-sitter) ; rust-analyzer when installed; cargo through SPC k
- (org +dragndrop +present +hugo +pretty +roam +pomodoro +pandoc +noter)
+ (org +dragndrop +present +pretty +roam +pandoc +noter) ; pomodoro: :private notes
  plantuml                 ; UML diagrams
  (qt +lsp +tree-sitter)   ; QML and qmake files, qmlls when installed
  (sh +lsp)                ; shell scripts, bash-ts-mode set up in :private core
