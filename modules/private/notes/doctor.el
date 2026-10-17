@@ -20,14 +20,18 @@
 
 (unless (modulep! :tools pdf)
   (warn! "Without (:tools pdf) papers open in DocView, which cannot annotate")
-  (explain! "openSUSE: zypper in libpoppler-glib-devel, then enable :tools pdf"))
+  (explain! (if (featurep :system 'macos)
+                "brew install poppler, then enable :tools pdf"
+              "openSUSE: zypper in libpoppler-glib-devel, then enable :tools pdf")))
 
 ;; epdfinfo is pdf-tools' own program and comes with no package: it is
 ;; built once against poppler and then found on PATH.
 (when (modulep! :tools pdf)
   (unless (executable-find "epdfinfo")
     (warn! "No epdfinfo, so PDFs open in DocView and cannot be annotated")
-    (explain! "Run M-x pdf-tools-install once, with libpoppler-glib-devel installed")))
+    (explain! (if (featurep :system 'macos)
+                  "Run M-x pdf-tools-install once, with poppler installed: brew install poppler"
+                "Run M-x pdf-tools-install once, with libpoppler-glib-devel installed"))))
 
 ;; The jars, and the java that runs them. The module sets the classpath
 ;; to the directory that holds the whole set, since Doom's points at one

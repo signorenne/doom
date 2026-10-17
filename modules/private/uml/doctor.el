@@ -7,19 +7,25 @@
 ;; plantuml renders, and serves its own picoweb server for the preview.
 (unless (executable-find "plantuml")
   (error! "No plantuml: nothing can be rendered")
-  (explain! "openSUSE: zypper in plantuml"))
+  (explain! (if (featurep :system 'macos)
+                "brew install plantuml"
+              "openSUSE: zypper in plantuml")))
 
 ;; PlantUML is a Java program whichever way it is installed.
 (unless (executable-find "java")
   (warn! "No java, so plantuml cannot run")
-  (explain! "openSUSE: zypper in java-25-openjdk-headless, or any JRE"))
+  (explain! (if (featurep :system 'macos)
+                "brew install openjdk, or any JRE"
+              "openSUSE: zypper in java-25-openjdk-headless, or any JRE")))
 
 ;; Most diagram kinds are laid out by graphviz. Sequence and timing
 ;; diagrams are not, which is why a broken install looks like "some
 ;; diagrams work".
 (unless (executable-find "dot")
   (warn! "No dot: class, state, component and C4 diagrams cannot be laid out")
-  (explain! "openSUSE: zypper in graphviz"))
+  (explain! (if (featurep :system 'macos)
+                "brew install graphviz"
+              "openSUSE: zypper in graphviz")))
 
 ;; The language server is optional on purpose: without it the mode's own
 ;; completion stays, so this is a note about what is missing rather than

@@ -7,7 +7,10 @@
          "This module uses core's compile runner and project root: enable (:private core)")
 
 (unless (executable-find "cargo")
-  (error! "No cargo: zypper in rustup, then rustup default stable"))
+  (error! "No cargo: %s, then rustup default stable"
+          (if (featurep :system 'macos)
+              "brew install rustup with $(brew --prefix rustup)/bin on PATH"
+            "zypper in rustup")))
 
 (unless (executable-find "rustc")
   (error! "No rustc, although cargo is here: rustup default stable"))

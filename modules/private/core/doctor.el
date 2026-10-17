@@ -28,7 +28,9 @@
 (unless (or (executable-find "vipsthumbnail") (executable-find "magick")
             (executable-find "convert"))
   (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane")
-  (explain! "openSUSE: zypper in vips-tools, or ImageMagick"))
+  (explain! (if (featurep :system 'macos)
+                "brew install vips, or imagemagick"
+              "openSUSE: zypper in vips-tools, or ImageMagick")))
 
 ;; The data formats. A language server validates as you type where one
 ;; is running; these are what `SPC m v' shells out to, and what the
@@ -50,13 +52,19 @@
     (warn! "No python3: SPC m v cannot check data files, and images open without their inspector")
   (unless (zerop (call-process "python3" nil nil nil "-c" "import yaml"))
     (warn! "python3 has no yaml module: SPC m v cannot check a YAML file")
-    (explain! "openSUSE: zypper in python3-PyYAML"))
+    (explain! (if (featurep :system 'macos)
+                  "python3 -m pip install pyyaml, in a venv; Homebrew's own python3 takes no pip"
+                "openSUSE: zypper in python3-PyYAML")))
   (unless (zerop (call-process "python3" nil nil nil "-c" "import PIL"))
     (warn! "python3 has no PIL: the image inspector cannot describe the picture")
-    (explain! "openSUSE: zypper in python3-Pillow")))
+    (explain! (if (featurep :system 'macos)
+                  "brew install pillow for Homebrew's python3, or python3 -m pip install pillow in a venv"
+                "openSUSE: zypper in python3-Pillow"))))
 (unless (executable-find "exiftool")
   (warn! "Couldn't find exiftool: the image inspector shows no metadata")
-  (explain! "openSUSE: zypper in exiftool"))
+  (explain! (if (featurep :system 'macos)
+                "brew install exiftool"
+              "openSUSE: zypper in exiftool")))
 
 ;; The fonts config.el asks for; a missing one falls back silently to
 ;; whatever fontconfig picks, which is how a wrong glyph or width shows up.

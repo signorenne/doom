@@ -20,4 +20,6 @@
 ;; nothing saying so.
 (unless (executable-find "delta")
   (warn! "Couldn't find delta: diffs are painted by magit, not highlighted as code")
-  (explain! "openSUSE: zypper in git-delta"))
+  (explain! (if (featurep :system 'macos)
+                "brew install git-delta"
+              "openSUSE: zypper in git-delta")))
