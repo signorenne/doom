@@ -201,15 +201,16 @@ when it has no cache."
 ;; Autoloaded: cmake.el offers them as the value of CMAKE_PREFIX_PATH.
 ;;;###autoload
 (defun +cpp--qt-prefixes ()
-  "Where a Qt lives on this machine: the system one, and every
-~/Qt/<version>/gcc_64, newest first."
+  "Where a Qt lives on this machine: the system's or Homebrew's, and
+every ~/Qt/<version>/gcc_64 or ~/Qt/<version>/macos, newest first."
   (append
    (seq-filter (lambda (prefix)
                  (seq-some (lambda (sub) (file-directory-p (expand-file-name sub prefix)))
                            '("lib64/cmake/Qt6" "lib/cmake/Qt6"
                              "lib/x86_64-linux-gnu/cmake/Qt6" "lib64/cmake/Qt5")))
-               '("/usr" "/usr/local"))
-   (sort (file-expand-wildcards "~/Qt/[0-9]*/gcc_64")
+               '("/usr" "/usr/local" "/opt/homebrew/opt/qt" "/usr/local/opt/qt"))
+   (sort (append (file-expand-wildcards "~/Qt/[0-9]*/gcc_64")
+                 (file-expand-wildcards "~/Qt/[0-9]*/macos"))
          (lambda (a b) (string> a b)))))
 
 (defun +cpp--uses-qt-p (root)
