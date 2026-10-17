@@ -25,14 +25,22 @@ own: the ones Lazarus ships, with the five changes the README lists.")
 
 (defvar +pascal-lazarus-dir
   (seq-find #'file-directory-p
-            '("/usr/lib64/lazarus" "/usr/lib/lazarus" "/usr/share/lazarus"))
+            '("/usr/lib64/lazarus" "/usr/lib/lazarus" "/usr/share/lazarus"
+              "/Applications/Lazarus" "/usr/local/share/lazarus"))
   "Where Lazarus keeps its sources, which CodeTools reads.
-openSUSE puts them under lib64; another distribution will not.")
+openSUSE puts them under lib64; another distribution will not; the
+macOS installer puts them in /Applications/Lazarus.")
 
 (defvar +pascal-fpc-src-dir
   (seq-find #'file-directory-p
-            '("/usr/share/fpcsrc" "/usr/lib64/fpc/src" "/usr/share/fpc/src"))
+            (append '("/usr/share/fpcsrc" "/usr/lib64/fpc/src" "/usr/share/fpc/src")
+                    ;; The macOS installer's, one directory a version.
+                    (sort (file-expand-wildcards "/usr/local/share/fpcsrc/[0-9]*") #'string>)
+                    '("/usr/local/share/fpcsrc")))
   "Where Free Pascal keeps its own sources, so the RTL resolves.")
+
+(defvar +pascal-host-os (if (featurep :system 'macos) "darwin" "linux")
+  "The system half of a CPU-OS target built for this machine.")
 
 (declare-function +core-register-builder "build")
 (declare-function projection-type "projection-types")

@@ -10,6 +10,7 @@
 
 (defvar +pascal-lazarus-dir)
 (defvar +pascal-fpc-src-dir)
+(defvar +pascal-host-os)
 (declare-function +pascal-project-kind "pascal")
 (declare-function +core-project-root "lib")
 (declare-function eglot-completion-at-point "eglot")
@@ -27,10 +28,15 @@ them, KEY saying from which directories and when.")
 
 (defun +pascal--unit-dirs ()
   "The directories whose compiled units a program here can use."
-  (let ((fpc (car (file-expand-wildcards "/usr/lib*/fpc/*/units/*-linux")))
+  (let ((fpc (seq-some (lambda (root)
+                         (car (file-expand-wildcards
+                               (format "%s/fpc/*/units/*-%s" root +pascal-host-os))))
+                       ;; The distribution's, the macOS installer's, Homebrew's.
+                       '("/usr/lib*" "/usr/local/lib" "/opt/homebrew/lib")))
         (lcl (and +pascal-lazarus-dir
                   (car (file-expand-wildcards
-                        (file-name-concat +pascal-lazarus-dir "lcl/units/*-linux"))))))
+                        (file-name-concat +pascal-lazarus-dir
+                                          (concat "lcl/units/*-" +pascal-host-os)))))))
     (delq nil (list fpc lcl))))
 
 (defun +pascal--spellings ()
