@@ -88,9 +88,7 @@ FILE defaults to the file at point in dired, this buffer's file, or
   (let ((target (or file
                     (ignore-errors (+core-file-at-point))
                     default-directory)))
-    (unless (executable-find "xdg-open")
-      (user-error "xdg-open not found on PATH"))
-    (call-process "xdg-open" nil 0 nil (expand-file-name target))
+    (+core-os-open (expand-file-name target))
     (message "Opened %s externally" (abbreviate-file-name target))))
 
 ;;;###autoload

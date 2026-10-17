@@ -863,8 +863,9 @@ background and say when they are done. ~C~ and ~R~ ask for the
 destination instead, and when a second listing is open they offer its
 directory first: ~SPC m 2~ opens one beside this, the two pane file
 manager, and ~F~ brings the preview back afterwards. A file dragged out
-of the listing with the mouse lands in Dolphin, a browser's upload box
-or a chat; files dropped in are copied here; a right click is a menu.
+of the listing with the mouse lands in Finder or Dolphin, a browser's
+upload box or a chat; files dropped in are copied here; a right click is
+a menu.
 
 ** Other apps, and what to copy
 | Key     | What it does                                           |
@@ -875,12 +876,13 @@ or a chat; files dropped in are copied here; a right click is a menu.
 | ~yt~      | copy the whole text of the file, without opening it    |
 | ~SPC f k~ | the copy menu, every form with its value shown         |
 | ~f~       | its details: size, type, the size of a directory (~f s~) |
-| ~E~       | open it with the desktop app; on a directory, Dolphin  |
+| ~E~       | open it in its app; a directory in Finder or Dolphin   |
 | ~SPC o T~ | a terminal in this directory                           |
 
-~yc~ then ~Ctrl-V~ in Dolphin, a mail or a chat pastes the files; inside
-Emacs, ~p~ pastes their paths. The other way round, files copied in
-Dolphin land here with ~yv~; so do paths copied as text, one per line.
+~yc~ then a paste in Finder or Dolphin, a mail or a chat pastes the
+files; inside Emacs, ~p~ pastes their paths. The other way round, files
+copied in Finder or Dolphin land here with ~yv~; so do paths copied as
+text, one per line.
 
 ** Making, deleting, changing
 | Key      | What it does                                     |
@@ -942,15 +944,15 @@ file renamed here is a git mv, so its history follows it.
 - Make a file here: ~a~, its name. A directory: ~a~, its name ending
   in =/=.
 - Delete: ~d~ on each, then ~x~; or ~D~ for the marked ones at once.
-  Both ask first, and the files go to the trash, the same one Dolphin
-  shows. Deleted the wrong thing: ~SPC f t~ opens the trash, newest
-  first, ~m~ on it, ~SPC m t~ puts it back where it was.
+  Both ask first, and the files go to the trash, the same one Finder
+  or Dolphin shows. Deleted the wrong thing: ~SPC f t~ opens the trash,
+  newest first, ~m~ on it, ~SPC m t~ puts it back where it was.
 - A copy beside the original, to try something on: ~yd~.
 - Send a file to another app: ~yc~, then paste there. Bring one in: copy
-  it in Dolphin, ~yv~ here.
+  it in Finder or Dolphin, ~yv~ here.
 - Copy the path for a terminal or a chat: ~SPC f k~, pick the form.
 - See how big a directory is: cursor on it, ~f s~.
-- Open it in the desktop app, or the directory in Dolphin: ~E~.
+- Open it in the desktop app, or the directory in Finder or Dolphin: ~E~.
 - Open a terminal here: ~SPC o T~.
 - Two directories side by side: ~SPC w v~, ~SPC f d~ in the new window,
   navigate; ~C~ and ~R~ now offer the other side as the destination.
