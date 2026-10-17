@@ -26,5 +26,10 @@
 (unless (executable-find "jcf")
   (warn! "No jcf, so SPC c f cannot format Pascal; see the module README for how to build it"))
 
-(unless (executable-find "gdb")
+(unless (or (executable-find "gdb")
+            (and (featurep :system 'macos)
+                 (or (executable-find "lldb-dap")
+                     (seq-some #'file-executable-p
+                               '("/Library/Developer/CommandLineTools/usr/bin/lldb-dap"
+                                 "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-dap")))))
   (warn! "No gdb, so SPC k d cannot debug a Pascal program"))

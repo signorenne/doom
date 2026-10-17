@@ -299,7 +299,8 @@ already compiled into lib/ are not compiled again."
 
 ;;;###autoload
 (defun +pascal/debug ()
-  "Debug what this project builds, with gdb, given the run arguments."
+  "Debug what this project builds, given the run arguments: with gdb, or
+lldb-dap on a Mac, `+core-os-debugger'."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
@@ -310,10 +311,18 @@ already compiled into lib/ are not compiled again."
     ;; command, and no session started.
     (dape (dape--config-eval
            'gdb-pascal
-           (list :program program
-                 :cwd (+pascal-root)
-                 :args (vconcat (split-string-shell-command
-                                 (or +pascal-run-args ""))))))))
+           (append (let ((debugger (+core-os-debugger)))
+                     ;; The program's body is PASCALMAIN; main is the
+                     ;; RTL's start, where lldb would stop instead. The
+                     ;; first of a key in these options is the one kept.
+                     (if (equal (plist-get debugger :type) "lldb-dap")
+                         (append '(:preRunCommands ["breakpoint set --name PASCALMAIN --one-shot true"])
+                                 debugger)
+                       debugger))
+                   (list :program program
+                         :cwd (+pascal-root)
+                         :args (vconcat (split-string-shell-command
+                                         (or +pascal-run-args "")))))))))
 
 ;;;###autoload
 (defun +pascal/open-project-file ()
