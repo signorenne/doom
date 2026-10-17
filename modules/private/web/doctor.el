@@ -13,10 +13,12 @@
          "This module builds on Doom's web module: enable (:lang web +lsp +tree-sitter)")
 
 (unless (executable-find "node")
-  (error! "No node: zypper in nodejs22, or install it with your version manager"))
+  (error! "No node: %s, or install it with your version manager"
+          (if (featurep :system 'macos) "brew install node" "zypper in nodejs22")))
 
 (unless (seq-some #'executable-find '("yarn" "npm" "pnpm" "bun"))
-  (error! "No package manager at all: zypper in yarn"))
+  (error! "No package manager at all: %s"
+          (if (featurep :system 'macos) "brew install yarn" "zypper in yarn")))
 
 ;; The command that installs any of these, wherever you keep them:
 ;;   npm i -g --prefix ~/.local <package>      (no root, ~/.local/bin is on PATH)
@@ -34,4 +36,5 @@
 
 ;; Electron packaging for Windows from here goes through wine.
 (when (and (executable-find "node") (not (executable-find "wine")))
-  (warn! "No wine, so an Electron build for Windows cannot be made here: zypper in wine"))
+  (warn! "No wine, so an Electron build for Windows cannot be made here: %s"
+         (if (featurep :system 'macos) "brew install --cask wine-stable" "zypper in wine")))

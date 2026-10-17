@@ -46,11 +46,15 @@
                   '("qmlls" "qmlls6" "/usr/lib64/qt6/bin/qmlls"
                     "/opt/homebrew/opt/qt/bin/qmlls"))
   (warn! "No qmlls, so QML files get no language server")
-  (explain! "openSUSE: zypper in qt6-declarative-tools"))
+  (explain! (if (featurep :system 'macos)
+                "brew install qt"
+              "openSUSE: zypper in qt6-declarative-tools")))
 
 (unless (seq-some #'executable-find '("cmake-language-server" "neocmakelsp"))
   (warn! "No CMake language server, so CMakeLists.txt gets no completion")
-  (explain! "pipx install cmake-language-server, or zypper in neocmakelsp"))
+  (explain! (if (featurep :system 'macos)
+                "pipx install cmake-language-server"
+              "pipx install cmake-language-server, or zypper in neocmakelsp")))
 
 ;; Other languages: the kit menu, SPC k SPC, works for any project type
 ;; projection knows, but a language gets completion, jumps and fixes only
@@ -59,8 +63,10 @@
 ;; were dropped from init.el because nothing here is written in them,
 ;; so their servers are no longer asked after either.
 (dolist (server
-         '(("rust-analyzer"
-            . "Rust: zypper in rust-analyzer, or rustup component add rust-analyzer")
+         `(("rust-analyzer"
+            . ,(if (featurep :system 'macos)
+                   "Rust: rustup component add rust-analyzer, or brew install rust-analyzer"
+                 "Rust: zypper in rust-analyzer, or rustup component add rust-analyzer"))
            ("typescript-language-server"
             . "JS and TS: npm install -g typescript-language-server typescript")))
   (unless (executable-find (car server))
@@ -68,7 +74,10 @@
 (unless (seq-some #'executable-find '("basedpyright-langserver" "pyright-langserver" "pylsp"))
   (warn! "No Python server. pipx install basedpyright, or pip install python-lsp-server"))
 (unless (executable-find "cargo")
-  (warn! "No cargo: Rust projects cannot build. zypper in cargo, or rustup"))
+  (warn! "No cargo: Rust projects cannot build. %s"
+         (if (featurep :system 'macos)
+             "brew install rustup with $(brew --prefix rustup)/bin on PATH, then rustup default stable"
+           "zypper in cargo, or rustup")))
 (unless (or (file-executable-p
              (expand-file-name "debug-adapters/codelldb/extension/adapter/codelldb"
                                doom-user-dir))

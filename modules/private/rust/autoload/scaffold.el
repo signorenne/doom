@@ -131,7 +131,10 @@ several crates together."
    (cons (completing-read "Kind: " (+rust-project-kinds) nil t nil nil "bin")
          (+core-read-new-project)))
   (unless (executable-find "cargo")
-    (user-error "cargo is not installed: zypper in rustup, then rustup default stable"))
+    (user-error "cargo is not installed: %s, then rustup default stable"
+                (if (featurep :system 'macos)
+                    "brew install rustup with $(brew --prefix rustup)/bin on PATH"
+                  "zypper in rustup")))
   (when (and (file-exists-p dir) (directory-files dir nil "^[^.]"))
     (unless (y-or-n-p (format "%s is not empty.  Continue? " dir))
       (user-error "Aborted")))
