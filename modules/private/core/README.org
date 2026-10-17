@@ -286,8 +286,10 @@ files section has the detail.
 - ~+core-undo-flash-time~ (0.3 s), how long the lines an undo changed stay
   lit; 0 lights none. ~vundo-window-max-height~ is 10 lines.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file
-  tree-sitter cannot parse opens in the older mode;
-  ~+core-large-file-size~ (1 MB) says what is large.
+  tree-sitter cannot parse opens in the older mode; so does one with a
+  node of more than ~+core-treesit-children-max~ (20 000) children, an
+  image as a C array, whatever its size. ~+core-large-file-size~ (1 MB)
+  says what is large.
 - ~+core-build-niceness~ (10): builds start under =nice= at this value,
   so typing goes first when the cores are short. Every compilation is a
   build but a run (a =*run...*= buffer, projection's run), a benchmark
@@ -400,6 +402,18 @@ files included, and a key's CPU about doubled against a quiet machine.
 Builds Emacs starts run under =nice= since, see ~+core-build-niceness~;
 dired and the C++ test files, the two that fell behind, are below and in
 the cpp README.
+
+On 2026-10-21, on a Mac (M2 Pro, ten cores, Emacs+ 31.1 compiled
+natively), generated files opened with the size limits lifted, a key
+being an insert, the reparse and the colouring of 6 KB around it: C++
+opened in 0.35 s at 2 MB and 1.6 s at 8 MB, 19 and 63 ms a key; Org 0.5 s
+at 4 MB, 11 ms a key; JSON 0.7 s at 2 MB, 37 ms. The 2 MB past which a
+file opens as plain text stays. But a megabyte of ordinary C++, which
+the size rule sent to c++-mode at 128 to 163 ms a key, keeps
+c++-ts-mode at 11: tree-sitter's cost is the crowd of children around the edit, 2 ms
+of reparse among C++'s 6 000 top-level nodes, 132 among a C array's
+170 000, not the size. The array goes to c-mode, 7 to 11 ms a key from
+300 KB to 1 MB.
 
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
