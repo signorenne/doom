@@ -330,7 +330,7 @@ grammar one: for grammar see ~SPC n w c~, LanguageTool, under the notes.
 | ~SPC t m~ | the minimap on the right; a copy of the buffer, so moving and typing cost it nothing           |
 | ~SPC t o~ | the symbol outline at the side, following the cursor                                          |
 | ~SPC t h~ | the header line: project path, symbol path, or the function you scrolled into                 |
-| ~SPC t i~ | indent guides, off until asked: they cost a redisplay per scroll step                         |
+| ~SPC t i~ | indent guides, on by default; off and on again in this buffer                                 |
 | ~SPC t B~ | who wrote this line and when, at its end; on by itself under 1M                               |
 
 * Getting around

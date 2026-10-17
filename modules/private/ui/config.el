@@ -338,13 +338,10 @@ or the enclosing function's first line while it is scrolled off the top."
               (kill-local-variable 'next-error-function)
               (kill-local-variable 'next-error-find-buffer-function))))
 
-;; The indent guides would cost four milliseconds a scroll step on a big
-;; frame, but switching them off while the wheel turns refontifies the
-;; buffer, which costs more; so they are off unless asked for, SPC t i.
-(defun +ui--no-guides-by-default-h ()
-  "Keep Doom's indent guides off until asked for."
-  t)
-(add-hook '+indent-guides-inhibit-functions #'+ui--no-guides-by-default-h)
+;; The indent guides are on, Doom's way, and SPC t i turns them off in a
+;; buffer. They cost some four milliseconds a scroll step on a big frame,
+;; which a fast machine does not feel; in a megabyte of C++ they add
+;; nothing measurable to a key or to colouring a screen.
 
 ;; The wheel went on past the end of a file until its last line stood
 ;; alone at the top, and then ultra-scroll put the window's start on the
