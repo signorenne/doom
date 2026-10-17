@@ -338,8 +338,16 @@ dape looks for it there; SPC k d in a Rust buffer uses it afterwards."
   (interactive)
   (let* ((dir (expand-file-name "debug-adapters/codelldb" doom-user-dir))
          (version "1.11.4")
-         (url (format "https://github.com/vadimcn/codelldb/releases/download/v%s/codelldb-linux-x64.vsix"
-                      version))
+         ;; A build per system and processor: darwin-arm64 on a Mac with
+         ;; Apple silicon, linux-x64 on a PC.
+         (platform (format "%s-%s"
+                           (pcase system-type
+                             ('darwin "darwin")
+                             ('gnu/linux "linux")
+                             (_ (user-error "codelldb has no build for %s here" system-type)))
+                           (if (string-prefix-p "aarch64" system-configuration) "arm64" "x64")))
+         (url (format "https://github.com/vadimcn/codelldb/releases/download/v%s/codelldb-%s.vsix"
+                      version platform))
          (vsix (expand-file-name "codelldb.vsix" temporary-file-directory)))
     (unless (executable-find "unzip") (user-error "unzip is not installed"))
     (make-directory dir t)
