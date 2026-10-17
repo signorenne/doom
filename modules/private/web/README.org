@@ -93,9 +93,11 @@ The =electron= kind puts the SvelteKit build behind an Electron window:
 | =yarn package=     | a package for this machine           |
 | ~SPC k m P~        | the same, asking which platform      |
 
-Linux builds here. Windows builds here too, through wine. *macOS does
-not*: an installer for it has to be signed on a Mac, and an unsigned
-build will not open on an arm64 one at all. The template carries
+~SPC k m P~ offers this machine's platform first. A Linux machine builds
+Linux, and Windows through wine. *macOS builds only on a Mac*: an
+installer for it has to be signed there; built without a certificate
+it runs on the Mac that built it, and another Mac's Gatekeeper refuses
+it. The template carries
 =.github/workflows/release.yml=, which builds each platform on its own
 runner and signs the macOS one when these secrets are set: =APPLE_ID=,
 =APPLE_APP_SPECIFIC_PASSWORD=, =APPLE_TEAM_ID=, =CSC_LINK=,
