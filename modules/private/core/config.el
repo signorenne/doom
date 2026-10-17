@@ -194,6 +194,15 @@ archive's, `+core-large-file-excluded-modes', are left alone."
                           (or (getenv "PATH") ""))
     (setenv "PATH" (concat bin path-separator (getenv "PATH")))))
 
+;; On a Mac the left Option is Meta, as Alt is elsewhere, and the right
+;; one stays Option, so a U.S. layout still types its accents: right
+;; Option and ` then e is è. Command is Super, on which Doom puts the
+;; Mac's own keys, s-c, s-v, s-s, s-z.
+(when (featurep :system 'macos)
+  (setq ns-command-modifier 'super
+        ns-option-modifier 'meta
+        ns-right-option-modifier 'none))
+
 ;; vterm's module is native code built on this machine: on a new machine,
 ;; or once the packages were rebuilt for a new Emacs, vterm asked whether
 ;; to build it, and a daemon, with no one to answer, waited for good. It
