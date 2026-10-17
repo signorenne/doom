@@ -110,7 +110,7 @@ the one wanted.  Nil and it is worked out from the kit.")
         "--function-arg-placeholders=0"
         "--pch-storage=memory"
         "--log=error"
-        (format "-j=%d" (max 1 (/ (doom-system-cpus) 2)))
+        (format "-j=%d" (doom-system-cpus))
         ;; Compilers clangd may run to learn their include paths: PlatformIO's
         ;; cross compilers, and any SDK under /opt laid out the Yocto way,
         ;; sysroots/<host>/usr/bin/<triple>/<compiler>, which is what Qt
@@ -121,7 +121,7 @@ the one wanted.  Nil and it is worked out from the kit.")
   "Arguments passed to clangd.")
 
 (defvar +cpp-ccls-init-options
-  `(:index (:threads ,(max 1 (/ (doom-system-cpus) 2)) :trackDependency 1)
+  `(:index (:threads ,(doom-system-cpus) :trackDependency 1)
     :cache (:directory ".ccls-cache"))
   "Options sent to ccls when it starts.")
 
@@ -285,7 +285,7 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
         projection-cmake-configure-options
         '("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
         projection-cmake-ctest-options '("--output-on-failure")
-        projection-build-jobs (max 1 (/ (doom-system-cpus) 2)))
+        projection-build-jobs (doom-system-cpus))
 
   ;; PlatformIO projects build, upload and test through pio.
   (defvar projection-project-type-platformio

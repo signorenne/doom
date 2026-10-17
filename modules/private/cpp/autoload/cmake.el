@@ -257,7 +257,7 @@ With no overrides left the next configure is back to the preset's values."
    (list (read-number "Parallel jobs: "
                       (if (numberp projection-build-jobs)
                           projection-build-jobs
-                        (max 1 (/ (doom-system-cpus) 2))))))
+                        (doom-system-cpus)))))
   (setq projection-build-jobs (max 1 (truncate jobs)))
   (message "Building with %d job(s)" projection-build-jobs))
 
