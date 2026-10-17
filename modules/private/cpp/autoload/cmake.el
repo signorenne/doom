@@ -127,7 +127,11 @@ Nil when there is no such preset or it has no binaryDir."
                (pcase (match-string 1 m)
                  ("sourceDir" (directory-file-name root))
                  ("presetName" name)
-                 ("hostSystemName" "Linux")
+                 ;; CMake's names for the system it runs on.
+                 ("hostSystemName" (pcase system-type
+                                     ('darwin "Darwin")
+                                     ('windows-nt "Windows")
+                                     (_ "Linux")))
                  ("sourceDirName"
                   (file-name-nondirectory (directory-file-name root)))
                  ("sourceParentDir"
