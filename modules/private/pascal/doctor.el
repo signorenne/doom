@@ -8,15 +8,22 @@
   (error! "No opascal-mode, although Emacs ships one: this Emacs is built oddly"))
 
 (unless (executable-find "fpc")
-  (warn! "No fpc, so a Free Pascal project cannot be built: zypper in fpc fpc-src"))
+  (warn! "No fpc, so a Free Pascal project cannot be built: %s"
+         (if (featurep :system 'macos) "brew install fpc" "zypper in fpc fpc-src")))
 
 (unless (executable-find "lazbuild")
-  (warn! "No lazbuild, so a Lazarus project cannot be built: zypper in lazarus"))
+  (warn! "No lazbuild, so a Lazarus project cannot be built: %s"
+         (if (featurep :system 'macos) "brew install --cask lazarus" "zypper in lazarus")))
 
 ;; CodeTools needs the compiler's own sources to resolve the RTL.
-(unless (seq-some #'file-directory-p
-                  '("/usr/share/fpcsrc" "/usr/lib64/fpc/src" "/usr/share/fpc/src"))
-  (warn! "No Free Pascal sources, so go-to-definition stops at the RTL: zypper in fpc-src"))
+(unless (or (seq-some #'file-directory-p
+                      '("/usr/share/fpcsrc" "/usr/lib64/fpc/src" "/usr/share/fpc/src"
+                        "/usr/local/share/fpcsrc"))
+            (file-expand-wildcards "/usr/local/share/fpcsrc/[0-9]*"))
+  (warn! "No Free Pascal sources, so go-to-definition stops at the RTL: %s"
+         (if (featurep :system 'macos)
+             "the fpcsrc package of the Lazarus macOS download"
+           "zypper in fpc-src")))
 
 ;; pasls is not packaged anywhere; it is built from the Lazarus sources.
 (unless (executable-find "pasls")

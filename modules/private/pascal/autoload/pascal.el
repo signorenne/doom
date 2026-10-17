@@ -10,6 +10,7 @@
 (declare-function +core-compile "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
+(defvar +pascal-host-os)
 
 
 ;;
@@ -23,7 +24,8 @@
 
 ;;;###autoload
 (defvar-local +pascal-widgetset nil
-  "The widget set an LCL program is built against: gtk2, gtk3, qt5, qt6.
+  "The widget set an LCL program is built against: gtk2, gtk3, qt5, qt6,
+cocoa on a Mac.
 Nil leaves the choice to the project, which is what a project that only
 ever runs here wants.")
 ;;;###autoload
@@ -136,7 +138,7 @@ second project."
            (when +pascal-target
              (let ((parts (split-string +pascal-target "-")))
                (list (concat "--cpu=" (car parts))
-                     (concat "--os=" (or (cadr parts) "linux"))))))))
+                     (concat "--os=" (or (cadr parts) +pascal-host-os))))))))
 
 (defun +pascal--fpc-args ()
   "The fpc flags this project is set to, plus the ones every build wants.
@@ -153,7 +155,7 @@ sources, and -Fu says where the project\='s own units are."
    (when +pascal-target
      (let ((parts (split-string +pascal-target "-")))
        (list (concat "-P" (car parts))
-             (concat "-T" (or (cadr parts) "linux")))))))
+             (concat "-T" (or (cadr parts) +pascal-host-os)))))))
 
 ;;;###autoload
 (defun +pascal-build-command ()
@@ -216,10 +218,12 @@ or nil when it has not been built."
   (let ((kind (+pascal-project-kind)))
     (when (eq kind 'lazarus)
       (unless (executable-find "lazbuild")
-        (user-error "lazbuild is not installed: zypper in lazarus")))
+        (user-error "lazbuild is not installed: %s"
+                    (if (featurep :system 'macos) "brew install --cask lazarus" "zypper in lazarus"))))
     (when (eq kind 'fpc)
       (unless (executable-find "fpc")
-        (user-error "fpc is not installed: zypper in fpc fpc-src"))))
+        (user-error "fpc is not installed: %s"
+                    (if (featurep :system 'macos) "brew install fpc" "zypper in fpc fpc-src")))))
   (+pascal--compile "build" (+pascal-build-command)))
 
 ;;;###autoload
@@ -364,7 +368,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
 (defun +pascal/set-widgetset (widgetset)
   "Build the LCL against WIDGETSET.  Empty leaves it to the project."
   (interactive
-   (list (completing-read "Widget set: " '("gtk2" "gtk3" "qt5" "qt6" "")
+   (list (completing-read "Widget set: " '("gtk2" "gtk3" "qt5" "qt6" "cocoa" "")
                           nil nil nil nil (or +pascal-widgetset ""))))
   (let ((value (unless (string-empty-p widgetset) widgetset)))
     (+core-dir-locals-set (+pascal-root) '+pascal-widgetset value)
@@ -377,7 +381,8 @@ lldb-dap on a Mac, `+core-os-debugger'."
   (interactive
    (list (completing-read "Target (empty for this machine): "
                           '("x86_64-linux" "i386-linux" "aarch64-linux"
-                            "arm-linux" "arm-embedded" "x86_64-win64")
+                            "arm-linux" "arm-embedded" "x86_64-win64"
+                            "aarch64-darwin" "x86_64-darwin")
                           nil nil nil nil (or +pascal-target ""))))
   (let ((value (unless (string-empty-p target) target)))
     (+core-dir-locals-set (+pascal-root) '+pascal-target value)

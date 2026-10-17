@@ -107,10 +107,13 @@ fpc directly and needs neither.
 
 =~/.local/bin= is already on =exec-path=, so a restart is all it takes.
 The module finds Lazarus and the Free Pascal sources itself, at
-=/usr/lib64/lazarus= and =/usr/share/fpcsrc= on openSUSE, and sets
+=/usr/lib64/lazarus= and =/usr/share/fpcsrc= on openSUSE, and on macOS at
+=/Applications/Lazarus= and under =/usr/local/share/fpcsrc=, and sets
 =LAZARUSDIR=, =FPCDIR= and =PP= for the server; ~+pascal-lazarus-dir~ and
 ~+pascal-fpc-src-dir~ override that when a distribution puts them
-elsewhere.
+elsewhere. On a Mac the commands above take those two paths, and the
+binary lands in =dist/aarch64-darwin/=; a target written without its
+system, =aarch64=, is built for this one.
 
 Until pasls is there, a Pascal buffer has opascal-mode's own navigation,
 imenu and the project's files, and no completion.
