@@ -83,7 +83,7 @@ so turning it off from another buffer took two presses; this is one."
       (add-hook 'pre-command-hook #'+core--undo-note-trail-h nil t)
       (add-hook 'post-command-hook #'+core--undo-diff-follow-h nil t)))
   (when (modulep! :ui nav-flash)
-    (pushnew! +nav-flash-exclude-modes 'vundo-mode))
+    (cl-pushnew 'vundo-mode +nav-flash-exclude-modes))
 
   (+core--undo-graph-keys-h 'vundo))
 
