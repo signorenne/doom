@@ -293,13 +293,17 @@ show a group."
 
 ;;;###autoload
 (defun +web/package (target)
-  "Package the Electron application for TARGET.
-Linux and Windows are built here, Windows through wine as
-electron-builder arranges; macOS needs a Mac to sign for, so the
-template's CI workflow builds that one."
+  "Package the Electron application for TARGET, this machine's by default.
+Linux and Windows build on a Linux machine, Windows through wine as
+electron-builder arranges; macOS builds on a Mac, unsigned unless a
+certificate is set up, and the template's CI workflow signs it."
   (interactive
    (list (completing-read "Package for: "
-                          '("linux" "win" "mac" "current") nil t nil nil "linux")))
+                          '("linux" "win" "mac" "current") nil t nil nil
+                          (pcase system-type
+                            ('darwin "mac")
+                            ('windows-nt "win")
+                            (_ "linux")))))
   (unless (+web-electron-p)
     (user-error "Not an Electron project: no electron in package.json"))
   ;; The project's own script for the target, the one SPC k n writes,
