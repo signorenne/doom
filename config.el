@@ -32,9 +32,12 @@
       doom-font (font-spec :family "JetBrains Mono" :size 15)
       doom-variable-pitch-font (font-spec :family "DejaVu Sans" :size 16)
       doom-big-font (font-spec :family "JetBrains Mono" :size 24) ; SPC t b
-      ;; Doom draws icons, symbols and emoji from these two.
+      ;; Doom draws icons, symbols and emoji from these two; a Mac's
+      ;; emoji are Apple's own.
       doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
-      doom-emoji-font (font-spec :family "Noto Color Emoji"))
+      doom-emoji-font (font-spec :family (if (featurep :system 'macos)
+                                             "Apple Color Emoji"
+                                           "Noto Color Emoji")))
 
 (when (boundp 'ns-system-appearance-change-functions)
   (add-hook 'ns-system-appearance-change-functions

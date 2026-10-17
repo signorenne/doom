@@ -60,8 +60,9 @@
 
 ;; The fonts config.el asks for; a missing one falls back silently to
 ;; whatever fontconfig picks, which is how a wrong glyph or width shows up.
+;; The emoji are Apple's on a Mac, which every Mac has.
 (when (display-graphic-p)
-  (dolist (family '("JetBrains Mono" "DejaVu Sans"
-                    "Symbols Nerd Font Mono" "Noto Color Emoji"))
+  (dolist (family `("JetBrains Mono" "DejaVu Sans" "Symbols Nerd Font Mono"
+                    ,@(unless (featurep :system 'macos) '("Noto Color Emoji"))))
     (unless (find-font (font-spec :family family))
       (warn! "The font %s is not installed; config.el asks for it" family))))
