@@ -433,7 +433,7 @@ What keeps it that way:
 - Doom compiles a few of its hot functions when Emacs is idle; they are
   byte-compiled in place now, not natively in a batch Emacs waited for,
   a third of a second frozen each.
-- clangd indexes at low priority, with half the cores.
+- clangd indexes at low priority, on every core.
 - dired shows no vc state: that attribute ran git twice per file, in the
   background, every time a directory of a repository was entered. Add
   ~vc-state~ back to ~dirvish-attributes~ if the fringe marks are missed.
