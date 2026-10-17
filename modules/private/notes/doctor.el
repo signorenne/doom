@@ -31,19 +31,23 @@
 
 ;; The jars, and the java that runs them. The module sets the classpath
 ;; to the directory that holds the whole set, since Doom's points at one
-;; that holds part of it.
+;; that holds part of it. Where there is a languagetool command, Doom
+;; runs that instead: Homebrew's on a Mac, which brings its own Java.
 (when (modulep! :checkers grammar)
-  (unless (executable-find "java")
-    (warn! "No java, so LanguageTool cannot run")
-    (explain! "openSUSE: zypper in java-25-openjdk-headless, or any JRE"))
-  (unless (seq-some (lambda (dir)
-                      (file-exists-p
-                       (expand-file-name "languagetool-commandline.jar" dir)))
-                    '("/usr/share/languagetool"
-                      "/usr/share/java/languagetool"
-                      "/usr/local/share/languagetool"))
-    (warn! "No LanguageTool jars, so SPC n w c cannot check the grammar")
-    (explain! "openSUSE: zypper in languagetool")))
+  (unless (seq-some #'executable-find '("languagetool-commandline" "languagetool"))
+    (unless (executable-find "java")
+      (warn! "No java, so LanguageTool cannot run")
+      (explain! "openSUSE: zypper in java-25-openjdk-headless, or any JRE"))
+    (unless (seq-some (lambda (dir)
+                        (file-exists-p
+                         (expand-file-name "languagetool-commandline.jar" dir)))
+                      '("/usr/share/languagetool"
+                        "/usr/share/java/languagetool"
+                        "/usr/local/share/languagetool"))
+      (warn! "No LanguageTool, so SPC n w c cannot check the grammar")
+      (explain! (if (featurep :system 'macos)
+                    "brew install languagetool"
+                  "openSUSE: zypper in languagetool")))))
 
 ;; The CLI loads init.el, where the two are set, but no module config:
 ;; unset, both default to ~/org, as core and this module do.
