@@ -13,7 +13,7 @@
   (warn! "No (:ui zen): SPC t z and the one-font setting here do nothing"))
 
 (unless (modulep! :ui indent-guides)
-  (warn! "No (:ui indent-guides): SPC t i and the off-until-asked rule here do nothing"))
+  (warn! "No (:ui indent-guides): SPC t i does nothing"))
 
 (unless (modulep! :ui treemacs)
   (warn! "No (:ui treemacs): SPC e t and the treemacs settings here do nothing"))

@@ -18,9 +18,8 @@
   the fringe is left to the git gutter and the diagnostics; the minimap on
   the right on ~SPC t m~, a copy of the buffer in a tiny font with the
   part on screen marked, taken again once the typing pauses, so moving and
-  typing cost it nothing, and a click in it goes there; indent guides on
-  ~SPC t i~, off until asked since each bar costs a redisplay per scroll
-  step on a big frame; diagnostics at the end of the line as well as in
+  typing cost it nothing, and a click in it goes there; indent guides,
+  ~SPC t i~ turning them off; diagnostics at the end of the line as well as in
   the popup, flymake underneath, which eglot reports into directly,
 - the wheel stops at the end of a file, with its last line at the bottom
   of the window; it scrolled on until the window was empty. The keys
@@ -94,7 +93,7 @@ it.
 | ~SPC t o~ | ~imenu-list-smart-toggle~ | the symbol outline at the side     |
 | ~SPC t h~ | ~+ui-where-mode~          | the header line saying where you are |
 | ~SPC t m~ | ~+ui/minimap~             | the minimap on the right           |
-| ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
+| ~SPC t i~ | ~indent-bars-mode~        | indent guides, on and off          |
 | ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
 | ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation in a popup           |
 | ~SPC e t~ | ~+treemacs/toggle~          | the project drawer, as Doom's ~SPC o p~ |
