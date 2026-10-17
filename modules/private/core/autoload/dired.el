@@ -16,9 +16,6 @@
 (declare-function dired-do-find-marked-files "dired-x")
 (declare-function dirvish-fd "dirvish-fd")
 (declare-function dired-copy-file "dired-aux")
-(declare-function url-hexify-string "url-util")
-(declare-function url-unhex-string "url-util")
-(defvar url-unreserved-chars)
 
 ;;;###autoload
 (defun +core/dirvish-here (&optional arg)
@@ -165,73 +162,29 @@ The fixed entries of the config stay."
 ;;
 ;;; The system clipboard, other apps, and copies of a file
 
-(defun +core--file-uri (file)
-  "FILE as a file:// URI, spaces and the like escaped."
-  (concat "file://"
-          (url-hexify-string (expand-file-name file)
-                             (append url-unreserved-chars '(?/ ?~)))))
-
-(defun +core--clipboard-tool ()
-  "The copy and paste commands of this display, as (COPY . PASTE)."
-  (cond ((and (getenv "WAYLAND_DISPLAY") (executable-find "wl-copy"))
-         (cons '("wl-copy") '("wl-paste" "-n")))
-        ((executable-find "xclip")
-         (cons '("xclip" "-selection" "clipboard")
-               '("xclip" "-selection" "clipboard" "-o")))
-        (t (user-error "Neither wl-copy nor xclip is installed"))))
-
 ;;;###autoload
 (defun +core/files-to-clipboard ()
   "Put the marked files, or this file, on the system clipboard as files.
-Paste them in Dolphin, a mail, a chat, any app that takes files. Inside
-Emacs the kill ring gets their paths, one per line."
+Paste them in Finder or Dolphin, a mail, a chat, any app that takes
+files. Inside Emacs the kill ring gets their paths, one per line."
   (interactive)
-  (require 'url-util)
-  (let* ((files (+core-file-at-point t))
-         (copy (car (+core--clipboard-tool)))
-         (uris (concat (mapconcat #'+core--file-uri files "\r\n") "\r\n")))
+  (let ((files (+core-file-at-point t)))
     ;; The kill ring first: writing it also writes the clipboard as
     ;; text, and the files must be the last thing put there.
     (kill-new (mapconcat #'expand-file-name files "\n"))
-    (with-temp-buffer
-      (insert uris)
-      (unless (zerop (apply #'call-process-region (point-min) (point-max)
-                            (car copy) nil nil nil
-                            (append (cdr copy) '("-t" "text/uri-list"))))
-        (user-error "%s failed" (car copy))))
+    (+core-os-files-to-clipboard files)
     (message "On the clipboard, as files: %s"
              (if (cdr files)
                  (format "%d files" (length files))
                (file-name-nondirectory (car files))))))
 
-(defun +core--clipboard-files ()
-  "Files on the system clipboard: file:// URIs, or paths, one per line."
-  (let* ((paste (cdr (+core--clipboard-tool)))
-         (text (with-temp-buffer
-                 ;; Files first; failing that, whatever text is there.
-                 (unless (zerop (apply #'call-process (car paste) nil '(t nil) nil
-                                       (append (cdr paste) '("-t" "text/uri-list"))))
-                   (erase-buffer)
-                   (apply #'call-process (car paste) nil '(t nil) nil (cdr paste)))
-                 (buffer-string))))
-    (cl-loop for line in (split-string text "[\r\n]+" t)
-             for path = (if (string-prefix-p "file://" line)
-                            ;; Percent-encoded UTF-8: unhexing gives the
-                            ;; bytes, and a name with an accent in it is
-                            ;; then neither printable nor findable.
-                            (decode-coding-string
-                             (url-unhex-string (substring line 7)) 'utf-8)
-                          line)
-             when (file-exists-p path) collect path)))
-
 ;;;###autoload
 (defun +core/files-from-clipboard ()
   "Copy the files on the system clipboard into this directory.
-Files copied in Dolphin or another app land here; so do paths copied as
-text, one per line."
+Files copied in Finder, Dolphin or another app land here; so do paths
+copied as text, one per line."
   (interactive nil dired-mode)
-  (require 'url-util)
-  (let ((files (or (+core--clipboard-files)
+  (let ((files (or (+core-os-clipboard-files)
                    (user-error "No files on the clipboard")))
         (dir (dired-current-directory)))
     (dolist (file files)
@@ -295,60 +248,45 @@ text, one per line."
 ;;
 ;;; The trash
 
-(defun +core--trash-dir ()
-  "Where deleted files go: the desktop's trash."
-  (file-name-as-directory
-   (or trash-directory
-       (expand-file-name "Trash" (or (getenv "XDG_DATA_HOME") "~/.local/share")))))
-
 ;;;###autoload
 (defun +core/trash ()
   "The trash, in the file manager: what was deleted, newest first.
 Mark what you want back and SPC m t puts it where it came from."
   (interactive)
-  (let ((dired-listing-switches (concat dired-listing-switches " -t")))
-    (dirvish (expand-file-name "files/" (+core--trash-dir)))))
-
-(defun +core--trash-origin (file)
-  "Where FILE, now in the trash, was deleted from, or nil."
-  (let ((info (expand-file-name
-               (concat (file-name-nondirectory (directory-file-name file))
-                       ".trashinfo")
-               (expand-file-name "info/" (+core--trash-dir)))))
-    (when (file-exists-p info)
-      (with-temp-buffer
-        (insert-file-contents info)
-        (when (re-search-forward "^Path=\\(.+\\)$" nil t)
-          (let ((path (decode-coding-string
-                       (url-unhex-string (match-string 1)) 'utf-8)))
-            ;; The spec allows a relative Path= for a trash that is not
-            ;; the home one: it is relative to the volume the trash
-            ;; directory sits on, which is its grandparent.
-            (unless (file-name-absolute-p path)
-              (setq path (expand-file-name
-                          path (file-name-directory
-                                (directory-file-name (+core--trash-dir))))))
-            (cons path info)))))))
+  (let ((dir (+core-os-trash-files-dir))
+        (dired-listing-switches (concat dired-listing-switches " -t")))
+    ;; macOS lets an app read ~/.Trash only with Full Disk Access, and
+    ;; says so as a listing that failed, which reads like a bug.
+    (condition-case nil
+        (directory-files dir nil nil t 1)
+      (file-error
+       (user-error (if (featurep :system 'macos)
+                       "Emacs may not read the trash: allow it in System Settings, Privacy & Security, Full Disk Access"
+                     "The trash cannot be read: %s")
+                   dir)))
+    (dirvish dir)))
 
 ;;;###autoload
 (defun +core/restore-from-trash ()
   "Put the marked files, deleted earlier, back where they came from."
   (interactive nil dired-mode)
-  (require 'url-util)
   (let ((files (dired-get-marked-files)) (back nil) last)
-    (unless (string-prefix-p (expand-file-name "files/" (+core--trash-dir))
+    (unless (string-prefix-p (expand-file-name (+core-os-trash-files-dir))
                              (expand-file-name default-directory))
       (user-error "This is not the trash; SPC f t opens it"))
     (dolist (file files)
-      (pcase-let ((`(,origin . ,info) (or (+core--trash-origin file)
-                                         (user-error "No record of where %s came from"
-                                                     (file-name-nondirectory file)))))
+      (pcase-let ((`(,origin . ,forget)
+                   (or (+core-os-trash-origin file)
+                       (user-error (if (featurep :system 'macos)
+                                       "No record of where %s came from: it was not deleted from Emacs, so Finder's Put Back is the way"
+                                     "No record of where %s came from")
+                                   (file-name-nondirectory file)))))
         (when (and (file-exists-p origin)
                    (not (y-or-n-p (format "%s exists again; replace it? " origin))))
           (user-error "Left in the trash"))
         (make-directory (file-name-directory origin) t)
         (rename-file file origin t)
-        (delete-file info)
+        (funcall forget)
         (setq last origin)
         (push origin back)))
     (revert-buffer)

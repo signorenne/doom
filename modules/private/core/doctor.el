@@ -5,14 +5,17 @@
 ;; Emacs 31.
 
 ;; The tools the commands shell out to. Each line says what stops working.
-(dolist (tool '(("xdg-open" . "SPC f x, open a file in its desktop app")
+;; macOS has its own opener and clipboard, open and osascript, always.
+(dolist (tool `(,@(unless (featurep :system 'macos)
+                    '(("xdg-open" . "SPC f x, open a file in its desktop app")))
                 ("fd" . "SPC s F and the project file lists")
                 ("rg" . "SPC p t, the task scan of the notes, the AI's greps")
                 ("git" . "the notes repository and the copy menu's forge link")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
 
-(unless (or (and (getenv "WAYLAND_DISPLAY") (executable-find "wl-copy"))
+(unless (or (featurep :system 'macos)
+            (and (getenv "WAYLAND_DISPLAY") (executable-find "wl-copy"))
             (executable-find "xclip"))
   (warn! "No wl-copy (Wayland) or xclip (X11): files cannot go to or come from other apps, dired's yc and yv"))
 

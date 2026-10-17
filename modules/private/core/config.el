@@ -171,10 +171,13 @@ archive's, `+core-large-file-excluded-modes', are left alone."
                +core-plain-mode))))
 
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
-;; delete-file behind them move the file to the desktop's trash, the one
-;; Dolphin shows, and SPC f t opens it here. Put a file back from the
-;; trash listing with SPC m t.
+;; delete-file behind them move the file to the system's trash, the one
+;; Finder or Dolphin shows, and SPC f t opens it here. Put a file back
+;; from the trash listing with SPC m t; on macOS Emacs notes where each
+;; file it deletes came from, since only Finder knows otherwise.
 (setq delete-by-moving-to-trash t)
+(when (featurep :system 'macos)
+  (advice-add 'move-file-to-trash :around #'+core--trash-note-origin-a))
 
 (map! :leader
       :desc "The trash" "f t" #'+core/trash)

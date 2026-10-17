@@ -5,7 +5,6 @@
 
 (defvar +ai-hook-script)
 (declare-function +cpp-preset-names "kit")
-(declare-function notifications-notify "notifications")
 (declare-function org-capture "org-capture")
 
 (defun +ai--claude-md-commands (root)
@@ -177,11 +176,7 @@ Writes to ~/.claude/settings.json, keeping a .bak copy.  Safe to re-run."
 
 (defun +ai--notify (title body)
   "Show a desktop notification, or a message if that fails."
-  (condition-case nil
-      (progn (require 'notifications)
-             (notifications-notify :title title :body body
-                                   :app-name "Emacs" :timeout 6000))
-    (error (message "%s: %s" title body))))
+  (+core-os-notify title body))
 
 
 ;;

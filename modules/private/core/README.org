@@ -99,16 +99,22 @@ manager is dirvish either way.
 Projectile's file list is not cached: fd lists a project in milliseconds
 and a cache goes stale the moment another program adds a file.
 
-Deleting moves to the desktop's trash (~delete-by-moving-to-trash~), the
-freedesktop one under =~/.local/share/Trash= that Dolphin shows, so ~D~,
-~x~ and ~SPC f D~ can be undone: ~SPC f t~ lists the trash and ~SPC m t~
-there reads each file's =.trashinfo= record and moves it back to the path
-it came from. ~r~ in dired is ~revert-buffer~, a full refresh, since
+Deleting moves to the system's trash (~delete-by-moving-to-trash~): on
+Linux the freedesktop one under =~/.local/share/Trash= that Dolphin shows,
+on macOS =~/.Trash=, Finder's. So ~D~, ~x~ and ~SPC f D~ can be undone:
+~SPC f t~ lists the trash and ~SPC m t~ there moves a file back to the
+path it came from. Linux records that path in each file's =.trashinfo=;
+macOS keeps it to Finder, so Emacs notes it for each file it deletes
+itself, and Finder's Put Back is the way for the rest. macOS lets Emacs
+list the trash only with Full Disk Access, in System Settings, Privacy &
+Security. ~r~ in dired is ~revert-buffer~, a full refresh, since
 =dired-do-redisplay= could leave a dirvish listing looking emptied.
 
-Files go to other apps as =text/uri-list= through =wl-copy= (=xclip= on
-X11), which is what Dolphin, mail and chat clients read; the kill ring
-gets the paths. The same two tools bring files in. The copy menu ~SPC f k~
+Files go to other apps as files: on Linux as =text/uri-list= through
+=wl-copy= (=xclip= on X11), which is what Dolphin, mail and chat clients
+read; on macOS as file URLs on the pasteboard, which =osascript= writes,
+and Finder reads. The kill ring gets the paths. The same tools bring
+files in. The copy menu ~SPC f k~
 has both of these too, plus the file's whole text.
 
 The file manager is dirvish, opened with the preview pane by ~SPC o -~
