@@ -411,13 +411,16 @@ Checked as Emacs redraws, which is between commands, when
   (not (or (memq this-command +ui-wheel-commands)
            (memq last-command +ui-wheel-commands))))
 
-(add-hook! 'ultra-scroll-mode-hook
-  (defun +ui--cursor-line-fully-visible-h ()
-    "Bring the cursor's line fully into view again, but for the wheel."
-    (setq-default make-cursor-line-fully-visible
-                  (if (bound-and-true-p ultra-scroll-mode)
-                      #'+ui--cursor-line-fully-visible-p
-                    t))))
+;; An older Emacs keeps ultra-scroll's choice: there the function is the
+;; hundredfold slowdown.
+(when (>= emacs-major-version 31)
+  (add-hook! 'ultra-scroll-mode-hook
+    (defun +ui--cursor-line-fully-visible-h ()
+      "Bring the cursor's line fully into view again, but for the wheel."
+      (setq-default make-cursor-line-fully-visible
+                    (if (bound-and-true-p ultra-scroll-mode)
+                        #'+ui--cursor-line-fully-visible-p
+                      t)))))
 
 ;;
 ;;; Where you are in the buffer
