@@ -206,8 +206,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
             90))
 
 ;; QML: openSUSE installs Qt 6 tools with a version suffix, so the plain
-;; name Doom looks for is not there. Doom registers `qmlls' for
-;; `qml-ts-mode' on its own and eglot takes the first entry that matches,
+;; name Doom looks for is not there; Homebrew keeps them in its Qt. Doom
+;; registers `qmlls' for `qml-ts-mode' on its own and eglot takes the
+;; first entry that matches,
 ;; which is that one, so ours was never reached and no server started at
 ;; all: that entry goes. And qmlls resolves only what Qt ships unless it
 ;; is given a build directory, so a type of the project's own, or a
@@ -623,7 +624,8 @@ function, so `c-ts-mode-set-style' installs them."
         ;; -w; the suffixed one is Qt 6, as with qmlls.
         '((or (executable-find "qmlformat6")
               (executable-find "/usr/lib64/qt6/bin/qmlformat")
-              (executable-find "qmlformat"))
+              (executable-find "qmlformat")
+              (executable-find "/opt/homebrew/opt/qt/bin/qmlformat"))
           "-w" (number-to-string (or (bound-and-true-p qml-ts-mode-indent-offset) 4))
           input))
   (setf (alist-get 'qml-ts-mode apheleia-mode-alist) 'qmlformat)

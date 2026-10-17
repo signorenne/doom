@@ -208,7 +208,8 @@ the fallback."
           (when (zerop (call-process qmake nil t nil "-query" "QT_INSTALL_HEADERS"))
             (let ((dir (string-trim (buffer-string))))
               (and (file-directory-p dir) dir)))))
-      (seq-find #'file-directory-p '("/usr/include/qt6" "/usr/include/qt5"))))
+      (seq-find #'file-directory-p '("/usr/include/qt6" "/usr/include/qt5"
+                                     "/opt/homebrew/opt/qt/include"))))
 
 (defun +cpp--qt-include-flags ()
   "-I flags for Qt and each of its modules, so QString resolves without a
@@ -366,7 +367,8 @@ or a module it builds, is unknown, and completion offers nothing for
 it."
   (when-let* ((program (seq-some (lambda (name)
                                    (and (executable-find name) name))
-                                 '("qmlls" "qmlls6" "/usr/lib64/qt6/bin/qmlls"))))
+                                 '("qmlls" "qmlls6" "/usr/lib64/qt6/bin/qmlls"
+                                   "/opt/homebrew/opt/qt/bin/qmlls"))))
     (let* ((dir (ignore-errors (+cpp-kit-abs-dir (+cpp--kit))))
            (modules (and dir (expand-file-name "qml" dir))))
       (append (list program)

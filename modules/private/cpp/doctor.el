@@ -43,7 +43,8 @@
       (warn! "gdb %s is too old for DAP; dape needs gdb >= 14.1" version))))
 
 (unless (seq-some #'executable-find
-                  '("qmlls" "qmlls6" "/usr/lib64/qt6/bin/qmlls"))
+                  '("qmlls" "qmlls6" "/usr/lib64/qt6/bin/qmlls"
+                    "/opt/homebrew/opt/qt/bin/qmlls"))
   (warn! "No qmlls, so QML files get no language server")
   (explain! "openSUSE: zypper in qt6-declarative-tools"))
 
