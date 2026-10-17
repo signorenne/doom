@@ -191,6 +191,12 @@ archive's, `+core-large-file-excluded-modes', are left alone."
                           (or (getenv "PATH") ""))
     (setenv "PATH" (concat bin path-separator (getenv "PATH")))))
 
+;; vterm's module is native code built on this machine: on a new machine,
+;; or once the packages were rebuilt for a new Emacs, vterm asked whether
+;; to build it, and a daemon, with no one to answer, waited for good. It
+;; is built without asking; it needs cmake, and libvterm or the network.
+(setq vterm-always-compile-module t)
+
 ;; Every compilation notes when it started, so the newest can be found:
 ;; `+core-last-compilation-buffer', which the AI's build tool reports.
 (add-hook 'compilation-start-hook #'+core--note-compile-start-h)
