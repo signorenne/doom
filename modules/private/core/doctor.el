@@ -4,6 +4,15 @@
 ;; package from a doctor file trips an eager macro-expansion cycle on
 ;; Emacs 31.
 
+;; Written for Emacs 31: an older one misses what the config leans on,
+;; and one setting, the cursor line kept in view, slows its redisplay
+;; down a hundredfold (bug#78766).
+(when (< emacs-major-version 31)
+  (error! "Emacs %s: this config needs Emacs 31" emacs-version)
+  (explain! (if (featurep :system 'macos)
+                "brew install --cask emacs-plus-app, then doom sync"
+              "Install Emacs 31 from your distribution, then doom sync")))
+
 ;; The tools the commands shell out to. Each line says what stops working.
 ;; macOS has its own opener and clipboard, open and osascript, always.
 (dolist (tool `(,@(unless (featurep :system 'macos)
