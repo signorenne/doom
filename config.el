@@ -20,13 +20,32 @@
 ;;
 ;;; Fonts and theme
 
-(setq doom-theme 'doom-one
+;; On a Mac the theme is a pair, dark and light, and follows the system's
+;; appearance as the Mac's own apps do: Doom picks one as Emacs starts,
+;; and Emacs+ says when the appearance changes, below. Elsewhere it is
+;; the dark one. The pair is kept apart: Doom sets `doom-theme' to the
+;; one it loads.
+(defvar +config-themes '(doom-one . doom-one-light)
+  "The dark theme and the light one, worn as a Mac's appearance says.")
+
+(setq doom-theme (if (featurep :system 'macos) +config-themes 'doom-one)
       doom-font (font-spec :family "JetBrains Mono" :size 15)
       doom-variable-pitch-font (font-spec :family "DejaVu Sans" :size 16)
       doom-big-font (font-spec :family "JetBrains Mono" :size 24) ; SPC t b
       ;; Doom draws icons, symbols and emoji from these two.
       doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
       doom-emoji-font (font-spec :family "Noto Color Emoji"))
+
+(when (boundp 'ns-system-appearance-change-functions)
+  (add-hook 'ns-system-appearance-change-functions
+            (defun +config--follow-appearance-h (appearance)
+              "Wear the light or the dark one of `+config-themes' for APPEARANCE."
+              (let ((on (if (eq appearance 'light) (cdr +config-themes) (car +config-themes))))
+                ;; Every theme on goes, one picked with SPC h t too, or
+                ;; the pair's would be drawn over it.
+                (unless (equal custom-enabled-themes (list on))
+                  (mapc #'disable-theme custom-enabled-themes)
+                  (load-theme on t))))))
 
 ;; No line numbers in any buffer: the modeline has the line and the
 ;; count. SPC t l shows them in one buffer, then relative, then none.
