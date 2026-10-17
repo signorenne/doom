@@ -10,16 +10,27 @@
 (assert! (modulep! :tools debugger)
          "Debugging needs :tools debugger (dape)")
 
-(dolist (tool '(("clangd" . "the default language server")
+(dolist (tool `(("clangd" . "the default language server")
                 ("ccls" . "the other language server, SPC k l s")
                 ("cmake" . "needed by CMake projects")
                 ("ninja" . "the generator the scaffold presets use")
-                ("gdb" . "needed to debug, version 14.1 or newer")
+                ;; gdb does not run on Apple silicon; a Mac has lldb-dap.
+                ,@(unless (featurep :system 'macos)
+                    '(("gdb" . "needed to debug, version 14.1 or newer")))
                 ("clang-format" . "formats C and C++, SPC k f")
                 ("run-clang-tidy" . "lints the whole project, SPC k g p")
                 ("pio" . "PlatformIO, the SPC k p commands")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
+
+(when (and (featurep :system 'macos)
+           (not (executable-find "gdb"))
+           (not (seq-some #'file-executable-p
+                          '("/Library/Developer/CommandLineTools/usr/bin/lldb-dap"
+                            "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-dap")))
+           (not (executable-find "lldb-dap")))
+  (warn! "No lldb-dap, so SPC k d cannot debug C or C++")
+  (explain! "xcode-select --install, or brew install llvm"))
 
 (when-let* ((gdb (executable-find "gdb")))
   (let ((version (with-temp-buffer
@@ -61,7 +72,7 @@
              (expand-file-name "debug-adapters/codelldb/extension/adapter/codelldb"
                                doom-user-dir))
             (executable-find "lldb-dap"))
-  (warn! "No codelldb, so Rust cannot be debugged; C and C++ use gdb")
+  (warn! "No codelldb, so Rust cannot be debugged; C and C++ use gdb, or lldb-dap on a Mac")
   (explain! "+cpp/install-codelldb downloads it into debug-adapters/"))
 
 (assert! (modulep! :private container)

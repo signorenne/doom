@@ -278,12 +278,26 @@ which for PlatformIO means upload."
   "Ask which process to attach to."
   (read-number "Attach to PID: "))
 
+(defun +cpp--debugger (kit)
+  "How a program of KIT is debugged, or one outside a kit when KIT is
+nil: the head of a dape config, its command and its type.  gdb's DAP
+inside the kit's container or environment when it has one; else this
+machine's debugger, `+core-os-debugger', lldb-dap on a Mac."
+  (let ((gdb (and kit (+cpp--kit-process kit '("gdb" "--interpreter=dap")))))
+    (if (and gdb (not (equal (car gdb) "gdb")))
+        `(command ,(car gdb)
+          command-args ,(cdr gdb)
+          :type "gdb"
+          :stopAtBeginningOfMainSubprogram t)
+      (+core-os-debugger))))
+
 ;;;###autoload
 (cl-defun +cpp/debug ()
   "Debug the project's executable where the kit runs.
-CMake: the run target, with gdb, in the kit's container.  Rust: the crate
-binary with codelldb (`+cpp/install-codelldb' fetches it).  Anything
-else asks for the program and uses gdb."
+CMake: the run target, with gdb, in the kit's container; on a Mac, with
+no gdb, lldb-dap.  Rust: the crate binary with codelldb
+\(`+cpp/install-codelldb' fetches it).  Anything else asks for the
+program and uses the same debugger."
   (interactive)
   (require 'dape)
   (+cpp--save-project-buffers)
@@ -299,18 +313,12 @@ else asks for the program and uses gdb."
          (args (or (+cpp--setting '+cpp-run-args) (plist-get active :run-args) ""))
          (cwd (let ((qtc (plist-get active :run-dir)))
                 (if (and qtc (file-directory-p qtc)) qtc (file-name-directory exe))))
-         (command (if kit
-                      (+cpp--kit-process kit '("gdb" "--interpreter=dap"))
-                    '("gdb" "--interpreter=dap")))
          (config `(modes ,+cpp-modes
-                   command ,(car command)
-                   command-args ,(cdr command)
-                   :type "gdb"
+                   ,@(+cpp--debugger kit)
                    :request "launch"
                    :program ,exe
                    :cwd ,cwd
-                   :args ,(vconcat (+cpp--run-argv args))
-                   :stopAtBeginningOfMainSubprogram t)))
+                   :args ,(vconcat (+cpp--run-argv args)))))
     (dape config)))
 
 ;;;###autoload

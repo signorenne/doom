@@ -218,6 +218,40 @@ FORGET is called once it is back. Nil when that is not known."
 
 
 ;;
+;;; The debugger
+
+;; gdb, with its DAP interpreter, where there is one; on a Mac gdb does
+;; not run on Apple silicon, and LLDB is the system's debugger.
+
+;;;###autoload
+(defun +core-os-lldb-dap ()
+  "The lldb-dap to debug with: Apple's first, which macOS lets attach to
+a program without a debugger signed for it, else the one on PATH."
+  (or (seq-find #'file-executable-p
+                '("/Library/Developer/CommandLineTools/usr/bin/lldb-dap"
+                  "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-dap"))
+      (executable-find "lldb-dap")))
+
+;;;###autoload
+(defun +core-os-debugger ()
+  "How a program built here is debugged, as the head of a dape config:
+its command and type, and a stop at main.  gdb's DAP; where there is no
+gdb and there is an lldb-dap, as on a Mac, lldb-dap."
+  (if-let* (((not (executable-find "gdb")))
+            (lldb (+core-os-lldb-dap)))
+      ;; No arguments, said outright: merged over a gdb config, gdb's
+      ;; --interpreter=dap would reach lldb-dap.
+      `(command ,lldb
+        command-args nil
+        :type "lldb-dap"
+        :preRunCommands ["breakpoint set --name main --one-shot true"])
+    '(command "gdb"
+      command-args ("--interpreter=dap")
+      :type "gdb"
+      :stopAtBeginningOfMainSubprogram t)))
+
+
+;;
 ;;; Notifications
 
 ;;;###autoload
