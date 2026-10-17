@@ -26,9 +26,9 @@
 ;; Install tree-sitter grammars on first use instead of asking.
 (setq treesit-auto-install-grammar 'always)
 
-;; A file over a megabyte is large here: tree-sitter and the header's
-;; function line stand down in it, below. Doom kept that mark once, and
-;; now tells a large file by its lines, for so-long alone, so the mark is
+;; A file over a megabyte is large here: the header's function line, in
+;; the ui module, stands down in it. Doom kept that mark once, and now
+;; tells a large file by its lines, for so-long alone, so the mark is
 ;; made here, in the file's own buffer, as it opens.
 (defvar +core-large-file-size (* 1024 1024)
   "Past this size, in bytes, a file opened is large: `+core-large-file-p'.")
@@ -52,15 +52,36 @@ which show something other than the text.")
       (when (> size +core-large-file-size)
         (setq-local +core-large-file-p size)))))
 
-;; Tree-sitter reparses what an edit touched, which in most files is a
-;; function; but in a file that is one declaration, an image as a C array
-;; of 17 000 lines, that is all of it, and every key rebuilt it: 176 ms.
-;; A file the grammar cannot read at all, nlohmann's json.hpp, is one error
-;; node, and nothing of it is reused: 55 ms. A large file, and a quarter of
-;; one that failed to parse, opens in the mode Emacs had before
-;; tree-sitter: 7 ms a key in that array.
+;; Tree-sitter reparses what an edit touched, and the node that holds it
+;; with all its children: in most files a function among a few thousand,
+;; a reparse of 2 ms in a megabyte of C++. But in a file that is one
+;; declaration, an image as a C array, that node is a list of 170 000
+;; values, and every key rebuilt it: 340 to 410 ms a key, 11 to 14 in
+;; c-mode. A file the grammar cannot read at all, nlohmann's json.hpp, is
+;; one error node, and nothing of it is reused. A file with a node that
+;; crowded, and a quarter of a megabyte that failed to parse, open in the
+;; mode Emacs had before tree-sitter. Size alone is no reason: that
+;; megabyte of C++ costs 11 ms a key in c++-ts-mode and 128 to 163 in
+;; c++-mode. A key here is a character typed, the reparse and the
+;; colouring of 6 KB around it, timed on the Mac the README names.
 (defvar +core-treesit-unparsed-max (* 256 1024)
   "Past this size a file tree-sitter could not parse opens without it.")
+
+(defvar +core-treesit-children-max 20000
+  "Past this many children under one node, a file opens without tree-sitter:
+JSON's array of 9 000 objects, a megabyte, costs 13 ms a key, and of
+18 000, two, 37.")
+
+(defun +core--treesit-crowded-p ()
+  "Non-nil when a node around the middle of the buffer has more than
+`+core-treesit-children-max' children: tree-sitter rebuilds it at every
+key.  A node that holds most of the file holds the middle too."
+  (let ((node (treesit-node-at (/ (+ (point-min) (point-max)) 2)))
+        crowded)
+    (while (and node (not crowded))
+      (setq crowded (> (treesit-node-child-count node t) +core-treesit-children-max)
+            node (treesit-node-parent node)))
+    crowded))
 
 (defun +core--classic-mode (mode)
   "The mode that tree-sitter MODE stands in for, or nil."
@@ -73,9 +94,9 @@ which show something other than the text.")
     (when-let* (((treesit-parser-list))
                 (classic (+core--classic-mode major-mode))
                 ((fboundp classic))
-                ((or +core-large-file-p
-                     (and (> (buffer-size) +core-treesit-unparsed-max)
-                          (equal (treesit-node-type (treesit-buffer-root-node)) "ERROR")))))
+                ((or (and (> (buffer-size) +core-treesit-unparsed-max)
+                          (equal (treesit-node-type (treesit-buffer-root-node)) "ERROR"))
+                     (+core--treesit-crowded-p))))
       (funcall classic)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
