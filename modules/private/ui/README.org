@@ -121,11 +121,7 @@ kept it from telling, and one made the modeline dear:
   bright number cannot stay behind on the line the cursor left.
 - hl-line moved its overlay onto the current line after every command,
   even where it already was, and an overlay moved in place still counts
-  as a change of the whole window. It moves only when the line does; and
-  while a key is held, commands closer together than
-  ~+ui-hl-line-repeat~ (70 ms, where KDE repeats every 40), the band and
-  the bright number step aside in the window you work in and are back
-  as soon as the key is let go. A held line move costs 1.4 ms, not 3.9.
+  as a change of the whole window. It moves only when the line does.
 - Doom's light modeline formatted its right half twice at every key, once
   only to measure it, and eglot's piece of it is a quoted cl-loop the
   interpreter expanded afresh each time. Once, and compiled once, it
@@ -169,9 +165,6 @@ Colouring had its own waste:
   file, so every overlay the file moved redrew the minimap, 8 ms a key.
 - ~+ui-current-line-number~: the current line's number as the theme
   draws it, taken from ~line-number-current-line~ whenever a theme loads.
-- ~+ui-hl-line-repeat~, 0.07 s: commands closer together than this come
-  from a held key, and hl-line steps aside until it is let go; 0 keeps
-  the band on every line the cursor passes.
 - ~+ui-jit-lock-hidden-min~, 500: hidden text shorter than this many
   characters is coloured with the text around it.
 - ~+ui-flymake-eol-max~, 300: past that many diagnostics in a report,
