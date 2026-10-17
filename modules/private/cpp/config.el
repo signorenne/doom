@@ -193,17 +193,13 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
         :desc "Call hierarchy" "c h" #'eglot-show-call-hierarchy
         :desc "Type hierarchy" "c T" #'eglot-show-type-hierarchy)
   ;; A path inside the container opens through TRAMP.
-  (advice-add #'eglot-uri-to-path :filter-return #'+cpp--container-path-a)
-  ;; The server's semantic tokens, on by default in this eglot, colour
-  ;; what tree-sitter already colours, at a request on every change and
-  ;; one per scrolled range; off, M-x eglot-semantic-tokens-mode when
-  ;; wanted.  Inlay hints stay, SPC k l i turns them off.
-  (add-hook 'eglot-managed-mode-hook
-            (defun +cpp--no-semantic-tokens-h ()
-              (when (and (fboundp 'eglot-semantic-tokens-mode)
-                         (bound-and-true-p eglot-semantic-tokens-mode))
-                (eglot-semantic-tokens-mode -1)))
-            90))
+  (advice-add #'eglot-uri-to-path :filter-return #'+cpp--container-path-a))
+
+;; The server's semantic tokens, on by default in this eglot, stay on:
+;; they colour by meaning, what tree-sitter cannot know, a member, a
+;; parameter, a macro, at a request per change and per range scrolled to,
+;; which a fast machine does not feel. M-x eglot-semantic-tokens-mode
+;; turns them off in a buffer; SPC k l i the inlay hints.
 
 ;; QML: openSUSE installs Qt 6 tools with a version suffix, so the plain
 ;; name Doom looks for is not there; Homebrew keeps them in its Qt. Doom
