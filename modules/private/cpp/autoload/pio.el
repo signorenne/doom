@@ -257,9 +257,28 @@ Opens platformio.ini when it is ready."
 (defvar +pio--compiledb-done nil
   "Projects this session has already written a compilation database for.")
 
+(defun +pio--compiledb-stale (root db)
+  "Why DB, ROOT's compile_commands.json, no longer answers for it, or nil.
+Written for another directory, the project moved since: every relative
+path in it, the include directories, the sources, the specs file the
+cross compiler is asked about, pointed into a directory that was gone,
+and clangd found no header at all. Or older than platformio.ini, whose
+flags it carries."
+  (cond
+   ((file-newer-than-file-p (expand-file-name "platformio.ini" root) db)
+    "platformio.ini is newer")
+   ((with-temp-buffer
+      ;; The first entry says it; the file runs to tens of megabytes. Its
+      ;; command comes before it, some 20 000 characters.
+      (insert-file-contents db nil 0 (* 1024 1024))
+      (and (re-search-forward "\"directory\": *\"\\([^\"]+\\)\"" nil t)
+           (not (file-equal-p (match-string 1) root))
+           (format "it was written in %s" (match-string 1)))))))
+
 ;;;###autoload
 (defun +pio--compiledb-h ()
-  "Write compile_commands.json for a PlatformIO project that has none.
+  "Write compile_commands.json for a PlatformIO project that has none, or
+whose one is stale, see `+pio--compiledb-stale'.
 A firmware's flags are nothing a language server can guess: the cross
 compiler, the framework's headers, the board's defines. pio knows them
 and writes them out in a second for a project that has been built, so
@@ -273,12 +292,15 @@ someone's back. SPC k p i asks for it then."
               (root (expand-file-name root))
               ((not (member root +pio--compiledb-done)))
               ((file-directory-p (expand-file-name ".pio/build" root)))
-              ((not (file-exists-p (expand-file-name "compile_commands.json" root))))
+              (db (expand-file-name "compile_commands.json" root))
+              (why (if (file-exists-p db)
+                       (+pio--compiledb-stale root db)
+                     "there is none"))
               (pio (executable-find "pio")))
     (push root +pio--compiledb-done)
     (let ((default-directory root))
-      (message "pio: writing the compilation database for %s..."
-               (file-name-nondirectory (directory-file-name root)))
+      (message "pio: writing the compilation database for %s, %s..."
+               (file-name-nondirectory (directory-file-name root)) why)
       (make-process
        :name "pio-compiledb"
        :buffer (generate-new-buffer " *pio compiledb*")
@@ -290,6 +312,24 @@ someone's back. SPC k p i asks for it then."
            (let ((ok (eq (process-exit-status process) 0)))
              (when (buffer-live-p (process-buffer process))
                (kill-buffer (process-buffer process)))
+             ;; A server started on the old database, as the file opened,
+             ;; kept its errors: it starts again on the new one.
+             (when ok (+pio--reconnect-servers root))
              (message (if ok
                           "pio: the compilation database is written; the server has the flags"
                         "pio: could not write the compilation database; SPC k p i says why")))))))))
+
+(declare-function eglot-current-server "eglot")
+(declare-function eglot-reconnect "eglot")
+
+(defun +pio--reconnect-servers (root)
+  "Start again every language server running for a file under ROOT."
+  (let (servers)
+    (dolist (buffer (buffer-list))
+      (when-let* ((file (buffer-file-name buffer))
+                  ((file-in-directory-p file root))
+                  (server (and (fboundp 'eglot-current-server)
+                               (with-current-buffer buffer (eglot-current-server)))))
+        (cl-pushnew server servers)))
+    (dolist (server servers)
+      (eglot-reconnect server))))
