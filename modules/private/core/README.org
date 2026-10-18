@@ -286,7 +286,9 @@ files section has the detail.
 - ~+core-undo-flash-time~ (0.3 s), how long the lines an undo changed stay
   lit; 0 lights none. ~vundo-window-max-height~ is 10 lines.
 - ~+core-treesit-unparsed-max~ (256 KB): past this size a file
-  tree-sitter cannot parse opens in the older mode; so does one with a
+  tree-sitter cannot parse, or takes longer than
+  ~+core-treesit-reparse-max~ (0.04 s) to reparse after an edit, opens in
+  the older mode; so does one with a
   node of more than ~+core-treesit-children-max~ (20 000) children, an
   image as a C array, whatever its size. ~+core-large-file-size~ (1 MB)
   says what is large.
@@ -518,18 +520,22 @@ What keeps it that way:
   popup whenever a candidate is chosen, for the preview it inserts;
   with the first chosen from the start that was every backspace.
 - ~large-file-warning-threshold~ is 64 MB; below that, files just open.
-- A file over a megabyte is large, as Doom means it: so-long's minor mode
-  turns off the spell check, eldoc, smartparens, flymake, hl-line and the
-  diff gutter, and colours less. Doom marked the file from a function
-  Emacs 31 calls before the file has a buffer, so no file was ever large;
-  it is marked in the file's own buffer now. =M-x so-long-minor-mode=
-  gives it all back in one.
-- A large file, and one over 256 KB that tree-sitter cannot parse
-  (~+core-treesit-unparsed-max~), opens in the mode Emacs had before
-  tree-sitter. Tree-sitter reparses what an edit touched, and in a file
-  that is one declaration, or one error, that is all of it: 176 ms a key
-  in the data array, 55 in =json.hpp=, 1.8 s in a 2 MB header, where the
-  older modes take 5, 8 and 7.
+- A file of more than 20 000 lines gets so-long's minor mode, Doom's
+  rule: eldoc, smartparens, whitespace trimming, the jump list and
+  save-place go, and it colours less. In 28 000 lines of C++ a key costs
+  13.5 ms so, 19 to 28 without (2026-10-23). =M-x so-long-minor-mode=
+  gives it all back in one. A file over a megabyte is marked large in its
+  own buffer, ~+core-large-file-p~; Doom's mark never fired on Emacs 31.
+  The mark only keeps the header line from looking for the function
+  without a syntax tree.
+- A file tree-sitter would make slow opens in the mode Emacs had before
+  it: one over 256 KB (~+core-treesit-unparsed-max~) that it cannot
+  parse, or that it takes more than 40 ms to reparse after a one
+  character edit, timed as the file opens (~+core-treesit-reparse-max~);
+  and one with a node of more than 20 000 children. Tree-sitter reparses
+  what an edit touched, and in a file that is one declaration, or one
+  error, or thousands of errors, that is all of it: a generated 1.5 MB C
+  file reparsed in 90 ms and took 190 a key, 8 in c-mode.
 - A file past two megabytes (~+core-plain-file-size~) is made by a
   program, and opens whole as plain text, at once: its mode went over
   all of it before the first screen, 2.4 s for 8 MB of C++, 2.3 s for
