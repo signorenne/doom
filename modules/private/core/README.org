@@ -461,9 +461,10 @@ What keeps it that way:
   byte-compiled in place now, not natively in a batch Emacs waited for,
   a third of a second frozen each.
 - clangd indexes at low priority, on every core.
-- dired shows no vc state: that attribute ran git twice per file, in the
-  background, every time a directory of a repository was entered. Add
-  ~vc-state~ back to ~dirvish-attributes~ if the fringe marks are missed.
+- dired marks each file's git state in the fringe. It runs git twice per
+  file in the background as a directory of a repository is entered, 12 ms
+  a file on the Mac, off the editor's thread; the old machine at load 30
+  could not spare the core.
 - Tree-sitter grammars for the enabled modes are installed ahead of time,
   so no first open compiles one; ~treesit-auto-install-grammar~ stays
   ~always~ for the next language. (Not listed here: the list rots.) A
