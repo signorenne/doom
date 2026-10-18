@@ -163,7 +163,8 @@ draws on the dashboard moves on from here, inside
 ;; the top, the way VS Code and Zed pin it.  In code buffers.
 (defvar-local +ui--defun-cache nil
   "(START END TICK TOP . LINE) of the function last found under the
-window's top TOP: reused while the top stays inside it and the buffer
+window's top TOP, or of the stretch between two functions TOP was in,
+with LINE nil: reused while the top stays inside it and the buffer
 unchanged, since the header line is asked on every redisplay, dozens a
 second while the wheel turns; and while the window stays still and only
 the text changes, until the typing stops.")
@@ -171,14 +172,18 @@ the text changes, until the typing stops.")
 (defvar-local +ui--defun-refresh nil
   "The idle timer that looks the function up again once typing stops.")
 
+(defun +ui--defun-by-tree-p ()
+  "Non-nil where the buffer's functions are found from its syntax tree."
+  (and (fboundp 'treesit-defun-at-point)
+       (bound-and-true-p treesit-defun-type-regexp)
+       (treesit-parser-list)))
+
 (defun +ui--defun-around (top)
   "(START . END) of the function holding TOP, or nil.  From the syntax
 tree where the buffer has one, in as many steps as it is deep: moving to
 the start and end of a defun walks every sibling on the way, and in a
 large object literal or array that was most of a scroll step's time."
-  (if (and (fboundp 'treesit-defun-at-point)
-           (bound-and-true-p treesit-defun-type-regexp)
-           (treesit-parser-list))
+  (if (+ui--defun-by-tree-p)
       (when-let* ((node (save-excursion (goto-char top) (treesit-defun-at-point))))
         (cons (treesit-node-start node) (treesit-node-end node)))
     (save-excursion
@@ -186,6 +191,26 @@ large object literal or array that was most of a scroll step's time."
       (when-let* ((start (and (ignore-errors (beginning-of-defun) t) (point)))
                   (end (progn (ignore-errors (end-of-defun)) (point))))
         (cons start end)))))
+
+(defun +ui--defun-gap (top range)
+  "(FROM . TO) round TOP, which no function holds, where no function
+starts; RANGE is the function found before TOP.  Without a syntax tree a
+lookup walks the code, 5 to 9 ms in cc-mode, and scrolling between two
+functions looked again at every line: the stretch to the next function
+is found once instead.  With a tree, or a function starting at TOP, the
+top line alone."
+  (if (or (+ui--defun-by-tree-p) (and range (>= (car range) top)))
+      (cons top (1+ top))
+    ;; The next start is sought from where RANGE ends, a character back:
+    ;; at the very start of a function the one found before TOP is the
+    ;; one before that, and from TOP its own start is passed over.
+    (let* ((from (if (and range (<= (cdr range) top)) (cdr range) top))
+           (next (save-excursion
+                   (goto-char (max (point-min) (1- from)))
+                   (and (ignore-errors (beginning-of-defun -1) t) (point)))))
+      (if (and next (> next top))
+          (cons from next)
+        (cons top (1+ top))))))
 
 (defun +ui--scrolled-defun ()
   "The first line of the function that holds the window's first line,
@@ -204,7 +229,7 @@ header of declarations cc-mode walked back through them at every step,
         (cond
          ;; A function's line holds while the top is past it: with the
          ;; top on that line it is on screen, and the header doubled it.
-         ;; The entry for no function at all is the top line alone.
+         ;; The entry for no function at all is the stretch between two.
          ((and from (if line (< from top) (<= from top)) (< top to)
                (eq tick (buffer-chars-modified-tick)))
           line)
@@ -222,14 +247,15 @@ header of declarations cc-mode walked back through them at every step,
          (t
           (let* ((range (+ui--defun-around top))
                  (inside (and range (< (car range) top) (> (cdr range) top)))
+                 (span (if inside range (+ui--defun-gap top range)))
                  (text (and inside
                             (save-excursion
                               (goto-char (car range))
                               (font-lock-ensure (car range) (pos-eol))
                               (string-trim-right (buffer-substring (car range) (pos-eol)))))))
             (setq +ui--defun-cache
-                  (cons (if inside (car range) top)
-                        (cons (if inside (cdr range) (1+ top))
+                  (cons (car span)
+                        (cons (cdr span)
                               (cons (buffer-chars-modified-tick) (cons top text)))))
             text)))))))
 
