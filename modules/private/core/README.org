@@ -454,11 +454,9 @@ What keeps it that way:
 - Tree-sitter grammars for the enabled modes are installed ahead of time,
   so no first open compiles one; ~treesit-auto-install-grammar~ stays
   ~always~ for the next language. (Not listed here: the list rots.) A
-  file only previewed, in SPC . or a search, never builds one, whether
-  Doom or the mode itself would: it shows in the older mode, or without
-  colour, until a file of its language is opened. On a new machine every
-  language's first preview froze while its grammar was cloned and
-  compiled, 1.5 s for Go and CSS, more for TypeScript.
+  file only previewed never builds one, whoever would ask: on a new
+  machine every language's first preview froze while its grammar was
+  cloned and compiled, 1.5 s for Go and CSS, more for TypeScript.
   A buffer past tree-sitter's limit, ~treesit-max-buffer-size~ (40 MB),
   gets the older mode with nothing installed: Doom took the limit for a
   missing grammar, and built the C++ one again at every such file.
@@ -527,11 +525,17 @@ What keeps it that way:
   files, which the agenda reads in org-mode only, are not touched. Reading such a file in pieces behind the first screen was
   measured and is worse: each piece sends the mode over the whole file
   again, 8.8 s in all for that C++ and 40 s for an 8 MB JSON.
-- A file previewed in a prompt is plain past 256 KB
-  (~+core-plain-preview-size~), and read whole up to 8 MB: a 900 KB
-  header took a third of a second to colour at each step through the
-  list, and past a megabyte consult showed its first 10 KB, so a
-  search's match further down was not on screen.
+- A file previewed, beside ~SPC .~, in the file manager's pane or in a
+  search, is plain text, whatever it is and whatever its size: its mode
+  is never set up, so nothing it runs can hold the cursor up. A font
+  kept as a C array took 115 to 390 ms to show in ~c-ts-mode~, a 900 KB
+  header a third of a second to colour at each step; plain, a preview
+  takes a millisecond. Pictures, videos, PDFs and fonts are drawn by
+  their own programs outside Emacs, a GIF as its first frame; a binary
+  says so in a line, a pipe or a socket is not read. A search reads a
+  file whole up to 8 MB: past a megabyte consult showed its first 10 KB,
+  so a match further down was not on screen. The file picked opens
+  afresh, in its own mode.
 
 Doom's own part, left as it is: ~read-process-output-max~ 1 MB under eglot, native
 compilation of every package ahead of time, so-long and fundamental mode
