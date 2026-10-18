@@ -506,7 +506,10 @@ pause again for the one after."
 ;; A server that formats as you type is asked, and waited for, at each
 ;; newline: clangd did it on every RET, a round trip a busy server makes
 ;; long. The mode indents the new line already, and the file is
-;; formatted when it is saved.
+;; formatted when it is saved. Tried again on the Mac, a RET costs 8.5 ms
+;; without it, and with it clangd's edit lands inside the same insertion:
+;; Doom's comment continuation then finds no newline before point and
+;; RET signals an error.
 (after! eglot
   (add-to-list 'eglot-ignored-server-capabilities :documentOnTypeFormattingProvider))
 
