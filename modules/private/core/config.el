@@ -318,8 +318,10 @@ re-run starts it at the editor's priority again.")
 ;; collection took, Doom's setting: here that came to under half a
 ;; second, so a pause to read a line ended in a collection of 40 to 150
 ;; ms, and the key that ended the pause waited for it. Four seconds is a
-;; rest, not a glance.
-(setq gcmh-idle-delay 4)
+;; rest, not a glance. Doom sets its own as gcmh loads, with the first
+;; buffer, after this file: set before, the four seconds never held.
+(after! gcmh
+  (setq gcmh-idle-delay 4))
 
 ;; Doom compiles a few functions it calls often once Emacs is idle, and
 ;; natively where it can: `native-compile' runs a batch Emacs for each
