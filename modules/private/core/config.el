@@ -427,7 +427,7 @@ re-run starts it at the editor's priority again.")
 ;; its snippets as it opened, a third to half a second.
 (defvar +core-warm-up-features
   '(which-key vertico corfu
-    ert eldoc xref jsonrpc external-completion flymake eglot yasnippet
+    ert eldoc xref jsonrpc external-completion flymake eglot markdown-mode yasnippet
     vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table)
   "Libraries the first file of a session loads, loaded ahead while Emacs
 waits after starting.")
