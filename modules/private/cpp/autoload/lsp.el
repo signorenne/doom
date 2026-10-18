@@ -11,6 +11,8 @@
 (defvar +cpp-clangd-args)
 (defvar +cpp-container)
 (declare-function +cpp-kit-container "kit")
+(declare-function +pio--root "pio")
+(declare-function +pio--clangd-db "pio")
 (declare-function +cpp--set-setting "project")
 (declare-function +cpp-kit-make "kit")
 (declare-function +cpp-kit-name "kit")
@@ -43,9 +45,15 @@ path means the same thing there."
          (argv (pcase +cpp-lsp-server
                  ('ccls (list "ccls"))
                  ;; clangd looks in the root and in build/ only; a kit's
-                 ;; build/horizon-Debug has to be named.
+                 ;; build/horizon-Debug has to be named. A PlatformIO
+                 ;; project's is the copy made readable to clang, see
+                 ;; `+pio--compiledb-h'.
                  (_ (append (cons "clangd" +cpp-clangd-args)
-                            (when-let* ((db (+cpp--compile-commands-file)))
+                            (when-let* ((db (or (when-let* ((pio (+pio--root 'noerror))
+                                                            (copy (+pio--clangd-db pio))
+                                                            ((file-exists-p copy)))
+                                                  copy)
+                                                (+cpp--compile-commands-file))))
                               (list (concat "--compile-commands-dir="
                                             (file-name-directory db))))))))
          (kit (or (+cpp--kit) (+cpp-kit-make :name "host" :dir "build"))))
