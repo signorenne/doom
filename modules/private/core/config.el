@@ -102,24 +102,36 @@ key.  A node that holds most of the file holds the middle too."
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
 ;; Doom installs a grammar it finds missing when it picks a tree-sitter
-;; mode, and takes it to be missing whenever `treesit-ready-p' says no,
-;; which it also says of a buffer past `treesit-max-buffer-size', 40 MB.
-;; Each C++ file that big cloned and built the C++ grammar again, two
-;; seconds, over the library the session had loaded. Such a buffer gets
-;; the older mode instead, with nothing installed.
+;; mode, cloning and compiling it while Emacs waits, and takes it to be
+;; missing whenever `treesit-ready-p' says no, which it also says of a
+;; buffer past `treesit-max-buffer-size', 40 MB. Each C++ file that big
+;; cloned and built the C++ grammar again, two seconds, over the library
+;; the session had loaded. And a file only previewed, the cursor passing
+;; over it in SPC . or a search, built its language's grammar there and
+;; then: 1.8 s frozen for CSS, longer for TypeScript, on a machine new to
+;; them. Both get the older mode instead, with nothing installed; the
+;; grammar comes with the first file of its language opened for real.
 (defvar treesit-auto-install-grammar)
+
+(defvar +core--previewing nil
+  "Non-nil while a file is opened only to preview it, by consult or by
+dirvish beside a prompt.")
+
 (advice-add 'major-mode-remap :around
             (defun +core--treesit-no-install-a (fn mode)
-              "Install no grammar for a buffer too big for tree-sitter."
+              "Install no grammar for a buffer too big for tree-sitter, nor
+for a file previewed."
               ;; Loaded first: bound before treesit.el had defined it,
               ;; the binding was lexical, and the first file of a session
               ;; failed to open with treesit loading inside it.
               (require 'treesit)
-              (let ((treesit-auto-install-grammar
-                     (if (> (buffer-size) (or (bound-and-true-p treesit-max-buffer-size)
-                                             most-positive-fixnum))
-                         'never
-                       treesit-auto-install-grammar)))
+              ;; Bound only to say never: bound to its own value, Doom's
+              ;; making it buffer-local once a grammar is in was warned of.
+              (if (or +core--previewing
+                      (> (buffer-size) (or (bound-and-true-p treesit-max-buffer-size)
+                                           most-positive-fixnum)))
+                  (let ((treesit-auto-install-grammar 'never))
+                    (funcall fn mode))
                 (funcall fn mode)))
             '((depth . -90)))
 
@@ -154,15 +166,25 @@ it, which a revert keeps.")
 (defvar +core-plain-preview-size (* 256 1024)
   "Past this size a file previewed in a prompt is shown as plain text.")
 
-(defvar +core--previewing nil
-  "Non-nil while consult opens a file to preview it.")
+(defun +core--previewing-a (fn &rest args)
+  "Call FN with ARGS as a preview, `+core--previewing' set.
+No grammar is built for it, whoever asks: Doom's choice of mode, above,
+or one of Emacs 31's tree-sitter modes, which installs its own as it
+starts, TOML's taking 1.4 s, Go's, Lua's or a Dockerfile's the same."
+  (require 'treesit)
+  (let ((+core--previewing t)
+        (treesit-auto-install-grammar 'never))
+    (apply fn args)))
 
 (after! consult
   (setq consult-preview-partial-size (* 8 1024 1024))
-  (defadvice! +core--previewing-a (fn &rest args)
-    :around #'consult--find-file-temporarily
-    (let ((+core--previewing t))
-      (apply fn args))))
+  (advice-add 'consult--find-file-temporarily :around #'+core--previewing-a))
+
+;; dirvish's beside a prompt, SPC . among them, and in its own pane: the
+;; text of a file, its first 64 KB, or the file opened.
+(after! dirvish
+  (advice-add 'dirvish--preview-file-maybe-truncate :around #'+core--previewing-a)
+  (advice-add 'dirvish--find-file-temporarily :around #'+core--previewing-a))
 
 (defadvice! +core--plain-big-file-a (fn mode &rest args)
   "Set a file past its size limit up in `fundamental-mode', not MODE.
