@@ -194,10 +194,12 @@ between two.  Kept while the window's top stays inside that function.
 Typing with the window still keeps it too, and it is looked up again
 half a second after the typing stops: without a syntax tree the lookup
 walks the code, and in cc-mode it was half of what a key cost.  Not
-looked up in a file core calls large: in a 2 MB header of declarations
-cc-mode walked back through them at every step, 130 ms a line scrolled."
+looked up in a file core calls large without a syntax tree: in a 2 MB
+header of declarations cc-mode walked back through them at every step,
+130 ms a line scrolled; the tree finds it in a megabyte in 10 µs."
   (let ((top (window-start)))
-    (when (and (> top (point-min)) (not +core-large-file-p))
+    (when (and (> top (point-min))
+               (or (not +core-large-file-p) (treesit-parser-list)))
       (pcase-let ((`(,from ,to ,tick ,old-top . ,line) +ui--defun-cache))
         (cond
          ;; A function's line holds while the top is past it: with the

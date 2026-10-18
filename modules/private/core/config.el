@@ -27,9 +27,10 @@
 (setq treesit-auto-install-grammar 'always)
 
 ;; A file over a megabyte is large here: the header's function line, in
-;; the ui module, stands down in it. Doom kept that mark once, and now
-;; tells a large file by its lines, for so-long alone, so the mark is
-;; made here, in the file's own buffer, as it opens.
+;; the ui module, stands down in it when it has no syntax tree to ask.
+;; Doom kept that mark once, and now tells a large file by its lines, for
+;; so-long alone, so the mark is made here, in the file's own buffer, as
+;; it opens.
 (defvar +core-large-file-size (* 1024 1024)
   "Past this size, in bytes, a file opened is large: `+core-large-file-p'.")
 
