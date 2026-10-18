@@ -158,14 +158,14 @@ agenda reads every file of the notes.")
 it, which a revert keeps.")
 (put '+core-plain-mode 'permanent-local t)
 
-;; A file previewed in a prompt is a glance, so plain past 256 KB: a 900
-;; KB header took a third of a second to colour at each step through the
-;; list. And whole up to 8 MB, where consult showed the first 10 KB of
-;; anything past a megabyte, so a search's match beyond them was not on
-;; screen.
-(defvar +core-plain-preview-size (* 256 1024)
-  "Past this size a file previewed in a prompt is shown as plain text.")
-
+;; A file previewed in a prompt is a glance: plain text, whatever it is and
+;; whatever its size, its mode never set up, so nothing a mode runs can
+;; hold the cursor up. Colouring a 900 KB header took a third of a second
+;; at each step through the list, and C headers and other files held SPC
+;; . up while their modes started. A binary shows nothing. Read whole up
+;; to 8 MB, where consult showed the first 10 KB of anything past a
+;; megabyte, so a search's match beyond them was not on screen. The file
+;; picked is opened afresh, in its own mode.
 (defun +core--previewing-a (fn &rest args)
   "Call FN with ARGS as a preview, `+core--previewing' set.
 No grammar is built for it, whoever asks: Doom's choice of mode, above,
@@ -187,24 +187,24 @@ starts, TOML's taking 1.4 s, Go's, Lua's or a Dockerfile's the same."
   (advice-add 'dirvish--find-file-temporarily :around #'+core--previewing-a))
 
 (defadvice! +core--plain-big-file-a (fn mode &rest args)
-  "Set a file past its size limit up in `fundamental-mode', not MODE.
-The limit is `+core-plain-file-size', `+core-plain-preview-size' in a
-preview. The modes a large file keeps, a picture's, a PDF's, an
-archive's, `+core-large-file-excluded-modes', are left alone."
+  "Set a file past `+core-plain-file-size' up in `fundamental-mode', not
+MODE, and a file previewed at any size.  Opened, the modes a large file
+keeps, a picture's, a PDF's, an archive's, `+core-large-file-excluded-modes',
+are left alone, and so are `+core-plain-file-keep-modes'."
   :around #'set-auto-mode-0
-  (let ((limit (if +core--previewing +core-plain-preview-size +core-plain-file-size)))
-    (if (and mode
-             buffer-file-name
-             (not (eq +core-plain-mode t))
-             (> (buffer-size) limit)
-             (not (memq mode +core-large-file-excluded-modes))
-             (not (memq mode +core-plain-file-keep-modes)))
-        (progn (setq +core-plain-mode mode)
-               (apply fn #'fundamental-mode args))
-      ;; Back under the limit, a revert after the file shrank: not plain.
-      (unless (eq +core-plain-mode t)
-        (setq +core-plain-mode nil))
-      (apply fn mode args))))
+  (if (and mode
+           buffer-file-name
+           (not (eq +core-plain-mode t))
+           (or +core--previewing
+               (and (> (buffer-size) +core-plain-file-size)
+                    (not (memq mode +core-large-file-excluded-modes))
+                    (not (memq mode +core-plain-file-keep-modes)))))
+      (progn (setq +core-plain-mode mode)
+             (apply fn #'fundamental-mode args))
+    ;; Back under the limit, a revert after the file shrank: not plain.
+    (unless (eq +core-plain-mode t)
+      (setq +core-plain-mode nil))
+    (apply fn mode args)))
 
 (add-hook! 'find-file-hook :depth 90
   (defun +core--plain-file-say-h ()

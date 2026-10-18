@@ -270,8 +270,10 @@ the pane, the way an image viewer does."
                                   (/ (float h) (cdr size)))))))
 
   (dirvish-define-preview +core-image (file ext preview-window)
-    "Preview images, a thumbnail made by vipsthumbnail or ImageMagick."
-    (when (member ext dirvish-image-exts)
+    "Preview images, a thumbnail made by vipsthumbnail or ImageMagick.
+A GIF as well, its first frame: dirvish's own opened it whole in
+image-mode and played it."
+    (when (or (member ext dirvish-image-exts) (equal ext "gif"))
       (let* ((w (dirvish-media--img-size preview-window))
              (h (dirvish-media--img-size preview-window 'height))
              (alpha (member ext +core-image-alpha-exts))
@@ -321,8 +323,37 @@ the pane, the way an image viewer does."
     (when (and (member ext dirvish-audio-exts) (executable-find "ffprobe"))
       `(shell . ("ffprobe" "-hide_banner" ,file))))
 
+  ;; Every other file as plain text, its first 64 KB read and nothing
+  ;; run: no mode set up, no colour, no grammar built, so no file can hold
+  ;; the cursor up, a C header's mode starting, an Org file's, a minified
+  ;; script's colouring. dirvish's own set the mode up for each. A file
+  ;; with a NUL in it is a binary, said in a line; a pipe or a socket is
+  ;; not read at all, which would wait for good.
+  (dirvish-define-preview +core-text (file)
+    "Preview any other file as its plain text."
+    (cond
+     ((file-directory-p file) nil)
+     ((not (file-regular-p file))
+      '(info . "Not a regular file: a pipe, a socket or a device"))
+     (t
+      (let ((buffer (get-buffer-create " *+core-preview*"))
+            (size (file-attribute-size (file-attributes file))))
+        (with-current-buffer buffer
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (condition-case err
+                (insert-file-contents file nil 0 dirvish-preview-large-file-threshold)
+              (file-error (insert (error-message-string err))))
+            (goto-char (point-min))
+            (setq buffer-read-only t
+                  truncate-lines t)))
+        (if (with-current-buffer buffer
+              (search-forward "\0" (min (point-max) 8192) t))
+            `(info . ,(format "Binary, %s" (file-size-human-readable (or size 0))))
+          `(buffer . ,buffer))))))
+
   (setq dirvish-preview-dispatchers
-        '(+core-image gif +core-video +core-audio archive font pdf)))
+        '(+core-image +core-video +core-audio archive font pdf +core-text)))
 
 ;; The keys that make it a file manager. M-n narrows the listing as you
 ;; type, which is Doom's; the rest of the file manager's own work is on
