@@ -345,6 +345,20 @@ or the enclosing function's first line while it is scrolled off the top."
 ;; which a fast machine does not feel; in a megabyte of C++ they add
 ;; nothing measurable to a key or to colouring a screen.
 
+;; With a syntax tree, indent-bars finishes setting itself up from
+;; `font-lock-mode-hook', and colours the whole buffer there at once. That
+;; hook runs as font lock goes off too, which it does as a buffer changes
+;; mode: a file core opens in the mode before tree-sitter, a revert, M-x
+;; c-mode. All of a 1.1 MB C array was coloured then, for the mode about
+;; to be dropped: 15 s frozen before the file showed. Going off, nothing
+;; is set up now.
+(declare-function indent-bars-ts--finalize-jit-lock "indent-bars-ts")
+(defadvice! +ui--indent-bars-finalize-on-a (fn)
+  "Finish indent-bars' tree-sitter setup only as font lock comes on."
+  :around #'indent-bars-ts--finalize-jit-lock
+  (when font-lock-mode
+    (funcall fn)))
+
 ;; The wheel went on past the end of a file until its last line stood
 ;; alone at the top, and then ultra-scroll put the window's start on the
 ;; very end: an empty window. It stops now as the last line reaches the
