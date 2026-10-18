@@ -303,6 +303,13 @@ are left alone, and so are `+core-plain-file-keep-modes'."
 ;; is built without asking; it needs cmake, and libvterm or the network.
 (setq vterm-always-compile-module t)
 
+;; A terminal keeps 20 000 lines, an agent's session or a build's log, not
+;; Doom's 5 000. Each line costs some 8 KB besides its text, in the cells
+;; the module keeps for it: 57 MB for 5 000, 397 for 50 000, and output
+;; reads 3 % slower at that end (2026-10-23).
+(after! vterm
+  (setq vterm-max-scrollback 20000))
+
 ;; Every compilation notes when it started, so the newest can be found:
 ;; `+core-last-compilation-buffer', which the AI's build tool reports.
 (add-hook 'compilation-start-hook #'+core--note-compile-start-h)
