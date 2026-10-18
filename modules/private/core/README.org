@@ -453,7 +453,12 @@ What keeps it that way:
   ~vc-state~ back to ~dirvish-attributes~ if the fringe marks are missed.
 - Tree-sitter grammars for the enabled modes are installed ahead of time,
   so no first open compiles one; ~treesit-auto-install-grammar~ stays
-  ~always~ for the next language. (Not listed here: the list rots.)
+  ~always~ for the next language. (Not listed here: the list rots.) A
+  file only previewed, in SPC . or a search, never builds one, whether
+  Doom or the mode itself would: it shows in the older mode, or without
+  colour, until a file of its language is opened. On a new machine every
+  language's first preview froze while its grammar was cloned and
+  compiled, 1.5 s for Go and CSS, more for TypeScript.
   A buffer past tree-sitter's limit, ~treesit-max-buffer-size~ (40 MB),
   gets the older mode with nothing installed: Doom took the limit for a
   missing grammar, and built the C++ one again at every such file.
