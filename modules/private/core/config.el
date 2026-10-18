@@ -68,6 +68,37 @@ which show something other than the text.")
 (defvar +core-treesit-unparsed-max (* 256 1024)
   "Past this size a file tree-sitter could not parse opens without it.")
 
+;; And a file the grammar reads with many errors reparses slowly at every
+;; key wherever it is edited: a generated 1.5 MB C file with 2 579 error
+;; nodes, 90 ms a reparse and 190 ms a key, 18 to 34 in c-mode; a 1 MB
+;; register header with 930, 20 ms and 42 a key, which stays, cc-mode
+;; spending half a second at a key in places there. Ordinary C++ of the
+;; same size reparses in under a millisecond. Past the size above, one
+;; reparse is timed as the file opens.
+(defvar +core-treesit-reparse-max 0.04
+  "Past `+core-treesit-unparsed-max', a file whose syntax tree takes longer
+than this, in seconds, to reparse after a one character edit opens without
+tree-sitter.")
+
+(defun +core--treesit-slow-reparse-p ()
+  "Non-nil when a one character edit in the middle of the buffer takes
+tree-sitter longer than `+core-treesit-reparse-max' to reparse.  The edit
+is made and taken back unseen: no undo, no change hooks, the text and the
+modified flag as they were."
+  (save-excursion
+    (let ((inhibit-read-only t)
+          elapsed)
+      (with-silent-modifications
+        (goto-char (/ (+ (point-min) (point-max)) 2))
+        (treesit-buffer-root-node)
+        (insert " ")
+        (unwind-protect
+            (let ((start (float-time)))
+              (treesit-buffer-root-node)
+              (setq elapsed (- (float-time) start)))
+          (delete-char -1)))
+      (> elapsed +core-treesit-reparse-max))))
+
 (defvar +core-treesit-children-max 20000
   "Past this many children under one node, a file opens without tree-sitter:
 JSON's array of 9 000 objects, a megabyte, costs 13 ms a key, and of
@@ -97,7 +128,9 @@ key.  A node that holds most of the file holds the middle too."
                 ((fboundp classic))
                 ((or (and (> (buffer-size) +core-treesit-unparsed-max)
                           (equal (treesit-node-type (treesit-buffer-root-node)) "ERROR"))
-                     (+core--treesit-crowded-p))))
+                     (+core--treesit-crowded-p)
+                     (and (> (buffer-size) +core-treesit-unparsed-max)
+                          (+core--treesit-slow-reparse-p)))))
       (funcall classic)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
