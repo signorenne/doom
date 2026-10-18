@@ -43,14 +43,17 @@ the next session by savehist.")
 (after! savehist
   (add-to-list 'savehist-additional-variables '+core-quick-access-extra))
 
-;; No vc-state attribute: to mark files in the fringe, dirvish runs git
-;; twice for every file of a directory each time it is entered, in a
-;; batch Emacs in the background; browsing a repository kept a core busy.
-;; Git state is one keypress away in magit.
+;; Each file's git state is marked in the fringe. To find it dirvish
+;; runs git twice per file, in a batch Emacs in the background, each time
+;; a directory of a repository is entered: on the old machine at load 30
+;; that kept a core busy. On the Mac it is 12 ms a file, 0.2 to 0.5 s for
+;; a directory of 20 to 35 entries, off the editor's thread: the listing
+;; shows as fast and j costs 2.4 to 2.8 ms with it, 3.3 without.
 (after! dirvish
   (setq dirvish-default-layout '(0 0 0.45)
-        ;; Read from the file attributes dired already has, no process.
-        dirvish-attributes '(subtree-state nerd-icons collapse
+        ;; All but vc-state read from the file attributes dired already
+        ;; has, no process.
+        dirvish-attributes '(subtree-state nerd-icons collapse vc-state
                              file-time file-modes file-size)
         dirvish-use-header-line 'global
         dirvish-header-line-format '(:left (path) :right (free-space))
