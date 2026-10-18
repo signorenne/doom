@@ -458,6 +458,11 @@ What keeps it that way:
   gets the older mode with nothing installed: Doom took the limit for a
   missing grammar, and built the C++ one again at every such file.
 - Projectile has no cache; fd lists a project in milliseconds.
+- gcmh lets 64 MB of garbage gather at rest and 256 MB at work, 512 with
+  a language server, which Doom doubles it for: a collection of a 178 MB
+  heap took 176 ms at 16 MB and 181 at 64, and comes half as often; at
+  256 MB a quarter as often again, 219 ms. With memory to spare, fewer
+  pauses of the same length are the better trade.
 - gcmh collects after four seconds of rest. Doom's setting waits ten
   times the last collection, under half a second here, so every pause to
   read a line ended in a collection of 40 to 150 ms that the next key
@@ -523,8 +528,7 @@ What keeps it that way:
   list, and past a megabyte consult showed its first 10 KB, so a
   search's match further down was not on screen.
 
-Doom's own part, left as it is: gcmh's thresholds (16 MB idle, 64 MB
-busy, 128 MB with a language server), ~read-process-output-max~ 1 MB under eglot, native
+Doom's own part, left as it is: ~read-process-output-max~ 1 MB under eglot, native
 compilation of every package ahead of time, so-long and fundamental mode
 for huge files, ~redisplay-skip-fontification-on-input~.
 

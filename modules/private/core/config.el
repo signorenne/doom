@@ -310,9 +310,12 @@ re-run starts it at the editor's priority again.")
 
 ;; gcmh drops the GC threshold to 800 KB while Emacs is idle, but an agent
 ;; streaming into vterm happens while idle: on a 350 MB heap that was a
-;; 100 ms freeze every 800 KB of output. 16 MB is Doom's own value for a
-;; setup without gcmh.
-(setq gcmh-low-cons-threshold (* 16 1024 1024))
+;; 100 ms freeze every 800 KB of output. It waits for 64 MB: with memory
+;; to spare a pause comes half as often as at 16 MB and lasts as long,
+;; 181 ms where it took 176 on a 178 MB heap; at 256 MB, a quarter as
+;; often again, 219 ms. Working, Doom's 64 MB is 256 here, below, and
+;; 512 once a language server runs, which Doom doubles it for.
+(setq gcmh-low-cons-threshold (* 64 1024 1024))
 
 ;; And it collects once Emacs has rested ten times as long as the last
 ;; collection took, Doom's setting: here that came to under half a
@@ -321,7 +324,8 @@ re-run starts it at the editor's priority again.")
 ;; rest, not a glance. Doom sets its own as gcmh loads, with the first
 ;; buffer, after this file: set before, the four seconds never held.
 (after! gcmh
-  (setq gcmh-idle-delay 4))
+  (setq gcmh-idle-delay 4
+        gcmh-high-cons-threshold (* 256 1024 1024)))
 
 ;; Doom compiles a few functions it calls often once Emacs is idle, and
 ;; natively where it can: `native-compile' runs a batch Emacs for each
