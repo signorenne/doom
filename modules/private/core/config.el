@@ -539,6 +539,9 @@ pause again for the one after."
 ;; starts inside a container takes longer than that every time. Give the
 ;; buffer back at once; the server attaches when it is ready.
 (after! eglot
+  ;; What was typed goes to the server after a quarter second at rest,
+  ;; not half, so its diagnostics follow sooner; sending is a few ms here.
+  (setq eglot-send-changes-idle-time 0.25)
   (setq eglot-sync-connect nil
         ;; The server's "a fix is available here" is a mark in the margin,
         ;; as in every other IDE, not a line of text in the echo area: with
@@ -811,6 +814,12 @@ MANAGED-MODES on its way already."
 ;; not enough.
 (setq eldoc-echo-area-use-multiline-p 3)
 
+;; What is under the cursor shows after a quarter second at rest, not
+;; half. In C++ with clangd that rest asks for the signature, the hover
+;; and the highlights, 37 to 46 ms of work in all, the longest piece 19
+;; ms: a key pressed meanwhile waits no more than that (2026-10-23).
+(setq eldoc-idle-delay 0.25)
+
 ;; eldoc, which eglot brings from ELPA and which loads with the first
 ;; file, primes its list of motion commands by running thirty prefixes
 ;; one by one through every symbol there is: 76 000 of them in a session
@@ -899,7 +908,11 @@ MANAGED-MODES on its way already."
 
 ;; What the candidate under the cursor means, beside the list. Doom turns
 ;; the popup on and binds nothing for it, so it could only be waited for:
-;; M-d asks for it at once, and M-n and M-p read a long one.
+;; M-d asks for it at once, and M-n and M-p read a long one. By itself it
+;; comes 0.3 s after the list does, and follows the selection in 0.15:
+;; Doom waited half a second and then a whole one at each move.
+(after! corfu-popupinfo
+  (setq corfu-popupinfo-delay '(0.3 . 0.15)))
 (map! :after corfu-popupinfo
       :map corfu-map
       "M-d" #'corfu-popupinfo-toggle

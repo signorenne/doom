@@ -68,5 +68,5 @@
 
 ;; Show the key hints sooner.
 (after! which-key
-  (setq which-key-idle-delay 0.5
+  (setq which-key-idle-delay 0.3
         which-key-idle-secondary-delay 0.05))
