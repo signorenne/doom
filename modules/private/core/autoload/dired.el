@@ -275,6 +275,13 @@ Mark what you want back and SPC m t puts it where it came from."
                              (expand-file-name default-directory))
       (user-error "This is not the trash; SPC f t opens it"))
     (dolist (file files)
+      ;; Only what was deleted has a record: a file inside a directory in
+      ;; the trash came with it, and one by the same name deleted on its
+      ;; own would be taken for it.
+      (unless (file-equal-p (file-name-directory (directory-file-name file))
+                            (+core-os-trash-files-dir))
+        (user-error "%s is inside a directory in the trash: put that back"
+                    (file-name-nondirectory (directory-file-name file))))
       (pcase-let ((`(,origin . ,forget)
                    (or (+core-os-trash-origin file)
                        (user-error (if (featurep :system 'macos)
