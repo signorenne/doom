@@ -1004,13 +1004,25 @@ has loaded so far."
   (with-temp-buffer
     (pcase-dolist (`(,prefix ,heading ,features . ,maps) (+docs--command-groups))
       (dolist (feature features) (require feature nil t))
-      (when-let* ((commands (sort (seq-filter #'+docs--this-config-p
-                                              (apropos-internal (format "^\\+%s/" prefix)
-                                                                #'commandp))
-                                  #'string<)))
-        (insert (format "\n** %s\n" heading))
-        (mapc (lambda (command) (insert (+docs--command-entry command maps)))
-              commands)))
+      (let* ((find (lambda ()
+                     (sort (seq-filter #'+docs--this-config-p
+                                       (apropos-internal (format "^\\+%s/" prefix)
+                                                         #'commandp))
+                           #'string<)))
+             ;; A command's file can define more as it loads, a menu its
+             ;; suffixes; reading the docstring of one autoloaded loads it,
+             ;; so the first list of a session lacked them and the next had
+             ;; them. Each file is loaded first, and the list taken after.
+             (commands (progn
+                         (dolist (command (funcall find))
+                           (let ((def (symbol-function command)))
+                             (when (autoloadp def)
+                               (ignore-errors (autoload-do-load def command)))))
+                         (funcall find))))
+        (when commands
+          (insert (format "\n** %s\n" heading))
+          (mapc (lambda (command) (insert (+docs--command-entry command maps)))
+                commands))))
     (buffer-string)))
 
 (defun +docs--replace-generated (marker content)
