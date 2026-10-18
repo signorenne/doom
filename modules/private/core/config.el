@@ -134,6 +134,23 @@ key.  A node that holds most of the file holds the middle too."
       (funcall classic)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
+;; Whether a grammar is there is looked up on disk at every asking, 3 ms
+;; even with the library loaded, and markdown asks twice for each code
+;; block it colours: every block of a README, and each documentation
+;; popup's signature, 5.5 ms a block. A grammar found stays usable for
+;; the session; one not found is looked for again, so a grammar
+;; installed meanwhile is found.
+(defvar +core--treesit-available (make-hash-table :test #'eq)
+  "The languages whose grammar was found, as t.")
+
+(defadvice! +core--treesit-available-once-a (fn language &optional detail)
+  "Ask FN about LANGUAGE once it has been found; DETAIL is always asked."
+  :around #'treesit-language-available-p
+  (cond (detail (funcall fn language detail))
+        ((gethash language +core--treesit-available))
+        ((funcall fn language)
+         (puthash language t +core--treesit-available))))
+
 ;; Doom installs a grammar it finds missing when it picks a tree-sitter
 ;; mode, cloning and compiling it while Emacs waits, and takes it to be
 ;; missing whenever `treesit-ready-p' says no, which it also says of a
