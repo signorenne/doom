@@ -784,6 +784,38 @@ what the modules say and `+docs-cheatsheet-sections'; nil when none fits."
              thereis (cdr (seq-find (lambda (d) (string-match-p (car d) full))
                                     (+docs--descriptions))))))
 
+(defvar +docs--prefix-descriptions nil
+  "(KEY . DESCRIPTION) of each leader prefix, as its keymap names it.")
+
+(defvar +docs--seen nil
+  "While the leader is walked, the keys found already: a keymap's parent
+binds some again, and the nearer one is the one that holds.")
+
+(defun +docs--leader-walk (map &optional prefix)
+  "(KEY DESCRIPTION . DEF) for every binding under MAP, KEY written after
+PREFIX, a key vector, going down into every prefix.  Doom binds a prefix
+as (DESCRIPTION . KEYMAP), which which-key does not go down into, and may
+bind a command as (DESCRIPTION . COMMAND); a menu item is one binding,
+its label the description: SPC k is a map chosen as it is pressed."
+  (let (rows)
+    (map-keymap
+     (lambda (ev def)
+       (let* ((key (vconcat prefix (vector ev)))
+              (desc (cond ((eq (car-safe def) 'menu-item) (nth 1 def))
+                          ((stringp (car-safe def)) (car def))))
+              (def (cond ((eq (car-safe def) 'menu-item) 'menu-item)
+                         ((stringp (car-safe def)) (cdr def))
+                         (t def))))
+         (cond ((or (memq def '(nil ignore self-insert-command)) (eq ev 'menu-bar)
+                    (gethash key +docs--seen)
+                    (not (puthash key t +docs--seen))))
+               ((and (keymapp def) (not (eq def 'menu-item)))
+                (push (cons (key-description key) desc) +docs--prefix-descriptions)
+                (setq rows (nconc (+docs--leader-walk def key) rows)))
+               (t (push (cons (key-description key) (cons desc def)) rows)))))
+     map)
+    rows))
+
 (defun +docs--leader-descriptions ()
   "Alist of (KEY . DESCRIPTION) for everything under the leader, once
 `+docs-leader-features' are loaded, so the table does not depend on
@@ -791,19 +823,16 @@ what the session has done."
   (require 'which-key)
   (dolist (feature +docs-leader-features)
     (require feature nil t))
-  (setq +docs--descriptions nil)
-  ;; Entries are (KEY . DESC) in which-key 3 and (KEY SEP DESC) in the
-  ;; version bundled with Emacs 30 and later.
-  (mapcar (lambda (cell)
-            (let* ((key (substring-no-properties (car cell)))
-                   (command (substring-no-properties
-                             (if (consp (cdr cell)) (car (last cell)) (cdr cell))))
-                   (desc (+docs--describe-key key)))
+  (setq +docs--descriptions nil
+        +docs--prefix-descriptions nil)
+  (let ((+docs--seen (make-hash-table :test #'equal)))
+    (mapcar (pcase-lambda (`(,key ,label . ,def))
               ;; The description alone keeps the rows narrow; `SPC h k' on
               ;; the key says which command it runs.
-              (cons key (or desc command))))
-          (let ((which-key-max-description-length 120)) ; don't truncate
-            (which-key--get-bindings nil doom-leader-map nil t))))
+              (cons key (or (+docs--describe-key key)
+                            label
+                            (if (symbolp def) (symbol-name def) "a function"))))
+            (+docs--leader-walk doom-leader-map))))
 
 (defun +docs--org-escape (s)
   "Make S safe inside an org table cell."
@@ -847,7 +876,9 @@ after PREFIX; a kit map keeps each description in the map itself."
       (dolist (group (sort groups :key #'car :lessp #'string<))
         (let ((prefix (car group)))
           (insert (format "\n** SPC %s: %s\n| Key | What it does |\n|-----+--------------|\n"
-                          prefix (or (+docs--describe-key prefix) prefix)))
+                          prefix (or (+docs--describe-key prefix)
+                                     (cdr (assoc prefix +docs--prefix-descriptions))
+                                     prefix)))
           (dolist (binding (sort (cdr group) :key #'car :lessp #'string<))
             (insert (format "| ~SPC %s %s~ | %s |\n" prefix
                             (+docs--org-escape (car binding))
