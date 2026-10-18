@@ -16,6 +16,7 @@
 ;;
 ;;; Helpers
 
+;;;###autoload
 (defun +pio--root (&optional noerror)
   "Directory of the nearest platformio.ini.
 Signals an error unless NOERROR."
@@ -276,12 +277,61 @@ flags it carries."
            (format "it was written in %s" (match-string 1)))))))
 
 ;;;###autoload
+(defun +pio--clangd-db (root)
+  "Where ROOT's compilation database for clangd is: what pio writes, made
+readable to clang by bin/pio-clangd-db, in .pio, which git leaves alone."
+  (expand-file-name ".pio/clangd/compile_commands.json" root))
+
+(defun +pio--python ()
+  "PlatformIO's own Python, which every pio comes with, else python3."
+  (or (when-let* ((pio (executable-find "pio"))
+                  (python (expand-file-name "python" (file-name-directory (file-truename pio))))
+                  ((file-executable-p python)))
+        python)
+      (executable-find "python3")))
+
+(defvar +pio--clangd-db-tried (make-hash-table :test #'equal)
+  "ROOT to the time of the database the clangd copy was last tried from,
+so a copy that cannot be written is not tried at every file.")
+
+(defun +pio--write-clangd-db (root)
+  "Write ROOT's database for clangd from pio's, then start its servers
+again on it.  A second's work, in the background."
+  (let ((db (expand-file-name "compile_commands.json" root))
+        (script (expand-file-name "bin/pio-clangd-db" doom-user-dir))
+        (python (+pio--python)))
+    (puthash root (file-attribute-modification-time (file-attributes db))
+             +pio--clangd-db-tried)
+    (when python
+      (make-process
+       :name "pio-clangd-db"
+       :buffer (generate-new-buffer " *pio clangd db*")
+       :noquery t
+       :command (list python script root)
+       :sentinel
+       (lambda (process _event)
+         (unless (process-live-p process)
+           (let ((ok (eq (process-exit-status process) 0))
+                 (said (with-current-buffer (process-buffer process)
+                         (string-trim (buffer-string)))))
+             (kill-buffer (process-buffer process))
+             ;; A server started before the copy was there, as the file
+             ;; opened, kept its errors: it starts again on the copy.
+             (when ok (+pio--reconnect-servers root))
+             (message "pio: %s" (if ok
+                                    (concat "clangd has the flags, " said)
+                                  (concat "the database for clangd failed: " said))))))))))
+
+;;;###autoload
 (defun +pio--compiledb-h ()
-  "Write compile_commands.json for a PlatformIO project that has none, or
-whose one is stale, see `+pio--compiledb-stale'.
+  "Give clangd a PlatformIO project's flags, with nothing to set up.
+pio writes compile_commands.json when the project has none, or one that
+is stale, see `+pio--compiledb-stale'; and from it the copy clangd starts
+on, `+pio--clangd-db', whenever that is missing or older, so a database
+pio wrote from a terminal is taken up as well.
 A firmware's flags are nothing a language server can guess: the cross
 compiler, the framework's headers, the board's defines. pio knows them
-and writes them out in a second for a project that has been built, so
+and writes them out in a minute for a project that has been built, so
 the first C or C++ file opened in one asks for them.
 
 Only for a project with a .pio/build: without one the answer means
@@ -290,34 +340,37 @@ someone's back. SPC k p i asks for it then."
   (when-let* (((derived-mode-p 'c-mode 'c++-mode 'c-ts-mode 'c++-ts-mode))
               (root (ignore-errors (+pio--root 'noerror)))
               (root (expand-file-name root))
-              ((not (member root +pio--compiledb-done)))
-              ((file-directory-p (expand-file-name ".pio/build" root)))
-              (db (expand-file-name "compile_commands.json" root))
-              (why (if (file-exists-p db)
-                       (+pio--compiledb-stale root db)
-                     "there is none"))
-              (pio (executable-find "pio")))
-    (push root +pio--compiledb-done)
-    (let ((default-directory root))
-      (message "pio: writing the compilation database for %s, %s..."
-               (file-name-nondirectory (directory-file-name root)) why)
-      (make-process
-       :name "pio-compiledb"
-       :buffer (generate-new-buffer " *pio compiledb*")
-       :noquery t
-       :command (list pio "run" "-t" "compiledb")
-       :sentinel
-       (lambda (process _event)
-         (unless (process-live-p process)
-           (let ((ok (eq (process-exit-status process) 0)))
-             (when (buffer-live-p (process-buffer process))
-               (kill-buffer (process-buffer process)))
-             ;; A server started on the old database, as the file opened,
-             ;; kept its errors: it starts again on the new one.
-             (when ok (+pio--reconnect-servers root))
-             (message (if ok
-                          "pio: the compilation database is written; the server has the flags"
-                        "pio: could not write the compilation database; SPC k p i says why")))))))))
+              ((file-directory-p (expand-file-name ".pio/build" root))))
+    (let* ((db (expand-file-name "compile_commands.json" root))
+           (copy (+pio--clangd-db root))
+           (why (if (file-exists-p db)
+                    (+pio--compiledb-stale root db)
+                  "there is none")))
+      (cond
+       ((and why (not (member root +pio--compiledb-done)) (executable-find "pio"))
+        (push root +pio--compiledb-done)
+        (let ((default-directory root))
+          (message "pio: writing the compilation database for %s, %s..."
+                   (file-name-nondirectory (directory-file-name root)) why)
+          (make-process
+           :name "pio-compiledb"
+           :buffer (generate-new-buffer " *pio compiledb*")
+           :noquery t
+           :command (list (executable-find "pio") "run" "-t" "compiledb")
+           :sentinel
+           (lambda (process _event)
+             (unless (process-live-p process)
+               (let ((ok (eq (process-exit-status process) 0)))
+                 (when (buffer-live-p (process-buffer process))
+                   (kill-buffer (process-buffer process)))
+                 (if ok
+                     (+pio--write-clangd-db root)
+                   (message "pio: could not write the compilation database; SPC k p i says why"))))))))
+       ((and (not why)
+             (or (not (file-exists-p copy)) (file-newer-than-file-p db copy))
+             (not (equal (gethash root +pio--clangd-db-tried)
+                         (file-attribute-modification-time (file-attributes db)))))
+        (+pio--write-clangd-db root))))))
 
 (declare-function eglot-current-server "eglot")
 (declare-function eglot-reconnect "eglot")

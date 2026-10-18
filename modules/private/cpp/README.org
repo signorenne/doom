@@ -397,8 +397,20 @@ template uses Qt style: PascalCase types, camelCase functions, =m_= members,
 - Before finishing: ~SPC k g F~, ~SPC k g p~, then the =ci= and =asan=
   presets through ~SPC k K~ and ~SPC k t~.
 - PlatformIO: ~SPC k p e~ pick the environment, ~SPC k p b~ build,
-  ~SPC k p u~ upload, ~SPC k p m~ watch the serial output. Run
-  ~SPC k p i~ once so clangd knows the compiler flags.
+  ~SPC k p u~ upload, ~SPC k p m~ watch the serial output. clangd needs
+  nothing set up: the first C or C++ file opened in a project that has
+  been built has pio write =compile_commands.json= when there is none,
+  when it was written in another directory (the project moved since, and
+  every path in it pointed at nothing) or before =platformio.ini= last
+  changed; =bin/pio-clangd-db= then makes the copy clangd starts on,
+  =.pio/clangd/=, which git leaves alone. In it the cross compiler is
+  named in full, the GCC flags clang does not know are out, clang itself
+  telling which, no system directory but the cross compiler's is
+  searched (the Mac's own stopped every file with "architecture not
+  supported"), and libstdc++ is told of the C library's =isinf= and
+  =isnan=, which with Arduino.h clashed under clang. The servers of the
+  project start again on it. ~SPC k p i~ writes the database by hand, and
+  a database written from a terminal is taken up at the next file.
 
 * Indentation
 A C++ buffer indents the way its project's =.clang-format= says, read
