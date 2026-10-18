@@ -366,10 +366,16 @@ or the enclosing function's first line while it is scrolled off the top."
               (kill-local-variable 'next-error-function)
               (kill-local-variable 'next-error-find-buffer-function))))
 
-;; The indent guides are on, Doom's way, and SPC t i turns them off in a
-;; buffer. They cost some four milliseconds a scroll step on a big frame,
-;; which a fast machine does not feel; in a megabyte of C++ they add
-;; nothing measurable to a key or to colouring a screen.
+;; The indent guides are off until asked for, SPC t i. On an empty line
+;; they are a string drawn over its newline, and Emacs finds point there a
+;; line lower than it is: j onto an empty line at the bottom of the window
+;; scrolled two lines and the next j none, one press in seven in C++ held
+;; down, and k the same at the top. Without them every step is one line,
+;; and costs 5 ms instead of 10.
+(defun +ui--no-guides-by-default-h ()
+  "Keep Doom's indent guides off until asked for."
+  t)
+(add-hook '+indent-guides-inhibit-functions #'+ui--no-guides-by-default-h)
 
 ;; With a syntax tree, indent-bars finishes setting itself up from
 ;; `font-lock-mode-hook', and colours the whole buffer there at once. That
