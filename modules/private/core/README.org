@@ -415,6 +415,19 @@ of reparse among C++'s 6 000 top-level nodes, 132 among a C array's
 170 000, not the size. The array goes to c-mode, 7 to 11 ms a key from
 300 KB to 1 MB.
 
+On 2026-10-22 and 23, on that Mac, with real key presses posted to a
+maximised frame 33 ms apart: a held =j= in C++ costs 10 to 18 ms from key
+to screen and never falls behind. What read as lag was a step of two
+lines and then none, one press in seven, from the indent guides on empty
+lines (ui README); without them every step is one line, 5 ms. A file
+that falls back to c-mode no longer colours all of itself as it leaves
+c-ts-mode, 16.5 s to 1.2 for a 1.1 MB font array, and a revert of a
+3 500 line C++ file 250 ms to 87. The config runs as source, and stays
+so: compiled, the header line went from 2 µs to 0.5, the modeline 34 to
+32, a held =j= stayed at 4.8 ms, opening a C++ file at 73, and startup
+went from 0.67 s to 0.70 to 0.80 as Emacs started compiling the files
+natively behind it, without Doom's macros.
+
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
   redisplay, which in a busy window costs tens of ms. The dashboard
