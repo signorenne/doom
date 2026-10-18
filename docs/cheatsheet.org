@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-13 15:36
+#+generated: 2026-10-21 21:38
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2527,26 +2527,25 @@ back.
 Generated from the running config. Rebuild it with ~gr~ in this buffer.
 # BEGIN GENERATED-KEYS
 ** Top level (SPC)
-| Key                | What it does                 |
-|--------------------+------------------------------|
-| ~SPC '~              | Resume last search           |
-| ~SPC *~              | Search for symbol in project |
-| ~SPC ,~              | Switch workspace buffer      |
-| ~SPC .~              | Find file                    |
-| ~SPC /~              | Search project               |
-| ~SPC :~              | M-x                          |
-| ~SPC ;~              | Eval expression              |
-| ~SPC <~              | Switch buffer                |
-| ~SPC RET~            | Jump to bookmark             |
-| ~SPC SPC~            | Find file in project         |
-| ~SPC X~              | Org Capture                  |
-| ~SPC `~              | Switch to last buffer        |
-| ~SPC a~              | Actions                      |
-| ~SPC k~              | project                      |
-| ~SPC override-state~ | all                          |
-| ~SPC u~              | Universal argument           |
-| ~SPC x~              | Pop up scratch buffer        |
-| ~SPC ~~              | Toggle last popup            |
+| Key     | What it does                 |
+|---------+------------------------------|
+| ~SPC '~   | Resume last search           |
+| ~SPC *~   | Search for symbol in project |
+| ~SPC ,~   | Switch workspace buffer      |
+| ~SPC .~   | Find file                    |
+| ~SPC /~   | Search project               |
+| ~SPC :~   | M-x                          |
+| ~SPC ;~   | Eval expression              |
+| ~SPC <~   | Switch buffer                |
+| ~SPC RET~ | Jump to bookmark             |
+| ~SPC SPC~ | Find file in project         |
+| ~SPC X~   | Org Capture                  |
+| ~SPC `~   | Switch to last buffer        |
+| ~SPC a~   | Actions                      |
+| ~SPC k~   | project                      |
+| ~SPC u~   | Universal argument           |
+| ~SPC x~   | Toggle scratch buffer        |
+| ~SPC ~~   | Toggle last popup            |
 
 ** SPC TAB: workspace
 | Key         | What it does              |
@@ -2628,7 +2627,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC c j~ | Jump to symbol in current workspace |
 | ~SPC c k~ | Jump to documentation               |
 | ~SPC c r~ | LSP Rename                          |
-| ~SPC c s~ | Send to repl                        |
+| ~SPC c s~ | Send buffer/region to repl          |
 | ~SPC c t~ | Find type definition                |
 | ~SPC c w~ | Delete trailing whitespace          |
 | ~SPC c x~ | List errors                         |
@@ -2752,104 +2751,106 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC g y~   | Copy link to remote   |
 
 ** SPC h: help
-| Key         | What it does                     |
-|-------------+----------------------------------|
-| ~SPC h '~     | doom/describe-char               |
-| ~SPC h .~     | display-local-help               |
-| ~SPC h /~     | Cheat sheet                      |
-| ~SPC h 4 i~   | info-other-window                |
-| ~SPC h 4 s~   | help-find-source                 |
-| ~SPC h ?~     | help-for-help                    |
-| ~SPC h A~     | apropos-documentation            |
-| ~SPC h C~     | describe-coding-system           |
-| ~SPC h C-\~   | describe-input-method            |
-| ~SPC h C-a~   | about-emacs                      |
-| ~SPC h C-c~   | describe-coding-system           |
-| ~SPC h C-d~   | view-emacs-debugging             |
-| ~SPC h C-e~   | view-external-packages           |
-| ~SPC h C-f~   | view-emacs-FAQ                   |
-| ~SPC h C-k~   | describe-key-briefly             |
-| ~SPC h C-l~   | describe-language-environment    |
-| ~SPC h C-n~   | view-emacs-news                  |
-| ~SPC h C-o~   | describe-distribution            |
-| ~SPC h C-p~   | view-emacs-problems              |
-| ~SPC h C-q~   | help-quick-toggle                |
-| ~SPC h C-s~   | search-forward-help-for-help     |
-| ~SPC h C-t~   | view-emacs-todo                  |
-| ~SPC h C-w~   | describe-no-warranty             |
-| ~SPC h D~     | Delays: what paused              |
-| ~SPC h E~     | doom/sandbox                     |
-| ~SPC h F~     | describe-face                    |
-| ~SPC h I~     | describe-input-method            |
-| ~SPC h J~     | Dismiss the butler               |
-| ~SPC h K~     | Info-goto-emacs-key-command-node |
-| ~SPC h L~     | describe-language-environment    |
-| ~SPC h M~     | doom/describe-active-minor-mode  |
-| ~SPC h O~     | +lookup/online                   |
-| ~SPC h P~     | find-library                     |
-| ~SPC h R~     | info-display-manual              |
-| ~SPC h RET~   | info-emacs-manual                |
-| ~SPC h S~     | info-lookup-symbol               |
-| ~SPC h T~     | doom/toggle-profiler             |
-| ~SPC h V~     | doom/help-custom-variable        |
-| ~SPC h W~     | +default/man-or-woman            |
-| ~SPC h a~     | apropos                          |
-| ~SPC h b b~   | describe-bindings                |
-| ~SPC h b f~   | which-key-show-full-keymap       |
-| ~SPC h b i~   | which-key-show-minor-mode-keymap |
-| ~SPC h b k~   | which-key-show-keymap            |
-| ~SPC h b m~   | which-key-show-major-mode        |
-| ~SPC h b t~   | which-key-show-top-level         |
-| ~SPC h c~     | describe-key-briefly             |
-| ~SPC h d C~   | Check the config's commands      |
-| ~SPC h d L~   | doom/help-search-loaded-files    |
-| ~SPC h d M~   | Private module README            |
-| ~SPC h d N~   | doom/help-search-news            |
-| ~SPC h d S~   | doom/help-search                 |
-| ~SPC h d b~   | doom/report-bug                  |
-| ~SPC h d c~   | doom/open-private-config         |
-| ~SPC h d d~   | doom-debug-mode                  |
-| ~SPC h d f~   | doom/help-faq                    |
-| ~SPC h d h~   | doom/help                        |
-| ~SPC h d l~   | doom/help-search-load-path       |
-| ~SPC h d m~   | doom/help-modules                |
-| ~SPC h d n~   | doom/help-news                   |
-| ~SPC h d p c~ | doom/help-package-config         |
-| ~SPC h d p h~ | doom/help-package-homepage       |
-| ~SPC h d p p~ | doom/help-packages               |
-| ~SPC h d s~   | doom/help-search-headings        |
-| ~SPC h d t~   | doom/toggle-profiler             |
-| ~SPC h d u~   | doom/help-autodefs               |
-| ~SPC h d v~   | doom/version                     |
-| ~SPC h d x~   | doom/sandbox                     |
-| ~SPC h e~     | view-echo-area-messages          |
-| ~SPC h f~     | describe-function                |
-| ~SPC h f1~    | help-for-help                    |
-| ~SPC h g~     | describe-gnu-project             |
-| ~SPC h help~  | help-for-help                    |
-| ~SPC h i~     | info                             |
-| ~SPC h j~     | Summon the butler                |
-| ~SPC h k~     | describe-key                     |
-| ~SPC h l~     | view-lossage                     |
-| ~SPC h m~     | describe-mode                    |
-| ~SPC h n~     | doom/help-news                   |
-| ~SPC h o~     | describe-symbol                  |
-| ~SPC h p~     | doom/help-packages               |
-| ~SPC h q~     | help-quit                        |
-| ~SPC h r d~   | Doom doctor                      |
-| ~SPC h r e~   | doom/reload-env                  |
-| ~SPC h r f~   | doom/reload-font                 |
-| ~SPC h r p~   | doom/reload-packages             |
-| ~SPC h r r~   | doom/reload                      |
-| ~SPC h r s~   | Doom sync                        |
-| ~SPC h r t~   | doom/reload-theme                |
-| ~SPC h r u~   | Doom upgrade                     |
-| ~SPC h s~     | describe-syntax                  |
-| ~SPC h t~     | load-theme                       |
-| ~SPC h u~     | doom/help-autodefs               |
-| ~SPC h v~     | describe-variable                |
-| ~SPC h w~     | where-is                         |
-| ~SPC h x~     | describe-command                 |
+| Key          | What it does                     |
+|--------------+----------------------------------|
+| ~SPC h '~      | doom/describe-char               |
+| ~SPC h .~      | display-local-help               |
+| ~SPC h /~      | Cheat sheet                      |
+| ~SPC h 4 i~    | info-other-window                |
+| ~SPC h 4 s~    | help-find-source                 |
+| ~SPC h <f1>~   | help-for-help                    |
+| ~SPC h <help>~ | help-for-help                    |
+| ~SPC h ?~      | help-for-help                    |
+| ~SPC h A~      | apropos-documentation            |
+| ~SPC h C~      | describe-coding-system           |
+| ~SPC h C-\~    | describe-input-method            |
+| ~SPC h C-a~    | about-emacs                      |
+| ~SPC h C-c~    | describe-coding-system           |
+| ~SPC h C-d~    | view-emacs-debugging             |
+| ~SPC h C-e~    | view-external-packages           |
+| ~SPC h C-f~    | view-emacs-FAQ                   |
+| ~SPC h C-k~    | describe-key-briefly             |
+| ~SPC h C-l~    | describe-language-environment    |
+| ~SPC h C-n~    | view-emacs-news                  |
+| ~SPC h C-o~    | describe-distribution            |
+| ~SPC h C-p~    | view-emacs-problems              |
+| ~SPC h C-q~    | help-quick-toggle                |
+| ~SPC h C-s~    | search-forward-help-for-help     |
+| ~SPC h C-t~    | view-emacs-todo                  |
+| ~SPC h C-w~    | describe-no-warranty             |
+| ~SPC h D~      | Delays: what paused              |
+| ~SPC h E~      | doom/sandbox                     |
+| ~SPC h F~      | describe-face                    |
+| ~SPC h H~      | doom/docs                        |
+| ~SPC h I~      | describe-input-method            |
+| ~SPC h J~      | Dismiss the butler               |
+| ~SPC h K~      | Info-goto-emacs-key-command-node |
+| ~SPC h L~      | describe-language-environment    |
+| ~SPC h M~      | doom/describe-active-minor-mode  |
+| ~SPC h O~      | +lookup/online                   |
+| ~SPC h P~      | find-library                     |
+| ~SPC h R~      | info-display-manual              |
+| ~SPC h RET~    | info-emacs-manual                |
+| ~SPC h S~      | info-lookup-symbol               |
+| ~SPC h T~      | doom/toggle-profiler             |
+| ~SPC h V~      | doom/describe-option             |
+| ~SPC h W~      | +default/man-or-woman            |
+| ~SPC h a~      | apropos                          |
+| ~SPC h b b~    | describe-bindings                |
+| ~SPC h b f~    | which-key-show-full-keymap       |
+| ~SPC h b i~    | which-key-show-minor-mode-keymap |
+| ~SPC h b k~    | which-key-show-keymap            |
+| ~SPC h b m~    | which-key-show-major-mode        |
+| ~SPC h b t~    | which-key-show-top-level         |
+| ~SPC h c~      | describe-key-briefly             |
+| ~SPC h d C~    | Check the config's commands      |
+| ~SPC h d L~    | doom/help-search-loaded-files    |
+| ~SPC h d M~    | Private module README            |
+| ~SPC h d S~    | doom/docs-search                 |
+| ~SPC h d a~    | doom/describe-autodef            |
+| ~SPC h d b~    | doom/report-bug                  |
+| ~SPC h d c~    | doom/open-private-config         |
+| ~SPC h d d~    | doom-debug-mode                  |
+| ~SPC h d f~    | doom/docs-find-file              |
+| ~SPC h d h~    | doom/docs                        |
+| ~SPC h d i~    | doom/info                        |
+| ~SPC h d l~    | doom/help-search-load-path       |
+| ~SPC h d m~    | doom/describe-module             |
+| ~SPC h d n~    | doom/docs-news                   |
+| ~SPC h d p c~  | doom/help-package-config         |
+| ~SPC h d p h~  | doom/help-package-homepage       |
+| ~SPC h d p p~  | doom/describe-package            |
+| ~SPC h d s~    | doom/docs-headings               |
+| ~SPC h d t~    | doom/toggle-profiler             |
+| ~SPC h d v~    | doom/version                     |
+| ~SPC h d x~    | doom/sandbox                     |
+| ~SPC h e~      | view-echo-area-messages          |
+| ~SPC h f~      | describe-function                |
+| ~SPC h g~      | describe-gnu-project             |
+| ~SPC h h~      | doom/help                        |
+| ~SPC h i~      | info                             |
+| ~SPC h j~      | Summon the butler                |
+| ~SPC h k~      | describe-key                     |
+| ~SPC h l~      | view-lossage                     |
+| ~SPC h m~      | describe-mode                    |
+| ~SPC h n~      | doom/help-news                   |
+| ~SPC h o~      | describe-symbol                  |
+| ~SPC h p~      | doom/describe-package            |
+| ~SPC h q~      | help-quit                        |
+| ~SPC h r d~    | Doom doctor                      |
+| ~SPC h r e~    | doom/reload-env                  |
+| ~SPC h r f~    | doom/reload-font                 |
+| ~SPC h r p~    | doom/reload-packages             |
+| ~SPC h r r~    | doom/reload                      |
+| ~SPC h r s~    | Doom sync                        |
+| ~SPC h r t~    | doom/reload-theme                |
+| ~SPC h r u~    | Doom upgrade                     |
+| ~SPC h s~      | describe-syntax                  |
+| ~SPC h t~      | load-theme                       |
+| ~SPC h u~      | doom/describe-autodef            |
+| ~SPC h v~      | describe-variable                |
+| ~SPC h w~      | where-is                         |
+| ~SPC h x~      | describe-command                 |
 
 ** SPC i: insert
 | Key     | What it does        |
@@ -2979,6 +2980,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o A~   | Org agenda                   |
 | ~SPC o E~   | Open eshell here             |
 | ~SPC o F~   | Select frame                 |
+| ~SPC o O~   | Reveal project in Finder     |
 | ~SPC o P~   | Find file in project sidebar |
 | ~SPC o R~   | REPL (same window)           |
 | ~SPC o T~   | Open vterm here              |
@@ -2996,6 +2998,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o d~   | Start a debugger             |
 | ~SPC o e~   | Toggle eshell popup          |
 | ~SPC o f~   | New frame                    |
+| ~SPC o l L~ | Open gptel in same window    |
 | ~SPC o l O~ | Org: set properties          |
 | ~SPC o l a~ | Add text to context          |
 | ~SPC o l e~ | Explain                      |
@@ -3005,8 +3008,15 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o l o~ | Org: set topic               |
 | ~SPC o l r~ | Rewrite                      |
 | ~SPC o l s~ | Send to gptel                |
+| ~SPC o o~   | Reveal in Finder             |
 | ~SPC o p~   | Project sidebar              |
 | ~SPC o r~   | REPL                         |
+| ~SPC o s I~ | Open in new iTerm window     |
+| ~SPC o s L~ | Send project to Launchbar    |
+| ~SPC o s T~ | Send project to Transmit     |
+| ~SPC o s i~ | Open in iTerm                |
+| ~SPC o s l~ | Send to Launchbar            |
+| ~SPC o s t~ | Send to Transmit             |
 | ~SPC o t~   | Toggle vterm popup           |
 
 ** SPC p: project
@@ -3036,7 +3046,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC p r~ | Find recent project files   |
 | ~SPC p s~ | Save project files          |
 | ~SPC p t~ | Project TODOs               |
-| ~SPC p x~ | Pop up scratch buffer       |
+| ~SPC p x~ | Toggle scratch buffer       |
 
 ** SPC q: quit/session
 | Key     | What it does               |
@@ -3045,13 +3055,12 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC q K~ | Kill Emacs (and daemon)    |
 | ~SPC q L~ | Restore session from file  |
 | ~SPC q Q~ | Quit Emacs without saving  |
-| ~SPC q R~ | Restart Emacs              |
 | ~SPC q S~ | Save session to file       |
 | ~SPC q d~ | Restart emacs server       |
 | ~SPC q f~ | Delete frame               |
 | ~SPC q l~ | Restore last session       |
 | ~SPC q q~ | Quit Emacs                 |
-| ~SPC q r~ | Restart & restore Emacs    |
+| ~SPC q r~ | Restart Emacs              |
 | ~SPC q s~ | Quick save current session |
 
 ** SPC s: search
@@ -3117,94 +3126,94 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC t z~ | Zen mode                     |
 
 ** SPC w: window
-| Key           | What it does                      |
-|---------------+-----------------------------------|
-| ~SPC w +~       | evil-window-increase-height       |
-| ~SPC w -~       | evil-window-decrease-height       |
-| ~SPC w 0~       | winum-select-window-0-or-10       |
-| ~SPC w 1~       | winum-select-window-1             |
-| ~SPC w 2~       | winum-select-window-2             |
-| ~SPC w 3~       | winum-select-window-3             |
-| ~SPC w 4~       | winum-select-window-4             |
-| ~SPC w 5~       | winum-select-window-5             |
-| ~SPC w 6~       | winum-select-window-6             |
-| ~SPC w 7~       | winum-select-window-7             |
-| ~SPC w 8~       | winum-select-window-8             |
-| ~SPC w 9~       | winum-select-window-9             |
-| ~SPC w :~       | evil-ex                           |
-| ~SPC w <~       | evil-window-decrease-width        |
-| ~SPC w =~       | balance-windows                   |
-| ~SPC w >~       | evil-window-increase-width        |
-| ~SPC w C-=~     | balance-windows                   |
-| ~SPC w C-S-h~   | evil-window-move-far-left         |
-| ~SPC w C-S-j~   | evil-window-move-very-bottom      |
-| ~SPC w C-S-k~   | evil-window-move-very-top         |
-| ~SPC w C-S-l~   | evil-window-move-far-right        |
-| ~SPC w C-S-r~   | evil-window-rotate-upwards        |
-| ~SPC w C-S-s~   | evil-window-split                 |
-| ~SPC w C-S-w~   | ace-swap-window                   |
-| ~SPC w C-_~     | evil-window-set-height            |
-| ~SPC w C-b~     | evil-window-bottom-right          |
-| ~SPC w C-c~     | ace-delete-window                 |
-| ~SPC w C-down~  | evil-window-down                  |
-| ~SPC w C-f~     | ffap-other-window                 |
-| ~SPC w C-h~     | evil-window-left                  |
-| ~SPC w C-j~     | evil-window-down                  |
-| ~SPC w C-k~     | evil-window-up                    |
-| ~SPC w C-l~     | evil-window-right                 |
-| ~SPC w C-left~  | evil-window-left                  |
-| ~SPC w C-n~     | evil-window-new                   |
-| ~SPC w C-o~     | delete-other-windows              |
-| ~SPC w C-p~     | evil-window-mru                   |
-| ~SPC w C-q~     | evil-quit                         |
-| ~SPC w C-r~     | winner-redo                       |
-| ~SPC w C-right~ | evil-window-right                 |
-| ~SPC w C-s~     | evil-window-split                 |
-| ~SPC w C-t~     | evil-window-top-left              |
-| ~SPC w C-u~     | winner-undo                       |
-| ~SPC w C-up~    | evil-window-up                    |
-| ~SPC w C-v~     | evil-window-vsplit                |
-| ~SPC w C-w~     | other-window                      |
-| ~SPC w C-x~     | evil-window-exchange              |
-| ~SPC w H~       | +evil/window-move-left            |
-| ~SPC w J~       | +evil/window-move-down            |
-| ~SPC w K~       | +evil/window-move-up              |
-| ~SPC w L~       | +evil/window-move-right           |
-| ~SPC w R~       | evil-window-rotate-upwards        |
-| ~SPC w S~       | +evil/window-split-and-follow     |
-| ~SPC w T~       | tear-off-window                   |
-| ~SPC w V~       | +evil/window-vsplit-and-follow    |
-| ~SPC w W~       | evil-window-prev                  |
-| ~SPC w _~       | evil-window-set-height            |
-| ~SPC w b~       | evil-window-bottom-right          |
-| ~SPC w c~       | evil-window-delete                |
-| ~SPC w d~       | evil-window-delete                |
-| ~SPC w down~    | evil-window-down                  |
-| ~SPC w f~       | ffap-other-window                 |
-| ~SPC w g T~     | tab-bar-switch-to-prev-tab        |
-| ~SPC w g t~     | evil-tab-next                     |
-| ~SPC w h~       | evil-window-left                  |
-| ~SPC w j~       | evil-window-down                  |
-| ~SPC w k~       | evil-window-up                    |
-| ~SPC w l~       | evil-window-right                 |
-| ~SPC w left~    | evil-window-left                  |
-| ~SPC w m m~     | doom/window-maximize-buffer       |
-| ~SPC w m s~     | doom/window-maximize-horizontally |
-| ~SPC w m v~     | doom/window-maximize-vertically   |
-| ~SPC w n~       | evil-window-new                   |
-| ~SPC w o~       | doom/window-enlargen              |
-| ~SPC w p~       | evil-window-mru                   |
-| ~SPC w q~       | evil-quit                         |
-| ~SPC w r~       | evil-window-rotate-downwards      |
-| ~SPC w right~   | evil-window-right                 |
-| ~SPC w s~       | evil-window-split                 |
-| ~SPC w t~       | evil-window-top-left              |
-| ~SPC w u~       | winner-undo                       |
-| ~SPC w up~      | evil-window-up                    |
-| ~SPC w v~       | evil-window-vsplit                |
-| ~SPC w w~       | evil-window-next                  |
-| ~SPC w x~       | evil-window-exchange              |
-| ~SPC w /~       | evil-window-set-width             |
+| Key             | What it does                      |
+|-----------------+-----------------------------------|
+| ~SPC w +~         | evil-window-increase-height       |
+| ~SPC w -~         | evil-window-decrease-height       |
+| ~SPC w 0~         | winum-select-window-0-or-10       |
+| ~SPC w 1~         | winum-select-window-1             |
+| ~SPC w 2~         | winum-select-window-2             |
+| ~SPC w 3~         | winum-select-window-3             |
+| ~SPC w 4~         | winum-select-window-4             |
+| ~SPC w 5~         | winum-select-window-5             |
+| ~SPC w 6~         | winum-select-window-6             |
+| ~SPC w 7~         | winum-select-window-7             |
+| ~SPC w 8~         | winum-select-window-8             |
+| ~SPC w 9~         | winum-select-window-9             |
+| ~SPC w :~         | evil-ex                           |
+| ~SPC w <~         | evil-window-decrease-width        |
+| ~SPC w <down>~    | evil-window-down                  |
+| ~SPC w <left>~    | evil-window-left                  |
+| ~SPC w <right>~   | evil-window-right                 |
+| ~SPC w <up>~      | evil-window-up                    |
+| ~SPC w =~         | balance-windows                   |
+| ~SPC w >~         | evil-window-increase-width        |
+| ~SPC w C-<down>~  | evil-window-down                  |
+| ~SPC w C-<left>~  | evil-window-left                  |
+| ~SPC w C-<right>~ | evil-window-right                 |
+| ~SPC w C-<up>~    | evil-window-up                    |
+| ~SPC w C-=~       | balance-windows                   |
+| ~SPC w C-S-h~     | evil-window-move-far-left         |
+| ~SPC w C-S-j~     | evil-window-move-very-bottom      |
+| ~SPC w C-S-k~     | evil-window-move-very-top         |
+| ~SPC w C-S-l~     | evil-window-move-far-right        |
+| ~SPC w C-S-r~     | evil-window-rotate-upwards        |
+| ~SPC w C-S-s~     | evil-window-split                 |
+| ~SPC w C-S-w~     | ace-swap-window                   |
+| ~SPC w C-_~       | evil-window-set-height            |
+| ~SPC w C-b~       | evil-window-bottom-right          |
+| ~SPC w C-c~       | ace-delete-window                 |
+| ~SPC w C-f~       | ffap-other-window                 |
+| ~SPC w C-h~       | evil-window-left                  |
+| ~SPC w C-j~       | evil-window-down                  |
+| ~SPC w C-k~       | evil-window-up                    |
+| ~SPC w C-l~       | evil-window-right                 |
+| ~SPC w C-n~       | evil-window-new                   |
+| ~SPC w C-o~       | delete-other-windows              |
+| ~SPC w C-p~       | evil-window-mru                   |
+| ~SPC w C-q~       | evil-quit                         |
+| ~SPC w C-r~       | winner-redo                       |
+| ~SPC w C-s~       | evil-window-split                 |
+| ~SPC w C-t~       | evil-window-top-left              |
+| ~SPC w C-u~       | winner-undo                       |
+| ~SPC w C-v~       | evil-window-vsplit                |
+| ~SPC w C-w~       | other-window                      |
+| ~SPC w C-x~       | evil-window-exchange              |
+| ~SPC w H~         | +evil/window-move-left            |
+| ~SPC w J~         | +evil/window-move-down            |
+| ~SPC w K~         | +evil/window-move-up              |
+| ~SPC w L~         | +evil/window-move-right           |
+| ~SPC w R~         | evil-window-rotate-upwards        |
+| ~SPC w S~         | +evil/window-split-and-follow     |
+| ~SPC w T~         | tear-off-window                   |
+| ~SPC w V~         | +evil/window-vsplit-and-follow    |
+| ~SPC w W~         | evil-window-prev                  |
+| ~SPC w _~         | evil-window-set-height            |
+| ~SPC w b~         | evil-window-bottom-right          |
+| ~SPC w c~         | evil-window-delete                |
+| ~SPC w d~         | evil-window-delete                |
+| ~SPC w f~         | ffap-other-window                 |
+| ~SPC w g T~       | tab-bar-switch-to-prev-tab        |
+| ~SPC w g t~       | evil-tab-next                     |
+| ~SPC w h~         | evil-window-left                  |
+| ~SPC w j~         | evil-window-down                  |
+| ~SPC w k~         | evil-window-up                    |
+| ~SPC w l~         | evil-window-right                 |
+| ~SPC w m m~       | doom/window-maximize-buffer       |
+| ~SPC w m s~       | doom/window-maximize-horizontally |
+| ~SPC w m v~       | doom/window-maximize-vertically   |
+| ~SPC w n~         | evil-window-new                   |
+| ~SPC w o~         | doom/window-enlargen              |
+| ~SPC w p~         | evil-window-mru                   |
+| ~SPC w q~         | evil-quit                         |
+| ~SPC w r~         | evil-window-rotate-downwards      |
+| ~SPC w s~         | evil-window-split                 |
+| ~SPC w t~         | evil-window-top-left              |
+| ~SPC w u~         | winner-undo                       |
+| ~SPC w v~         | evil-window-vsplit                |
+| ~SPC w w~         | evil-window-next                  |
+| ~SPC w x~         | evil-window-exchange              |
+| ~SPC w /~         | evil-window-set-width             |
 
 ** SPC k: outside a project
 | Key     | What it does          |
@@ -3446,20 +3455,33 @@ bound.
   '+core/quick-access-add' from the b menu.
 - ~+core/replace-in-buffer~ :: Replace through this buffer, with the menu's
   options: a literal string with F, whole words with w, either case with i.
+- ~+core/replace-in-buffer-suffix~ :: Replace in this buffer.
 - ~+core/replace-in-cwd~ :: Replace through this directory and below.
+- ~+core/replace-in-cwd-suffix~ :: Replace in this directory.
 - ~+core/replace-in-other-cwd~ :: Replace through a directory you pick.
+- ~+core/replace-in-other-cwd-suffix~ :: Replace in a directory you pick.
 - ~+core/replace-in-other-project~ :: Replace through another project.
+- ~+core/replace-in-other-project-suffix~ :: Replace in another project.
 - ~+core/replace-in-project~ (~SPC s R~) :: Replace through the project, in
   the files that hold the text.
+- ~+core/replace-in-project-suffix~ :: Replace in the project.
 - ~+core/replace-menu~ :: Replace, in the same places the search menu looks.
+- ~+core/replace-menu-suffix~ :: Open the replace menu, keeping what is set
+  here.
 - ~+core/restore-from-trash~ (~SPC m t~) :: Put the marked files, deleted
   earlier, back where they came from.
 - ~+core/run~ (~SPC k r~) :: Run what this project builds, however this kind
   of project is run.
 - ~+core/run-with-args~ (~SPC k R~) :: Run what this project builds once,
   with arguments asked for.
+- ~+core/search-cwd-with-flags~ :: Search this directory and below.
 - ~+core/search-menu~ (~SPC s SPC~) :: Find text, and change it, with what
   to look for set before you look.
+- ~+core/search-other-cwd-with-flags~ :: Search a directory you pick.
+- ~+core/search-other-project-with-flags~ :: Search another project.
+- ~+core/search-project-with-flags~ :: Search the whole project.
+- ~+core/search-symbol-with-flags~ :: Search the project for the word under
+  the cursor.
 - ~+core/toggle-transparency~ (~SPC t T~) :: Toggle background transparency
   of this frame.
 - ~+core/trash~ (~SPC f t~) :: The trash, in the file manager: what was
@@ -3714,8 +3736,8 @@ bound.
 - ~+pascal/build-and-run~ (~SPC k x~) :: Build, and run it when the build
   worked.
 - ~+pascal/clean~ (~SPC k C~) :: Remove what the build made.
-- ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, with gdb,
-  given the run arguments.
+- ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, given the
+  run arguments: with gdb, or lldb-dap on a Mac, '+core-os-debugger'.
 - ~+pascal/menu~ (~SPC k m~) :: What a Pascal build depends on, and the
   files behind it.
 - ~+pascal/new-project~ :: Start Pascal project NAME of KIND in DIR, and
@@ -3756,7 +3778,8 @@ bound.
 - ~+web/new-project~ :: Start node project NAME of KIND in DIR, and open it.
 - ~+web/open-manifest~ (~SPC k p~) :: Open the project's package.json.
 - ~+web/outdated~ (~SPC k o~) :: Say which dependencies have moved on.
-- ~+web/package~ (~SPC k P~) :: Package the Electron application for TARGET.
+- ~+web/package~ (~SPC k P~) :: Package the Electron application for TARGET,
+  this machine's by default.
 - ~+web/preview~ (~SPC k v~) :: Serve what the build made, as it will be
   served for real.
 - ~+web/project-status~ (~SPC k I~) :: Say what is installed and what this
