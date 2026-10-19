@@ -446,3 +446,21 @@ found nothing and no server started at all."
                 (seq-remove (lambda (entry)
                               (string-match-p "qml" (format "%S" (car entry))))
                             eglot-server-programs)))))
+
+;;;###autoload
+(defun +cpp/server-log ()
+  "Show what the language server and Emacs said to each other, and log
+it from now on for this server.  Doom logs nothing, since every message
+would be formatted into the log as it passes; this server's are, until
+it stops."
+  (interactive)
+  (require 'eglot)
+  (let ((server (eglot-current-server)))
+    (unless server
+      (user-error "No language server for this buffer"))
+    (let ((config (slot-value server '-events-buffer-config)))
+      (when (eql (plist-get config :size) 0)
+        (setf (slot-value server '-events-buffer-config)
+              (list :size 2000000 :format (or (plist-get config :format) 'full)))
+        (message "Logging this server's messages from now on")))
+    (eglot-events-buffer server)))

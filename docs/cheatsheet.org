@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-21 21:38
+#+generated: 2026-10-23 10:37
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -1511,9 +1511,10 @@ the server has stale state: ~SPC k l r~ restarts it.
 | ~SPC k l s~ | switch between clangd and ccls |
 | ~SPC k l i~ | inlay hints on, off            |
 
-=M-x eglot-events-buffer= shows what the server and Emacs said to each
-other, which is the place to look when a server misbehaves; Doom keeps
-that log empty unless =doom-debug-mode= is on (=SPC h d d=).
+=SPC k l e= shows what the server and Emacs said to each other, which is
+the place to look when a server misbehaves. Doom keeps no log, since every
+message would be formatted into it; the key starts one for this server
+and shows it, and what follows is in it.
 
 * C and C++
 The [[file:../modules/private/cpp/README.org][cpp README]] explains how the pieces fit together; this is the key list.
@@ -3625,6 +3626,8 @@ bound.
   with ARGS, where the kit runs and with its SDK environment: a deploy
   script, a build_arm.sh, a tester.
 - ~+cpp/run-with-args~ :: Run a project executable with ARGS.
+- ~+cpp/server-log~ (~SPC k l e~) :: Show what the language server and Emacs
+  said to each other, and log it from now on for this server.
 - ~+cpp/set-build-target~ (~SPC k s~) :: Build TARGET by default from now
   on.
 - ~+cpp/set-container~ (~SPC k l b~) :: Run this project's kit inside the
