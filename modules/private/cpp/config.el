@@ -666,7 +666,7 @@ function, so `c-ts-mode-set-style' installs them."
        ("c" "Write .clangd" #'+cpp/write-clangd-config)
        ("l" "Link compile_commands.json into the root" #'+cpp/link-compile-commands)
        ("b" "Run the kit in a container" #'+cpp/set-container)
-       ("e" "The server's log" #'eglot-events-buffer)))
+       ("e" "The server's log" #'+cpp/server-log)))
      ("p" "PlatformIO"
       (("e" "Environment" #'+pio/set-env)
        ("b" "Build" #'+pio/build)

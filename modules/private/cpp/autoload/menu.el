@@ -35,7 +35,6 @@
 ;; buffer.
 (autoload 'eglot-rename "eglot" nil t)
 (autoload 'eglot-inlay-hints-mode "eglot" nil t)
-(autoload 'eglot-events-buffer "eglot" nil t)
 (autoload 'dape-breakpoint-toggle "dape" nil t)
 
 
@@ -159,7 +158,7 @@ behind it: the generator, the jobs, the overrides, the run line."
      :if (lambda () (+cpp--kind-p 'cmake)))
     ("l b" "Run the kit in a container" +cpp/set-container
      :if (lambda () (+cpp--kind-p 'cmake)))
-    ("l e" "The server's log" eglot-events-buffer)]
+    ("l e" "The server's log" +cpp/server-log)]
    ["Files and tools"
     ("h" "Header and source"  find-sibling-file
      :if (lambda () (+cpp--kind-p 'cmake 'platformio 'make)))
