@@ -11,13 +11,15 @@
 ;; server's hints, marked the minimap's window out of date, and its
 ;; hundreds of lines were laid out again at every key. Measured beside a
 ;; C++ file: 8 ms a move for demap, 1.5 for a copy. The copy is taken
-;; again once the typing pauses, and the marks follow once the keys stop.
+;; again once the typing pauses; the marks follow every move, and the
+;; minimap's own window follows them a move later, or at rest.
 
 (defvar +ui-minimap-width 16
   "Columns of the minimap's window.")
 
 (defvar +ui-minimap-idle 0.1
-  "Seconds of rest before the marks follow the window.")
+  "Seconds of rest before the minimap catches up with what a move could
+not do at once: a new buffer, its own window to scroll.")
 
 (defvar +ui-minimap-copy-idle 0.5
   "Seconds of rest after an edit before the text is copied again.")
@@ -108,11 +110,20 @@ minimap. Past it the minimap shows the colours of what has been seen.")
   (setq +ui--minimap-source source
         +ui--minimap-tick (buffer-chars-modified-tick source)))
 
-(defun +ui--minimap-mark (window)
-  "Mark in the minimap the part of the buffer WINDOW shows and its line."
+(defun +ui--minimap-current-p (window)
+  "Non-nil when the minimap holds WINDOW's buffer as it is now."
+  (and (+ui--minimap-source-p window)
+       (eq (window-buffer window) +ui--minimap-source)
+       (eq +ui--minimap-tick (buffer-chars-modified-tick +ui--minimap-source))))
+
+(defun +ui--minimap-mark (window &optional start no-scroll)
+  "Mark in the minimap the part of the buffer WINDOW shows and its line.
+START is where WINDOW starts when it is being scrolled, and its end is
+then worked out; with NO-SCROLL the minimap's own window is left where
+it is, and caught up at rest if the part on screen has left it."
   (let ((minimap (+ui--minimap-window))
-        (start (window-start window))
-        (end (window-end window))
+        (end (if start (window-end window t) (window-end window)))
+        (start (or start (window-start window)))
         (point (window-point window)))
     (with-current-buffer (+ui--minimap-buffer)
       (let ((start (min start (point-max))) (end (min end (point-max))))
@@ -128,11 +139,17 @@ minimap. Past it the minimap shows the colours of what has been seen.")
           (goto-char (min point (point-max)))
           (move-overlay +ui--minimap-line (line-beginning-position)
                         (min (point-max) (1+ (line-end-position)))))
+        ;; Whether the part on screen is still in the minimap's view, from
+        ;; where its window started and ended when last drawn: asking
+        ;; `pos-visible-in-window-p' laid out its hundreds of small lines,
+        ;; twice, a third of a move's time.
         (when (and minimap
-                   (not (and (pos-visible-in-window-p start minimap)
-                             (pos-visible-in-window-p (max start (1- end)) minimap))))
-          (set-window-point minimap (/ (+ start end) 2))
-          (with-selected-window minimap (recenter)))))))
+                   (not (and (<= (window-start minimap) start)
+                             (< (max start (1- end)) (window-end minimap)))))
+          (if no-scroll
+              (+ui--minimap-later)
+            (set-window-point minimap (/ (+ start end) 2))
+            (with-selected-window minimap (recenter))))))))
 
 (defun +ui--minimap-catch-up ()
   "Follow the selected window: its buffer, its text, what it shows."
@@ -159,19 +176,33 @@ minimap. Past it the minimap shows the colours of what has been seen.")
             (run-with-idle-timer (or delay +ui-minimap-idle) nil #'+ui--minimap-catch-up)))))
 
 (defun +ui--minimap-moved-h (&rest _)
-  "A command ran or a window changed: catch up once the keys stop.
-Only while the minimap is on show: its window gone with a workspace or
-the side windows, every command still set a timer, a redisplay each.
-Its buffer gone, the hooks go too."
-  (cond ((+ui--minimap-window) (+ui--minimap-later))
+  "A command ran or a window changed: mark the move at once when the
+minimap holds the buffer as it is, else catch up once the keys stop.
+Marking costs two overlays moved, a fraction of a millisecond; a copy
+waits for rest.  Only while the minimap is on show: its window gone with
+a workspace or the side windows, every command still set a timer, a
+redisplay each.  Its buffer gone, the hooks go too."
+  (cond ((+ui--minimap-window)
+         (if (+ui--minimap-current-p (selected-window))
+             (+ui--minimap-mark (selected-window))
+           (+ui--minimap-later)))
         ((not (get-buffer +ui--minimap-name)) (+ui--minimap-hooks nil))))
+
+(defun +ui--minimap-scrolled-h (window start)
+  "WINDOW is being scrolled to START: mark the part it is about to show.
+A command's own hook sees the window before redisplay scrolls it, so a
+held j at the bottom would mark the screen it just left."
+  (when (and (eq window (selected-window))
+             (+ui--minimap-window)
+             (+ui--minimap-current-p window))
+    (+ui--minimap-mark window start 'no-scroll)))
 
 (defun +ui--minimap-hooks (on)
   (let ((fn (if on #'add-hook #'remove-hook)))
     (funcall fn 'post-command-hook #'+ui--minimap-moved-h)
     (funcall fn 'window-selection-change-functions #'+ui--minimap-moved-h)
     (funcall fn 'window-buffer-change-functions #'+ui--minimap-moved-h)
-    (funcall fn 'window-scroll-functions #'+ui--minimap-moved-h)))
+    (funcall fn 'window-scroll-functions #'+ui--minimap-scrolled-h)))
 
 ;;;###autoload
 (defun +ui/minimap ()
