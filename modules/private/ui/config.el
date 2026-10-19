@@ -391,6 +391,18 @@ or the enclosing function's first line while it is scrolled off the top."
   (when font-lock-mode
     (funcall fn)))
 
+;; The cursor keeps five lines between itself and the top and bottom of the
+;; window, as VS Code's surrounding lines and Vim's scrolloff do: j held
+;; scrolls with the line in view still five from the edge. Every step is
+;; still one line, 5 ms, as with none (2026-10-23); the wheel turns with
+;; none, ultra-scroll setting it aside meanwhile, and a window too short
+;; for it keeps a quarter of its height at most. A terminal or a shell
+;; keeps none: its cursor is where the program put it, and a margin made
+;; the window scroll under it.
+(setq scroll-margin 5)
+(setq-hook! '(vterm-mode-hook term-mode-hook eshell-mode-hook comint-mode-hook)
+  scroll-margin 0)
+
 ;; The wheel went on past the end of a file until its last line stood
 ;; alone at the top, and then ultra-scroll put the window's start on the
 ;; very end: an empty window. It stops now as the last line reaches the
