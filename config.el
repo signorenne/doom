@@ -50,9 +50,13 @@
                   (mapc #'disable-theme custom-enabled-themes)
                   (load-theme on t))))))
 
-;; No line numbers in any buffer: the modeline has the line and the
-;; count. SPC t l shows them in one buffer, then relative, then none.
-(setq display-line-numbers-type nil)
+;; Line numbers in code and text, as VS Code has them; SPC t l turns a
+;; buffer's to relative, then none. The column is as wide as the file's
+;; last line needs from the start, so the text does not shift sideways
+;; when a scroll reaches line 1000. A held j costs 5 ms a line with them
+;; and 4.4 without, 6.5 relative (2026-10-23).
+(setq display-line-numbers-type t)
+(setq-default display-line-numbers-width-start t)
 
 
 ;;
