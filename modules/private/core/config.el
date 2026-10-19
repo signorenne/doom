@@ -463,6 +463,11 @@ are loaded: each with every mode of `+core--recent-file-modes' in turn.")
   "(MODE . STEPS): the warm-up steps left, and the mode they are for,
 `unknown' until the first function step asks.")
 
+(defvar +core-warm-up-skip-modes '(+cc-c-c++-objc-mode)
+  "Modes the warm-up leaves out: each picks the mode for a file from the
+file itself, its name and the files beside it, and with no file fails;
+the modes it picks are set up for their own files.")
+
 (defun +core--recent-file-modes ()
   "The modes of the latest recent files, `+core-warm-up-modes' at most:
 the one most of them open in first, the latest first among equals."
@@ -478,7 +483,8 @@ the one most of them open in first, the latest first among equals."
                     ((symbolp mode))
                     ;; A picture's or an archive's mode is nothing without
                     ;; the file to show.
-                    ((not (memq mode (cons 'fundamental-mode +core-large-file-excluded-modes)))))
+                    ((not (memq mode (cons 'fundamental-mode +core-large-file-excluded-modes))))
+                    ((not (memq mode +core-warm-up-skip-modes))))
           (push mode modes))))
     (setq modes (nreverse modes))
     (seq-take (sort (seq-uniq modes)
