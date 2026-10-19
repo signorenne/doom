@@ -70,6 +70,7 @@
  (dired +icons)    ; file browser (+dirvish would take SPC o p from treemacs)
  electric          ; smarter auto-indentation
  (ibuffer +icons)  ; buffer list
+ tramp             ; remote files and containers, connections shared
  undo              ; undo-fu and vundo, persistent across sessions
  vc                ; version control integration
 
@@ -92,7 +93,7 @@
  biblio            ; citar, for a .bib library
  ;;collab
  debugger          ; dape, which talks to gdb
- ;;direnv
+ direnv            ; a project's .envrc, for its shells, builds and servers
  ;;docker
  editorconfig      ; respect .editorconfig
  ;;ein
