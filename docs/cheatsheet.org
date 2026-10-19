@@ -327,7 +327,7 @@ grammar one: for grammar see ~SPC n w c~, LanguageTool, under the notes.
 | ~SPC t r~ | read only                                                                                     |
 | ~SPC t T~ | transparency                                                                                  |
 | ~SPC t S~ | subword motion                                                                                |
-| ~SPC t m~ | the minimap on the right; a copy of the buffer, so moving and typing cost it nothing           |
+| ~SPC t m~ | the minimap on the right, the part on screen marked at every move; typing costs it nothing    |
 | ~SPC t o~ | the symbol outline at the side, following the cursor                                          |
 | ~SPC t h~ | the header line: project path, symbol path, or the function you scrolled into                 |
 | ~SPC t i~ | indent guides, off until asked: on empty lines they make j and k scroll unevenly              |

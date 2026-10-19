@@ -17,8 +17,10 @@
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so
   the fringe is left to the git gutter and the diagnostics; the minimap on
   the right on ~SPC t m~, a copy of the buffer in a tiny font with the
-  part on screen marked, taken again once the typing pauses, so moving and
-  typing cost it nothing, and a click in it goes there; indent guides on
+  part on screen and the cursor's line marked at every move, the text
+  taken again once the typing pauses, and a click in it goes there; a held
+  =j= costs 15.7 ms a key with it open, 8 without (2026-10-23); indent
+  guides on
   ~SPC t i~, off until asked since on an empty line they made j and k
   scroll two lines and then none; diagnostics at the end of the line as
   well as in the popup, flymake underneath, which eglot reports into
@@ -161,7 +163,8 @@ Colouring had its own waste:
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
 - The minimap: ~+ui-minimap-width~ (16 columns), ~+ui-minimap-idle~
-  (0.1 s before its marks follow), ~+ui-minimap-copy-idle~ (0.5 s after
+  (0.1 s at rest before it catches up with a new buffer, or scrolls its
+  own window after the marks), ~+ui-minimap-copy-idle~ (0.5 s after
   an edit before the text is copied again), ~+ui-minimap-colour-max-size~
   (1 MB, past which only the colours already worked out are shown), and
   the faces ~+ui-minimap-face~, ~+ui-minimap-region-face~,
