@@ -26,6 +26,9 @@
 - the wheel stops at the end of a file, with its last line at the bottom
   of the window; it scrolled on until the window was empty. The keys
   still go past the end, as C-e does in Vim,
+- the cursor keeps five lines from the top and bottom of the window
+  (~scroll-margin~), as VS Code and Vim's scrolloff do; terminals and
+  shells keep none,
 - Treemacs settings and documentation popups.
 
 * The banner and the greeting
