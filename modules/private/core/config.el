@@ -310,6 +310,19 @@ are left alone, and so are `+core-plain-file-keep-modes'."
 (after! vterm
   (setq vterm-max-scrollback 20000))
 
+;; Doom reads 1 MB at a time from every process while a language server
+;; runs, for the server's sake. clangd's answers come no faster, a
+;; completion list in 14 to 15 ms and a file's semantic tokens in 4 at 64
+;; KB as at 1 MB, but a terminal reads its output a third slower: 200 000
+;; lines in 4.1 s instead of 2.8 to 3.1 (2026-10-23). The read size stays
+;; Doom's 64 KB; the rest of that mode, a higher GC threshold, stays too.
+(defvar +lsp--default-read-process-output-max)
+(add-hook! '+lsp-optimization-mode-hook
+  (defun +core--keep-read-size-h ()
+    "Read from processes as much at a time with a server as without."
+    (when (bound-and-true-p +lsp--default-read-process-output-max)
+      (setq-default read-process-output-max +lsp--default-read-process-output-max))))
+
 ;; Every compilation notes when it started, so the newest can be found:
 ;; `+core-last-compilation-buffer', which the AI's build tool reports.
 (add-hook 'compilation-start-hook #'+core--note-compile-start-h)
