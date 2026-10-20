@@ -53,6 +53,44 @@ which show something other than the text.")
       (when (> size +core-large-file-size)
         (setq-local +core-large-file-p size)))))
 
+;; Emacs lays out every line on screen to its end, truncated or not, and
+;; a window of long lines dense with colour is a lot of layout: a table
+;; of 2 000 character rows took 83 to 108 ms a line scrolled and 100 to
+;; 230 ms a key typed (2026-10-23). Three things make it pay that again
+;; and again. A truncated line is walked to its end at each redraw, where
+;; a wrapped one shows all it holds; each character walked is looked at
+;; for a glyph composition; and with a header line, an edit that changes
+;; the column the modeline shows redraws the whole window, where Emacs
+;; otherwise redraws the line. Doom's so-long acts only past 10 000
+;; characters, and its mode is plain text. A code file whose lines
+;; average more than 100 characters keeps its mode, colour and language
+;; server, wraps, composes nothing, and the ui module takes its header
+;; line down: 4 to 14 ms a key and 15 to 27 a line moved in that table.
+;; At 100 characters a key cost 17 to 27 ms, 6 to 7 so; in a file of
+;; ordinary code, 38 characters a line on average, the header costs a
+;; key nothing that shows.
+(defvar +core-long-lines-mean 100
+  "Past this mean line length, in characters, a code file opens with long
+lines: `+core-long-lines-p'.")
+
+(defvar +core-long-lines-hook nil
+  "Run in a code file's buffer as it opens when `+core-long-lines-p'.")
+
+(defvar-local +core-long-lines-p nil
+  "Non-nil in a code file whose lines average past `+core-long-lines-mean'.")
+
+;; After the mode tree-sitter would make slow is replaced, at -90: a new
+;; mode clears what is set here.
+(add-hook! 'find-file-hook :depth -80
+  (defun +core--long-lines-h ()
+    "Wrap a code file whose lines are long, and stop the redraws it pays for."
+    (when (and (derived-mode-p 'prog-mode)
+               (> (nth 2 (buffer-line-statistics)) +core-long-lines-mean))
+      (setq-local +core-long-lines-p t
+                  truncate-lines nil
+                  auto-composition-mode nil)
+      (run-hooks '+core-long-lines-hook))))
+
 ;; Tree-sitter reparses what an edit touched, and the node that holds it
 ;; with all its children: in most files a function among a few thousand,
 ;; a reparse of 2 ms in a megabyte of C++. But in a file that is one
