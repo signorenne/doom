@@ -448,7 +448,14 @@ re-run starts it at the editor's priority again.")
 (defvar +core-warm-up-features
   '(which-key vertico corfu
     ert eldoc xref jsonrpc external-completion flymake eglot markdown-mode yasnippet
-    vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table)
+    vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table
+    ;; And what the modules turned on since bring to the first file: the
+    ;; tabs, editorconfig, direnv's environment, the wheel's scrolling,
+    ;; surround and expand-region for embrace, ffap for C and C++. 1.5 s of
+    ;; a first C++ file that took 2.75 to 3 s after the rest was loaded
+    ;; (2026-10-23).
+    editorconfig-core centaur-tabs envrc pixel-scroll ultra-scroll mac-win
+    evil-surround expand-region embrace evil-embrace ffap)
   "Libraries the first file of a session loads, loaded ahead while Emacs
 waits after starting.")
 
