@@ -470,6 +470,19 @@ are loaded: each with every mode of `+core--recent-file-modes' in turn.")
   "(MODE . STEPS): the warm-up steps left, and the mode they are for,
 `unknown' until the first function step asks.")
 
+(defvar +core-warm-up-hooks-keep '(centaur-tabs-mode)
+  "Functions of Doom's first-buffer, first-key and first-file hooks the
+warm-up leaves for Doom: the tabs, which shown before a file is would sit
+over the dashboard.")
+
+;; Doom turns on most of its global modes at the first key, the first
+;; buffer and the first file, to start sooner: the undo, the surround and
+;; snipe keys, which-key, winner, the trimming, editorconfig, direnv, the
+;; diff gutter. That was a fifth of a second at the first key, and 0.6 s
+;; of a first file even with everything else loaded ahead, setopt reading
+;; customize's tables among it. The warm-up runs them while Emacs waits,
+;; a function a step; Doom then finds the hooks empty, as after it ran
+;; them itself.
 (defvar +core-warm-up-skip-modes '(+cc-c-c++-objc-mode)
   "Modes the warm-up leaves out: each picks the mode for a file from the
 file itself, its name and the files beside it, and with no file fails;
@@ -541,6 +554,18 @@ pause again for the one after."
                                                    (mapcar (lambda (m) (cons 'warm (cons what m))) mode)
                                                    (cdr steps))))
                               ('warm (funcall (car what) (cdr what)))
+                              ;; One function of the hook a step, taken off
+                              ;; it once it has run, so a key in the middle
+                              ;; leaves it for Doom to run again; the step
+                              ;; stays while the hook has more.
+                              ('hook
+                               (when-let* ((fn (seq-find (lambda (f)
+                                                           (and (functionp f)
+                                                                (not (memq f +core-warm-up-hooks-keep))))
+                                                         (symbol-value what))))
+                                 (funcall fn)
+                                 (remove-hook what fn)
+                                 (push (car steps) steps)))
                               ('done nil))))
                         nil))
           (setq steps (cdr steps))))
@@ -555,8 +580,10 @@ pause again for the one after."
   "Queue the warm-up, to start at the first pause after starting."
   (setq +core--warm-up-queue
         (cons 'unknown
-              (append (mapcar (lambda (f) (cons 'require f)) +core-warm-up-features)
-                      (mapcar (lambda (f) (cons 'call f)) +core-warm-up-functions))))
+              (append '((hook . doom-first-input-hook))
+                      (mapcar (lambda (f) (cons 'require f)) +core-warm-up-features)
+                      (mapcar (lambda (f) (cons 'call f)) +core-warm-up-functions)
+                      '((hook . doom-first-buffer-hook) (hook . doom-first-file-hook)))))
   (run-with-idle-timer 1 nil #'+core--warm-up))
 
 (add-hook 'doom-after-init-hook #'+core--warm-up-start-h 90)
