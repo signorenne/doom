@@ -14,7 +14,9 @@ name=xn-check-$$
 dir=$(mktemp -d "${TMPDIR:-/tmp}/check-config.XXXXXX")
 here=$(cd "$(dirname "$0")" && pwd)
 cleanup() {
-  emacsclient -s "$name" -e '(let ((kill-emacs-hook nil)) (kill-emacs))' >/dev/null 2>&1
+  # Its child processes first: a listing's background Emacs, started by
+  # dirvish for the documented-keys check, outlived the daemon each run.
+  emacsclient -s "$name" -e '(progn (mapc (function delete-process) (process-list)) (let ((kill-emacs-hook nil)) (kill-emacs)))' >/dev/null 2>&1
   # Without the hook the server does not remove its own socket file.
   # Emacs puts it under $XDG_RUNTIME_DIR/emacs/, and in emacs<uid>/ under
   # $TMPDIR, else /tmp, when that variable is not set.
