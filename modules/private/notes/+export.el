@@ -72,11 +72,35 @@ visibly but does not hold up the window.")
 ;; org-mind-map defines an export backend when it loads and requires only
 ;; org, so its file fails to load until something else has loaded ox.
 ;; Anything that asks whether one of its commands is a command loads the
-;; file (interactive-form autoloads), a menu listing it included, so an
-;; advice on the commands is too late: ox comes with org, as Doom's own
-;; biblio module does with oc-csl.
-(after! org
-  (require 'ox))
+;; file (interactive-form autoloads), a menu listing it included. So its
+;; commands are commands of their own until it loads, which load ox and
+;; it, then run the real one: ox waits for the first export instead of
+;; coming with org, which it made half a second slower to load, 1.9 s
+;; to 1.0 with the citations below (2026-10-23).
+(unless (featurep 'org-mind-map)
+  (dolist (command '(org-mind-map-write org-mind-map-write-current-tree
+                     org-mind-map-write-current-branch))
+    (let (stub)
+      (setq stub (lambda ()
+                   (interactive)
+                   (require 'ox)
+                   (require 'org-mind-map)
+                   (if (eq (symbol-function command) stub)
+                       (user-error "org-mind-map did not define %s" command)
+                     (call-interactively command))))
+      (defalias command stub
+        "Load ox and org-mind-map, then run the command of this name."))))
+
+;; Doom's biblio module loads oc-csl, and citeproc with it, with org: a
+;; third of a second of org's first load. Org loads a citation processor
+;; itself the first time an export or a follow needs it
+;; (`org-cite-try-load-processor'); Doom loaded it early only so it would
+;; not land inside its own piecemeal loading of org, which is over by
+;; then. Doom's entry is taken out of what runs as org loads.
+(unless (featurep 'org)
+  (setf (alist-get 'org after-load-alist)
+        (seq-remove (lambda (fn) (string-match-p "oc-csl" (prin1-to-string fn)))
+                    (alist-get 'org after-load-alist))))
 
 (use-package! org-mind-map
   :defer t
