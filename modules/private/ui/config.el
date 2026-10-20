@@ -314,6 +314,13 @@ or the enclosing function's first line while it is scrolled off the top."
   :commands (breadcrumb-project-crumbs breadcrumb-imenu-crumbs)
   :init (add-hook 'prog-mode-hook #'+ui-where-mode))
 
+;; Not in a file of long lines: with a header line, each key there redrew
+;; the whole window, 75 ms of a key's 107 (core's `+core-long-lines-p').
+(add-hook! '+core-long-lines-hook
+  (defun +ui--no-where-line-h ()
+    "Take the header line down in a file of long lines."
+    (+ui-where-mode -1)))
+
 ;; The symbol outline at the side, VS Code's Outline: SPC t o opens
 ;; and closes it; it follows point.
 (use-package! imenu-list

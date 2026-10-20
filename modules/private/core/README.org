@@ -297,6 +297,13 @@ files section has the detail.
   node of more than ~+core-treesit-children-max~ (20 000) children, an
   image as a C array, whatever its size. ~+core-large-file-size~ (1 MB)
   says what is large.
+- ~+core-long-lines-mean~ (100): a code file whose lines average more
+  characters than this keeps its mode, colour and language server but
+  wraps its lines, composes no glyphs, and has no header line (the ui
+  module, from ~+core-long-lines-hook~). A table of 2 000 character
+  rows: 100 to 230 ms a key to 4 to 14, a line moved 83 to 108 ms to 15
+  to 27, a =j= now passing a whole wrapped line (=gj= a screen line, 1
+  ms). Doom's so-long, past 10 000 characters, still opens plain text.
 - ~+core-build-niceness~ (10): builds start under =nice= at this value,
   so typing goes first when the cores are short. Every compilation is a
   build but a run (a =*run...*= buffer, projection's run), a benchmark
