@@ -279,7 +279,7 @@ flags it carries."
 ;;;###autoload
 (defun +pio--clangd-db (root)
   "Where ROOT's compilation database for clangd is: what pio writes, made
-readable to clang by bin/pio-clangd-db, in .pio, which git leaves alone."
+readable to clang by bin/clangd-db, in .pio, which git leaves alone."
   (expand-file-name ".pio/clangd/compile_commands.json" root))
 
 (defun +pio--python ()
@@ -298,7 +298,7 @@ so a copy that cannot be written is not tried at every file.")
   "Write ROOT's database for clangd from pio's, then start its servers
 again on it.  A second's work, in the background."
   (let ((db (expand-file-name "compile_commands.json" root))
-        (script (expand-file-name "bin/pio-clangd-db" doom-user-dir))
+        (script (expand-file-name "bin/clangd-db" doom-user-dir))
         (python (+pio--python)))
     (puthash root (file-attribute-modification-time (file-attributes db))
              +pio--clangd-db-tried)
@@ -307,7 +307,7 @@ again on it.  A second's work, in the background."
        :name "pio-clangd-db"
        :buffer (generate-new-buffer " *pio clangd db*")
        :noquery t
-       :command (list python script root)
+       :command (list python script db (+pio--clangd-db root))
        :sentinel
        (lambda (process _event)
          (unless (process-live-p process)
