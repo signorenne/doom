@@ -15,19 +15,40 @@
 ;; Doom maps the Nerd Font ranges and the symbol, math and emoji scripts from
 ;; `doom-symbol-font' and `doom-emoji-font'. This adds one more fallback for
 ;; arrows, technical and dingbat blocks. Re-runs on SPC h r f.
+;;
+;; Emacs on macOS asks no font it was not told of for a character, so a
+;; block left out is drawn as boxes even with a font for it installed:
+;; Supplemental Arrows C, the legacy computing block's sextants and
+;; segments that terminal programs draw with, and the alchemical symbols,
+;; 549 characters, all of them boxes (2026-10-23). Noto Sans Symbols 2 has
+;; the first two; the alchemical symbols are in Apple Symbols on macOS and
+;; in Noto Sans Symbols (the first one) on Linux.
+;;
+;; The font goes in as a spec, not its name: a name ending in a number is
+;; read as a family and a size, "Noto Sans Symbols" at 2, which is no
+;; font, so the fallback did nothing. Noto drew 230 characters of these
+;; blocks before, found some other way, and 841 now; 73 newer than any
+;; font here stay boxes.
 (add-hook! 'after-setting-font-hook
   (defun +ui--extra-fontsets-h ()
     "Append `+ui-symbol-fallback-font' to the symbol blocks."
-    (when (and (display-graphic-p)
-               (find-font (font-spec :family +ui-symbol-fallback-font)))
-      (dolist (range '((#x2190 . #x21FF)    ; arrows
-                       (#x2300 . #x23FF)    ; misc technical
-                       (#x25A0 . #x25FF)    ; geometric shapes
-                       (#x2600 . #x26FF)    ; misc symbols
-                       (#x2700 . #x27BF)    ; dingbats
-                       (#x2900 . #x297F)    ; supplemental arrows B
-                       (#x2B00 . #x2BFF)))  ; misc symbols and arrows
-        (set-fontset-font t range +ui-symbol-fallback-font nil 'append)))))
+    (when (display-graphic-p)
+      (when-let* ((font (font-spec :family +ui-symbol-fallback-font))
+                  ((find-font font)))
+        (dolist (range '((#x2190 . #x21FF)      ; arrows
+                         (#x2300 . #x23FF)      ; misc technical
+                         (#x25A0 . #x25FF)      ; geometric shapes
+                         (#x2600 . #x26FF)      ; misc symbols
+                         (#x2700 . #x27BF)      ; dingbats
+                         (#x2900 . #x297F)      ; supplemental arrows B
+                         (#x2B00 . #x2BFF)      ; misc symbols and arrows
+                         (#x1F800 . #x1F8FF)    ; supplemental arrows C
+                         (#x1FB00 . #x1FBFF)))  ; legacy computing
+          (set-fontset-font t range font nil 'append)))
+      (when-let* ((font (seq-find #'find-font
+                                  (list (font-spec :family "Apple Symbols")
+                                        (font-spec :family "Noto Sans Symbols")))))
+        (set-fontset-font t '(#x1F700 . #x1F77F) font nil 'append)))))  ; alchemical
 
 
 ;;
