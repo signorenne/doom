@@ -2,8 +2,9 @@
 #+subtitle: glyphs, dashboard and visual aids
 
 * Description
-- one more font fallback for arrows, technical and dingbat symbols, on top
-  of the Nerd Font and emoji fonts Doom already maps,
+- one more font fallback for arrows, technical and dingbat symbols, the
+  legacy computing block terminal programs draw with, and alchemical
+  symbols, on top of the Nerd Font and emoji fonts Doom already maps,
 - glyph helpers: insert an icon, insert it as elisp, or check the fonts,
 - a dashboard with the name as an ASCII banner a ripple runs through,
   carrying a slow wave of colour, a greeting another module may register
@@ -161,7 +162,14 @@ Colouring had its own waste:
   cc-mode walked back through them at every step, 130 ms a line scrolled.
 
 * Configuration
-- ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default.
+- ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default. =doom
+  doctor= warns that Symbola is missing whatever fonts are set: it counts
+  on Symbola to stop Emacs searching every font for a character none
+  has, which is slow under fontconfig. Emacs on macOS draws such a
+  character as a box without searching, faster than one with a font
+  (2026-10-23), and these fallbacks leave 73 symbols without one, so the
+  warning stands there. Symbola is free for personal use only and in no
+  package manager here.
 - The minimap: ~+ui-minimap-width~ (16 columns), ~+ui-minimap-idle~
   (0.1 s at rest before it catches up with a new buffer, or scrolls its
   own window after the marks), ~+ui-minimap-copy-idle~ (0.5 s after
