@@ -3,6 +3,15 @@
 ;; How org looks, and what it turns into: org-modern and friends, mind
 ;; maps, the exporters, LaTeX, PlantUML.
 
+;; What the first org buffer turns on, loaded in the background after org
+;; as Doom loads org itself: org-modern and its friends, and gptel, which
+;; Doom's llm module sets up in every org buffer for its source blocks. A
+;; first org file took 1.7 to 2.1 s after everything else was loaded,
+;; gptel half a second of it (2026-10-23).
+(doom-load-packages-incrementally
+ '(org-indent org-modern org-modern-indent org-appear evil-org toc-org
+   org-fragtog org-eldoc gptel gptel-org))
+
 ;; Makes org-modern's block borders line up under `org-indent-mode'.
 (use-package! org-modern-indent
   :hook (org-mode . org-modern-indent-mode))
