@@ -79,8 +79,8 @@ lines: `+core-long-lines-p'.")
 (defvar-local +core-long-lines-p nil
   "Non-nil in a code file whose lines average past `+core-long-lines-mean'.")
 
-;; After the mode tree-sitter would make slow is replaced, at -90: a new
-;; mode clears what is set here.
+;; Once the mode is the one the file keeps, the tree-sitter one or the
+;; older one put in its place: a new mode clears what is set here.
 (add-hook! 'find-file-hook :depth -80
   (defun +core--long-lines-h ()
     "Wrap a code file whose lines are long, and stop the redraws it pays for."
@@ -158,10 +158,30 @@ key.  A node that holds most of the file holds the middle too."
   (car (or (rassq mode major-mode-remap-alist)
            (rassq mode (bound-and-true-p major-mode-remap-defaults)))))
 
-(add-hook! 'find-file-hook :depth -90
+;; Decided as the mode is set, before eglot, at 0, attaches the buffer: a
+;; server already running for the project was sent the whole file as the
+;; tree-sitter mode came, and again as the older mode replaced it, the
+;; second time while it was still reading the first. A font array of
+;; 600 KB waited 3.6 s on the server's input, and opened in 4.5 s
+;; (2026-10-23). Once a visit: a mode chosen afterwards is kept.
+(defvar-local +core--treesit-checked nil
+  "Non-nil once this file's buffer was checked for a slow syntax tree.")
+(put '+core--treesit-checked 'permanent-local t)
+
+(defvar-local +core-treesit-fallback-p nil
+  "Non-nil in a file opened in the older mode, tree-sitter's being slow
+there: a file the older mode is slow to walk too, the ui module's header
+looking for no function in it.")
+
+(add-hook! 'after-change-major-mode-hook :depth -90
   (defun +core--without-treesit-h ()
     "Open a file tree-sitter would make slow in the mode before it."
-    (when-let* (((treesit-parser-list))
+    (when-let* (((buffer-file-name))
+                ((not +core--treesit-checked))
+                ;; Not at `normal-mode''s fundamental-mode, before the
+                ;; file's own: the mode with a parser is the one to check.
+                ((treesit-parser-list))
+                ((setq +core--treesit-checked t))
                 (classic (+core--classic-mode major-mode))
                 ((fboundp classic))
                 ((or (and (> (buffer-size) +core-treesit-unparsed-max)
@@ -170,6 +190,7 @@ key.  A node that holds most of the file holds the middle too."
                      (and (> (buffer-size) +core-treesit-unparsed-max)
                           (+core--treesit-slow-reparse-p)))))
       (funcall classic)
+      (setq-local +core-treesit-fallback-p t)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
 ;; Whether a grammar is there is looked up on disk at every asking, 3 ms
