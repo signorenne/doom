@@ -392,13 +392,54 @@ re-run starts it at the editor's priority again.")
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
 
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
-;; org-protocol, $EDITOR). Daemons already run one.
-(add-hook! 'doom-after-init-hook
-  (defun +core--start-server-h ()
-    "Start the Emacs server unless one is already running."
-    (require 'server)
-    (unless (or (daemonp) (server-running-p))
-      (server-start))))
+;; org-protocol, $EDITOR). Daemons already run one. Emacs here is the
+;; daemon that `+core/install-daemon' starts at login, its windows opened
+;; by Emacs Client.app; Emacs.app opened itself, from the Dock or Finder,
+;; found the daemon's server and ran none, so emacsclient went to an
+;; Emacs with no window and the files to one nothing could reach. A GUI
+;; Emacs whose server is taken now gives its files to that server, in a
+;; window of its own, and quits. EMACS_SERVER_NAME set to a name no
+;; server has gives an Emacs of its own, with its own server.
+;;
+;; Done once Emacs is idle, from a timer set here rather than from
+;; `doom-after-init-hook': an error in one of Doom's first hooks ends its
+;; startup there, the hooks after it with it, which left an Emacs with no
+;; server and its files with it (Emacs 31.1 failing now and then to load
+;; a package's native code as a GUI Emacs starts, 2026-10-23). And a file
+;; Finder hands over comes as an event just after startup.
+(defun +core--start-server-h ()
+  "Run the Emacs server, or hand this Emacs's files to the one running."
+  (require 'server)
+  (when-let* ((name (getenv "EMACS_SERVER_NAME")))
+    (setq server-name name))
+  (cond ((process-live-p server-process))   ; Doom started it
+        ((not (server-running-p)) (server-start))
+        (initial-window-system (+core--hand-off-to-server))))
+
+(unless (daemonp)
+  (run-with-idle-timer 0.1 nil #'+core--start-server-h))
+
+(defun +core--hand-off-to-server ()
+  "Open this Emacs's files in a new window of the running server, then quit.
+Not when a file's buffer is modified, or when the server cannot be reached."
+  (let ((files (delq nil (mapcar #'buffer-file-name (buffer-list))))
+        ;; Emacs.app keeps its own in Contents/MacOS/bin.
+        (client (or (executable-find "emacsclient")
+                    (expand-file-name "bin/emacsclient" invocation-directory))))
+    (cond ((seq-some (lambda (b) (and (buffer-file-name b) (buffer-modified-p b)))
+                     (buffer-list))
+           (message "Server %s runs elsewhere; this Emacs has edits, so it stays" server-name))
+          ((zerop (call-process client nil nil nil
+                                "-s" server-name "-c" "-n" "-e"
+                                (prin1-to-string
+                                 `(progn (mapc #'find-file ',files)
+                                         (select-frame-set-input-focus (selected-frame))))))
+           ;; Without its exit hook: this Emacs saving its history,
+           ;; recent files and places would write over the server's.
+           (let ((kill-emacs-hook nil))
+             (kill-emacs)))
+          (t (message "Server %s runs elsewhere and did not answer; this Emacs stays"
+                      server-name)))))
 
 ;; gcmh drops the GC threshold to 800 KB while Emacs is idle, but an agent
 ;; streaming into vterm happens while idle: on a 350 MB heap that was a
