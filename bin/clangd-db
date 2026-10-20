@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Write the compilation database clangd reads for a PlatformIO project.
+"""Write a compilation database clangd can read, from any project's.
 
-  pio-clangd-db ROOT
+  clangd-db SRC DEST
 
-ROOT/compile_commands.json is what `pio run -t compiledb` writes: the real
-cross compiler's command lines, which clang cannot take as they are. This
-writes ROOT/.pio/clangd/compile_commands.json, which Emacs starts clangd
-on, with these things changed for every entry and nothing to set up per
-project:
+SRC is a compile_commands.json, PlatformIO's, ESP-IDF's, a CMake build
+directory's, west's, bear's: the real compiler's command lines, which
+clang cannot always take as they are. This writes DEST, which Emacs
+starts clangd on, and beside it query-drivers, the cross compilers clangd
+may run to learn their headers, one a line. For every entry:
 
 - the compiler named in full: pio names most of them bare, an
   xtensa-esp32s3-elf-gcc on no PATH, and clangd then asked no compiler for
@@ -28,8 +28,12 @@ project:
   with Arduino.h in it stopped at its "using std::isinf". The compiler
   itself is asked whether the C library declares them.
 
-The directory .pio is the build's, which git leaves alone.
+A compiler is a cross compiler when it says it builds for another
+machine (-dumpmachine), not by its name. A database with no cross
+compiler and nothing clang refuses is left as it is: nothing is written
+and the exit status is 3, so clangd reads SRC itself.
 """
+import glob
 import json
 import os
 import re
@@ -53,6 +57,8 @@ KNOWN_UNKNOWN = {"-mlongcalls", "-mtext-section-literals", "-mno-target-align",
 KNOWN_UNKNOWN_PREFIX = ("-mfix-esp32-psram-cache", "-fstrict-flex-arrays=",
                         "-fzero-init-padding-bits=")
 
+NOTHING_TO_CHANGE = 3
+
 
 # A shell word: plain characters, a backslash and the one it escapes, or a
 # quoted run. shlex alone took ten seconds over a database of 40 MB, the
@@ -67,33 +73,80 @@ def split(command):
             for w in WORD.findall(command)]
 
 
-def core_dir():
-    return os.environ.get("PLATFORMIO_CORE_DIR") or os.path.expanduser("~/.platformio")
+def pio_packages():
+    core = os.environ.get("PLATFORMIO_CORE_DIR") or os.path.expanduser("~/.platformio")
+    return os.path.join(core, "packages")
+
+
+def toolchain_dirs():
+    """Where cross toolchains are kept when they are on no PATH: PlatformIO's
+    packages, ESP-IDF's tools, the Zephyr SDK, Arm's installer on macOS."""
+    idf = os.environ.get("IDF_TOOLS_PATH") or os.path.expanduser("~/.espressif")
+    patterns = [os.path.join(pio_packages(), "toolchain-*", "bin"),
+                os.path.join(idf, "tools", "*", "*", "*", "bin"),
+                os.path.expanduser("~/zephyr-sdk-*/*/bin"),
+                "/opt/zephyr-sdk-*/*/bin",
+                "/Applications/ArmGNUToolchain/*/*/bin"]
+    return [d for p in patterns for d in sorted(glob.glob(p))]
 
 
 def resolve(name, cache={}):
     """NAME in full: as given when it has a directory, else from PATH,
-    else from PlatformIO's toolchains."""
+    else from the toolchain directories."""
     if os.sep in name:
         return name
     if name not in cache:
         found = shutil.which(name)
         if not found:
-            packages = os.path.join(core_dir(), "packages")
-            for pkg in sorted(os.listdir(packages)) if os.path.isdir(packages) else []:
-                candidate = os.path.join(packages, pkg, "bin", name)
-                if pkg.startswith("toolchain-") and os.access(candidate, os.X_OK):
+            for d in toolchain_dirs():
+                candidate = os.path.join(d, name)
+                if os.access(candidate, os.X_OK):
                     found = candidate
                     break
         cache[name] = found or name
     return cache[name]
 
 
-def is_cross(compiler):
-    """Whether COMPILER builds for another machine: one of PlatformIO's
-    toolchains, or named for a target, xtensa-...-elf-gcc."""
+def machine(compiler, cache={}):
+    """The target COMPILER says it builds for, or None."""
+    if compiler not in cache:
+        try:
+            run = subprocess.run([compiler, "-dumpmachine"], capture_output=True,
+                                 text=True, timeout=20)
+            cache[compiler] = run.stdout.strip() if run.returncode == 0 else None
+        except (OSError, subprocess.SubprocessError):
+            cache[compiler] = None
+    return cache[compiler]
+
+
+def host_machine():
+    for cc in ("cc", "clang", "gcc"):
+        if shutil.which(cc):
+            found = machine(shutil.which(cc))
+            if found:
+                return found
+    return None
+
+
+def native(target, host):
+    """Whether TARGET is this machine's: the same triple, or both Apple's,
+    or both Linux on the same processor."""
+    if not target or not host or target == host:
+        return True
+    if "darwin" in target and "darwin" in host:
+        return True
+    arch = lambda t: t.split("-", 1)[0].replace("arm64", "aarch64")
+    return "linux" in target and "linux" in host and arch(target) == arch(host)
+
+
+def is_cross(compiler, host):
+    """Whether COMPILER builds for another machine. Asked of the compiler;
+    one that cannot be run is judged by where it is and its name."""
+    target = machine(compiler)
+    if target is not None:
+        return not native(target, host)
     base = os.path.basename(compiler)
-    return (compiler.startswith(os.path.join(core_dir(), "packages") + os.sep)
+    return (compiler.startswith(pio_packages() + os.sep)
             or any(t in base for t in ("-elf-", "-eabi-", "-eabihf-")))
 
 
@@ -142,8 +195,14 @@ def unknown_to_clang(flags):
     return unknown
 
 
-def main(root):
-    src = os.path.join(root, "compile_commands.json")
+def write(path, text):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.replace(tmp, path)
+
+
+def main(src, dest):
     with open(src, encoding="utf-8") as f:
         db = json.load(f)
     entries = []
@@ -153,12 +212,17 @@ def main(root):
     candidates = {a for _, args in entries for a in args[1:]
                   if a.startswith(("-f", "-m", "--param")) and not a.startswith(DROP_PREFIX)}
     unknown = unknown_to_clang(candidates)
+    host = host_machine()
+    cross = set()
+    changed = bool(unknown)
     out = []
     for e, args in entries:
         compiler = resolve(args[0])
         kept = [a for a in args[1:] if a not in unknown and not a.startswith(DROP_PREFIX)]
+        changed = changed or len(kept) != len(args) - 1
         extra = ADD[:]
-        if is_cross(compiler):
+        if is_cross(compiler, host):
+            cross.add(compiler)
             extra[:0] = ["-Xclang", "-nostdsysteminc"]
             if is_cxx(compiler) and declares_isinf(compiler, kept, e["directory"]):
                 extra += ["-D_GLIBCXX_HAVE_OBSOLETE_ISINF=1", "-D_GLIBCXX_HAVE_OBSOLETE_ISNAN=1"]
@@ -167,18 +231,19 @@ def main(root):
         if "output" in e:
             entry["output"] = e["output"]
         out.append(entry)
-    dest_dir = os.path.join(root, ".pio", "clangd")
-    os.makedirs(dest_dir, exist_ok=True)
-    dest = os.path.join(dest_dir, "compile_commands.json")
-    tmp = dest + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(out, f)
-    os.replace(tmp, dest)
-    print(f"{len(out)} entries, {len(unknown)} flags clang does not know taken out: "
-          + " ".join(sorted(unknown)))
+    if not cross and not changed:
+        print(f"{len(out)} entries, nothing clang cannot read")
+        return NOTHING_TO_CHANGE
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    write(dest, json.dumps(out))
+    write(os.path.join(os.path.dirname(dest), "query-drivers"),
+          "".join(c + "\n" for c in sorted(cross) if os.sep in c))
+    print(f"{len(out)} entries, {len(cross)} cross compilers, {len(unknown)} flags clang "
+          "does not know taken out: " + " ".join(sorted(unknown)))
+    return 0
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         sys.exit(__doc__.strip().splitlines()[2].strip())
-    main(os.path.abspath(sys.argv[1]))
+    sys.exit(main(os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])))

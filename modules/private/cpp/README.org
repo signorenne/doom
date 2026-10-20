@@ -399,7 +399,7 @@ template uses Qt style: PascalCase types, camelCase functions, =m_= members,
   been built has pio write =compile_commands.json= when there is none,
   when it was written in another directory (the project moved since, and
   every path in it pointed at nothing) or before =platformio.ini= last
-  changed; =bin/pio-clangd-db= then makes the copy clangd starts on,
+  changed; =bin/clangd-db= then makes the copy clangd starts on,
   =.pio/clangd/=, which git leaves alone. In it the cross compiler is
   named in full, the GCC flags clang does not know are out, clang itself
   telling which, no system directory but the cross compiler's is
