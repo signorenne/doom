@@ -221,12 +221,16 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; A PlatformIO project keeps its flags in platformio.ini, and the server
 ;; cannot read that: it reads compile_commands.json, which pio writes on
 ;; being asked. The first C or C++ file opened in such a project asks.
-;; The mode is tested here, so any other file leaves pio.el unloaded.
+;; Any other project's database is found where its build wrote it and
+;; made readable to clang, and a CMake project never configured here is
+;; configured, see compdb.el. The mode is tested here, so any other file
+;; leaves pio.el and compdb.el unloaded.
 (add-hook! 'find-file-hook
   (defun +pio--compiledb-maybe-h ()
     "Ask for the compilation database when the file is C or C++."
     (when (derived-mode-p 'c-mode 'c++-mode 'c-ts-mode 'c++-ts-mode)
-      (+pio--compiledb-h))))
+      (+pio--compiledb-h)
+      (+cpp--compdb-h))))
 
 ;; CMakeLists.txt: completion and documentation for commands and variables.
 (set-eglot-client! '(cmake-mode cmake-ts-mode)

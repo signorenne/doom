@@ -28,7 +28,8 @@ project; C and C++ get the most, the rest get the same menu:
   for environments, upload, the serial monitor in a terminal, the board
   catalogue and gdb.
 - clangd is the language server, ccls is one keystroke away, per project if
-  you want. =--query-driver= lets clangd read PlatformIO's cross compilers.
+  you want. =--query-driver= lets clangd read PlatformIO's cross compilers,
+  and any other a project's database names.
   QML gets =qmlls= (=qmlls6= on openSUSE) and =CMakeLists.txt= gets
   =cmake-language-server=, when they are installed; =doom doctor= says so.
 - [[https://github.com/svaante/dape][dape]] debugs through gdb. CMake executables are offered by name, anything
@@ -250,6 +251,26 @@ where clangd does not look on its own, so clangd is started with
 clang-tidy run by hand or another editor, ~SPC k l l~ links the kit's
 database there. If a jump lands in the wrong place, =?= says which
 database the server was given, and =z= configures and restarts.
+
+Any project's database, with nothing set up (=autoload/compdb.el=): the
+first C or C++ file opened looks for =compile_commands.json= where build
+systems write it, the root, =build/= (CMake, ESP-IDF's =idf.py=, Zephyr's
+=west=), =build/*/=, =build-*/=, =cmake-build-*/=, =out/build/*/= and the
+kits' directories, and takes the newest. When it names a cross compiler,
+or flags clang does not take, =bin/clangd-db= writes a copy clang can read,
+in Doom's cache so no project gets a file it did not ask for, and clangd
+is started on it, allowed to ask those compilers for their headers; a
+second's work in the background. A cross compiler is one that says it
+builds for another machine. On ESP firmware the raw database gave clangd
+35 errors in a file, =sys/features.h= not found first among them, the copy
+none of its own (2026-10-23). A database with neither is read as it is.
+
+A CMake project never configured here is configured once, in the
+background, as its first file opens: by its first preset or into
+=build/=, with no compiler kit asked for. Not one whose kit runs in a
+container or with an SDK's environment, which would start the one or
+source the other behind your back, and not again in a session after a
+configure fails; =SPC k c= configures it where you can see why.
 
 A project that has no database at all, qmake or a hand written Makefile,
 gets one thing more: ~SPC k l c~ writes a =.clangd= whose fallback flags
@@ -479,5 +500,6 @@ a target it has no symbols for.
   =tasks.el= (package, copy it out, run a script), =cmake.el=,
   =run.el=,
   =test.el=, =lsp.el=, =style.el=, =scaffold.el=, =menu.el=, =asm.el=,
-  =pio.el=, and =shim.el=, the one place that calls a private function
+  =pio.el=, =compdb.el= (any project's database for clangd, and the
+  background configure), and =shim.el=, the one place that calls a private function
   of projection, dape or jsonrpc.

@@ -82,9 +82,11 @@ takes under a second, and without it the file opens as a wall of red
 that means nothing.
 
 Configuring is what gives clangd its compilation database, so it is also
-what turns on completion, jumps, diagnostics and every fix key. =F8= is
-what you press afterwards, when something in a CMakeLists changes, or on
-a project somebody else made that has never been configured here.
+what turns on completion, jumps, diagnostics and every fix key. A CMake
+project never configured here is configured in the background as its
+first file opens, unless its kit runs in a container or an SDK's
+environment; =F8= is what you press afterwards, when something in a
+CMakeLists changes, or to configure one of those.
 
 If =SPC k ?= says the kit is not the one you meant, =SPC k K= picks
 another and =F8= configures that one.
