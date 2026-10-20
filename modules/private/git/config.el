@@ -8,6 +8,25 @@
 ;; date or author and split one, and run git through magit. The notes
 ;; repository keeps its own commands in the notes module.
 
+;; Doom loads magit in the background after starting, a package a step,
+;; each step a stretch Emacs does not answer keys in. magit was one step,
+;; 0.7 s, with everything it pulls in. Its parts go first, a step each.
+(defvar +git-incremental-parts
+  '(magit-section magit-git magit-mode magit-process magit-core magit-diff
+    magit-apply magit-log magit-wip epa ibuffer projectile)
+  "Libraries loaded in the background before magit, each its own step.")
+
+(defvar +git--incremental-split nil
+  "Non-nil once magit's parts are in Doom's queue, so a reload does not
+put them in twice; org-roam queues magit-section for itself, later.")
+
+(when-let* (((not +git--incremental-split))
+            (tail (memq 'magit doom-incremental-packages)))
+  (setcdr tail (cons 'magit (cdr tail)))
+  (setcar tail (car +git-incremental-parts))
+  (setcdr tail (append (cdr +git-incremental-parts) (cdr tail)))
+  (setq +git--incremental-split t))
+
 (defvar +git-docs
   '(:groups (("git" "Git" (magit) magit-mode-map magit-status-mode-map
               git-commit-mode-map))
