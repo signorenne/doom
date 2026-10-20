@@ -19,7 +19,8 @@
                     '(("gdb" . "needed to debug, version 14.1 or newer")))
                 ("clang-format" . "formats C and C++, SPC k f")
                 ("run-clang-tidy" . "lints the whole project, SPC k g p")
-                ("pio" . "PlatformIO, the SPC k p commands")))
+                ("pio" . "PlatformIO, the SPC k p commands")
+                ("python3" . "makes a project's database readable to clangd, bin/clangd-db")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
 

@@ -13,6 +13,9 @@
 (declare-function +cpp-kit-container "kit")
 (declare-function +pio--root "pio")
 (declare-function +pio--clangd-db "pio")
+(declare-function +cpp--compdb-drivers "compdb")
+(declare-function +cpp--compdb-for-clangd "compdb")
+(declare-function +core-project-root-or-nil "lib")
 (declare-function +cpp--set-setting "project")
 (declare-function +cpp-kit-make "kit")
 (declare-function +cpp-kit-name "kit")
@@ -47,15 +50,12 @@ path means the same thing there."
                  ;; clangd looks in the root and in build/ only; a kit's
                  ;; build/horizon-Debug has to be named. A PlatformIO
                  ;; project's is the copy made readable to clang, see
-                 ;; `+pio--compiledb-h'.
-                 (_ (append (cons "clangd" +cpp-clangd-args)
-                            (when-let* ((db (or (when-let* ((pio (+pio--root 'noerror))
-                                                            (copy (+pio--clangd-db pio))
-                                                            ((file-exists-p copy)))
-                                                  copy)
-                                                (+cpp--compile-commands-file))))
-                              (list (concat "--compile-commands-dir="
-                                            (file-name-directory db))))))))
+                 ;; `+pio--compiledb-h'; any other's, its copy once
+                 ;; there is one, see `+cpp--compdb-h'.
+                 (_ (pcase-let ((`(,dir . ,drivers) (+cpp--clangd-database)))
+                      (append (cons "clangd" (+cpp--with-query-drivers +cpp-clangd-args drivers))
+                              (when dir
+                                (list (concat "--compile-commands-dir=" dir))))))))
          (kit (or (+cpp--kit) (+cpp-kit-make :name "host" :dir "build"))))
     (when-let* ((container (+cpp-kit-container kit)))
       (message "Kit %s runs in %s; so does the language server"
@@ -63,6 +63,36 @@ path means the same thing there."
     (append (+cpp--kit-process kit argv)
             (when (eq +cpp-lsp-server 'ccls)
               (list :initializationOptions +cpp-ccls-init-options)))))
+
+(defun +cpp--clangd-database ()
+  "(DIR . DRIVERS): the directory of the database clangd is to read in
+this buffer's project, and the cross compilers it may ask for headers,
+or nil for clangd's own search."
+  (if-let* ((pio (ignore-errors (+pio--root 'noerror))))
+      (let ((copy (+pio--clangd-db pio)))
+        (if (file-exists-p copy)
+            (cons (file-name-directory copy)
+                  (+cpp--compdb-drivers (file-name-directory copy)))
+          (when-let* ((db (+cpp--compile-commands-file)))
+            (list (file-name-directory db)))))
+    (or (+cpp--compdb-for-clangd (+core-project-root-or-nil))
+        (when-let* ((db (+cpp--compile-commands-file)))
+          (list (file-name-directory db))))))
+
+(defun +cpp--with-query-drivers (args drivers)
+  "ARGS with DRIVERS added to the compilers clangd may run, the globs of
+`+cpp-clangd-args' kept: clangd runs only the compilers it is allowed,
+and a cross compiler outside them, ESP-IDF's in ~/.espressif or an Arm
+toolchain, was never asked for its headers."
+  (if (null drivers)
+      args
+    (let ((joined (string-join drivers ",")))
+      (if (seq-some (lambda (a) (string-prefix-p "--query-driver=" a)) args)
+          (mapcar (lambda (a) (if (string-prefix-p "--query-driver=" a)
+                                  (concat a "," joined)
+                                a))
+                  args)
+        (append args (list (concat "--query-driver=" joined)))))))
 
 ;;;###autoload
 (defun +cpp--container-path-a (path)
@@ -95,16 +125,18 @@ choice reaches it. `eglot-reconnect' would reuse the old command line."
     (eglot-shutdown server nil nil 'preserve-buffers))
   (eglot-ensure))
 
-;; Autoloaded: called from the reindex hook in cmake.el.
+;; Autoloaded: called from the reindex hook in cmake.el and from compdb.el.
 ;;;###autoload
-(defun +cpp--restart-servers ()
-  "Restart every C and C++ language server once, and put each of its
-buffers back on the new one.  Grouped before anything is touched: once
-a server is replaced, its old buffers already answer with the new one."
+(defun +cpp--restart-servers (&optional root)
+  "Restart every C and C++ language server once, or those with a file
+under ROOT, and put each of its buffers back on the new one.  Grouped
+before anything is touched: once a server is replaced, its old buffers
+already answer with the new one."
   (let (groups)
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
         (when-let* (((and buffer-file-name (apply #'derived-mode-p +cpp-modes)))
+                    ((or (null root) (file-in-directory-p buffer-file-name root)))
                     (server (and (fboundp 'eglot-current-server)
                                  (eglot-current-server))))
           (push buffer (alist-get server groups)))))
