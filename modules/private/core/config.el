@@ -676,17 +676,22 @@ pause again for the one after."
         (run-with-idle-timer (time-add (or (current-idle-time) 0) 0.1)
                              nil #'+core--warm-up)))))
 
-(defun +core--warm-up-start-h ()
-  "Queue the warm-up, to start at the first pause after starting."
+(defun +core--warm-up-start ()
+  "Queue the warm-up and take its first step."
   (setq +core--warm-up-queue
         (cons 'unknown
               (append '((hook . doom-first-input-hook))
                       (mapcar (lambda (f) (cons 'require f)) +core-warm-up-features)
                       (mapcar (lambda (f) (cons 'call f)) +core-warm-up-functions)
                       '((hook . doom-first-buffer-hook) (hook . doom-first-file-hook)))))
-  (run-with-idle-timer 1 nil #'+core--warm-up))
+  (+core--warm-up))
 
-(add-hook 'doom-after-init-hook #'+core--warm-up-start-h 90)
+;; At the first pause after starting, from a timer set here rather than
+;; from `doom-after-init-hook', as the server is: an error in one of
+;; Doom's first hooks ends its startup there and the hooks after it, and
+;; nothing was warmed up for the rest of the session. The queue is made
+;; when the timer fires, the other modules' steps in it.
+(run-with-idle-timer 1 nil #'+core--warm-up-start)
 
 
 ;; A 47 MB log opens in a fifth of a second here, in fundamental mode as
