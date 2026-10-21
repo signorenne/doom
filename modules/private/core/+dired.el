@@ -49,6 +49,11 @@ the next session by savehist.")
 ;; that kept a core busy. On the Mac it is 12 ms a file, 0.2 to 0.5 s for
 ;; a directory of 20 to 35 entries, off the editor's thread: the listing
 ;; shows as fast and j costs 2.4 to 2.8 ms with it, 3.3 without.
+(defvar-local +core--dirvish-drawn nil
+  "(POINT . KEY): where the cursor was when this listing was last drawn,
+and what else the drawing depended on; see the redraw below.")
+(defvar +core--dirvish-in-redraw nil)
+
 (after! dirvish
   (setq dirvish-default-layout '(0 0 0.45)
         ;; All but vc-state read from the file attributes dired already
@@ -99,10 +104,6 @@ the next session by savehist.")
   ;; left it keeps what is there, and one where only the cursor moved
   ;; draws the line it left and the line it is on, for the highlight.
   ;; dirvish's own calls, as when an answer from git arrives, draw all.
-  (defvar-local +core--dirvish-drawn nil
-    "(POINT . KEY): where the cursor was when this listing was last drawn,
-and what else the drawing depended on.")
-  (defvar +core--dirvish-in-redraw nil)
   (defvar dirvish--props)
   (declare-function dirvish--render-attrs "dirvish")
   (declare-function dirvish-pre-redisplay-h "dirvish")
