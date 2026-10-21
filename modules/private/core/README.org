@@ -453,6 +453,11 @@ project and 72 in a PlatformIO one, clangd's first diagnostics coming
 1.0 and 1.9 s after; the first =magit-status= in 313 ms. In the 6 158
 line =TFT_eSPI.cpp=, a =j= costs 3.2 ms (at most 5), a =k= 5.0 (at most
 7.4), one line every time; a key typed 4.2 ms, 6.4 for one in twenty.
+A font as a C array, which opens in c-mode, opened in 3.8 s at 600 KB
+and 9.7 s at 1.1 MB, clangd sent the file twice, and froze 300 to 700
+ms at each pause in the typing, the header line walking the array for
+its function; now 0.75 and 1.1 s, a half page scrolled 3 ms (62 and 71
+at worst before), a key 5 to 9.
 
 What keeps it that way:
 - No repeating timer runs for a buffer nobody sees: every timer wake is a
