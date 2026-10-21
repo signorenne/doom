@@ -980,6 +980,22 @@ MANAGED-MODES on its way already."
 ;; ms: a key pressed meanwhile waits no more than that (2026-10-23).
 (setq eldoc-idle-delay 0.25)
 
+;; eglot renders documentation as markdown in gfm-view-mode, and the
+;; first reply of a session set the mode up: 20 ms of it, the next one
+;; 1 (2026-10-23). It is set up the way eglot does it while Emacs waits
+;; after starting (`+core-warm-up-functions').
+(defun +core--warm-up-docs-h (_mode)
+  "Render a little markdown as eglot renders documentation."
+  (when (fboundp 'gfm-view-mode)
+    (with-temp-buffer
+      (setq-local markdown-fontify-code-blocks-natively t)
+      (insert "`int` *x*: a **value**")
+      (let ((inhibit-message t) (message-log-max nil))
+        (ignore-errors (delay-mode-hooks (gfm-view-mode)))
+        (font-lock-ensure)))))
+
+(add-hook '+core-warm-up-functions #'+core--warm-up-docs-h 50)
+
 ;; eldoc, which eglot brings from ELPA and which loads with the first
 ;; file, primes its list of motion commands by running thirty prefixes
 ;; one by one through every symbol there is: 76 000 of them in a session
