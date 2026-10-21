@@ -32,13 +32,37 @@ minimap. Past it the minimap shows the colours of what has been seen.")
   "The minimap's text."
   :group 'faces)
 
-(defface +ui-minimap-region-face '((t :inherit highlight :extend t))
-  "The part of the buffer on screen, in the minimap."
+(defface +ui-minimap-region-face '((t :extend t))
+  "The part of the buffer on screen, in the minimap: a gray a little off
+the background, worked out from the theme by `+ui--minimap-faces-h'."
   :group 'faces)
 
-(defface +ui-minimap-line-face '((t :inherit cursor :extend t))
-  "The line point is on, in the minimap."
+(defface +ui-minimap-line-face '((t :extend t))
+  "The line point is on, in the minimap: a gray a little further off."
   :group 'faces)
+
+(defvar +ui-minimap-grays '(0.08 . 0.2)
+  "How far from the background towards the text the part on screen and
+the line point is on are drawn in the minimap, from 0 to 1.")
+
+(defun +ui--minimap-gray (amount)
+  "The theme's background moved AMOUNT of the way to its text, or nil."
+  (require 'color)
+  (let ((bg (color-name-to-rgb (face-background 'default nil t)))
+        (fg (color-name-to-rgb (face-foreground 'default nil t))))
+    (when (and bg fg)
+      (apply #'color-rgb-to-hex
+             (append (cl-mapcar (lambda (b f) (+ b (* amount (- f b)))) bg fg) '(2))))))
+
+(defun +ui--minimap-faces-h (&rest _)
+  "Draw the minimap's marks in grays of the theme loaded: the theme's
+own highlight and cursor were a loud blue over the small text."
+  (when-let* ((region (+ui--minimap-gray (car +ui-minimap-grays)))
+              (line (+ui--minimap-gray (cdr +ui-minimap-grays))))
+    (set-face-attribute '+ui-minimap-region-face nil :background region)
+    (set-face-attribute '+ui-minimap-line-face nil :background line)))
+
+(add-hook 'doom-load-theme-hook #'+ui--minimap-faces-h)
 
 (defconst +ui--minimap-name "*Minimap*")
 
@@ -235,6 +259,7 @@ held j at the bottom would mark the screen it just left."
              (delete-window window)
              (kill-buffer +ui--minimap-name))
     (let ((origin (selected-window)))
+      (+ui--minimap-faces-h)
       (when (+ui--minimap-source-p origin)
         (+ui--minimap-copy (window-buffer origin)))
       (let ((window (display-buffer
