@@ -122,7 +122,17 @@ START is where WINDOW starts when it is being scrolled, and its end is
 then worked out; with NO-SCROLL the minimap's own window is left where
 it is, and caught up at rest if the part on screen has left it."
   (let ((minimap (+ui--minimap-window))
-        (end (if start (window-end window t) (window-end window)))
+        ;; While WINDOW is being scrolled its end is still the old one's:
+        ;; after a jump, G or gg, the part marked ran from the new start
+        ;; back to the old end, most of the file. A window's height of
+        ;; lines from the new start instead.
+        (end (if start
+                 (with-current-buffer (window-buffer window)
+                   (save-excursion
+                     (goto-char start)
+                     (forward-line (window-body-height window))
+                     (point)))
+               (window-end window)))
         (start (or start (window-start window)))
         (point (window-point window)))
     (with-current-buffer (+ui--minimap-buffer)
@@ -147,7 +157,7 @@ it is, and caught up at rest if the part on screen has left it."
                    (not (and (<= (window-start minimap) start)
                              (< (max start (1- end)) (window-end minimap)))))
           (if no-scroll
-              (+ui--minimap-later)
+              (+ui--minimap-soon)
             (set-window-point minimap (/ (+ start end) 2))
             (with-selected-window minimap (recenter))))))))
 
@@ -174,6 +184,15 @@ it is, and caught up at rest if the part on screen has left it."
               ;; Already resting: an idle timer would wait for the next rest.
               (run-at-time (or delay +ui-minimap-idle) nil #'+ui--minimap-catch-up)
             (run-with-idle-timer (or delay +ui-minimap-idle) nil #'+ui--minimap-catch-up)))))
+
+(defun +ui--minimap-soon ()
+  "Catch up as soon as the redisplay under way is over: the part on
+screen has left the minimap's view, a jump, and waiting for the keys to
+stop left the minimap on the old place, its mark out of sight.  A held
+j crosses the view's edge once in a few hundred lines."
+  (when (timerp +ui--minimap-timer)
+    (cancel-timer +ui--minimap-timer))
+  (setq +ui--minimap-timer (run-at-time 0 nil #'+ui--minimap-catch-up)))
 
 (defun +ui--minimap-moved-h (&rest _)
   "A command ran or a window changed: mark the move at once when the
