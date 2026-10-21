@@ -176,7 +176,8 @@ Colouring had its own waste:
   an edit before the text is copied again), ~+ui-minimap-colour-max-size~
   (1 MB, past which only the colours already worked out are shown), and
   the faces ~+ui-minimap-face~, ~+ui-minimap-region-face~,
-  ~+ui-minimap-line-face~. It is not demap, Doom's: demap's minimap is an
+  ~+ui-minimap-line-face~, the last two grays of the theme loaded, as far
+  towards its text as ~+ui-minimap-grays~ says (0.08 and 0.2). It is not demap, Doom's: demap's minimap is an
   indirect buffer, which shares its text's change counters with the
   file, so every overlay the file moved redrew the minimap, 8 ms a key.
 - ~+ui-current-line-number~: the current line's number as the theme
