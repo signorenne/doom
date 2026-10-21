@@ -242,10 +242,14 @@ half a second after the typing stops: without a syntax tree the lookup
 walks the code, and in cc-mode it was half of what a key cost.  Not
 looked up in a file core calls large without a syntax tree: in a 2 MB
 header of declarations cc-mode walked back through them at every step,
-130 ms a line scrolled; the tree finds it in a megabyte in 10 µs."
+130 ms a line scrolled; the tree finds it in a megabyte in 10 µs.  Nor
+in one core gave the older mode for its slow tree, an image or a font
+as a C array: cc-mode took 300 to 420 ms to walk a 600 KB one, at
+every pause in the typing (2026-10-23)."
   (let ((top (window-start)))
     (when (and (> top (point-min))
-               (or (not +core-large-file-p) (treesit-parser-list)))
+               (or (treesit-parser-list)
+                   (not (or +core-large-file-p +core-treesit-fallback-p))))
       (pcase-let ((`(,from ,to ,tick ,old-top . ,line) +ui--defun-cache))
         (cond
          ;; A function's line holds while the top is past it: with the
