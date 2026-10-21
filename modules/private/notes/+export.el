@@ -111,9 +111,13 @@ visibly but does not hold up the window.")
         (seq-remove (lambda (fn) (string-match-p "oc-csl" (prin1-to-string fn)))
                     (alist-get 'org after-load-alist))))
 
-(use-package! org-mind-map
-  :defer t
-  :config
+;; Neither `use-package!' nor `after!': compiling either loads the
+;; package to learn its names, and org-mind-map does not load without ox,
+;; so every compile of this file said "Cannot load org-mind-map".
+(defvar org-mind-map-engine)
+(defvar org-mind-map-include-text)
+(defvar org-mind-map-default-graph-attribs)
+(with-eval-after-load 'org-mind-map
   (setq org-mind-map-engine "dot"
         org-mind-map-include-text t
         org-mind-map-default-graph-attribs
