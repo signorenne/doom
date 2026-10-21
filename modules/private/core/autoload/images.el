@@ -74,8 +74,8 @@ decodes the whole picture to answer, and the centring asked after each
 resize: 0.4 s a time for a 15 megapixel PNG, four times as it opened."
   (let ((props (cdr spec)))
     (when-let* ((file (plist-get props :file))
-                ((memq (plist-get props :scale) '(nil 1 1.0)))
-                ((memq (plist-get props :rotation) '(nil 0 0.0)))
+                ((memql (plist-get props :scale) '(nil 1 1.0)))
+                ((memql (plist-get props :rotation) '(nil 0 0.0)))
                 (size (+core--image-header-size file))
                 ((> (car size) 0))
                 ((> (cdr size) 0)))
