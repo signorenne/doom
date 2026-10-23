@@ -6,6 +6,10 @@
 ;; whole config to load. Emacs Client.app still starts one when none runs
 ;; (emacsclient -a ''), after a crash or a kill.
 
+(defvar +core-daemon-at-login t
+  "Non-nil sets the login daemon up by itself on a machine that has none,
+once Emacs is idle after starting: `+core/install-daemon'.")
+
 (defvar +core-daemon-agent-file
   (expand-file-name "~/Library/LaunchAgents/org.gnu.emacs.daemon.plist")
   "The launchd agent that starts the Emacs daemon at login, on macOS.")
@@ -61,3 +65,20 @@ runs; otherwise from the next login, the running one left alone."
         (call-process "systemctl" nil nil nil "--user" "start" "emacs.service"))
       (message "emacs.service enabled; the daemon starts at login"))
      (t (user-error "No launchd or systemd here to start a daemon at login")))))
+
+;;;###autoload
+(defun +core--ensure-daemon-agent ()
+  "Set the login daemon up where it is not, by `+core-daemon-at-login'.
+Not from a daemon of another name, a test's or bin/check-config's, nor
+an Emacs given a server name of its own: neither is the one at login."
+  (when (and +core-daemon-at-login
+             (not (stringp (daemonp)))
+             (not (getenv "EMACS_SERVER_NAME"))
+             (pcase system-type
+               ('darwin (not (file-exists-p +core-daemon-agent-file)))
+               ('gnu/linux (and (executable-find "systemctl")
+                                (not (zerop (call-process "systemctl" nil nil nil "--user"
+                                                          "--quiet" "is-enabled" "emacs.service")))))))
+    (condition-case err
+        (+core/install-daemon)
+      (error (message "Login daemon not set up: %s" (error-message-string err))))))
