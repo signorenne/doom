@@ -98,7 +98,16 @@ own highlight and cursor were a loud blue over the small text."
                       cursor-in-non-selected-windows nil
                       truncate-lines t
                       line-spacing nil
-                      buffer-read-only t)
+                      buffer-read-only t
+                      ;; Each mark moved lays its hundreds of lines out
+                      ;; again; looking at every character for a glyph to
+                      ;; compose, and for text running right to left,
+                      ;; was a fifth of a held j with it open, 14 ms to
+                      ;; 10.9 on a full screen (2026-10-23).
+                      auto-composition-mode nil
+                      bidi-display-reordering nil
+                      bidi-paragraph-direction 'left-to-right
+                      bidi-inhibit-bpa t)
           (buffer-face-set '+ui-minimap-face)
           (use-local-map +ui-minimap-map)
           (current-buffer)))))
