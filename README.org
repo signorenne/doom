@@ -1,0 +1,109 @@
+#+title:    Doom config
+#+subtitle: setting it up on a new machine
+
+A Doom Emacs config for Emacs 31, written on an Apple-silicon Mac and meant to
+work the same on Linux. Each module under =modules/private/= has a README of
+its own; [[file:docs/cheatsheet.org][docs/cheatsheet.org]] has every key.
+
+* On a new machine
+** 1. Emacs 31
+macOS, Emacs+ with its Emacs Client.app, which opens windows of the daemon
+and takes =org-protocol://= links from the browser:
+
+#+begin_src sh
+brew tap d12frosted/emacs-plus
+brew install --cask emacs-plus-app
+#+end_src
+
+Linux: Emacs 31 from the distribution, built with native compilation and
+tree-sitter. An older Emacs is refused by =doom doctor=.
+
+** 2. Tools and fonts
+What the modules shell out to. =doom doctor= names each one missing and what
+stops working without it, so a tool can be left out on a machine that does
+not need it. macOS:
+
+#+begin_src sh
+# Search, files, git, the offline docs
+brew install git ripgrep fd jq git-delta
+# C and C++: clangd, clang-format and clang-tidy come with llvm
+brew install llvm cmake ninja python
+# Notes, diagrams, export, spelling
+brew install graphviz plantuml pandoc aspell languagetool
+# Previews in the file manager, the terminal, per-project environments
+brew install ffmpeg exiftool vips imagemagick libvterm direnv
+# Data files, web
+brew install taplo node
+npm install -g vscode-langservers-extracted yaml-language-server prettier \
+  typescript typescript-language-server @tailwindcss/language-server
+# PDF export of notes (optional)
+brew install --cask basictex
+# Fonts
+brew install --cask font-jetbrains-mono font-symbols-only-nerd-font \
+  font-noto-sans-symbols-2 font-dejavu
+#+end_src
+
+llvm is not linked into =/opt/homebrew/bin=: put =/opt/homebrew/opt/llvm/bin=
+on the shell's =PATH= (=~/.zshrc=) before step 3, so clangd is found. On
+Linux the same tools come from the distribution, the fonts too, with Noto
+Color Emoji for emoji.
+
+** 3. Doom and this config
+#+begin_src sh
+git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
+git clone https://github.com/signorenne/doom ~/.config/doom
+~/.config/emacs/bin/doom install   # finds this config, installs its pinned packages
+~/.config/emacs/bin/doom sync --env  # from the terminal you use: Emacs gets its PATH
+#+end_src
+
+=doom sync --env= is run again whenever the shell's =PATH= changes; =doom
+doctor= says when it has.
+
+** 4. What the first start does by itself
+Nothing here needs doing by hand; each happens once per machine.
+- The login daemon: once Emacs is idle after starting, a launchd agent on
+  macOS, or Emacs's =emacs.service= enabled on Linux, starts one Emacs at
+  every login. Open its windows with Emacs Client.app (macOS) or
+  =emacsclient -c=; Emacs.app opened by itself hands its files to it.
+  =+core-daemon-at-login= set to nil in =config.el= turns this off.
+- Tree-sitter grammars build themselves the first time a language opens
+  (a C compiler is needed, which Xcode's command line tools or the
+  distribution's =gcc= give).
+- Offline docs: the first C, C++ or CMake file opened downloads Doom's
+  docsets for =SPC s k= in the background, some 630 MB each for C and C++.
+  =M-x +core/install-docsets= tries again after a failed download.
+- The background warm-up loads what the first file and the first notes
+  need, so they open quickly.
+
+** 5. What is this machine's
+=init.el= says where the notes are, =+core-notes-dir= and
+=+notes-knowledge-dir=; change them there for a machine with its notes
+elsewhere. A missing folder is made on first use.
+
+** 6. Optional, when wanted
+| Command                               | What it sets up                                            |
+|---------------------------------------+------------------------------------------------------------|
+| =M-x +ai/install-claude-hooks=        | Claude Code's hooks, so Emacs follows its sessions         |
+| =M-x +notes/install-protocol-handler= | =org-protocol://= links on Linux (macOS: Emacs Client.app) |
+| =M-x +cpp/install-codelldb=           | the Rust debugger                                          |
+| =M-x nerd-icons-install-fonts=        | the icon font on Linux, when the distribution has none     |
+| =M-x +core/install-daemon=            | the login daemon again, after it was turned off            |
+
+** 7. Check
+#+begin_src sh
+~/.config/emacs/bin/doom doctor   # what is missing, and what it costs
+~/.config/doom/bin/check-config   # the config compiles, loads clean, binds what it says
+#+end_src
+
+Not yet tried on Linux: the steps are the same and the modules check for
+Linux's tools, but no Linux machine has run them.
+
+* Working on the config
+- Link the commit check once per clone; it refuses a message out of the
+  config's shape, =type(scope): what=:
+  #+begin_src sh
+  ln -s ../../bin/check-commit-msg ~/.config/doom/.git/hooks/commit-msg
+  #+end_src
+- =bin/check-config= runs before every commit; [[file:modules/private/core/README.org][the core README]] says what it
+  checks and how the config is written.
+- Guides: [[file:docs/cpp-guide.org][C and C++]], [[file:docs/org-roam-guide.org][the notes]].
