@@ -472,6 +472,10 @@ re-run starts it at the editor's priority again.")
 (unless (daemonp)
   (run-with-idle-timer 0.1 nil #'+core--start-server-h))
 
+;; And the daemon at login comes by itself to a machine without it, the
+;; launchd agent or the systemd unit (autoload/daemon.el).
+(run-with-idle-timer 5 nil #'+core--ensure-daemon-agent)
+
 (defun +core--hand-off-to-server ()
   "Open this Emacs's files in a new window of the running server, then quit.
 Not when a file's buffer is modified, or when the server cannot be reached."
