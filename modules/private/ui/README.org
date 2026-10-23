@@ -10,11 +10,12 @@
   carrying a slow wave of colour, a greeting another module may register
   (the butler's), the date as it would be announced, and the entry points
   with their current keys; the same in a terminal,
-- where you are, in code buffers: a header line with the project path and
-  the symbol path, file > class > function, replaced by the head of the
-  enclosing function, method or class while that is scrolled off the top,
-  its return type, name and parameters on one line (a namespace or a
-  block of statements is not one); the symbol
+- where you are, in code buffers: a header line with the scope at the
+  cursor, namespace and class, then the function with its parameters and
+  return type, and about that function the line you are on out of its
+  length, its errors and warnings and its changed hunks,
+  =…::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2=;
+  without a syntax tree, the project and symbol paths; the symbol
   outline at the side on ~SPC t o~; in the modeline, the line out of how
   many the buffer has, the column out of how many the line has, and how
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so
