@@ -1001,6 +1001,67 @@ MANAGED-MODES on its way already."
 
 (add-hook '+core-warm-up-functions #'+core--warm-up-docs-h 50)
 
+;; At rest on a name the echo area showed the first line of the hover,
+;; "function debug_push_event": nothing a reader did not know. The hover
+;; carries the declaration as code, return type, name and parameters,
+;; and that is the line shown now, coloured as code; K and SPC c H still
+;; show the whole hover. clangd puts the declaration in the last code
+;; block, after the documentation; other servers in the first.
+(declare-function eglot-hover-eldoc-function "eglot")
+(declare-function eglot-current-server "eglot")
+(declare-function jsonrpc--process "jsonrpc")
+
+(defun +core--hover-declaration (doc clangd)
+  "The declaration in DOC, a hover as eglot renders it, as one line:
+the last code block's code if CLANGD, else the first's, its comments
+left out; or nil."
+  (let (blocks)
+    (with-temp-buffer
+      (insert doc)
+      (goto-char (point-min))
+      (while (re-search-forward "^```[^\n]*\n\\(\\(?:.*\n\\)*?\\)```" nil t)
+        (push (cons (match-beginning 1) (match-end 1)) blocks)))
+    (when-let* ((block (if clangd (car blocks) (car (last blocks))))
+                (lines (split-string (substring doc (1- (car block)) (1- (cdr block))) "\n"))
+                (skip (lambda (line) (string-match-p "\\`[ \t]*\\(//\\|$\\)" line)))
+                ;; The code between the comments that may lead, "// In
+                ;; namespace x", and those that may follow, a macro's
+                ;; "// Expands to".
+                (code (string-join (seq-take-while (lambda (line) (not (funcall skip line)))
+                                                   (seq-drop-while skip lines))
+                                   " "))
+                ((not (string-empty-p code))))
+      (let ((line (string-trim
+                   (replace-regexp-in-string
+                    "\\`[ \t]*\\(?:public\\|protected\\|private\\): *" ""
+                    (replace-regexp-in-string "[ \t]+" " " code)))))
+        (remove-list-of-text-properties 0 (length line) '(invisible display) line)
+        line))))
+
+(defun +core--hover-eldoc-function (callback &rest _)
+  "`eglot-hover-eldoc-function', its echo the declaration hovered."
+  (let ((clangd (when-let* ((server (eglot-current-server)))
+                  (string-match-p "clangd" (car (process-command (jsonrpc--process server)))))))
+    (eglot-hover-eldoc-function
+     (lambda (doc &rest plist)
+       (apply callback doc
+              (if-let* ((line (and (stringp doc) (+core--hover-declaration doc clangd))))
+                  (plist-put plist :echo line)
+                plist))))))
+
+(add-hook! 'eglot-managed-mode-hook
+  (defun +core--hover-declaration-h ()
+    "Echo the declaration hovered, in place of the hover's first line;
+taken out again with eglot's own when eglot lets the buffer go."
+    (if (bound-and-true-p eglot--managed-mode)
+        (setq-local eldoc-documentation-functions
+                    (mapcar (lambda (fn)
+                              (if (eq fn #'eglot-hover-eldoc-function)
+                                  #'+core--hover-eldoc-function
+                                fn))
+                            eldoc-documentation-functions))
+      (remove-hook 'eldoc-documentation-functions #'+core--hover-eldoc-function t))))
+
 ;; eldoc, which eglot brings from ELPA and which loads with the first
 ;; file, primes its list of motion commands by running thirty prefixes
 ;; one by one through every symbol there is: 76 000 of them in a session
