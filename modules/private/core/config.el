@@ -995,6 +995,11 @@ MANAGED-MODES on its way already."
 
 (add-hook '+core-warm-up-functions #'+core--warm-up-docs-h 50)
 
+;; SPC s k searches Doom's Dash docsets offline; the first file of a
+;; language opened installs its docsets in the background, on any
+;; machine (autoload/docsets.el).
+(add-hook 'find-file-hook #'+core--docsets-h 90)
+
 ;; At rest on a name the echo area showed the first line of the hover,
 ;; "function debug_push_event": nothing a reader did not know. The hover
 ;; carries the declaration as code, return type, name and parameters,

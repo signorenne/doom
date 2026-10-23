@@ -1,0 +1,35 @@
+#!/bin/sh
+# Install a Dash docset from Kapeli's feeds, the ones Doom's lookup reads:
+#   install-docset NAME DIR
+# NAME as Doom names it ("C++", "CMake"), DIR the docsets directory. Each
+# mirror the feed lists is tried in turn; one slower than 200 KB/s for 20
+# seconds is left for the next, San Francisco's having taken ten minutes
+# for C++ from Europe. The archive is unpacked beside DIR's docsets and
+# moved in whole, so a docset half there is never read. Needs curl, tar.
+set -eu
+name=$1
+dir=$2
+enc=$(printf '%s' "$name" | sed 's/+/%2B/g; s/ /%20/g')
+feed=$(curl -fsSL --max-time 30 "https://raw.githubusercontent.com/Kapeli/feeds/master/$enc.xml") || {
+  echo "no feed for $name"; exit 2; }
+urls=$(printf '%s\n' "$feed" | sed -n 's:.*<url>\(.*\)</url>.*:\1:p')
+[ -n "$urls" ] || { echo "no download for $name"; exit 2; }
+mkdir -p "$dir"
+tmp=$(mktemp -d "$dir/.install.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+for url in $urls; do
+  if curl -fL --silent --show-error --speed-limit 200000 --speed-time 20 \
+       -o "$tmp/docset.tgz" "$url" &&
+     tar xzf "$tmp/docset.tgz" -C "$tmp"; then
+    rm -f "$tmp/docset.tgz"
+    for docset in "$tmp"/*.docset; do
+      rm -rf "$dir/$(basename "$docset")"
+      mv "$docset" "$dir/"
+    done
+    echo "$name installed from $url"
+    exit 0
+  fi
+  rm -rf "$tmp"/*
+done
+echo "every mirror failed for $name"
+exit 1
