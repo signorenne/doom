@@ -166,10 +166,9 @@ startup from loading it; .git is a file in a worktree."
 
 (+notes--watch)
 
-;; The pomodoro timer, set up as Doom's org module did with +pomodoro:
-;; its chime through PulseAudio where there is one, and its alerts as the
-;; desktop's notifications, here the way every notification of this
-;; config goes, D-Bus on Linux and Notification Center on a Mac.
+;; The pomodoro timer: its chime through PulseAudio where there is one,
+;; and its alerts sent the way every notification of this config goes,
+;; D-Bus on Linux and Notification Center on a Mac.
 (after! org-pomodoro
   (setq org-pomodoro-audio-player (or (executable-find "paplay")
                                       org-pomodoro-audio-player))
@@ -207,10 +206,8 @@ startup from loading it; .git is a file in a worktree."
 ;; The notes are spelt British, colour and centre, and American is taken
 ;; as well, since code and quotes bring it in. The words of this config
 ;; and its tools, config, keymap, clangd, magit, are in dictionary.pws
-;; beside this file, which zg adds to: gathered from the notes, the
-;; READMEs and the cheat sheet, where 300 of them were marked as errors.
-;; Italian is not checked here, twenty million word forms to hold in
-;; memory; LanguageTool reads it, below.
+;; beside this file, which zg adds to. Italian is not spell checked, its
+;; word forms being too many to hold in memory; LanguageTool reads it.
 (setq ispell-dictionary "en_GB"
       ispell-personal-dictionary (expand-file-name "dictionary.pws" (dir!)))
 
@@ -224,7 +221,7 @@ startup from loading it; .git is a file in a worktree."
 
 ;; org-modern draws the tags, the keywords, the dates and the labels in
 ;; faces of its own, which Doom's list of faces not to check does not
-;; know: a note's tags, :config: and :cpp:, were read as prose.
+;; know, so a note's tags, :config: and :cpp:, would be read as prose.
 (after! spell-fu
   (dolist (face '(org-modern-tag org-modern-label org-modern-todo org-modern-done
                   org-modern-priority org-modern-date-active org-modern-time-active
@@ -233,8 +230,8 @@ startup from loading it; .git is a file in a worktree."
                   org-modern-radio-target))
     (cl-pushnew face (alist-get 'org-mode +spell-excluded-faces-alist))))
 
-;; A possessive is spelt right when its word is: config's was marked with
-;; config known, and SDK's when SDK alone, in capitals, is left alone.
+;; A possessive is spelt right when its word is: config's when config is
+;; known, and SDK's when SDK alone, in capitals, is left alone.
 (defadvice! +notes--spell-possessive-a (fn pos-beg pos-end word)
   "Check a possessive, config's, as the word it is made of."
   :around #'spell-fu-check-word
@@ -242,9 +239,8 @@ startup from loading it; .git is a file in a worktree."
       (funcall fn pos-beg (+ pos-beg (match-end 1)) (match-string 1 word))
     (funcall fn pos-beg pos-end word)))
 
-;; The first note of a session loaded the three word lists, some 60 ms;
-;; they are loaded while Emacs waits after starting instead
-;; (`+core-warm-up-functions'), in a buffer no one sees.
+;; The three word lists are loaded while Emacs sits idle after starting,
+;; in a buffer no one sees, so the first note does not wait for them.
 (defun +notes--warm-up-h (_mode)
   "Load the spelling word lists ahead of the first note."
   (with-temp-buffer
@@ -253,13 +249,12 @@ startup from loading it; .git is a file in a worktree."
 
 (add-hook '+core-warm-up-functions #'+notes--warm-up-h 50)
 
-;; writegood marks the passive voice, a list of vague words and a word
-;; said twice, as you type: 116 marks in these notes and not one of them
-;; an error, "is generated" and "is checked" among them, and "m M" from
-;; SPC m M as a word said twice. It also makes every font-lock rule of
-;; its buffer ignore case, org's too: a heading called Done was taken
-;; for the DONE keyword with no title, and its fontification failed.
-;; Off where Doom turns it on; LanguageTool, SPC n w c, reads the style.
+;; writegood marks the passive voice, vague words and a word said twice
+;; as you type, and in these notes what it marks is not an error: "is
+;; generated", or "m M" from SPC m M. It also makes every font-lock rule
+;; of its buffer ignore case, org's too, so a heading called Done is
+;; taken for the DONE keyword and its fontification fails. Off where
+;; Doom turns it on; LanguageTool, SPC n w c, reads the style.
 (dolist (hook '(org-mode-hook markdown-mode-hook rst-mode-hook
                 asciidoc-mode-hook latex-mode-hook LaTeX-mode-hook))
   (remove-hook hook #'writegood-mode))
@@ -272,9 +267,9 @@ startup from loading it; .git is a file in a worktree."
 ;; language names in a hidden buffer, the whole block at each key typed in
 ;; it. markdown takes a tree-sitter mode only when that mode appears in
 ;; `auto-mode-alist', and org never looks for one, while Emacs's own
-;; remapping, which opens a .c file in c-ts-mode, is in neither: a C block
-;; went to cc-mode, 25 ms for 230 lines at every key. A block gets the mode
-;; a file of its language opens in.
+;; remapping, which opens a .c file in c-ts-mode, is in neither, so a C
+;; block would go to the slower cc-mode. A block gets the mode a file of
+;; its language opens in.
 (defvar +notes--block-modes (make-hash-table :test #'eq)
   "Each mode a block has named, to the mode a file of its language opens
 in: asking Emacs is 150 microseconds, and it was asked for every block
@@ -292,10 +287,9 @@ of the screen at every key.")
 
 ;; markdown-mode tries every * and _ of a line as the start of an italic
 ;; or a bold, and asks for each whether it sits in inline code by matching
-;; the code of its text block again from the start: a paragraph that is
-;; one long line full of names like espressif__mdns took a quarter of a
-;; second at every line moved, a first screen of it thirteen. The code of
-;; a block is matched once for each state of the buffer.
+;; the code of its text block again from the start, which is slow on a
+;; long line full of names like espressif__mdns. The code of a block is
+;; matched once for each state of the buffer.
 (defvar-local +notes--md-code nil
   "(TICK START END . SPANS): the inline code of the text block START to
 END, each span the match data `markdown-match-code' leaves.")
@@ -329,7 +323,7 @@ from the spans of its block found once; the match data set the same."
                        (<= (nth 1 +notes--md-code) pos)
                        (< pos (nth 2 +notes--md-code))))
            ;; The block's bounds, found again only for a position outside
-           ;; the one known: finding them was most of what was left.
+           ;; the one known, since finding them is the costly part.
            (end (if known (nth 2 +notes--md-code)
                   (goto-char pos) (markdown-end-of-text-block) (point)))
            (start (if known (nth 1 +notes--md-code)
@@ -354,15 +348,15 @@ from the spans of its block found once; the match data set the same."
 
 ;; LanguageTool reads a buffer and says what is clumsy in it, not only
 ;; what is misspelt. The language is detected per buffer rather than
-;; fixed, since the notes here are written in two; the mother tongue is
+;; fixed, since the notes are written in two; the mother tongue is
 ;; told to it as well, which is how it catches the words that look like
 ;; the English ones and are not.
 ;;
-;; The classpath is set here because Doom's points at
-;; /usr/share/java/languagetool, which on openSUSE holds the three top
-;; jars and not the libs/ beside them, so a check dies on a missing
+;; The classpath is set because Doom's points at
+;; /usr/share/java/languagetool, which on openSUSE holds the top jars
+;; and not the libs/ beside them, so a check would die on a missing
 ;; class. The directory is looked for rather than named, and its libs
-;; goes on the classpath with it.
+;; go on the classpath with it.
 (after! langtool
   (setq langtool-default-language 'auto
         langtool-mother-tongue "it")
@@ -423,8 +417,7 @@ from the spans of its block found once; the match data set the same."
         :desc "How to work with roam"  "?" #'+notes/roam-guide
         :desc "Graph UI (browser)"     "u" #'org-roam-ui-open
         :desc "Graph UI mode"          "U" #'org-roam-ui-mode))
-      ;; Doom's key for it, kept since its org module stopped bringing
-      ;; the timer; packages.el brings it now.
+      ;; Doom's usual key for the timer, which packages.el installs.
       (:prefix "t"
        :desc "Pomodoro timer"          "t" #'org-pomodoro)
       (:prefix "o"
@@ -435,7 +428,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Projects"              "p" #'+notes/projects
         :desc "Inbox"                 "i" #'+notes/inbox
         ;; The legacy Org/GTD task files, read only by habit: no capture
-        ;; writes there any more.
+        ;; writes there.
         :desc "Legacy tasks"          "L" (cmd! (org-agenda nil "L")))))
 
 ;; Org lines up the table you are in when you leave a cell, and leaves

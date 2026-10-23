@@ -78,8 +78,8 @@ the fixes clang-tidy proposes."
                                        (list +cpp-tidy-file-filter))
                                " ")
                     ;; From the root, which the kit's directory is
-                    ;; relative to; in a container it ran from the
-                    ;; buffer's own directory and found no database.
+                    ;; relative to; from the buffer's own directory a
+                    ;; container finds no database.
                     root))))
 
 ;;;###autoload

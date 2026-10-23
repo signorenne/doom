@@ -4,9 +4,9 @@
 (declare-function consult-ripgrep "consult")
 (declare-function doom/restart-and-restore "sessions")
 (defvar consult-fd-args)
-(defvar +core-compile-name)             ; lib.el
-(defvar +core-plain-mode)               ; config.el
-(defvar +core-todo-markers)             ; lib.el
+(defvar +core-compile-name)
+(defvar +core-plain-mode)
+(defvar +core-todo-markers)
 
 (defvar +core-transparency-alpha 85
   "Opacity (0-100) `+core/toggle-transparency' switches to.")
@@ -106,8 +106,8 @@ sets it up as opening it would have, and a revert keeps that."
 (defun +core/project-todos ()
   "Search the project for TODO, FIXME, HACK, NOTE, REVIEW, BUG and XXX."
   (interactive)
-  ;; An Emacs regexp: consult turns it into ripgrep's, and ripgrep's own
-  ;; pattern, `+core-todo-regexp', came out of that as literal text.
+  ;; An Emacs regexp, since consult turns it into ripgrep's; a ripgrep
+  ;; pattern such as `+core-todo-regexp' would be searched as literal text.
   (consult-ripgrep (+core-project-root 'noerror) (regexp-opt +core-todo-markers 'words)))
 
 ;;;###autoload

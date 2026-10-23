@@ -2,10 +2,9 @@
 # Install a Dash docset from Kapeli's feeds, the ones Doom's lookup reads:
 #   install-docset NAME DIR
 # NAME as Doom names it ("C++", "CMake"), DIR the docsets directory. Each
-# mirror the feed lists is tried in turn; one slower than 200 KB/s for 20
-# seconds is left for the next, San Francisco's having taken ten minutes
-# for C++ from Europe. The archive is unpacked beside DIR's docsets and
-# moved in whole, so a docset half there is never read. Needs curl, tar.
+# mirror the feed lists is tried in turn, and a slow one is left for the
+# next. The archive is unpacked beside DIR's docsets and moved in whole,
+# so a docset half there is never read. Needs curl and tar.
 set -eu
 name=$1
 dir=$2

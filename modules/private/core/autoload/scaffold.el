@@ -6,9 +6,8 @@
 ;;; Project templates
 
 ;; A tree of files with {{PROJECT}} in the names and the text, copied
-;; into a new project with the name filled in. cpp, rust and pascal all
-;; scaffold this way, so the copier lives here rather than in whichever
-;; module wanted it first.
+;; into a new project with the name filled in. Several language modules
+;; scaffold this way, so the copier is shared in core.
 
 ;;;###autoload
 (defvar +core-github-user "signorenne"

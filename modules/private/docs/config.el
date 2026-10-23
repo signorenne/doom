@@ -19,9 +19,7 @@ a session that never switched would write evil's defaults instead.  The
 cpp module binds SPC c h and SPC c T once eglot has loaded.")
 
 ;; Each private module says how the sheet documents it, in its own
-;; `+NAME-docs'; see `+docs--module-docs'. These are the sections of the
-;; modes no private module owns; none today, every mode with a section
-;; belongs to a module.
+;; `+NAME-docs'. This holds only the modes no private module owns.
 (defvar +docs-cheatsheet-sections nil
   "Cheat sheet heading per mode, for the modes no private module owns.
 A mode is a major mode, or a minor mode that is on in the buffer.")
@@ -29,11 +27,9 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (define-minor-mode +docs-cheatsheet-mode
   "Keys for the cheat sheet buffer: s search, q close, gr regenerate."
   :lighter " Cheat"
-  ;; The keys below are evil normal-state bindings that evil keeps for
-  ;; the mode, with no map of its own. evil gathers them when it
-  ;; normalizes, on a state change, not when a mode turns on; the sheet
-  ;; buffer is in normal state already, so it is told here, as the
-  ;; org-fc modes are.
+  ;; The mode's keys are evil normal-state bindings, with no map of its
+  ;; own. evil gathers them only on a state change, and the sheet buffer
+  ;; is already in normal state, so evil is told as the mode turns on.
   (when (fboundp 'evil-normalize-keymaps)
     (evil-normalize-keymaps)))
 
@@ -41,10 +37,9 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (set-popup-rule! "^cheatsheet\\.org$"
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
-;; The other two under Doom's own help about itself, SPC h d, beside its
-;; private config and its modules: SPC h is Emacs's help map, so on M and
-;; C they took C-h M and C-h C, Doom's minor mode help and the coding
-;; systems, as well.
+;; The README and the check sit under SPC h d, Doom's help about itself.
+;; SPC h is also Emacs's help map, so on SPC h M and SPC h C they would
+;; take C-h M and C-h C as well.
 (map! :leader
       (:prefix "h"
        :desc "Cheat sheet"           "/" #'+docs/cheatsheet

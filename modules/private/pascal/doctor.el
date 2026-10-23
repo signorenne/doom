@@ -29,7 +29,7 @@
 (unless (executable-find "pasls")
   (warn! "No pasls, so a Pascal buffer has no language server; see the module README for how to build it"))
 
-;; Nor is the Lazarus IDE's formatter as a command; the README builds it.
+;; Nor is the Lazarus IDE's formatter as a command; it is built too.
 (unless (executable-find "jcf")
   (warn! "No jcf, so SPC c f cannot format Pascal; see the module README for how to build it"))
 

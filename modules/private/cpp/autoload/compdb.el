@@ -155,8 +155,8 @@ that fails is not tried at every file."
     (let* ((default-directory root)
            (name (file-name-nondirectory (directory-file-name root)))
            ;; Asked nothing: projection would have a compiler kit picked
-           ;; from VS Code's list, and any other question there is the
-           ;; end of it, with a word, not a prompt as a file opens.
+           ;; from VS Code's list. Any other question stops the configure
+           ;; with a message, since opening a file should not prompt.
            (command (condition-case err
                         (let ((projection-cmake-kit 'silent)
                               (inhibit-interaction t))

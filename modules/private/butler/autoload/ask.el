@@ -21,7 +21,7 @@
 (declare-function +butler--section-here "menu")
 (declare-function +ai-anthropic-api-key "gptel")
 (defvar +docs-cheatsheet-file)
-(defvar +butler--question)              ; config.el
+(defvar +butler--question)
 (defvar +butler--offered)
 (defvar +butler--offered-hits)
 
@@ -221,8 +221,8 @@ with what he found, and answers in a sentence."
         (setq +butler--answer nil)
         (+butler--show (format "I have nothing on that, %s." +butler-address))))
      ;; The answer is the first offer, the line the clarity was judged
-     ;; on: past two keyed hits a line of prose that scored best stands
-     ;; aside, and it was said all the same.
+     ;; on, not the best hit: past two keyed hits, a line of prose that
+     ;; scored best stands aside.
      ((+butler--clear-p (setq +butler--offered (+butler--offer hits)))
       (+butler--answer (car +butler--offered) hits))
      ;; The words leave it open: he says the best of them and lays the
@@ -261,8 +261,9 @@ line, or the README."
     (user-error "%s: I have not answered anything yet, %s" +butler-name +butler-address))
   (pcase-let ((`(,file . ,line) +butler--answer))
     (if (equal file +docs-cheatsheet-file)
-        ;; get-buffer-window of no buffer is the selected window, so a
-        ;; sheet not open at all was opened bare, without its own mode.
+        ;; get-buffer-window of no buffer is the selected window, so
+        ;; without the check a sheet not open at all would open bare,
+        ;; without its own mode.
         (progn (unless (when-let* ((buffer (get-file-buffer file)))
                          (get-buffer-window buffer))
                  (+docs/cheatsheet))

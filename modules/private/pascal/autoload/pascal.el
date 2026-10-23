@@ -148,9 +148,8 @@ and -FU put the binary and the units somewhere other than beside the
 sources, and -Fu says where the project\='s own units are."
   (append
    ;; -Fu names where the units are: without src/ on it, fpc looks only
-   ;; beside the program file and cannot find the project's own units.
-   ;; -vb: an error in src/greeter.pas said greeter.pas, which the build
-   ;; buffer looked for at the root and could not open.
+   ;; beside the program file. -vb puts the full path in each message,
+   ;; so the build buffer can open a file under src/.
    '("-Mobjfpc" "-Sh" "-gw3" "-vb" "-FEbin" "-FUlib" "-Fusrc" "-Fu." "-Fisrc")
    (when +pascal-target
      (let ((parts (split-string +pascal-target "-")))
@@ -246,9 +245,9 @@ or nil when it has not been built."
 (defun +pascal/build-and-run ()
   "Build, and run it when the build worked."
   (interactive)
-  ;; Which binary is known once the build is done: the newer of the two
-  ;; places, as `+pascal-program' picks; bin/ was assumed, and a Lazarus
-  ;; project that builds beside its file found nothing there.
+  ;; Which binary is known only once the build is done: the newer of the
+  ;; two places, as `+pascal-program' picks, since a Lazarus project may
+  ;; build beside its file rather than in bin/.
   (pcase-let ((`(,bin ,beside) (mapcar #'shell-quote-argument (+pascal--program-candidates))))
     (+pascal--compile "build"
                       (concat (+pascal-build-command)
@@ -295,8 +294,8 @@ already compiled into lib/ are not compiled again."
   (let ((root (+pascal-root)))
     (+pascal--compile
      "clean"
-     ;; A Lazarus project too: lazbuild has no clean, and --build-all,
-     ;; what ran here, builds everything again.
+     ;; A Lazarus project too: lazbuild has no clean, and --build-all
+     ;; would build everything again.
      (format "rm -rf %s %s"
              (shell-quote-argument (expand-file-name "lib" root))
              (shell-quote-argument (expand-file-name "bin" root))))))
@@ -310,9 +309,9 @@ lldb-dap on a Mac, `+core-os-debugger'."
     (user-error "dape is not here to debug with"))
   (require 'dape)
   (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
-    ;; dape takes the configuration itself, not its name: handed
-    ;; (gdb-pascal :program ...) it read every key as a value, found no
-    ;; command, and no session started.
+    ;; dape takes the configuration itself, not its name: given
+    ;; (gdb-pascal :program ...) it reads every key as a value and
+    ;; starts nothing.
     (dape (dape--config-eval
            'gdb-pascal
            (append (let ((debugger (+core-os-debugger)))
@@ -345,8 +344,8 @@ lldb-dap on a Mac, `+core-os-debugger'."
       (insert-file-contents lpi)
       (let ((modes nil))
         (goto-char (point-min))
-        ;; <Item1 Name="Debug" .../> inside <BuildModes>, the shape
-        ;; Lazarus has written since 1.x.
+        ;; <Item1 Name="Debug" .../> inside <BuildModes>, as Lazarus
+        ;; writes them.
         (while (re-search-forward "<Item[0-9]*[^>]*Name=\"\\([^\"]+\\)\"" nil t)
           (push (match-string 1) modes))
         (nreverse (delete-dups modes))))))

@@ -11,7 +11,7 @@
 
 ;; Set before anything loads: Doom copies it into
 ;; `org-cite-global-bibliography' when oc loads with org, long before the
-;; first citar command, so inside `after! citar' it came too late.
+;; first citar command, so inside `after! citar' it would come too late.
 (setq citar-bibliography (list +notes-bibliography))
 
 (after! oc
@@ -27,7 +27,7 @@
   (setq citar-org-roam-subdir "resources/sources/papers"
         citar-org-roam-note-title-template "${author} :: ${title}"
         ;; R, not r: the same note, without the prompt for a source that
-        ;; citar has already handed over. See `org-roam-capture-templates'.
+        ;; citar has already handed over.
         citar-org-roam-capture-template-key "R"))
 
 ;; Spaced repetition, over the notes you already wrote: a card is a heading
@@ -68,8 +68,8 @@
   (add-hook 'org-fc-review-rate-mode-hook #'evil-normalize-keymaps))
 
 ;; Transclusion: a map can show what it links to, rather than only naming it.
-;; The text stays in its own note; here it is read only, and #+transclude
-;; lines are what is saved.
+;; The text stays in its own note; in the map it is read only, and
+;; #+transclude lines are what is saved.
 (use-package! org-transclusion
   :defer t
   :config

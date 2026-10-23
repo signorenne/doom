@@ -3,8 +3,8 @@
 ;; :lang org already brings org-modern, org-appear, org-roam, ox-pandoc,
 ;; org-download, org-noter, org-tree-slide and toc-org.
 
-;; The pomodoro timer on a heading, SPC t t: Doom's org module stopped
-;; bringing it with +pomodoro in 25.04.
+;; The pomodoro timer on a heading, SPC t t, which Doom's org module
+;; does not bring.
 (package! org-pomodoro :pin "3f5bcfb80d61556d35fc29e5ddb09750df962cc6")
 
 ;; Grouped agenda views

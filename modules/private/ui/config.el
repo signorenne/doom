@@ -1,7 +1,6 @@
 ;;; private/ui/config.el -*- lexical-binding: t; -*-
 ;;
-;; Glyph fallbacks, dashboard entry points and small visual aids. The fonts
-;; themselves are set in $DOOMDIR/config.el.
+;; Glyph fallbacks, dashboard entry points and small visual aids.
 
 ;;
 ;;; Glyphs
@@ -19,16 +18,14 @@
 ;; Emacs on macOS asks no font it was not told of for a character, so a
 ;; block left out is drawn as boxes even with a font for it installed:
 ;; Supplemental Arrows C, the legacy computing block's sextants and
-;; segments that terminal programs draw with, and the alchemical symbols,
-;; 549 characters, all of them boxes (2026-10-23). Noto Sans Symbols 2 has
-;; the first two; the alchemical symbols are in Apple Symbols on macOS and
-;; in Noto Sans Symbols (the first one) on Linux.
+;; segments that terminal programs draw with, and the alchemical symbols.
+;; Noto Sans Symbols 2 has the first two; the alchemical symbols are in
+;; Apple Symbols on macOS and in Noto Sans Symbols (the first one) on
+;; Linux.
 ;;
 ;; The font goes in as a spec, not its name: a name ending in a number is
 ;; read as a family and a size, "Noto Sans Symbols" at 2, which is no
-;; font, so the fallback did nothing. Noto drew 230 characters of these
-;; blocks before, found some other way, and 841 now; 73 newer than any
-;; font here stay boxes.
+;; font.
 (add-hook! 'after-setting-font-hook
   (defun +ui--extra-fontsets-h ()
     "Append `+ui-symbol-fallback-font' to the symbol blocks."
@@ -92,8 +89,8 @@
   (warn "+dashboard-resize-h is gone; the dashboard may lose its centring"))
 
 ;; The animation stops when the dashboard leaves the screen and starts
-;; again when it comes back; a tick is a redisplay, and ten a second for
-;; a buffer nobody sees cost a fifth of a core.
+;; again when it comes back: a tick is a redisplay, wasted on a buffer
+;; nobody sees.
 (add-hook 'window-buffer-change-functions #'+ui--dashboard-shown-h)
 
 ;; Nothing on the dashboard gets selected or lit up: no cursor, since there
@@ -140,10 +137,10 @@ draws on the dashboard moves on from here, inside
 
 ;; The name as an ASCII banner, the greeting, then a short menu of entry
 ;; points, each showing its current key. Doom skips entries whose
-;; command isn't defined. Our banner stands in for Doom's widget, the
-;; way its README says to, so a terminal frame and the GUI draw the
-;; same thing; a picture would want `+dashboard-widget-banner' back
-;; and `fancy-splash-image' pointed at it.
+;; command isn't defined. Our banner stands in for Doom's widget, so a
+;; terminal frame and the GUI draw the same thing; a picture would want
+;; `+dashboard-widget-banner' back and `fancy-splash-image' pointed at
+;; it.
 (when (modulep! :ui dashboard)
   (setq +dashboard-functions '(+ui-dashboard-banner
                                +ui-dashboard-greeting ; a module's, else the date
@@ -187,8 +184,7 @@ draws on the dashboard moves on from here, inside
 ;;   …::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2
 ;;
 ;; Without a tree, in the older modes, breadcrumb's symbol path. Never the
-;; file's path, which the modeline shows. The function was a first line pinned while scrolled off
-;; before, which said "namespace {" or "int" more often than anything.
+;; file's path, which the modeline shows.
 (defvar +ui-scope-node-types
   (concat "\\`" (regexp-opt '("namespace_definition" "mod_item" "module"
                               "internal_module" "class_specifier"
@@ -343,8 +339,8 @@ and its changes; or the symbol path without a syntax tree."
   :commands (breadcrumb-imenu-crumbs)
   :init (add-hook 'prog-mode-hook #'+ui-where-mode))
 
-;; Not in a file of long lines: with a header line, each key there redrew
-;; the whole window, 75 ms of a key's 107 (core's `+core-long-lines-p').
+;; Not in a file of long lines, where a header line makes each key
+;; redraw the whole window.
 (add-hook! '+core-long-lines-hook
   (defun +ui--no-where-line-h ()
     "Take the header line down in a file of long lines."
@@ -361,17 +357,16 @@ and its changes; or the symbol path without a syntax tree."
         imenu-list-auto-resize nil))
 
 ;; Diagnostics at the end of the line as well as in the popup, the
-;; most severe one; flymake is the checker (init.el, +flymake), eglot
-;; reports into it directly.
+;; most severe one; flymake is the checker, and eglot reports into it
+;; directly.
 (after! flymake
   (setq flymake-inline-diagnostics 'short))
 
 ;; flymake rewrites the text at the end of every line with a diagnostic
-;; at each report: 1 607 lines of it in a file a server found 2 896
-;; problems in, which doubled the cost of a key. Past a few hundred the
-;; ends of the lines are a wall no one reads; the underline, the fringe
-;; and the popup still say it all, and the text comes back when the
-;; count comes down.
+;; at each report, which in a file with thousands of problems makes every
+;; key slow. Past a few hundred the ends of the lines are a wall no one
+;; reads; the underline, the fringe and the popup still say it all, and
+;; the text comes back when the count comes down.
 (defvar +ui-flymake-eol-max 300
   "Past this many diagnostics in a report, none is written at a line's end.")
 
@@ -398,11 +393,10 @@ and its changes; or the symbol path without a syntax tree."
   (advice-add 'flymake--handle-report :around #'+ui--flymake-eol-within-reason-a))
 
 ;; ]e and [e are `next-error', which walks whatever buffer last reported
-;; errors: with flymake doing the checking that is some compilation log
-;; from an hour ago, and the key leaves the file to ask where vertico's
-;; sources are. Flymake says in its own manual that it does not take
-;; `next-error' over and that one should say so oneself, so here it is:
-;; in a buffer flymake is checking, ]e is that buffer's diagnostics.
+;; errors: with flymake doing the checking that is some old compilation
+;; log, and the key leaves the file. Flymake does not take `next-error'
+;; over and leaves that to the user, so in a buffer flymake is checking,
+;; ]e is that buffer's diagnostics.
 (defun +ui--flymake-next-error (n reset)
   "A `next-error-function' that walks this buffer's flymake diagnostics."
   (when reset (goto-char (point-min)))
@@ -413,7 +407,7 @@ and its changes; or the symbol path without a syntax tree."
   (current-buffer))
 
 ;; And this buffer's, not the one ]e walked last: `next-error' asks the
-;; buffer it used before first, and in another file the key went on
+;; buffer it used before first, so in another file the key would go on
 ;; through the first file's diagnostics, out of sight.
 (add-hook 'flymake-mode-hook
           (defun +ui--flymake-next-error-h ()
@@ -426,9 +420,8 @@ and its changes; or the symbol path without a syntax tree."
 ;; The indent guides are off until asked for, SPC t i. On an empty line
 ;; they are a string drawn over its newline, and Emacs finds point there a
 ;; line lower than it is: j onto an empty line at the bottom of the window
-;; scrolled two lines and the next j none, one press in seven in C++ held
-;; down, and k the same at the top. Without them every step is one line,
-;; and costs 5 ms instead of 10.
+;; scrolls two lines and the next j none, and k the same at the top.
+;; Without them every step is one line.
 (defun +ui--no-guides-by-default-h ()
   "Keep Doom's indent guides off until asked for."
   t)
@@ -438,9 +431,8 @@ and its changes; or the symbol path without a syntax tree."
 ;; `font-lock-mode-hook', and colours the whole buffer there at once. That
 ;; hook runs as font lock goes off too, which it does as a buffer changes
 ;; mode: a file core opens in the mode before tree-sitter, a revert, M-x
-;; c-mode. All of a 1.1 MB C array was coloured then, for the mode about
-;; to be dropped: 15 s frozen before the file showed. Going off, nothing
-;; is set up now.
+;; c-mode. The whole of a large file would be coloured then, for a mode
+;; about to be dropped, so going off, nothing is set up.
 (declare-function indent-bars-ts--finalize-jit-lock "indent-bars-ts")
 (defadvice! +ui--indent-bars-finalize-on-a (fn)
   "Finish indent-bars' tree-sitter setup only as font lock comes on."
@@ -450,20 +442,19 @@ and its changes; or the symbol path without a syntax tree."
 
 ;; The cursor keeps five lines between itself and the top and bottom of the
 ;; window, as VS Code's surrounding lines and Vim's scrolloff do: j held
-;; scrolls with the line in view still five from the edge. Every step is
-;; still one line, 5 ms, as with none (2026-10-23); the wheel turns with
-;; none, ultra-scroll setting it aside meanwhile, and a window too short
-;; for it keeps a quarter of its height at most. A terminal or a shell
-;; keeps none: its cursor is where the program put it, and a margin made
-;; the window scroll under it.
+;; scrolls with the line in view still five from the edge. The wheel
+;; turns with none, ultra-scroll setting it aside meanwhile, and a window
+;; too short for it keeps a quarter of its height at most. A terminal or
+;; a shell keeps none: its cursor is where the program put it, and a
+;; margin would make the window scroll under it.
 (setq scroll-margin 5)
 (setq-hook! '(vterm-mode-hook term-mode-hook eshell-mode-hook comint-mode-hook)
   scroll-margin 0)
 
-;; The wheel went on past the end of a file until its last line stood
-;; alone at the top, and then ultra-scroll put the window's start on the
-;; very end: an empty window. It stops now as the last line reaches the
-;; bottom. The keys are as they were: C-e still scrolls past the end.
+;; The wheel stops as the last line reaches the bottom. Left alone it
+;; goes on until the last line stands alone at the top, and ultra-scroll
+;; then puts the window's start on the very end: an empty window. The
+;; keys are unchanged: C-e still scrolls past the end.
 (defun +ui--room-below (enough)
   "Pixels the selected window can scroll on before its last line is at
 the bottom, counted no further than ENOUGH. The empty line after a final
@@ -506,11 +497,11 @@ half a window above it: a quick turn of the wheel ran past the end."
 ;; ultra-scroll, and the pixel-scroll-precision-mode it rides on, turn
 ;; `make-cursor-line-fully-visible' off for good: the wheel leaves the
 ;; cursor on a half-shown line while it turns. So j onto the bottom line
-;; of a window, or onto the last line of a file, left that line cut in
-;; half. The option takes a function, asked as Emacs redraws: a line is
-;; brought fully into view unless the wheel is what moved it. What
-;; ultra-scroll feared of it, redisplay slowing a hundredfold (bug#78766),
-;; was fixed in Emacs 31.
+;; of a window, or onto the last line of a file, would leave that line
+;; cut in half. The option takes a function, asked as Emacs redraws: a
+;; line is brought fully into view unless the wheel is what moved it.
+;; What ultra-scroll fears of it, redisplay slowing a hundredfold, is
+;; fixed in Emacs 31.
 (defconst +ui-wheel-commands
   '(ultra-scroll ultra-scroll-mac pixel-scroll-precision
     pixel-scroll-start-momentum pixel-scroll-interpolate-down
@@ -631,18 +622,17 @@ Checked as Emacs redraws, which is between commands, when
 
 ;; Emacs redraws a window by laying out every line of it again, unless it
 ;; can tell that only the cursor moved or only a line changed; on a full
-;; frame of C++ that layout is most of what a key costs. Two things kept
+;; frame of code that layout is most of what a key costs. Two things keep
 ;; it from telling.
 
 ;; The theme draws the current line's number unlike the others, bright on
 ;; hl-line's band. Emacs sees two faces that differ and gives up every
-;; shortcut: each redraw laid out the whole window, even one after a
-;; timer or a server message that changed nothing, 2.8 ms instead of 0.6,
-;; and a key cost 6 ms instead of 4. So where Emacs looks the two faces
-;; are the same, and the theme's look comes back through a remap in the
-;; buffers where hl-line is on. There a change of line always moves
-;; hl-line's overlay, which redraws the whole window anyway, so the
-;; bright number is never left on the line the cursor left.
+;; shortcut: each redraw lays out the whole window, even one after a
+;; timer or a server message that changed nothing. So where Emacs looks
+;; the two faces are the same, and the theme's look comes back through a
+;; remap in the buffers where hl-line is on. There a change of line
+;; always moves hl-line's overlay, which redraws the whole window anyway,
+;; so the bright number is never left on the line the cursor left.
 (defface +ui-current-line-number '((t))
   "The current line's number as the theme draws it, kept by
 `+ui--line-number-faces-h'."
@@ -688,9 +678,8 @@ on every frame."
 ;; And hl-line puts its overlay on the current line after every command,
 ;; even when the overlay is there already, and an overlay moved, even in
 ;; place, changes the whole window as far as redisplay knows. It moves
-;; now only when the line did: moving along a line and typing on it no
-;; longer lay out the window. A held key moves it at every repeat, a line
-;; move at 3.9 ms where the cursor alone costs 1.4, well inside a frame.
+;; only when the line does, so moving along a line and typing on it do
+;; not lay out the window.
 (defadvice! +ui--hl-line-stay-a (fn overlay)
   "Leave OVERLAY where it is when it covers the current line already."
   :around #'hl-line-move
@@ -704,8 +693,8 @@ on every frame."
 ;; its right half twice for it, the first time only to measure it for the
 ;; space that pushes it to the edge; and eglot's piece of it is a cl-loop
 ;; quoted into `mode-line-misc-info', a macro the interpreter expands
-;; afresh each time. Formatted once, with eglot's loop compiled once, the
-;; modeline takes 70 microseconds instead of 200 and half the garbage.
+;; afresh each time. Here the right half is formatted once, and eglot's
+;; loop is compiled once.
 (defun +ui--modeline-right ()
   "The right half of the modeline, pushed against the window's edge."
   (let ((right (format-mode-line '("" +modeline-format-right))))
@@ -731,8 +720,7 @@ on every frame."
 ;; requests, its progress, are quoted code too: when-let* and cl-loop
 ;; expanded at every redisplay, and a closure made over a hash each
 ;; time, which expands its body again. While a server works that is at
-;; every message it sends, and it was a tenth of a whole file's inlay
-;; hints being fetched. Each is compiled once.
+;; every message it sends. Each is compiled once.
 (after! eglot
   (dolist (piece eglot-mode-line-format)
     (when (and (symbolp piece) (boundp piece))
@@ -756,11 +744,11 @@ on every frame."
 ;; Emacs 31 colours text as it comes on screen in chunks that end where
 ;; hidden text starts, so that a folded subtree is not coloured for
 ;; nothing. But org also hides the = and ~ around code and the brackets
-;; of a link, and each of those ended a chunk; every chunk is widened to
-;; whole lines, so a line of the cheat sheet with ten of them was coloured
-;; twenty times, and a half page first shown took 60 ms. A chunk now runs
-;; on through hidden text shorter than `+ui-jit-lock-hidden-min' and stops
-;; before a longer one, the body of a fold.
+;; of a link, and each of those ends a chunk; every chunk is widened to
+;; whole lines, so a line with ten of them would be coloured twenty
+;; times. A chunk runs on through hidden text shorter than
+;; `+ui-jit-lock-hidden-min' and stops before a longer one, the body of a
+;; fold.
 (defvar +ui-jit-lock-hidden-min 500
   "Hidden text shorter than this, in characters, is coloured with the text
 around it; longer, it waits until it shows.")
@@ -787,7 +775,7 @@ around it; longer, it waits until it shows.")
 ;; block does from the line typed on back to its first line, jit-lock
 ;; redraws the window a second time for what it drew before the change.
 ;; That text is often above the window, and then the second redraw, a
-;; whole one, showed nothing new: 2 ms of every key typed in a block.
+;; whole one, shows nothing new.
 (defadvice! +ui--jit-lock-redraw-if-shown-a (fn start end)
   "Redraw for text coloured between START and END only if a window shows it."
   :around #'jit-lock-force-redisplay
@@ -801,15 +789,15 @@ around it; longer, it waits until it shows.")
 ;;; Minimap
 
 ;; SPC t m: the buffer in a tiny font on the right, the part on screen
-;; marked; autoload/minimap.el. A copy of the text, taken again once the
-;; typing pauses, so moving and typing cost it nothing.
+;; marked. A copy of the text, taken again once the typing pauses, so
+;; moving and typing cost it nothing.
 
 ;; A window can say it is not one to move to, and the minimap says it:
 ;; there is nothing to do in there and no way back but the way you came.
-;; `other-window' listens, evil's window motions go through windmove,
-;; which does not, so C-w l walked straight into it. They step over it
-;; now, and a window given over to something else is left alone the same
-;; way.
+;; `other-window' listens, but evil's window motions go through
+;; windmove, which does not, so C-w l would walk straight into it. They
+;; step over it, and a window given over to something else is left alone
+;; the same way.
 (defun +ui--keep-out-of-side-windows-a (fn &rest args)
   "Undo a move that landed on a window with `no-other-window'."
   (let ((origin (selected-window)))

@@ -891,8 +891,8 @@ after PREFIX; a kit map keeps each description in the map itself."
           (insert (format "| ~SPC k %s~ | %s |\n"
                           (+docs--org-escape (car row))
                           (+docs--org-escape (cdr row))))))
-      ;; Aligned here, so what goes into the file is what a reader sees
-      ;; and a regeneration compares like with like.
+      ;; Aligned before writing, so the file holds what a reader sees and
+      ;; a regeneration compares like with like.
       (let ((org-inhibit-startup t) (org-mode-hook nil))
         (delay-mode-hooks (org-mode)))
       (org-table-map-tables #'org-table-align t)
@@ -941,16 +941,12 @@ so dired's and C++'s keys are found from anywhere."
                                    (and (fboundp '+core-kit-maps)
                                         (mapcar #'cdr (+core-kit-maps))))))
           (concat doom-leader-key " k " (describe key)))
-        ;; One map at a time, not the whole list at once. Given a list,
-        ;; `where-is-internal' drops a key that an earlier map in it binds
-        ;; to something else, so dired's j and k hid the image viewer's
-        ;; pan keys and the sheet printed those commands with no key at
-        ;; all. Worse, it depended on whether dirvish had loaded yet.
+        ;; One map at a time: given a list, `where-is-internal' drops a
+        ;; key that an earlier map in it binds to something else.
         ;;
-        ;; Asking each map separately gives several answers where the one
-        ;; list gave none, so they are ranked: the localleader form first,
-        ;; since that is the one a reader can find from the mode they are
-        ;; in, then the shortest, which is how TAB wins over <tab>.
+        ;; The answers are ranked: the localleader form first, since a
+        ;; reader finds it from the mode they are in, then the shortest,
+        ;; so TAB wins over <tab>.
         (when-let* ((keys (delq nil
                                 (cl-loop for map in (+docs--keymaps maps)
                                          collect (where-is-internal
@@ -1010,9 +1006,8 @@ has loaded so far."
                                                          #'commandp))
                            #'string<)))
              ;; A command's file can define more as it loads, a menu its
-             ;; suffixes; reading the docstring of one autoloaded loads it,
-             ;; so the first list of a session lacked them and the next had
-             ;; them. Each file is loaded first, and the list taken after.
+             ;; suffixes. Each file is loaded first and the list taken
+             ;; after, so the list is the same every time.
              (commands (progn
                          (dolist (command (funcall find))
                            (let ((def (symbol-function command)))

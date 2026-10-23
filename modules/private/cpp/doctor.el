@@ -59,10 +59,8 @@
 
 ;; Other languages: the kit menu, SPC k SPC, works for any project type
 ;; projection knows, but a language gets completion, jumps and fixes only
-;; with its server on PATH. Each line says how to get one.
-;; The languages this config is set up for. Go, Java, Kotlin and Zig
-;; were dropped from init.el because nothing here is written in them,
-;; so their servers are no longer asked after either.
+;; with its server on PATH. Each line says how to get one. Only the
+;; languages this config is set up for are checked.
 (dolist (server
          `(("rust-analyzer"
             . ,(if (featurep :system 'macos)

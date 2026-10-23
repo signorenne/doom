@@ -180,8 +180,7 @@ the formatter keeps where opascal has others of its own."
                (eq 'colon (opascal-token-kind (+pascal--previous-solid token))))
           (opascal-line-indent-of (+pascal--previous-solid token) 0))
          ;; A condition broken over lines goes on one level in from its
-         ;; statement's line, not two past its first word: after
-         ;; "else if" that was twenty columns out.
+         ;; statement's line, not two past its first word.
          (t
           (when-let* ((statement (+pascal--open-expression token)))
             (opascal-stmt-line-indent-of statement opascal-indent-level))))

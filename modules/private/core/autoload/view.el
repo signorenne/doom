@@ -4,7 +4,7 @@
 ;;
 ;; A diagram's picture beside its source, an SVG's drawing beside its
 ;; XML, an image's structure and metadata beside the picture: one piece
-;; of machinery, so it lives here once. A buffer says how its view is
+;; of machinery shared by all of them. A buffer says how its view is
 ;; drawn with `+core-view-enable'. This keeps a side window showing the
 ;; view of whichever such buffer you are in, draws it again as the text
 ;; changes when that makes sense, and steps out of the way when you move
@@ -147,7 +147,7 @@ says what it made."
       (+core-view-panel-mode 1)))
   (+core-view--header source)
   ;; image-mode centred the picture before the header line was there,
-  ;; half a line too low; the next redraw that centred it again moved it.
+  ;; so it would sit half a line too low until centred again.
   (with-current-buffer (+core-view--buffer)
     (+core--image-recenter-a)))
 
@@ -155,7 +155,7 @@ says what it made."
   "Show TEXT in the view."
   (with-current-buffer (+core-view--buffer)
     (let ((inhibit-read-only t))
-      ;; A picture drawn here before left its centring overlay, the gap
+      ;; A picture drawn before leaves its centring overlay, the gap
       ;; above it, which neither a mode nor erasing takes away.
       (+core-image-uncenter)
       (unless (derived-mode-p 'special-mode) (special-mode))
@@ -201,7 +201,7 @@ has shown nothing for SOURCE yet does the problem take the whole view."
                            (+core-view--put-text source (+core-view--decorate text))
                          (+core-view--put-problem
                           source (car (split-string text "\n" t)))))))))
-            ;; A program that cannot start at all, python3 gone: say so,
+            ;; A program that cannot start at all (no python3): say so,
             ;; and leave no output buffer behind for each try.
             (error (kill-buffer out)
                    (+core-view--put-problem source (error-message-string err))
@@ -265,20 +265,19 @@ in a sliver between them."
                       (window-parameters . ((no-delete-other-windows . t)
                                             (+core-view . t)))))
     ;; A picture beside the view just lost half its window. Fitted again
-    ;; now rather than when image-mode notices, a fifth of a second on,
-    ;; it is never drawn spilling out of the window it has left.
+    ;; now rather than when image-mode notices, it is never drawn
+    ;; spilling out of its window.
     (when-let* ((window (get-buffer-window source)))
       (with-current-buffer source
         (when (derived-mode-p 'image-mode)
           (ignore-errors (image-fit-to-window window)))))))
 
-;; With the view's window its own, a file opened from inside it went to
-;; a new window: the only other one was split in two, the picture over
-;; its source. A command run from inside the view that shows another
-;; buffer, find-file, the workspace's own switch to a new file, a buffer
-;; switch, runs as if from the window beside it, which it then leaves
-;; selected. Only a command: a timer showing something while you read
-;; the view leaves you where you are.
+;; The view's window is its own, so a buffer shown from inside it would
+;; split the other window in two. A command run from inside the view
+;; that shows another buffer (find-file, a buffer switch) runs as if
+;; from the window beside it, which it then leaves selected. Only a
+;; command: a timer showing something while you read the view leaves
+;; you where you are.
 (defun +core-view--step-out-a (buffer-or-name &rest _)
   "Select the window beside the view before BUFFER-OR-NAME is shown, when
 a command run from inside the view shows it."
@@ -337,8 +336,8 @@ major mode too, which wipes the buffer's local variables; a mode that
 wants a view gives it one again from its own hook."
   (when +core-view-draw
     (setq +core-view--buffers (max 0 (1- +core-view--buffers)))
-    ;; On show and left without one once the new mode is set up, a
-    ;; picture turned into text: the view goes, or it stayed there.
+    ;; On show and left without a view once the new mode is set up (a
+    ;; picture turned into text): the view closes rather than stays.
     (when (eq +core-view--showing (current-buffer))
       (let ((buffer (current-buffer)))
         (run-at-time 0 nil (lambda ()
@@ -377,11 +376,11 @@ nil. See `+core-view-draw' for what DRAW returns."
     (add-hook 'after-change-functions #'+core-view--schedule nil t))
   ;; Opened in a window: the view comes up as the command that opened it
   ;; ends, before anything is drawn, with a word in it until its drawing
-  ;; is ready. Shown a moment later instead, it took half the window from
-  ;; a picture already drawn across all of it, which spilled out and was
-  ;; fitted again: the jump at the first picture of a session. Opened
-  ;; from outside a command, by emacsclient, the timer shows it. Visited
-  ;; in the background, by a search or an export: nothing, and no window.
+  ;; is ready. Shown later, it would take half the window from a picture
+  ;; already drawn across all of it, which would jump as it is fitted
+  ;; again. Opened from outside a command, by emacsclient, the timer
+  ;; shows it. Visited in the background, by a search or an export: no
+  ;; view and no window.
   (when +core-view-on-open
     (let ((buffer (current-buffer)))
       (letrec ((open (lambda ()

@@ -9,11 +9,10 @@
         org-agenda-skip-scheduled-if-done t
         org-agenda-skip-deadline-if-done t
         org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled
-        ;; Not here: set globally it takes a task scheduled ahead out of
-        ;; every todo view there is, the inbox and the weekly review
-        ;; with them, so a task could be counted by the menu and shown
-        ;; by nothing. The dashboard, which is the view it was meant
-        ;; for, sets it itself.
+        ;; org-agenda-todo-ignore-scheduled is not set globally: it would
+        ;; take a task scheduled ahead out of every todo view, the inbox
+        ;; and the weekly review with them, so a task could be counted
+        ;; by the menu and shown by nothing. The dashboard sets it itself.
         org-agenda-tags-column 0
         org-agenda-block-separator ?-
         org-agenda-time-grid '((daily today require-timed)

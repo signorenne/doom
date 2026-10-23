@@ -1,15 +1,14 @@
 ;;; private/docs/autoload/keys.el -*- lexical-binding: t; -*-
 ;;
 ;; Do the menus and the documented keys hold up? A transient refuses a
-;; key bound twice or a suffix it cannot find, but only when asked, and
-;; it moves a suffix off q and Q on its own, since core binds q to quit;
-;; so every private menu is set up here under conflict detection and
-;; its layout read for what transient would silently move. Then every
-;; SPC key the sheet and the READMEs mention is looked up, so a key
-;; that changed in the config cannot stay in the docs; and the leader
-;; is read for one of our commands on two keys and for a Doom key
-;; rebound without meaning to. bin/check-config runs all of it;
-;; `+docs/check-keys' does from a session.
+;; key bound twice or a suffix it cannot find only when asked, and it
+;; moves a suffix off q and Q on its own, since core binds q to quit.
+;; So every private menu is set up under conflict detection and its
+;; layout read for what transient would silently move. Every SPC key
+;; the docs mention is looked up, so a changed key cannot stay in the
+;; docs, and the leader is read for one of our commands on two keys and
+;; for a Doom key rebound by mistake. `+docs/check-keys' runs it all
+;; from a session.
 
 (require 'transient)
 
@@ -56,7 +55,7 @@ entries, the :info lines, left out."
     (autoload-do-load (symbol-function prefix) prefix))
   (mapcar #'car (+docs--layout-suffixes (get prefix 'transient--layout))))
 
-;; Autoloaded: bin/check-config.el calls it in the throwaway daemon.
+;; Autoloaded: bin/check-config.el calls it.
 ;;;###autoload
 (defun +docs-menu-problems ()
   "Every private menu that does not hold up, as a list of sentences:
@@ -146,7 +145,7 @@ those of every SPC k keymap among them."
         (walk map "k")))
     out))
 
-;; Autoloaded: bin/check-config.el calls it in the throwaway daemon.
+;; Autoloaded: bin/check-config.el calls it.
 ;;;###autoload
 (defun +docs-leader-problems ()
   "Every leader key that does not hold up, as a list of sentences: one
@@ -265,7 +264,7 @@ takes the keys so far as a string and returns their binding."
         (setq i (1+ i))))
     problem))
 
-;; Autoloaded: bin/check-config.el calls it in the throwaway daemon.
+;; Autoloaded: bin/check-config.el calls it.
 ;;;###autoload
 (defun +docs-key-problems ()
   "Every leader key the docs mention that the config does not bind, as
@@ -294,11 +293,11 @@ the rest; see `+docs-menu-problems', `+docs-leader-problems',
 ;;
 ;;; The keys that are not the leader's
 
-;; The leader is followed key by key above. The rest of the sheet's keys
-;; are ordinary ones, and they are where the quiet mistakes live: a key
-;; that means one thing in a C++ buffer and another in an Org document,
-;; a key Doom renamed, a key that only ever worked in a mode nobody is
-;; in. Each is looked up in the place its section says it belongs to.
+;; The rest of the sheet's keys are ordinary ones, where the quiet
+;; mistakes live: a key that means one thing in a C++ buffer and another
+;; in an Org document, a key Doom renamed, a key that only works in a
+;; mode nobody is in. Each is looked up where its section says it
+;; belongs.
 
 (defconst +docs-key-contexts
   '(("\\`Git" . skip)                   ; magit's transient suffixes
@@ -310,7 +309,7 @@ the rest; see `+docs-menu-problems', `+docs-leader-problems',
     ("The CMake panel\\|CMake panel" . skip) ; transient suffixes
     ("Function keys" . dape)
     ;; The popup's keys are bound per evil state, in an auxiliary map a
-    ;; plain lookup does not follow; there is nothing to check here.
+    ;; plain lookup does not follow, so they cannot be checked.
     ("Completion" . skip)
     ("minibuffer" . minibuffer)
     ("\\`Dired" . dired)
@@ -375,7 +374,7 @@ key of evil's would look unbound.  Those maps are put aside here."
       ('dape (or (in-buffer)
                  (if (boundp 'dape-active-mode-map) (in-map dape-active-mode-map) t)))
       ;; A directory of its own: dired hands back the buffer already
-      ;; listing a directory, and killing that closed the user's.
+      ;; listing a directory, and killing it would close the user's.
       ('dired (let* ((dir (make-temp-file "docs-keys" t))
                      (buffer (ignore-errors (dired-noselect dir))))
                 (unwind-protect

@@ -1,8 +1,8 @@
 ;;; private/rust/autoload/scaffold.el -*- lexical-binding: t; -*-
 ;;
-;; A new cargo project. cargo makes the skeleton, since it is the one
-;; that knows what a crate looks like this year; the house files go on
-;; top, the way the cpp templates do it.
+;; A new cargo project. cargo makes the skeleton, since it knows what a
+;; current crate looks like; the house files go on top, the way the cpp
+;; templates do it.
 
 (declare-function +core-copy-template "scaffold")
 (declare-function +core-read-new-project "scaffold")
@@ -142,8 +142,8 @@ several crates together."
   (let ((entry
          (if (equal kind "workspace")
              (+rust--workspace dir name)
-           ;; `init' rather than `new': the directory is already there,
-           ;; made above, and cargo refuses to create one that exists.
+           ;; `init' rather than `new': the directory already exists, and
+           ;; cargo refuses to create one that does.
            (+rust--cargo dir "init" (if (equal kind "lib") "--lib" "--bin")
                          "--name" name)
            (+rust--add-lints (expand-file-name "Cargo.toml" dir))

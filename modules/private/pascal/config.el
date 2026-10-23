@@ -1,10 +1,9 @@
 ;;; private/pascal/config.el -*- lexical-binding: t; -*-
 ;;
-;; Object Pascal. Free Pascal and Lazarus build, run and debug here;
-;; Delphi sources are read and edited here and built in the IDE, which
-;; is the honest limit of a Linux machine. Emacs ships the mode, so this
-;; module is the project side: what a build depends on, the keys, the
-;; server and the templates.
+;; Object Pascal. Free Pascal and Lazarus projects build, run and debug;
+;; Delphi sources are read and edited, and built in the Delphi IDE.
+;; Emacs ships the mode, so this module is the project side: what a
+;; build depends on, the keys, the server and the templates.
 
 (defvar +pascal-docs
   '(:groups (("pascal" "Pascal" (opascal) opascal-mode-map))
@@ -61,18 +60,14 @@ macOS installer puts them in /Applications/Lazarus.")
 (add-to-list 'auto-mode-alist '("\\.\\(lfm\\|dfm\\)\\'" . conf-mode))
 
 (after! opascal
-  ;; Two spaces, which is what Lazarus and Delphi both write. The tab
-  ;; key is Emacs's own `tab-always-indent' now; opascal's setting for
-  ;; it has been obsolete since 24.4. A begin sits under the statement
-  ;; that owns it, if, for, else or on: at 2 it went one level further
-  ;; and its body two, which no Pascal style writes.
+  ;; Two spaces, as Lazarus and Delphi write. A begin sits under the
+  ;; statement that owns it (if, for, else, on), not a level further.
   (setq opascal-indent-level 2
         opascal-compound-block-indent 0
         opascal-case-label-indent 2)
-  ;; And where opascal has rules of its own, the formatter's instead: a
-  ;; routine after a type, var or const section was indented into it,
-  ;; a condition broken over lines went twenty columns out. See
-  ;; autoload/indent.el.
+  ;; Where opascal has rules of its own, follow the formatter's instead:
+  ;; opascal indents a routine after a type, var or const section into
+  ;; that section, and a condition broken over lines far to the right.
   (advice-add #'opascal-corrected-indentation :around #'+pascal--indentation-a)
   (advice-add #'opascal-open-group-indent :override #'+pascal--open-group-indent-a))
 
@@ -98,7 +93,7 @@ macOS installer puts them in /Applications/Lazarus.")
     (setq-local show-paren-data-function #'+pascal-show-paren-data)))
 
 ;; The unit names in a uses clause; and pasls's completions merged with
-;; the buffer's words and the snippets, where one used to hide the rest.
+;; the buffer's words and the snippets, so none hides the others.
 (add-hook 'opascal-mode-hook #'+pascal-completion-h)
 (add-hook 'eglot-managed-mode-hook #'+pascal-completion-h)
 
@@ -138,9 +133,9 @@ macOS installer puts them in /Applications/Lazarus.")
 ;;
 ;;; The build
 
-;; projection has no Pascal type, so here are two: a Lazarus project is
+;; projection has no Pascal type, so this adds two: a Lazarus project is
 ;; the .lpi and lazbuild, a Free Pascal one the program file and fpc.
-;; SPC k b and SPC k r then work here as they do in a CMake tree.
+;; SPC k b and SPC k r then work as they do in a CMake tree.
 (after! projection-types
   (defvar projection-project-type-lazarus
     (projection-type
@@ -168,10 +163,9 @@ macOS installer puts them in /Applications/Lazarus.")
                             projection-project-types))))
 
 ;; fpc writes file(line,col) Error: text, which none of Emacs's own
-;; patterns reads: a build's errors were plain text, and RET on one or
-;; M-g n went nowhere. The closing "Fatal: There were 2 errors" names
-;; the file without its directory and is a count, not a place: it is
-;; information, which ]e passes over. lazbuild numbers them: (10026).
+;; patterns reads. The closing "Fatal: There were 2 errors" is a count,
+;; not a place, so it is information, which ]e passes over. lazbuild
+;; adds a message number, as in (10026).
 (after! compile
   (add-to-list 'compilation-error-regexp-alist-alist
                '(fpc "^\\([^\t\n(]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?) \\(?:\\(Note:\\|Hint:\\|Fatal: \\(?:([0-9]+) \\)?There were\\)\\|Fatal:\\|Error:\\|\\(Warning:\\)\\)"
@@ -179,9 +173,9 @@ macOS installer puts them in /Applications/Lazarus.")
   (add-to-list 'compilation-error-regexp-alist 'fpc))
 
 ;; SPC k r, SPC k d, SPC k m and SPC k n in a Pascal project are this
-;; module's. A Delphi project is claimed too: the panel and the status
-;; then say what can and cannot be done with it here, which is better
-;; than the keys quietly meaning the C++ module.
+;; module's. A Delphi project is claimed too, so the panel and the
+;; status say what can be done with it, rather than the keys quietly
+;; meaning the C++ module.
 (+core-register-builder 'pascal #'+pascal-project-p
                         :run #'+pascal/run
                         :run-with-args #'+pascal/run-with-args
@@ -197,14 +191,14 @@ macOS installer puts them in /Applications/Lazarus.")
 ;;; The server
 
 ;; pasls is Lazarus's CodeTools behind an LSP server. It is not
-;; packaged: the README says how to build it, and until it is there a
-;; Pascal buffer has the mode's own navigation and nothing more.
+;; packaged and must be built; without it a Pascal buffer has only the
+;; mode's own navigation.
 (declare-function +pascal-project-kind "pascal")
 
 ;; pasls reads a Lazarus project's unit paths from its .lpi, but not the
-;; include path the LCL's own package sets: every LCL unit it opened then
-;; failed on lcl_defines.inc, and nothing of the LCL, TForm among it,
-;; could be looked up. A Lazarus project hands it that directory.
+;; include path the LCL's own package sets, so every LCL unit fails on
+;; lcl_defines.inc and nothing of the LCL can be looked up. A Lazarus
+;; project hands it that directory.
 (defun +pascal--pasls-contact (&rest _)
   "How to start pasls for this buffer's project, or nil without pasls."
   (when-let* ((pasls (executable-find "pasls")))

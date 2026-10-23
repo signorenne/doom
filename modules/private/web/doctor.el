@@ -1,9 +1,8 @@
 ;; -*- lexical-binding: t; no-byte-compile: t; -*-
 ;;; private/web/doctor.el
 
-;; Every server is looked for on PATH rather than at a path: on this
-;; machine they are in ~/.local/bin, on another they may be in
-;; /usr/local/bin, and the module does not care which.
+;; Every server is looked for on PATH rather than at a fixed path, so
+;; the module does not care where it is installed.
 
 (assert! (modulep! :private core)
          "This module uses core's compile runner and project root: enable (:private core)")
@@ -34,7 +33,7 @@
   (unless (executable-find (car pair))
     (warn! "No %s: npm i -g --prefix ~/.local %s" (car pair) (cdr pair))))
 
-;; Electron packaging for Windows from here goes through wine.
+;; Electron packaging for Windows from Linux or macOS goes through wine.
 (when (and (executable-find "node") (not (executable-find "wine")))
   (warn! "No wine, so an Electron build for Windows cannot be made here: %s"
          (if (featurep :system 'macos) "brew install --cask wine-stable" "zypper in wine")))

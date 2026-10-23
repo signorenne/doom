@@ -13,8 +13,8 @@
 ;; A compiler that is not on the host lives in a distrobox, and the SDK it
 ;; belongs to has an environment script next to its sysroots; where a
 ;; kit runs, and how a command runs there, is container.el; Qt Creator
-;; is read in qtc.el. The choice is remembered in .dir-locals.el as
-;; `+cpp-kit'.
+;; is read by the qtcreator module. The choice is remembered in
+;; .dir-locals.el as `+cpp-kit'.
 
 (require 'cl-lib)
 
@@ -51,7 +51,7 @@
 
 ;;;###autoload
 (cl-defstruct (+cpp-kit (:constructor +cpp-kit-make))
-  name                                  ; "horizon-pc-Debug", or a preset name
+  name                                  ; "Desktop-Debug", or a preset name
   dir                                   ; build directory, relative to the root
   source                                ; how it was chosen: `chosen', `qtcreator', `preset', `directory', `default'
   preset                                ; the configure preset it is, or nil
@@ -467,9 +467,9 @@ a plain build directory on the host."
       (if (and cached (equal (car cached) stamp))
           (cdr cached)
         (let ((kit (+cpp--kit-locate (+cpp--choose-kit root))))
-          ;; Found while no container may be started, as a file opens,
-          ;; a compiler in a stopped one is not found: kept, that answer
-          ;; sent the next build to the host, where it is not.
+          ;; Located while no container may be started, as a file opens,
+          ;; a compiler in a stopped container is missed. That answer is
+          ;; not kept, or the next build would run on the host.
           (unless (and (boundp '+container-may-start)
                        (not +container-may-start)
                        (not (+cpp-kit-container kit)))

@@ -5,10 +5,8 @@
 ;; One `git blame' of the whole buffer, run in the background and kept;
 ;; each line is then read from that. It is fed the buffer's own text, so
 ;; an edited buffer is blamed as it stands, and taken again only when
-;; the buffer has changed since. blamer, which this replaces, started a
-;; second Emacs for every line point rested on, twice, each after
-;; searching the whole load path for its own library: a third of the
-;; editor's time while moving through a file went there.
+;; the buffer has changed since. Moving through a file costs no process
+;; per line.
 
 (declare-function flymake-diagnostics "flymake")
 (defvar +git-blame-line-mode)
@@ -206,7 +204,7 @@ It is drawn at the end of the line too, and is the one to read."
                                            (+git--blame-text commit info) room nil nil "...")
                                           'face '+git-blame-face))))
             ;; With point at the end of the line, as A leaves it, the
-            ;; cursor was drawn after the note; this puts it before.
+            ;; cursor would be drawn after the note; this puts it before.
             (put-text-property 0 1 'cursor t text)
             (overlay-put overlay 'after-string text)
             (setq +git--blame-overlay overlay

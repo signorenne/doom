@@ -229,8 +229,8 @@ which for PlatformIO means upload."
                                                  (cons exe (+cpp--run-argv args))
                                                  " ")))
                              t))))
-      ;; It takes the project and the command, which its interactive
-      ;; form works out: called bare it failed on the number of them.
+      ;; It takes the project and the command, which only its
+      ;; interactive form works out.
       (when (and args (not (string-empty-p args)))
         (user-error "Only a CMake project's programs are given arguments here"))
       (call-interactively #'projection-commands-run-project))))
@@ -325,8 +325,8 @@ program and uses the same debugger."
 (defun +cpp/debug-or-continue ()
   "Continue the running debug session, or start one."
   (interactive)
-  ;; Started as SPC k d is: it was the C++ debug, which in a Pascal,
-  ;; Rust or web project asked for a program instead of knowing it.
+  ;; Started as SPC k d is, so a Pascal, Rust or web project gets its
+  ;; own debug rather than the C++ one, which asks for a program.
   (if (+cpp--dape-stopped-p)
       (call-interactively #'dape-continue)
     (call-interactively #'+core/debug)))

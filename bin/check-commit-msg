@@ -1,5 +1,5 @@
 #!/bin/sh
-# The shape a commit subject has here: type(scope): what, the what in
+# The shape a commit subject must have: type(scope): what, the what in
 # the imperative (add, drop, keep, stop, say) and no trailer that
 # names a tool. The scope is not optional. Install as a hook with
 #   ln -s ../../bin/check-commit-msg .git/hooks/commit-msg

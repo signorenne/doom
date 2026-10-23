@@ -29,12 +29,10 @@ day is written under.")
 (after! org-roam
   ;; A task written inside a note reaches the agenda like any other: the
   ;; file list is set before an agenda or a refile, not advised, so a
-  ;; view that binds its own list, or a restriction, keeps it.
-  ;; Every command that reads the list, not only the agenda: the todo
-  ;; list and org-ql went through neither, so in a session that had not
-  ;; opened an agenda they missed every task written inside a note.
-  ;; org-ql-search reads it at its prompt, before advice on the command
-  ;; itself runs, so the prompt is refreshed too.
+  ;; view that binds its own list, or a restriction, keeps it. Every
+  ;; command that reads the list is covered, the todo list and org-ql
+  ;; too. org-ql-search reads it at its prompt, before advice on the
+  ;; command itself runs, so the prompt is refreshed too.
   (dolist (command '(org-agenda org-refile org-todo-list org-ql-search
                      org-ql-view--complete-buffers-files))
     (advice-add command :before #'+notes--agenda-files-refresh-h))
@@ -81,11 +79,10 @@ day is written under.")
            :target (file+head "%(+notes--roam-path \"resources/sources/manuals/${slug}.org\")"
                               ,(concat (replace-regexp-in-string ":END:" ":ROAM_REFS: ${ref}\n:END:" +notes-roam-head t t) ":ref:\n\n"))
            :unnarrowed t :empty-lines-before 1)
-          ;; The one citar fills. `r' asks for the source because there
-          ;; is nothing to ask instead; here citar has just handed over
-          ;; the key, so asking again is asking the user to retype what
-          ;; the tool knows. The file is named for the key as well, which
-          ;; is how citar finds the note again.
+          ;; The one citar fills. `r' asks for the source; citar has
+          ;; already handed over the key, so this one does not ask again.
+          ;; The file is named for the key as well, which is how citar
+          ;; finds the note again.
           ("R" "reference: a source citar already knows" plain
            "* Key points\n%?\n\n* Quotes\n\n* My take\n"
            :target (file+head "%(+notes--roam-path \"resources/sources/papers/${citar-citekey}.org\")"
@@ -126,7 +123,8 @@ day is written under.")
         ;; each one a node.
         org-roam-db-node-include-function #'+notes--roam-include-node-p))
 
-;; org-protocol://roam-ref lands here: one note per page, found again by URL.
+;; What org-protocol://roam-ref captures with: one note per page, found
+;; again by URL.
 (after! org-roam-protocol
   (setq org-roam-capture-ref-templates
         `(("w" "web page" plain

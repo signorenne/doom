@@ -11,7 +11,7 @@
 (defvar +butler-nudge-step)
 (defvar +butler-quips)
 (defvar +butler-address)
-(defvar +butler--said)                  ; config.el
+(defvar +butler--said)
 (defvar +butler--section)
 (declare-function +docs-cheatsheet-section-for "cheatsheet")
 (defvar +butler--position)

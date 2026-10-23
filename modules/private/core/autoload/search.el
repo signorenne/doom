@@ -110,8 +110,9 @@ how it reports no match."
          (flags (seq-remove (lambda (flag) (string-prefix-p "--context=" flag))
                             (+core--search-flags))))
     ;; The replace reads PATTERN as an Emacs regexp, so ripgrep is given
-    ;; it in its own syntax, as consult gives a search: \( and \| were
-    ;; literal characters to it, and | a choice the replace never made.
+    ;; it in its own syntax, as consult does for a search; otherwise \(
+    ;; and \| would be literal to ripgrep, and | a choice the replace
+    ;; never makes.
     (unless (or (member "-F" flags) (not (require 'consult nil t)))
       (setq pattern (consult--convert-regexp pattern 'extended)))
     (mapcar #'expand-file-name

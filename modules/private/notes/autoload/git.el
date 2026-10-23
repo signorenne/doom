@@ -176,8 +176,8 @@ the finder knows the notes that arrived."
      ;; What the other machine wrote is on disk now, and the graph's
      ;; database learns of a file only when it is visited: read them all.
      ;; If that fails it is the graph that is behind, not the notes, and
-     ;; the push still has to happen: a sentinel that dies here would
-     ;; leave the commits here and say nothing.
+     ;; the push still has to happen: a sentinel that died would leave
+     ;; the commits unpushed and say nothing.
      (let ((trouble (when (featurep 'org-roam)
                       (condition-case err
                           (progn (org-roam-db-sync) nil)

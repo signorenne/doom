@@ -109,7 +109,7 @@ tables and the indentation about."
     (setq-local +notes--writing-mode on)
     (visual-line-mode (if on +1 -1))
     ;; A minor mode called from Lisp with no argument turns itself on,
-    ;; whatever it was, so zen never went off again: say which way.
+    ;; whatever it was, so zen would never go off again: say which way.
     (when (fboundp '+zen/toggle)
       (+zen/toggle (if on +1 -1)))
     (message "Writing mode %s" (if on "on" "off"))))

@@ -1,20 +1,20 @@
 ;; -*- lexical-binding: t; no-byte-compile: t; -*-
 ;;; private/core/doctor.el
-;; Only `executable-find', `modulep!' and font checks here: requiring a
-;; package from a doctor file trips an eager macro-expansion cycle on
+;; Only `executable-find', `modulep!' and font checks: requiring a
+;; package from a doctor file trips an eager macro-expansion cycle in
 ;; Emacs 31.
 
-;; Written for Emacs 31: an older one misses what the config leans on,
-;; and one setting, the cursor line kept in view, slows its redisplay
-;; down a hundredfold (bug#78766).
+;; The config needs Emacs 31: an older one lacks features it uses, and
+;; keeping the cursor line in view makes its redisplay far slower.
 (when (< emacs-major-version 31)
   (error! "Emacs %s: this config needs Emacs 31" emacs-version)
   (explain! (if (featurep :system 'macos)
                 "brew install --cask emacs-plus-app, then doom sync"
               "Install Emacs 31 from your distribution, then doom sync")))
 
-;; The tools the commands shell out to. Each line says what stops working.
-;; macOS has its own opener and clipboard, open and osascript, always.
+;; The tools the commands shell out to, each with what stops working
+;; without it. macOS always has its own opener and clipboard (open and
+;; osascript).
 (dolist (tool `(,@(unless (featurep :system 'macos)
                     '(("xdg-open" . "SPC f x, open a file in its desktop app")))
                 ("fd" . "SPC s F and the project file lists")
@@ -43,10 +43,10 @@
                 "brew install vips, or imagemagick"
               "openSUSE: zypper in vips-tools, or ImageMagick")))
 
-;; The data formats. A language server validates as you type where one
-;; is running; these are what `SPC m v' shells out to, and what the
-;; prettify and compact keys use. A missing one is not fatal: the
-;; format keeps its mode and loses its checking.
+;; The data formats. A language server validates as you type; the other
+;; tools are what `SPC m v' and the prettify and compact keys shell out
+;; to. A missing one is not fatal: the format keeps its mode and loses
+;; its checking.
 (dolist (tool '(("jq" . "JSON: prettify and compact")
                 ("prettier" . "YAML and JSON with comments: prettify, keeping the comments")
                 ("taplo" . "TOML: format, and the server")
@@ -77,9 +77,9 @@
                 "brew install exiftool"
               "openSUSE: zypper in exiftool")))
 
-;; The fonts config.el asks for; a missing one falls back silently to
-;; whatever fontconfig picks, which is how a wrong glyph or width shows up.
-;; The emoji are Apple's on a Mac, which every Mac has.
+;; The fonts config.el asks for. A missing one silently falls back to
+;; whatever fontconfig picks, which shows as wrong glyphs or widths.
+;; On macOS the emoji come from Apple's font, which is always there.
 (when (display-graphic-p)
   (dolist (family `("JetBrains Mono" "DejaVu Sans" "Symbols Nerd Font Mono"
                     ,@(unless (featurep :system 'macos) '("Noto Color Emoji"))))

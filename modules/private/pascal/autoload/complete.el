@@ -3,10 +3,9 @@
 ;; What completion offers in a Pascal buffer. pasls knows a record's
 ;; fields and the library's routines, but not the names a program file
 ;; declares for itself, nor a routine's own locals at times, nor the
-;; units a uses clause can name, nor the keywords. And the buffer's
-;; words and the snippets were only asked when pasls had nothing at
-;; all: Par offered ParamStr and never Parsed, the variable on the line
-;; above.
+;; units a uses clause can name, nor the keywords. So the buffer's words
+;; and the snippets are offered alongside pasls's, not only when it has
+;; nothing.
 
 (defvar +pascal-lazarus-dir)
 (defvar +pascal-fpc-src-dir)

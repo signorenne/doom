@@ -307,8 +307,8 @@ certificate is set up, and the template's CI workflow signs it."
   (unless (+web-electron-p)
     (user-error "Not an Electron project: no electron in package.json"))
   ;; The project's own script for the target, the one SPC k n writes,
-  ;; else its build and then electron-builder run by the manager: called
-  ;; bare it was not on the path, and nothing was built before it.
+  ;; else its build and then electron-builder run by the manager, since
+  ;; called bare it is not on the path and nothing is built first.
   (let ((script (if (equal target "current")
                     (+web--script "package" "dist" "build:app")
                   (+web--script (concat "package:" target))))
@@ -336,9 +336,9 @@ this project's manager."
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
   (require 'dape)
-  ;; dape takes the configuration itself, not its name: handed
-  ;; (node-project :cwd ...) it read every key as a value, found no
-  ;; command, and no session started.
+  ;; dape takes the configuration itself, not its name: given
+  ;; (node-project :cwd ...) it reads every key as a value and starts
+  ;; nothing.
   (let ((root (+web-root)))
     (dape (if (+web-electron-p)
               (dape--config-eval 'electron-main

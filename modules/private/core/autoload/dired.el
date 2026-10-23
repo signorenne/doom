@@ -104,7 +104,7 @@ is not one of them, and leaves the file squeezed in among them."
 ;;
 ;;; Quick access
 
-(defvar +core-quick-access)             ; config.el
+(defvar +core-quick-access)
 (defvar +core-quick-access-extra)
 
 ;; Autoloaded: config.el builds the entries from it when dirvish loads.

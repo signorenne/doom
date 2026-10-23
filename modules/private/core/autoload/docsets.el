@@ -1,10 +1,10 @@
 ;;; private/core/autoload/docsets.el -*- lexical-binding: t; -*-
 ;;
-;; The offline documentation SPC s k searches, Doom's Dash docsets, put on
-;; any machine with nothing done by hand: the first file of a language
-;; opened starts, in the background, the download of the docsets Doom
-;; names for it (`set-docsets!'), bin/install-docset trying each mirror.
-;; C++ and C are some 630 MB each, so this happens once per machine.
+;; Installs the offline documentation SPC s k searches, Doom's Dash
+;; docsets, with nothing done by hand: the first file of a language
+;; opened starts a background download of the docsets Doom names for it
+;; (`set-docsets!'), bin/install-docset trying each mirror. The C and
+;; C++ docsets are large, so each is downloaded only once.
 
 (defvar dash-docs-docsets)
 (declare-function doom-profile-data-dir "doom-lib")

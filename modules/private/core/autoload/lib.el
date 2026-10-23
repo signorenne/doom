@@ -114,11 +114,10 @@ Returns the buffer, which carries NAME in `+core-compile-name'."
     ;; keeps out of the way.
     (when (and comint (string-prefix-p "run" name))
       (with-current-buffer buffer
-        ;; Output, once nothing is listening: q closes it the way it
-        ;; closes every other window of the kind, and so does ESC, the
-        ;; other key a window one has finished reading is dismissed with.
-        ;; While the program runs the buffer is in insert state, where q
-        ;; is a letter it is told and ESC steps out of typing first.
+        ;; Once the program has ended, q and ESC close the window like
+        ;; any other output window. While it runs the buffer is in
+        ;; insert state, where q is typed to the program and ESC first
+        ;; steps out of typing.
         (when (fboundp 'evil-local-set-key)
           (evil-local-set-key 'normal "q" #'quit-window)
           (evil-local-set-key 'normal [escape] #'quit-window)))

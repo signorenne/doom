@@ -16,10 +16,9 @@
 ;; Lets gptel use MCP servers, through gptel-mcp-connect.
 (package! mcp :pin "2d172809cbdb2a40d86b28ad73bd65547cefe0e1")
 
-;; The MCP server above runs on eschulte's web-server. Its recipe and the
-;; one for org-roam-ui's simple-httpd both name the repository
-;; emacs-web-server, so straight built skeeto's under this name, Claude's
-;; tools server found no web-server, and none of the tools reached it.
+;; The MCP server above runs on eschulte's web-server. org-roam-ui's
+;; simple-httpd names a repository emacs-web-server too, so a local repo
+;; name of its own keeps straight from building the wrong one.
 (package! web-server
   :recipe (:host github :repo "eschulte/emacs-web-server" :local-repo "web-server")
   :pin "6357a1c2d1718778503f7ee0909585094117525b")

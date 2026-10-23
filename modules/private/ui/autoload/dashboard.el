@@ -7,14 +7,14 @@
 ;; frame draws what the GUI does; only the size of the type differs.
 
 (defvar +dashboard-name)
-(defvar +ui-banner-name)                  ; config.el
-(defvar +ui-dashboard-greeting-function)  ; config.el
+(defvar +ui-banner-name)
+(defvar +ui-dashboard-greeting-function)
 (defvar +ui-dashboard-tick-hook)
 (declare-function doom-color "doom-themes")
 (declare-function doom-blend "doom-themes")
 
-;; The local widgets keep the old dashboard's 80-column block, then hand
-;; its horizontal alignment to Doom's current dashboard API.
+;; The widgets are laid out in an 80-column block, then handed to Doom's
+;; dashboard for their horizontal alignment.
 
 (defun +ui--dashboard-width ()
   "The columns the dashboard is laid out in."

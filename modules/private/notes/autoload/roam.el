@@ -108,7 +108,7 @@ database."
             (cons now (ignore-errors (+notes--roam-scan-todo-files)))))
     (cdr +notes--roam-todo-files)))
 
-(defvar +notes-agenda-base-files)         ; config.el
+(defvar +notes-agenda-base-files)
 
 (defun +notes--under-base-p (file)
   "Non-nil when FILE sits in a directory `+notes-agenda-base-files' names."
@@ -130,9 +130,9 @@ timestamps a day's note carries, which no scan looks for.")
 
 (defun +notes--recent-dailies ()
   "The daily notes of the last `+notes-daily-agenda-days\=' days."
-  ;; capture/journal/, the value +roam.el sets, until org-roam-dailies is
-  ;; loaded: org-roam does not load it, and the agenda went without the
-  ;; dailies until a dailies command had run.
+  ;; capture/journal/, the value the config sets, until org-roam-dailies
+  ;; is loaded: org-roam does not load it on its own, and the agenda
+  ;; should not miss the dailies meanwhile.
   (when-let* ((dir (expand-file-name (if (boundp 'org-roam-dailies-directory)
                                          org-roam-dailies-directory
                                        "capture/journal/")

@@ -1,11 +1,9 @@
 ;;; private/notes/+capture.el -*- lexical-binding: t; -*-
 ;;
 ;; The capture templates, one per document they write into. Doom's own
-;; t, n and j are replaced; the two helpers a template calls at capture
-;; time, the babel language and the project name, are autoloaded from
-;; autoload/capture.el. A note and a meeting are roam notes, kinds in
-;; +roam.el, so that they link to people, projects and each other; the
-;; menu's c n and c m make them.
+;; t, n and j are replaced. A note and a meeting are roam notes, so that
+;; they link to people, projects and each other; the menu's c n and c m
+;; make them.
 
 (defun +notes--capture-templates ()
   "Capture into the knowledge inbox or the owning PARA project."
@@ -53,7 +51,7 @@
 ;; An aborted P capture must not leave an empty active project behind:
 ;; +notes--capture-project-goal records a project it created, and this
 ;; removes it again when the capture is killed.
-(defvar +notes--roam-todo-files)          ; autoload/roam.el
+(defvar +notes--roam-todo-files)
 (declare-function org-capture-get "org-capture")
 
 (defun +notes--discard-aborted-project-h ()
@@ -76,10 +74,8 @@
   ;; adds nothing twice.
   ;;
   ;; Through `org-capture-upgrade-templates', which is what the option's
-  ;; own :set does: a plain `setq' on this one variable skips it, and an
-  ;; old-format template then reaches org unconverted. Every template
-  ;; here is current format, so this changes nothing today and keeps
-  ;; changing nothing if one is ever pasted in from somewhere older.
+  ;; own :set does: a plain `setq' skips it, and an old-format template
+  ;; would then reach org unconverted.
   (let ((mine (+notes--capture-templates)))
     (setq org-capture-templates
           (org-capture-upgrade-templates

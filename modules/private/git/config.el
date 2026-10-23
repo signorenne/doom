@@ -9,8 +9,8 @@
 ;; repository keeps its own commands in the notes module.
 
 ;; Doom loads magit in the background after starting, a package a step,
-;; each step a stretch Emacs does not answer keys in. magit was one step,
-;; 0.7 s, with everything it pulls in. Its parts go first, a step each.
+;; and Emacs does not answer keys during a step. magit with everything
+;; it pulls in is a long one, so its parts go first, a step each.
 (defvar +git-incremental-parts
   '(magit-section magit-git magit-mode magit-process magit-core magit-diff
     magit-apply magit-log magit-wip epa ibuffer projectile)
@@ -58,10 +58,9 @@ bin/check-commit-msg accepts.")
   ;; neighbours in its refresh hook. That file is lexically bound, so
   ;; with projectile not yet loaded the three become lexical bindings,
   ;; and projectile's own defcustom then fails with "Defining as
-  ;; dynamic an already lexical var": an error on the first refresh of
-  ;; a session that opened magit before any file, which is SPC g g from
-  ;; the dashboard. Loading projectile first makes them special, as the
-  ;; let meant them to be.
+  ;; dynamic an already lexical var" when magit opens before any file.
+  ;; Loading projectile first makes them special, as the let means them
+  ;; to be.
   (require 'projectile nil t)
 
   (setq
@@ -74,15 +73,15 @@ bin/check-commit-msg accepts.")
    ;; Word diffs in every hunk, not only the selected one.
    magit-diff-refine-hunk 'all
    ;; A tab in a diff is drawn eight columns wide unless magit is told
-   ;; to ask the file's own mode: C++ here is two or four, so a
-   ;; tab-indented hunk was shown at an indentation the file does not
-   ;; have, and the + and - lines did not line up with each other.
+   ;; to ask the file's own mode, so a tab-indented hunk would show at
+   ;; an indentation the file does not have, and the + and - lines
+   ;; would not line up with each other.
    magit-diff-adjust-tab-width t
    ;; A line indented with tabs where the file uses spaces looks exactly
    ;; like a correct one. This is the change you cannot see otherwise.
    magit-diff-highlight-indentation '((".*" . tabs))
    ;; A file with CRLF endings, which is most of what Delphi writes,
-   ;; showed a ^M at the end of every line of every hunk.
+   ;; would show a ^M at the end of every line of every hunk.
    magit-diff-hide-trailing-cr-characters t
    ;; Refs after the summary, not before it: with them in front, every
    ;; summary in a log starts at a different column and the eye cannot
@@ -90,15 +89,15 @@ bin/check-commit-msg accepts.")
    magit-log-show-refname-after-summary t
    ;; git colours the graph when asked with --color, and magit takes that
    ;; away again past this many commits, because turning the escapes into
-   ;; faces is slow. 256 is the default and also the number the log asks
-   ;; for, so the colours were dropped exactly when there were branches
-   ;; worth telling apart. --color itself is in the arguments below.
+   ;; faces is slow. The default, 256, is also the number the log asks
+   ;; for, so the colours would go exactly when there are branches worth
+   ;; telling apart. --color itself is in the arguments below.
    magit-log-color-graph-limit 2048
    ;; Dates, not ages: history is compared, not felt.
    magit-log-margin '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18)
    magit-status-margin '(t "%Y-%m-%d %H:%M " magit-log-margin-width nil 18)
    magit-refs-margin '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18)
-   ;; The branch you were on yesterday first, in every branch prompt.
+   ;; The newest branches first, in every branch prompt.
    magit-list-refs-sortby "-creatordate"
    ;; SPC g l r lists every repository under the projects directory
    ;; with its state; a clone lands there too.
@@ -112,8 +111,7 @@ bin/check-commit-msg accepts.")
   ;; The graph, in colour, in both buffers. --color is a switch magit
   ;; leaves off (-c in the log's own menu), and without it in the
   ;; arguments the graph is drawn in one face however high the limit
-  ;; above is: every branch line the same grey, which is the state the
-  ;; limit was raised to fix. git picks the colours, from log.graphColors.
+  ;; above is. git picks the colours, from log.graphColors.
   ;;
   ;; The status buffer needs --graph as well. Without it its recent
   ;; commits are a flat list and not in topological order, so a commit
@@ -199,12 +197,12 @@ paints it the plain way instead."
 ;;
 ;;; Coming back from a magit buffer
 
-;; C-o is the way back from everywhere else, and from magit it did
-;; nothing: better-jumper records a jump only in a buffer that has a
-;; file name, or one whose name it has been told to treat as a target.
-;; A magit buffer is neither, so visiting a file or a TODO from the
-;; status buffer left nothing to come back to. The variable is the
-;; package's own, and the only knob it has for this.
+;; C-o is the way back from everywhere else. better-jumper records a
+;; jump only in a buffer that has a file name, or one whose name it has
+;; been told to treat as a target. A magit buffer is neither, so
+;; visiting a file or a TODO from the status buffer would leave nothing
+;; to come back to. The variable is the package's own, and the only
+;; knob it has for this.
 (after! better-jumper
   (unless (string-match-p "magit" better-jumper--buffer-targets)
     (setq better-jumper--buffer-targets
@@ -220,7 +218,7 @@ paints it the plain way instead."
     (when (fboundp command)
       (advice-add command :around #'doom-set-jump-a))))
 
-;; t in a magit buffer is the tag menu of autoload/tag.el: a tag on the
+;; t in a magit buffer is this module's tag menu: a tag on the
 ;; commit under the cursor, any commit by its message, a branch's head or
 ;; HEAD. magit's own menu, still behind its dispatch, tags the same way.
 (after! magit
@@ -251,11 +249,10 @@ paints it the plain way instead."
                                magit-todos-item-keyword))
   ;; RET on a TODO pops the file into a second window and records no
   ;; jump, so there is nothing to close it with: q in a source buffer
-  ;; is evil's macro recorder, which starts recording and says nothing,
-  ;; and C-o did not come back either. Visit it in the window the
-  ;; status buffer is in, after marking where we were, so C-o returns
-  ;; the way it does from everywhere else. Peeking still uses its own
-  ;; window, which is the point of peeking.
+  ;; is evil's macro recorder, and C-o has nowhere to return. Visit it
+  ;; in the window the status buffer is in, after marking where we
+  ;; were, so C-o returns the way it does from everywhere else. Peeking
+  ;; still uses its own window, which is the point of peeking.
   (defadvice! +git--todo-visit-in-place-a (fn &rest args)
     "Visit a TODO in place, leaving a jump to come back to."
     :around #'magit-todos-jump-to-item
@@ -274,7 +271,7 @@ paints it the plain way instead."
 ;; The commit behind the current line at its end, author and date and
 ;; the summary, after a moment of rest, in every code buffer under git
 ;; that is not a very large one; SPC t B turns it off and on anywhere.
-;; SPC g B is still the whole-buffer blame. autoload/blame.el has how.
+;; SPC g B is still the whole-buffer blame.
 (defvar +git-blame-max-size (* 1024 1024)
   "The largest buffer the blame turns itself on in, in characters.
 One `git blame' of the whole file answers for every line, so moving and

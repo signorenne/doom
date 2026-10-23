@@ -42,7 +42,7 @@ the list.  Main itself and the current branch stay."
          (current (magit-get-current-branch))
          ;; Names alone, and none checked out anywhere: git marks the
          ;; current branch with * and one in another worktree with +, and
-         ;; "+ name" went to branch -d as a name.
+         ;; "+ name" would go to branch -d as a name.
          (merged (seq-remove (lambda (branch)
                                (member branch (list main current "master" "main")))
                              (seq-remove #'string-empty-p

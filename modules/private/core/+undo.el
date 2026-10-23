@@ -10,9 +10,9 @@
 
 ;; And typing is undone a word at a time, as in VS Code and Qt Creator.
 ;; Emacs gathers up to twenty typed characters into one undo step and
-;; cut them where the twentieth fell, mid-word as often as not, so u
-;; left "running f". A step now also ends where a new word starts: the
-;; letter typed after a space, a bracket or a comma begins the next one.
+;; cuts it wherever the twentieth falls, often mid-word. A step also
+;; ends where a new word starts: the letter typed after a space, a
+;; bracket or a comma begins the next one.
 (defadvice! +core--undo-by-word-a (fn)
   "Keep the undo step ending before the word about to be typed, instead
 of running the typing on into it."
@@ -61,12 +61,11 @@ so turning it off from another buffer took two presses; this is one."
 (after! vundo
   (setq vundo-window-max-height 10)
 
-  ;; The graph is one long line per branch, 6 700 characters for three
-  ;; thousand states, and its first drawing is most of its cost. Every
-  ;; character of it went through the check for a composition, which
-  ;; nothing in a tree of box drawing needs: without it the graph opens
-  ;; in 300 ms instead of 600. Nor does it need the flash that follows
-  ;; the cursor into a window, which looked along that line for its end.
+  ;; The graph is one long line per branch, and its first drawing is
+  ;; most of its cost. Every character of it would go through the check
+  ;; for a composition, which nothing in a tree of box drawing needs.
+  ;; Nor does it need the flash that follows the cursor into a window,
+  ;; which looks along that long line for its end.
   (add-hook! 'vundo-mode-hook
     (defun +core--undo-graph-h ()
       "Set up the undo graph's buffer."
@@ -112,13 +111,11 @@ moves by the drawing in place of vundo's."
 
 (add-hook 'evil-collection-setup-hook #'+core--undo-graph-keys-h)
 
-;; vundo's j and k went only to the other branches of the fork just
-;; behind you; further along a branch they did nothing, so a branch was
-;; reached by going back to where it forked. Each branch is a line of the
-;; drawing, and the keys move by the drawing now: j and k to the line below
-;; and above, onto the state drawn nearest, H and L to the ends of the
-;; line. l after h goes back the way h came; it took the top branch at
-;; every fork.
+;; vundo's j and k go only to the other branches of the fork just
+;; behind you. Each branch is a line of the drawing, so these keys move
+;; by the drawing instead: j and k to the line below and above, onto the
+;; state drawn nearest, H and L to the ends of the line. l after h goes
+;; back the way h came, rather than taking the top branch at every fork.
 (declare-function vundo-m-children "vundo")
 (declare-function vundo-m-point "vundo")
 (declare-function vundo--move-to-node "vundo")
@@ -260,7 +257,7 @@ taken beyond it, else the one drawn beside it."
    "The newest state of this branch"))
 
 ;; Drawing the graph makes a lot of garbage, and a collection in the
-;; middle of it was a sixth of the wait; it can wait for the next pause.
+;; middle of it slows the drawing; it can wait for the next pause.
 (defadvice! +core--undo-graph-no-gc-a (fn &rest args)
   :around #'vundo
   (let ((gc-cons-threshold (max gc-cons-threshold (* 256 1024 1024))))
@@ -305,13 +302,12 @@ in a command hook takes the hook away, so one is only said."
             (erase-buffer)
             (insert "The oldest state kept: nothing before it to compare with.\n")))))))
 
-;; A step the history can no longer make, when what it recorded does not
-;; match the text any more, failed the same way at every key: each move
-;; tried it, q as well, since going back to where you started takes it
-;; again, and only RET got out. A step that fails now draws the graph
-;; again from the text as it is, and q that cannot go back keeps the text
-;; and closes the graph. vundo sets where q goes back to only when the
-;; graph opens, so after a new drawing q keeps the text too.
+;; When what the history recorded no longer matches the text, a step
+;; fails, and would fail the same way at every key, q included. A step
+;; that fails draws the graph again from the text as it is, and a q that
+;; cannot go back keeps the text and closes the graph. vundo sets where
+;; q goes back to only when the graph opens, so after a new drawing q
+;; keeps the text too.
 (declare-function vundo--refresh-buffer "vundo")
 (declare-function vundo-confirm "vundo")
 (defvar vundo--orig-buffer)
@@ -351,8 +347,8 @@ the text as it is and close the graph."
 ;;; What an undo changed
 
 ;; An undo puts the cursor at one end of what it changed and says no more,
-;; so a u that restored a line far off, or a word in the middle of the
-;; screen, went by unseen. The lines it changed light up for a moment,
+;; so a u that restores a line far off, or a word in the middle of the
+;; screen, goes by unseen. The lines it changed light up for a moment,
 ;; after u, C-r and each step through the graph.
 (defface +core-undo-changed '((t (:inherit region :extend t)))
   "The lines an undo, a redo or a step in the undo graph just changed."

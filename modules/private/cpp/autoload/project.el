@@ -3,8 +3,8 @@
 ;; What every command asks first: what kind of project this is, where it
 ;; is, what it keeps in .dir-locals.el, and how a command of it runs.
 
-(defvar +core-compile-name)             ; core/autoload/lib.el
-(defvar +cpp-modes)                     ; config.el
+(defvar +core-compile-name)
+(defvar +cpp-modes)
 
 (defvar +cpp--kind-cache (make-hash-table :test #'equal)
   "Project root to (ROOT-MTIME . KIND).  The menu asks twenty times per

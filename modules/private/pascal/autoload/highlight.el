@@ -2,11 +2,10 @@
 ;;
 ;; What a Pascal buffer shows. opascal-mode colours its keywords, the name
 ;; after procedure or function, strings and comments, and nothing else;
-;; its keywords only in lower case, and among them words that are also
-;; common names, index, name, message, read and write. So Begin stayed
-;; plain, E.Message was a keyword, and types, calls, numbers and the
-;; {$...} directives all looked alike. These rules make the parts of a
-;; program look like what they are.
+;; its keywords only in lower case, and among them common names such as
+;; index, message, read and write. Types, calls, numbers and {$...}
+;; directives look alike. These rules make the parts of a program look
+;; like what they are.
 
 (defvar opascal-whitespace)
 (declare-function opascal-token-at "opascal")

@@ -85,9 +85,9 @@ in order: the tool chains, the Qt versions, the kits."
   "Read the settings directories, the kits, the container homes and what
 each qmake says again."
   (setq +qtcreator--settings nil
-        ;; Every other cache here is keyed by the file's mtime; this one
-        ;; is read once and was never dropped, so a kit whose sysroot or
-        ;; compiler changed kept the old answer until Emacs restarted.
+        ;; The other caches are keyed by the file's mtime; this one is
+        ;; read once, so it is dropped here for a kit whose sysroot or
+        ;; compiler changed to be read again.
         +qtcreator--kits-cache nil)
   (when (fboundp '+container-forget) (+container-forget))
   (clrhash +qtcreator--cache)

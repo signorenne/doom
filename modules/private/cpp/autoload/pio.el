@@ -4,8 +4,8 @@
 ;; for the environment in `+pio-env' or the project's default.
 
 (declare-function gdb "gdb-mi")
-(defvar +core-projects-dir)             ; core/config.el
-(defvar +core-compile-name)             ; core/autoload/lib.el
+(defvar +core-projects-dir)
+(defvar +core-compile-name)
 
 (defvar +pio-env)                       ; config.el, with its safe-local put
 
@@ -50,7 +50,7 @@ Signals an error unless NOERROR."
   "Run pio ARGS in a vterm buffer called NAME, so it takes input."
   (+core-run-in-vterm name (apply #'+pio--command args) (+pio--root)))
 
-;; What the projection project type runs (see config.el).
+;; What the projection project type runs.
 ;;;###autoload
 (defun +pio--configure-command () (+pio--command "run" "-t" "compiledb"))
 ;;;###autoload
@@ -269,8 +269,9 @@ flags it carries."
    ((file-newer-than-file-p (expand-file-name "platformio.ini" root) db)
     "platformio.ini is newer")
    ((with-temp-buffer
-      ;; The first entry says it; the file runs to tens of megabytes. Its
-      ;; command comes before it, some 20 000 characters.
+      ;; The first entry says it, so only the start of the file is read:
+      ;; the file can be very large, and the entry's long command comes
+      ;; before its directory.
       (insert-file-contents db nil 0 (* 1024 1024))
       (and (re-search-forward "\"directory\": *\"\\([^\"]+\\)\"" nil t)
            (not (file-equal-p (match-string 1) root))

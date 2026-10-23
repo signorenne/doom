@@ -30,11 +30,10 @@ Finder or the app macOS picks, the file manager or app xdg-open picks."
 ;; is what Dolphin, a mail and a chat read. macOS has no such text: the
 ;; pasteboard holds file URLs as objects, which only AppKit writes and
 ;; reads, so osascript does it in JavaScript, the paths as its arguments.
-;; It stays a tenth of a second after writing: exiting at once, it left
-;; the pasteboard short of its last file most times, the pasteboard
-;; taking the files from the process after the write returns. The paths
-;; come back decomposed, as macOS spells a file name, an ò as o and its
-;; accent, and are composed again.
+;; It waits a tenth of a second after writing: the pasteboard takes the
+;; files from the process after the write returns, and exiting at once
+;; can lose the last file. The paths come back decomposed, as macOS
+;; spells a file name (an ò as o and its accent), and are composed again.
 (defconst +core--macos-files-to-clipboard
   "ObjC.import('AppKit');
 function run(argv) {
@@ -132,10 +131,10 @@ a file manager, or paths copied as text, one per line."
 
 ;; Emacs deletes into the system's trash: on Linux the freedesktop one,
 ;; whose info/ says where each file came from; on macOS ~/.Trash, through
-;; the same call Finder makes. Where a file came from is kept by Finder
-;; there, in a format of its own, so Emacs notes it for what it deletes
-;; itself, and only that can be put back from here. A file deleted on
-;; another disk goes to that disk's trash, which is not listed here.
+;; the same call Finder makes. On macOS Finder keeps where a file came
+;; from in a format of its own, so Emacs notes it for the files it
+;; deletes itself, and only those can be put back. A file deleted on
+;; another disk goes to that disk's trash, which is not listed.
 
 ;;;###autoload
 (defun +core-os-trash-dir ()

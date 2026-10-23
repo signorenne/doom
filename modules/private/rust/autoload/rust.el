@@ -364,9 +364,9 @@ answer is asked of cargo rather than guessed."
     (user-error "dape is not here to debug with"))
   (require 'dape)
   (let ((program (+rust--debug-program)))
-    ;; dape takes the configuration itself, not its name: handed
-    ;; (codelldb-rust :program ...) it read every key as a value, found
-    ;; no command, and no session started.
+    ;; dape takes the configuration itself, not its name: given
+    ;; (codelldb-rust :program ...) it reads every key as a value and
+    ;; starts nothing.
     (dape (dape--config-eval 'codelldb-rust
                              (list :program program :cwd (+rust-root))))))
 

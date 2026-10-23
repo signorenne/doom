@@ -43,9 +43,8 @@
 
 
 ;; In front of web-mode, which Doom's :lang web gives .svelte too: the
-;; :mode above found svelte-mode's own entry already in the list, so it
-;; moved nothing, and every Svelte file opened in web-mode, without its
-;; server.
+;; :mode above finds svelte-mode's own entry already in the list and
+;; moves nothing, so web-mode would win.
 (setq auto-mode-alist
       (cons '("\\.svelte\\'" . svelte-mode)
             (seq-remove (lambda (entry) (equal (car entry) "\\.svelte\\'"))
@@ -78,7 +77,7 @@
                         '("vscode-css-language-server" "--stdio"))))))
 
 ;; Doom starts a server with `lsp!' on the local variables hook; svelte
-;; is not one of its modes, so it is added here the same way.
+;; is not one of its modes, so it is added the same way.
 (when (modulep! :tools lsp)
   (add-hook! 'svelte-mode-local-vars-hook
     (defun +web--lsp-h ()
@@ -86,8 +85,7 @@
       (when (executable-find "svelteserver") (lsp!)))))
 
 ;; :lang web starts one in XML buffers too, SVG among them, but eglot
-;; knows no server for XML and none is installed: every SVG opened
-;; printed eglot's failure, processp nil, in the echo area.
+;; knows no server for XML, so each would only print a failure.
 (remove-hook 'nxml-mode-local-vars-hook #'lsp!)
 
 
@@ -96,11 +94,9 @@
 
 ;; A project pins its typescript, its prettier and its eslint, and those
 ;; are the versions its code is written against: node_modules/.bin goes
-;; on `exec-path' for the buffer, so a formatter run here is the one the
-;; project would run in CI, not whatever is newest on this machine.
-;; Found on disk: add-node-modules-path asked `npm bin', which npm 9 took
-;; away, so nothing reached the path, and a shell ran for a fifth of a
-;; second at every buffer to learn that.
+;; on `exec-path' for the buffer, so a formatter run is the one the
+;; project would run in CI, not whatever is installed globally. Found on
+;; disk, not through `npm bin', which npm no longer has.
 (dolist (mode +web-modes)
   (add-hook (intern (format "%s-hook" mode))
             (defun +web--node-modules-path-h ()
@@ -141,8 +137,8 @@ buffer's `exec-path'."
 ;; An abbreviation expands into the tags it stands for: div.card>p*3
 ;; becomes the markup. Doom turns it on for html and css; Svelte and TSX
 ;; are markup too.
-;; At the top level: emmet-mode is autoloaded, and inside `after!' the
-;; hooks waited for a buffer of Doom's to load it first.
+;; At the top level, since emmet-mode is autoloaded: inside `after!' the
+;; hooks would wait for something else to load it first.
 (add-hook 'svelte-mode-hook #'emmet-mode)
 (add-hook 'tsx-ts-mode-hook #'emmet-mode)
 
@@ -185,10 +181,9 @@ buffer's `exec-path'."
 ;;; Debugging
 
 ;; js-debug, the adapter VS Code debugs node and Electron with; node's
-;; own --inspect speaks Chrome's protocol, which dape does not, and no
-;; session ever started. M-x +web/install-js-debug puts it where dape
-;; keeps adapters. Electron's main process is node, run by the electron
-;; binary of the project.
+;; own --inspect speaks Chrome's protocol, which dape does not. M-x
+;; +web/install-js-debug puts it where dape keeps adapters. Electron's
+;; main process is node, run by the electron binary of the project.
 (after! dape
   (let ((adapter
          `(modes ,+web-modes

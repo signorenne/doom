@@ -246,8 +246,9 @@ Each greeting is its lines; the first one takes `+butler-address'.")
   "What the butler says when asked for a word of his own.
 Each takes `+butler-address' where it calls you by it.")
 
-;; His state, here so it is there before either autoload file loads: what
-;; he last said, the mode he was summoned from, and where he stands.
+;; His state, defined at startup so it exists before either autoload
+;; file loads: what he last said, the mode he was summoned from, and
+;; where he stands.
 (defvar +butler--said ""
   "The last thing he said, for `+butler/copy'.")
 
@@ -272,14 +273,14 @@ their own.  Kept by savehist, so he is found where he was left.")
 ;; He stands on the dashboard through what ui offers: the greeting above
 ;; the date is his, and every tick of the animation moves him on. The
 ;; dashboard itself knows nothing of him.
-(defvar +ui-dashboard-greeting-function)  ; ui/config.el
+(defvar +ui-dashboard-greeting-function)
 (defvar +ui-dashboard-tick-hook)
 (setq +ui-dashboard-greeting-function #'+butler--dashboard-greeting)
 (add-hook '+ui-dashboard-tick-hook #'+butler--dashboard-tick-h)
 
 ;; In a terminal he takes a window at the bottom, as tall as what he
 ;; says; q closes it like any popup. In the GUI he floats in a child
-;; frame instead, see the autoloads.
+;; frame instead.
 (set-popup-rule! "^\\*butler\\*" :side 'bottom :size #'fit-window-to-buffer :select nil :quit t)
 ;; What he said in full, when the bubble could not hold it: an ordinary
 ;; buffer, which scrolls and searches like any other.

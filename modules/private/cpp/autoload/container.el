@@ -42,9 +42,8 @@ keep one next to their sysroots; it is what the toolchain file reads."
           hit
         (let ((script
                (if container
-                   ;; Entering the container takes half a second, so its
-                   ;; answer is kept across sessions; `+cpp/forget-kits'
-                   ;; asks again.
+                   ;; Entering the container is slow, so its answer is
+                   ;; kept across sessions; `+cpp/forget-kits' asks again.
                    (or (doom-store-get key "+cpp")
                        (when-let* (((fboundp '+container-run))
                                    (found (+container-run
@@ -72,11 +71,10 @@ themselves, for a container started or an SDK installed since."
 ;;; A command, where the kit runs
 
 ;; Qt Creator's kits for the PC target put the target's libraries on the
-;; loader's path. Nothing started here survives that: a program of the
-;; container's own loads the target's C library into its loader and
-;; crashes, as clangd did on opening a file, and one built for the
-;; target has no interpreter in the container to start with. So those
-;; variables stay out of every command a kit runs.
+;; loader's path. A program of the container's own then loads the
+;; target's C library and crashes, and one built for the target has no
+;; interpreter in the container to start with. So those variables stay
+;; out of every command a kit runs.
 (defconst +cpp--loader-variables '("LD_LIBRARY_PATH" "LD_PRELOAD" "LD_AUDIT")
   "What changes which libraries the dynamic loader loads.")
 

@@ -1,9 +1,9 @@
 ;;; private/web/autoload/scaffold.el -*- lexical-binding: t; -*-
 ;;
 ;; A new node project. Where an official generator exists it does the
-;; skeleton, because it is the one that knows what the framework looks
-;; like this month; the house files go on top. Where there is none, the
-;; whole thing is a template here.
+;; skeleton, because it knows what a current project of the framework
+;; looks like; the house files go on top. Where there is none, the whole
+;; thing is a template.
 
 (require 'json)                         ; json-pretty-print-buffer, not autoloaded
 
@@ -39,8 +39,8 @@ meanwhile: a step had no limit and said nothing while it ran."
                                 :sentinel #'ignore)))
     (unwind-protect
         (progn
-          ;; Nothing to read: a step that asks gets the end of its input,
-          ;; as it did from call-process, and does not wait for an answer.
+          ;; Nothing to read: a step that asks gets the end of its input
+          ;; and does not wait for an answer.
           (process-send-eof process)
           (while (and (process-live-p process)
                       (< (- (float-time) start) +web-scaffold-timeout))

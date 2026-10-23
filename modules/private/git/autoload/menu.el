@@ -122,7 +122,7 @@ transients is one key away on /, its dispatch."
 ;; Doom turns smerge-mode on by itself when a file is opened with
 ;; conflict markers in it, and puts the commands on the localleader,
 ;; where nobody finds them in the middle of a rebase. They are gathered
-;; here instead, with the two motions on ]n and [n as vim has them.
+;; in a menu instead, with the two motions on ]n and [n as vim has them.
 
 (declare-function diff-hl-show-hunk "diff-hl-show-hunk")
 (declare-function smerge-next "smerge-mode")

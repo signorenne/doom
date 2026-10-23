@@ -9,24 +9,15 @@ clang cannot always take as they are. This writes DEST, which Emacs
 starts clangd on, and beside it query-drivers, the cross compilers clangd
 may run to learn their headers, one a line. For every entry:
 
-- the compiler named in full: pio names most of them bare, an
-  xtensa-esp32s3-elf-gcc on no PATH, and clangd then asked no compiler for
-  its headers and found not even <sys/features.h>;
-- the flags clang does not know taken out, -mlongcalls and the rest of
-  GCC's, each an error at the top of every file; clang itself is asked
-  which they are, so a new GCC's are found too;
-- no system directories for a cross compiler: clangd on macOS gives a
-  command without a sysroot the Mac's own, and its <limits.h> stopped
-  every file with "architecture not supported". The cross compiler's
-  directories, which clangd asks it for, and clang's own headers stay.
-  Said to clang's front end, -Xclang -nostdsysteminc: as -nostdlibinc,
-  clangd took the command for one without system headers and asked the
-  compiler for none, so not even <initializer_list> was found;
-- libstdc++ told the C library's isinf and isnan are there, where they
-  are: a toolchain whose libstdc++ does not know it declares its own,
-  GCC lets the two be, as builtins, and clang does not, so every file
-  with Arduino.h in it stopped at its "using std::isinf". The compiler
-  itself is asked whether the C library declares them.
+- the compiler named in full, found in the toolchain directories when it
+  is on no PATH, so clangd can ask it for its headers;
+- the flags clang does not know taken out, as clang itself reports them,
+  since each is an error at the top of every file;
+- no system directories of the host for a cross compiler
+  (-Xclang -nostdsysteminc): its own come from the compiler, and the
+  host's do not fit its target;
+- libstdc++ told that the C library declares isinf and isnan when it
+  does, which GCC tolerates and clang does not.
 
 A compiler is a cross compiler when it says it builds for another
 machine (-dumpmachine), not by its name. A database with no cross
@@ -49,7 +40,7 @@ ADD = ["-Wno-unknown-warning-option", "-Wno-unknown-attributes",
 # paths in diagnostics and confuse the server's own resolution of them.
 DROP_PREFIX = ("-fmacro-prefix-map=", "-ffile-prefix-map=", "-fdiagnostics-color")
 
-# When no clang is there to ask: the ones ESP-IDF 6.1's GCC 15 passes.
+# Flags clang does not know, used when no clang is there to ask.
 KNOWN_UNKNOWN = {"-mlongcalls", "-mtext-section-literals", "-mno-target-align",
                  "-mdisable-hardware-atomics", "-fno-tree-switch-conversion",
                  "-fstrict-volatile-bitfields", "-fno-shrink-wrap", "-freorder-blocks",
@@ -61,9 +52,8 @@ NOTHING_TO_CHANGE = 3
 
 
 # A shell word: plain characters, a backslash and the one it escapes, or a
-# quoted run. shlex alone took ten seconds over a database of 40 MB, the
-# command lines being 20 000 characters each; it now sees only the few
-# words that have a quote or a backslash in them.
+# quoted run. shlex is slow on long command lines, so it only sees the
+# few words that have a quote or a backslash in them.
 WORD = re.compile(r"""(?:[^\s'"\\]+|\\.|'[^']*'|"(?:[^"\\]|\\.)*")+""")
 
 

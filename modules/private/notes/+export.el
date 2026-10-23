@@ -5,9 +5,8 @@
 
 ;; What the first org buffer turns on, loaded in the background after org
 ;; as Doom loads org itself: org-modern and its friends, and gptel, which
-;; Doom's llm module sets up in every org buffer for its source blocks. A
-;; first org file took 1.7 to 2.1 s after everything else was loaded,
-;; gptel half a second of it (2026-10-23).
+;; Doom's llm module sets up in every org buffer for its source blocks.
+;; The first org file then opens without waiting for them.
 (doom-load-packages-incrementally
  '(org-indent org-modern org-modern-indent org-appear evil-org toc-org
    org-fragtog org-eldoc gptel gptel-org))
@@ -22,10 +21,8 @@
 ;; cursor, which is worst where you meet many notes quickly, stepping
 ;; through `SPC n r f'.
 ;;
-;; Doing it at once costs 0.5 ms for a note and 90 ms for the cheat
-;; sheet, so it is done at once up to a size and left to the agent past
-;; it. The largest note here is 4 KB; the only org files over the limit
-;; are the sheet and the audits.
+;; Doing it at once is cheap for a note but not for a large file, so it
+;; is done at once up to a size and left to the agent past it.
 (defvar +notes-indent-at-once-max (* 40 1024)
   "The largest buffer indented as soon as it opens, in characters.
 Past this `org-indent-mode' is left to its idle agent, which reflows
@@ -45,15 +42,15 @@ visibly but does not hold up the window.")
       (setq org-indent-agentized-buffers
             (delq (current-buffer) org-indent-agentized-buffers))
       ;; What the agent runs once it has done a buffer: org-modern-indent
-      ;; waits for it to draw the blocks, and off the queue it never came.
+      ;; waits for it to draw the blocks, and a buffer taken off the queue
+      ;; would never get it.
       (run-hook-with-args 'org-indent-post-buffer-init-functions (current-buffer)))))
 
 ;; Org looks for LaTeX to colour with no bound on the search: from the
 ;; line being coloured to the next fragment, which in a file with few is
-;; its end, and it throws away what it finds past the region anyway. The
-;; cheat sheet paid 14 ms at every key and 3.6 s to open, one such scan
-;; for each heading on screen. The search now stops a few kilobytes past
-;; the region, enough for a fragment that starts in it to end.
+;; its end, and it throws away what it finds past the region anyway.
+;; The search stops a few kilobytes past the region, enough for a
+;; fragment that starts in it to end.
 (defvar +notes-latex-reach 4096
   "How far past the region being coloured org looks for LaTeX, in characters.")
 
@@ -84,8 +81,7 @@ visibly but does not hold up the window.")
 ;; file (interactive-form autoloads), a menu listing it included. So its
 ;; commands are commands of their own until it loads, which load ox and
 ;; it, then run the real one: ox waits for the first export instead of
-;; coming with org, which it made half a second slower to load, 1.9 s
-;; to 1.0 with the citations below (2026-10-23).
+;; coming with org and slowing its load.
 (unless (featurep 'org-mind-map)
   (dolist (command '(org-mind-map-write org-mind-map-write-current-tree
                      org-mind-map-write-current-branch))
@@ -100,12 +96,12 @@ visibly but does not hold up the window.")
       (defalias command stub
         "Load ox and org-mind-map, then run the command of this name."))))
 
-;; Doom's biblio module loads oc-csl, and citeproc with it, with org: a
-;; third of a second of org's first load. Org loads a citation processor
-;; itself the first time an export or a follow needs it
-;; (`org-cite-try-load-processor'); Doom loaded it early only so it would
-;; not land inside its own piecemeal loading of org, which is over by
-;; then. Doom's entry is taken out of what runs as org loads.
+;; Doom's biblio module loads oc-csl, and citeproc with it, with org,
+;; which slows org's first load. Org loads a citation processor itself
+;; the first time an export or a follow needs it
+;; (`org-cite-try-load-processor'); Doom loads it early only to keep it
+;; out of its own piecemeal loading of org, which is over by then. So
+;; Doom's entry is taken out of what runs as org loads.
 (unless (featurep 'org)
   (setf (alist-get 'org after-load-alist)
         (seq-remove (lambda (fn) (string-match-p "oc-csl" (prin1-to-string fn)))
@@ -113,7 +109,7 @@ visibly but does not hold up the window.")
 
 ;; Neither `use-package!' nor `after!': compiling either loads the
 ;; package to learn its names, and org-mind-map does not load without ox,
-;; so every compile of this file said "Cannot load org-mind-map".
+;; so compiling this file would warn "Cannot load org-mind-map".
 (defvar org-mind-map-engine)
 (defvar org-mind-map-include-text)
 (defvar org-mind-map-default-graph-attribs)
@@ -134,7 +130,7 @@ visibly but does not hold up the window.")
 
 (after! ox-latex
   ;; Source blocks go through listings, which needs its two packages
-  ;; declared here; nothing runs external programs, so no -shell-escape.
+  ;; declared; nothing runs external programs, so no -shell-escape.
   (setq org-latex-pdf-process
         '("latexmk -pdf -interaction=nonstopmode -output-directory=%o %f")
         org-latex-src-block-backend 'listings)

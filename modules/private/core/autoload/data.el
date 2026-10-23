@@ -4,10 +4,9 @@
 ;;
 ;; Validation is `bin/check-data', one program that reads each format
 ;; with its own real parser. It lives outside Emacs so it can be run over
-;; every data file on the machine to catch a wrong verdict; three of the
-;; checks it replaced were wrong on real files in ways no single test
-;; file showed. Reshaping goes through the tool that knows the format and
-;; keeps what the author wrote: comments, key names, number literals.
+;; many real files at once to catch a wrong verdict. Reshaping goes
+;; through the tool that knows the format and keeps what the author
+;; wrote: comments, key names, number literals.
 
 (defvar +data-checker (file-name-concat doom-user-dir "bin/check-data")
   "The program that says whether a data file is valid.")
@@ -168,8 +167,8 @@ Only where that loses nothing: JSON without comments, XML and CSV."
 ;; in a package.json passes. So the catalog is fetched here, cached, and
 ;; handed to the JSON server alone, in the notification VS Code uses for
 ;; it. Not in `eglot-workspace-configuration': eglot sends all of that
-;; to every server it starts, 180 KB of it with the catalog in, and
-;; plantuml-lsp reads at most 64 KB in one message and quits.
+;; to every server it starts, and the catalog is too large for some
+;; (plantuml-lsp quits on a message over 64 KB).
 
 (defun +data--schemastore-file ()
   "Where the catalog is kept between sessions."

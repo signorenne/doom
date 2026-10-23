@@ -5,14 +5,13 @@
 ;; there.
 ;;
 ;; It is a copy of the buffer's text, not a second view of the same text.
-;; demap, which this replaces, showed an indirect buffer, and an indirect
-;; buffer shares its text's change counters with its base: every overlay
-;; moved in the file, hl-line's at each line, the paren highlight, the
-;; server's hints, marked the minimap's window out of date, and its
-;; hundreds of lines were laid out again at every key. Measured beside a
-;; C++ file: 8 ms a move for demap, 1.5 for a copy. The copy is taken
-;; again once the typing pauses; the marks follow every move, and the
-;; minimap's own window follows them a move later, or at rest.
+;; An indirect buffer shares its text's change counters with its base:
+;; every overlay moved in the file, hl-line's at each line, the paren
+;; highlight, the server's hints, would mark the minimap's window out of
+;; date, and its hundreds of lines would be laid out again at every key.
+;; The copy is taken again once the typing pauses; the marks follow every
+;; move, and the minimap's own window follows them a move later, or at
+;; rest.
 
 (defvar +ui-minimap-width 16
   "Columns of the minimap's window.")
@@ -100,10 +99,8 @@ own highlight and cursor were a loud blue over the small text."
                       line-spacing nil
                       buffer-read-only t
                       ;; Each mark moved lays its hundreds of lines out
-                      ;; again; looking at every character for a glyph to
-                      ;; compose, and for text running right to left,
-                      ;; was a fifth of a held j with it open, 14 ms to
-                      ;; 10.9 on a full screen (2026-10-23).
+                      ;; again, so they are not searched for glyphs to
+                      ;; compose or for text running right to left.
                       auto-composition-mode nil
                       bidi-display-reordering nil
                       bidi-paragraph-direction 'left-to-right
@@ -155,10 +152,10 @@ START is where WINDOW starts when it is being scrolled, and its end is
 then worked out; with NO-SCROLL the minimap's own window is left where
 it is, and caught up at rest if the part on screen has left it."
   (let ((minimap (+ui--minimap-window))
-        ;; While WINDOW is being scrolled its end is still the old one's:
-        ;; after a jump, G or gg, the part marked ran from the new start
-        ;; back to the old end, most of the file. A window's height of
-        ;; lines from the new start instead.
+        ;; While WINDOW is being scrolled its end is still the old one's,
+        ;; so after a jump, G or gg, the part marked would run from the
+        ;; new start back to the old end. A window's height of lines from
+        ;; the new start instead.
         (end (if start
                  (with-current-buffer (window-buffer window)
                    (save-excursion
@@ -184,8 +181,8 @@ it is, and caught up at rest if the part on screen has left it."
                         (min (point-max) (1+ (line-end-position)))))
         ;; Whether the part on screen is still in the minimap's view, from
         ;; where its window started and ended when last drawn: asking
-        ;; `pos-visible-in-window-p' laid out its hundreds of small lines,
-        ;; twice, a third of a move's time.
+        ;; `pos-visible-in-window-p' would lay out its hundreds of small
+        ;; lines again.
         (when (and minimap
                    (not (and (<= (window-start minimap) start)
                              (< (max start (1- end)) (window-end minimap)))))

@@ -1,7 +1,7 @@
 ;;; private/pascal/autoload/menu.el -*- lexical-binding: t; -*-
 ;;
-;; The panel, on SPC k m like the others: what a build here depends on
-;; and the line it would run.
+;; The panel, on SPC k m like the others: what a build depends on and
+;; the line it would run.
 
 (require 'transient)
 

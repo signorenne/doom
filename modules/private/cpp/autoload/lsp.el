@@ -47,11 +47,10 @@ path means the same thing there."
          (+container-may-start nil)
          (argv (pcase +cpp-lsp-server
                  ('ccls (list "ccls"))
-                 ;; clangd looks in the root and in build/ only; a kit's
-                 ;; build/horizon-Debug has to be named. A PlatformIO
-                 ;; project's is the copy made readable to clang, see
-                 ;; `+pio--compiledb-h'; any other's, its copy once
-                 ;; there is one, see `+cpp--compdb-h'.
+                 ;; clangd looks in the root and in build/ only, so a
+                 ;; kit's own directory has to be named. A PlatformIO
+                 ;; project's database is the copy made readable to
+                 ;; clang; any other's is its copy once there is one.
                  (_ (pcase-let ((`(,dir . ,drivers) (+cpp--clangd-database)))
                       (append (cons "clangd" (+cpp--with-query-drivers +cpp-clangd-args drivers))
                               (when dir

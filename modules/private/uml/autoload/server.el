@@ -2,11 +2,10 @@
 ;;
 ;; One long-lived PlantUML process, reused for every render.
 ;;
-;; PlantUML in executable mode starts a JVM per diagram, which is about
-;; a second; its own picoweb server renders in 30 ms once warm. That
-;; difference is the whole reason a preview can follow your typing. The
-;; server is started when something first needs it and stays until Emacs
-;; exits or you stop it.
+;; PlantUML in executable mode starts a JVM per diagram, which is slow;
+;; its own picoweb server renders quickly once warm, which is what lets
+;; a preview follow your typing. The server is started when something
+;; first needs it and stays until Emacs exits or you stop it.
 
 (require 'url)
 (require 'json)
@@ -58,14 +57,10 @@ Waits for it to answer, since the first start has a JVM to load."
                (unless (string-match-p "\\`\\(run\\|open\\)" event)
                  (setq +uml--server-process nil +uml--server-port nil))))
             +uml--server-port port)
-      ;; The first start loads a JVM; wait for it rather than failing the
-      ;; render that asked for it.
-      ;; Wait for it to answer: the port stops being free once it
-      ;; listens. A fresh start has a JVM to load, which is the only
-      ;; slow render you pay.
-      ;; A server that died at once, no java, is not waited for: from the
-      ;; drawing's idle timer the wait could not be interrupted, and the
-      ;; next edit started it again.
+      ;; Wait for it to answer, rather than failing the render that asked
+      ;; for it: the port stops being free once it listens. A server that
+      ;; died at once (no java, say) is not waited for, since the wait
+      ;; cannot be interrupted from the drawing's idle timer.
       (let ((process +uml--server-process)
             (deadline (+ (float-time) +uml-server-start-timeout)))
         (while (and (< (float-time) deadline) (process-live-p process)

@@ -15,7 +15,7 @@
 (unless (executable-find "rustc")
   (error! "No rustc, although cargo is here: rustup default stable"))
 
-;; rust-analyzer is not packaged for Tumbleweed; rustup carries it.
+;; rust-analyzer comes with rustup rather than the system's packages.
 (unless (executable-find "rust-analyzer")
   (warn! "No rust-analyzer, so no completion or go-to-definition: rustup component add rust-analyzer"))
 

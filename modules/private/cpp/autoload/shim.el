@@ -4,7 +4,7 @@
 ;; one place, with the version it was read from. An upgrade that renames
 ;; one breaks here and nowhere else.
 ;;
-;;   projection  898c6fc, 2026-06-14
+;;   projection  898c6fc
 ;;   dape        0.25.0
 ;;   jsonrpc     the one in Emacs 31.1
 

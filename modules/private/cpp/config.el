@@ -1,6 +1,6 @@
 ;;; private/cpp/config.el -*- lexical-binding: t; -*-
 ;;
-;; A Qt Creator style workflow for C and C++, under SPC k (see +cpp/menu):
+;; A Qt Creator style workflow for C and C++, under SPC k:
 ;;   projection  configure, build, run, test, with CMake presets and targets
 ;;               or PlatformIO environments
 ;;   clangd      the default server, ccls on request, per project if needed
@@ -149,9 +149,9 @@ a choice.  Set with `+cpp/set-run-target', kept in .dir-locals.el.")
 Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 
 
-;; The offline docs SPC s k searches, and core installs on first use:
+;; The offline docs SPC s k searches, and core installs on first use.
 ;; Doom names them when cc-mode and cmake-mode load, which a tree-sitter
-;; buffer never makes happen, so a C++ file had no docsets at all.
+;; buffer never does, so the tree-sitter modes are named too.
 (when (modulep! :tools lookup +docsets)
   (set-docsets! '(c-mode c-ts-mode) "C")
   (set-docsets! '(c++-mode c++-ts-mode) "C++" "Boost")
@@ -166,9 +166,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 (set-eglot-client! +cpp-modes #'+cpp--eglot-server-program)
 
 ;; The first C or C++ file of a session loads the files of this module
-;; that find the kit and the container, Qt Creator's and projection's, a
-;; fifth of a second; they are loaded ahead while Emacs waits after
-;; starting when the file opened last was one (`+core-warm-up-functions').
+;; that find the kit and the container, Qt Creator's and projection's.
+;; When the file opened last was one, they are loaded ahead while Emacs
+;; waits after starting (`+core-warm-up-functions').
 (defun +cpp--warm-up-h (mode)
   "Load what the first C or C++ file of a session loads, if MODE is one."
   (when (memq mode +cpp-modes)
@@ -182,9 +182,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 (add-hook '+core-warm-up-functions #'+cpp--warm-up-h 50)
 
 ;; F4 and SPC p o: header and source. Doom sets these rules when cc-mode
-;; loads, but a tree-sitter buffer never loads cc-mode, so they were never
-;; there. Set here, and with one more pair for names with a platform in
-;; them, so foo.arm.cpp finds foo.h and back.
+;; loads, but a tree-sitter buffer never loads cc-mode, so they are set
+;; here, with one more pair for names with a platform in them, so
+;; foo.arm.cpp finds foo.h and back.
 (dolist (rule '(("/\\([^/]+\\)\\.c\\(c\\|pp\\)?\\'" "\\1.h\\(h\\|pp\\)?\\'")
                 ("/\\([^/]+\\)\\.h\\(h\\|pp\\)?\\'" "\\1.c\\(c\\|pp\\)?\\'")
                 ("/\\([^/]+\\)\\.[^./]+\\.c\\(c\\|pp\\)?\\'" "\\1.h\\(h\\|pp\\)?\\'")
@@ -213,12 +213,10 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; QML: openSUSE installs Qt 6 tools with a version suffix, so the plain
 ;; name Doom looks for is not there; Homebrew keeps them in its Qt. Doom
 ;; registers `qmlls' for `qml-ts-mode' on its own and eglot takes the
-;; first entry that matches,
-;; which is that one, so ours was never reached and no server started at
-;; all: that entry goes. And qmlls resolves only what Qt ships unless it
-;; is given a build directory, so a type of the project's own, or a
-;; Label from a module the project builds, is unknown; the kit knows
-;; where that directory is.
+;; first entry that matches, so that entry goes and ours is used. And
+;; qmlls resolves only what Qt ships unless it is given a build
+;; directory, so a type of the project's own, or a Label from a module
+;; the project builds, is unknown; the kit knows where that directory is.
 (when (modulep! :lang qt +lsp)
   ;; Doom registers its entry from the mode's own `:config', which is
   ;; later than any `after! eglot' here, so it would land in front of
@@ -231,9 +229,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; cannot read that: it reads compile_commands.json, which pio writes on
 ;; being asked. The first C or C++ file opened in such a project asks.
 ;; Any other project's database is found where its build wrote it and
-;; made readable to clang, and a CMake project never configured here is
-;; configured, see compdb.el. The mode is tested here, so any other file
-;; leaves pio.el and compdb.el unloaded.
+;; made readable to clang, and a CMake project never configured is
+;; configured in the background. The mode is tested first, so any other
+;; file leaves pio.el and compdb.el unloaded.
 (add-hook! 'find-file-hook
   (defun +pio--compiledb-maybe-h ()
     "Ask for the compilation database when the file is C or C++."
@@ -268,10 +266,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 (defvar projection-cmake-configure-options)
 
 ;; projection's commands autoload from files that load its core but not
-;; its project types; a build asked for before anything loaded the whole
-;; package found no type, fell back to the default one and ran "make".
-;; The whole package, and with it the types below, as soon as the core
-;; loads.
+;; its project types, so an early build would find no type and fall back
+;; to "make". The whole package, and with it the types below, loads as
+;; soon as the core does.
 (after! projection-core
   (require 'projection))
 
@@ -309,11 +306,11 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
      :compile-multi-targets #'+pio-targets)
     "projection type for PlatformIO projects (platformio.ini).")
 
-  ;; CMake projects build through the kit (see autoload/kit.el): the build
-  ;; directory the kit names, inside the container the kit's compiler
-  ;; lives in, with the SDK environment sourced. projection's own CMake
-  ;; type is replaced by this one, which asks projection for every command
-  ;; with the kit's directory in place and wraps what comes back.
+  ;; CMake projects build through the kit: the build directory the kit
+  ;; names, inside the container the kit's compiler lives in, with the
+  ;; SDK environment sourced. projection's own CMake type is replaced by
+  ;; this one, which asks projection for every command with the kit's
+  ;; directory in place and wraps what comes back.
   (defvar projection-project-type-cmake-kit
     (projection-type
      :name 'cmake
@@ -402,8 +399,8 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 
 (after! dape
   ;; Doom already sets dape's layout and inlay hints, and dape ships a gdb
-  ;; config. SPC k d builds its own config from the kit (see `+cpp/debug');
-  ;; these two are for M-x dape by hand: a program asked for, or a process.
+  ;; config. SPC k d builds its own config from the kit; these two are
+  ;; for M-x dape by hand: a program asked for, or a process.
   (add-to-list 'dape-configs
                `(gdb-project
                  modes ,+cpp-modes
@@ -447,10 +444,9 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;;
 ;;; Indentation, from the project's .clang-format
 
-;; The tree-sitter modes indent GNU style by two, which no project here
-;; writes, and their C++ rules leave holes: the brace of a namespace, a
-;; class or an enum body is pushed in, and case labels sit on the
-;; switch.  A buffer takes its indentation from the .clang-format that
+;; The tree-sitter modes indent GNU style by two, and their C++ rules
+;; leave holes: the brace of a namespace, a class or an enum body is
+;; pushed in, and case labels sit on the switch.  A buffer takes its indentation from the .clang-format that
 ;; governs it: the width, tabs or spaces, where braces go (Allman when
 ;; a function's brace opens its own line, K&R otherwise, Linux and GNU
 ;; by name), whether namespace bodies and case labels indent; a project
@@ -550,9 +546,9 @@ function, so `c-ts-mode-set-style' installs them."
 (add-hook 'c++-mode-hook #'+cpp--indent-from-project-h)
 
 ;; Doom's style lines a closing paren up with this function, whose
-;; argument is spelt `langlem' and whose body reads `langelem': in a
-;; cc-mode buffer, TAB on a line that closes an argument list signalled
-;; a void variable. The same function with the name it reads.
+;; argument is spelt `langlem' while its body reads `langelem', so TAB on
+;; a line that closes an argument list signals a void variable in a
+;; cc-mode buffer. This is the same function with the name it reads.
 (declare-function c-langelem-pos "cc-defs")
 (declare-function c-lineup-arglist "cc-align")
 (defadvice! +cpp--lineup-arglist-close-a (langelem)
@@ -581,12 +577,12 @@ function, so `c-ts-mode-set-style' installs them."
 ;;
 ;;; Formatting
 
-;; QML has a formatter of its own and Doom knows nothing of it, so a QML
-;; file was never formatted on save. qmlformat prints to stdout and takes
-;; the indent width, which is the one this file is written in.
+;; QML has a formatter of its own that Doom does not know, so it is
+;; added here. qmlformat prints to stdout and takes the indent width,
+;; which is the one this file is written in.
 (after! apheleia
   (setf (alist-get 'qmlformat apheleia-formatters)
-        ;; The plain name is Qt 5 on this distribution and does not know
+        ;; The plain name is Qt 5 on openSUSE and does not know
         ;; -w; the suffixed one is Qt 6, as with qmlls.
         '((or (executable-find "qmlformat6")
               (executable-find "/usr/lib64/qt6/bin/qmlformat")
@@ -610,8 +606,8 @@ function, so `c-ts-mode-set-style' installs them."
 ;;; File templates
 
 ;; New files start from the templates in $DOOMDIR/snippets. Doom already
-;; points .hpp and .cpp at __hpp and __cpp but ships no such snippet, so a
-;; new header used to open empty; ours follow the house style.
+;; points .hpp and .cpp at __hpp and __cpp but ships no such snippet; ours
+;; follow the house style.
 (set-file-template! "/CMakeLists\\.txt\\'"
                     :trigger "__CMakeLists.txt" :mode 'cmake-mode)
 (set-file-template! "/te?st_[^/]+\\.cpp\\'"
@@ -622,7 +618,7 @@ function, so `c-ts-mode-set-style' installs them."
 ;;; Keybindings
 
 (declare-function +core-kit-keymap "build")
-(defvar +core-kit-project-map)          ; core/config.el
+(defvar +core-kit-project-map)
 
 (defvar +cpp-kit-map
   (+core-kit-keymap
@@ -703,11 +699,8 @@ function, so `c-ts-mode-set-style' installs them."
 
 ;; Qt Creator's function keys. F2 and F4 only in C and C++ buffers; map!
 ;; defers each map until its mode loads, so the four maps share one block.
-;; F6 runs the project whatever its language, as SPC k r does: it was the
-;; C++ run, which in a Pascal or Rust project went round by projection
-;; and found nothing in a directory without version control. S-F6 and
-;; SPC k R go by the language too: in a Pascal project they asked for
-;; C++ program arguments, then failed.
+;; F6, S-F6 and SPC k R go by the project's language, as SPC k r does,
+;; so a Pascal or Rust project runs its own way rather than as C++.
 (map! :g "<f5>"  #'+cpp/debug-or-continue
       :g "<f6>"  #'+core/run
       :g "<S-f6>" #'+core/build-and-run
@@ -720,9 +713,9 @@ function, so `c-ts-mode-set-style' installs them."
        "<f4>"   #'find-sibling-file))
 
 ;; The stepping keys, while a session runs. dape's mode for that has no
-;; keymap of its own, so a map bound to `dape-active-mode-map' waited
-;; for a variable that never comes and the keys did nothing; this one
-;; hangs from the mode's variable instead.
+;; keymap of its own, and a map bound to `dape-active-mode-map' would
+;; wait for a variable that never comes; this one hangs from the mode's
+;; variable instead.
 (defvar +cpp-dape-active-map
   (define-keymap
     "<f10>"   #'dape-next

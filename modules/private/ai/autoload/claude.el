@@ -3,7 +3,7 @@
 ;; Tools Claude can call over MCP, plus the model flag and terminal helpers.
 
 (defvar +ai-claude-model)
-(defvar +core-todo-markers)             ; core/autoload/lib.el
+(defvar +core-todo-markers)
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
@@ -57,8 +57,8 @@ wait holds Emacs, so it is short by default and capped, and a slow
 build is polled with emacs_last_compilation.  Modified buffers are
 saved without asking: a y/n prompt while Claude waits would time out
 the tool."
-  ;; From a buffer of none of your own, in the session's root: the kit
-  ;; reads the current buffer's settings before the project's file.
+  ;; Run from a fresh buffer in the session's root, since the kit reads
+  ;; the current buffer's settings before the project's file.
   (with-temp-buffer
     (setq default-directory (file-name-as-directory (+ai--tool-root)))
     (let* ((root default-directory)

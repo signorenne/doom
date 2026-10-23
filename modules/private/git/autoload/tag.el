@@ -1,8 +1,8 @@
 ;;; private/git/autoload/tag.el -*- lexical-binding: t; -*-
 ;;
-;; Tags, on t in every magit buffer. magit's own menu asked where to put a
-;; tag among branch names only, and its name prompt completed to an
-;; existing tag when RET was pressed on a new one. Here a tag goes on the
+;; Tags, on t in every magit buffer. magit's own menu asks where to put a
+;; tag among branch names only, and its name prompt completes to an
+;; existing tag when RET is pressed on a new one. Here a tag goes on the
 ;; commit under the cursor, on any commit found by a word of its message
 ;; or its hash, on the head of a branch, or on HEAD; the name is typed as
 ;; it is.

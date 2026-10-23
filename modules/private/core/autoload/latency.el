@@ -1,11 +1,10 @@
 ;;; private/core/autoload/latency.el -*- lexical-binding: t; -*-
 ;;
-;; Where a pause came from. Lag that comes now and then, in some file and
-;; not another, is seldom caught by trying again; so this watches while
-;; you work and writes down every key that took long to answer, every
-;; timer that ran long and every garbage collection, with what was
-;; running and where. Off until asked: watching costs a little of what it
-;; measures.
+;; Where a pause came from. Lag that comes now and then is seldom caught
+;; by trying again, so this watches while you work and writes down every
+;; key that took long to answer, every timer that ran long and every
+;; garbage collection, with what was running and in which buffer. Off
+;; until asked: watching costs a little of what it measures.
 
 (defvar +core-latency-threshold 0.05
   "Seconds past which a key, a timer or a collection is written down.")

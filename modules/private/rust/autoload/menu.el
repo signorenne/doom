@@ -1,7 +1,7 @@
 ;;; private/rust/autoload/menu.el -*- lexical-binding: t; -*-
 ;;
-;; The panel: what a cargo build here depends on, and the files behind
-;; it. The same shape as the CMake panel, so SPC k m means the same
+;; The panel: what a cargo build depends on, and the files behind it.
+;; The same shape as the CMake panel, so SPC k m means the same
 ;; thing in a Rust buffer as in a C++ one.
 
 (require 'transient)

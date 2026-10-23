@@ -33,9 +33,9 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
 
 (defvar +ai-docs
   '(:groups (("ai" "AI" (vterm)
-              ;; The module's own keys are in this map, not vterm's:
-              ;; without it `+ai/claude-leave' and its neighbours reached
-              ;; the reference with no key beside them.
+              ;; The module's own keys are in this map, not vterm's, so
+              ;; it is listed for `+ai/claude-leave' and its neighbours
+              ;; to show their keys.
               +ai-claude-keys-mode-map +ai-claude-keys-mode vterm-mode-map))
     :sections ((+ai-claude-keys-mode . "AI")
                (agent-shell-mode . "AI")))
@@ -60,8 +60,8 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
         claude-code-ide-focus-claude-after-ediff t
         claude-code-ide-enable-execute-code nil ; elisp eval is off, SPC l e
         claude-code-ide-vterm-anti-flicker t
-        ;; The default swallows height-only resizes to dodge a 2025 CLI bug;
-        ;; today it only leaves the TUI drawn for the old window height.
+        ;; The default swallows height-only resizes, which leaves the TUI
+        ;; drawn for the old window height.
         claude-code-ide-prevent-reflow-glitch nil
         claude-code-ide-show-backend-recommendation nil)
   ;; Keys go to the Claude TUI. C-z switches to Doom's keys and back; the
@@ -73,8 +73,8 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
       "Set up a Claude Code buffer: its keys, a terminal as wide as its window."
       (when (string-match-p "^\\*claude-code\\[" (buffer-name))
         (+ai-claude-keys-mode +1)
-        ;; vterm never makes a terminal narrower than 80 columns, so in a
-        ;; narrower side window the TUI was cut off at the right edge.
+        ;; vterm never makes a terminal narrower than 80 columns, which
+        ;; would cut the TUI off at the right edge of a narrower window.
         (setq-local vterm-min-window-width 40)
         (add-hook 'kill-buffer-hook #'+ai--claude-quiet-exit-h nil t))))
   :config

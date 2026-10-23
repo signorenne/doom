@@ -2,23 +2,22 @@
 ;;
 ;; The data and configuration formats: JSON, YAML, TOML, XML and the
 ;; plainer ones. Doom's :lang json, :lang yaml and :lang data bring the
-;; modes; what is added here is the part that says whether a file is
-;; actually valid, and the two shapes you usually want it in.
+;; modes; this file adds the part that says whether a file is actually
+;; valid, and the two shapes you usually want it in.
 ;;
-;; Validation comes from a language server where one exists, so it is
-;; live rather than a command you remember to run: a bad comma is
-;; underlined as you type. The servers also know SchemaStore, so a file
-;; they recognise, package.json, tsconfig.json, a compose file, a GitHub
-;; workflow, is checked against its real schema and a misspelt key is an
-;; error rather than a mystery.
+;; Validation comes from a language server where one exists, so a bad
+;; comma is underlined as you type. The servers also know SchemaStore,
+;; so a file they recognise (package.json, a compose file, a GitHub
+;; workflow) is checked against its schema and a misspelt key is an
+;; error.
 
 
 ;;
 ;;; TOML
 
-;; Doom has no :lang toml. Emacs 29 brought `toml-ts-mode' and has long
-;; had `conf-toml-mode', so the mode is here already; what is missing is
-;; the association and a server.
+;; Doom has no :lang toml. Emacs has `toml-ts-mode' and
+;; `conf-toml-mode' already; what is missing is the file association and
+;; a server.
 (add-to-list 'auto-mode-alist
              `("\\.toml\\'" . ,(if (fboundp 'toml-ts-mode)
                                   'toml-ts-mode

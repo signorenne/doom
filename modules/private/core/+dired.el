@@ -45,10 +45,8 @@ the next session by savehist.")
 
 ;; Each file's git state is marked in the fringe. To find it dirvish
 ;; runs git twice per file, in a batch Emacs in the background, each time
-;; a directory of a repository is entered: on the old machine at load 30
-;; that kept a core busy. On the Mac it is 12 ms a file, 0.2 to 0.5 s for
-;; a directory of 20 to 35 entries, off the editor's thread: the listing
-;; shows as fast and j costs 2.4 to 2.8 ms with it, 3.3 without.
+;; a directory of a repository is entered. That is off the editor's
+;; thread, so the listing shows and moves as fast with it.
 (defvar-local +core--dirvish-drawn nil
   "(POINT . KEY): where the cursor was when this listing was last drawn,
 and what else the drawing depended on; see the redraw below.")
@@ -71,23 +69,23 @@ and what else the drawing depended on; see the redraw below.")
   ;; The same preview beside the minibuffer while choosing a file.
   (dirvish-peek-mode 1)
   ;; A text file is previewed from its first 64 KB, not the first
-  ;; megabyte: a 900 KB header was parsed whole by tree-sitter at every
-  ;; preview, two thirds of a second, for the fifty lines on show.
+  ;; megabyte: the pane shows a screenful, and reading more only slows
+  ;; every preview.
   (setq dirvish-preview-large-file-threshold (* 64 1024))
   ;; Only once the cursor stops. Its delay is its own, not
-  ;; `dirvish-input-debounce', and was none: holding a key down opened a
-  ;; file every quarter second, 20 to 150 ms each, and the list stuttered
-  ;; under it. Held, it now opens none; stopped, the file shows 0.15 s on.
+  ;; `dirvish-input-debounce', and is none by default, so holding a key
+  ;; down would open file after file and the list would stutter. Held,
+  ;; it opens none; stopped, the file shows 0.15 s later.
   (setq dirvish-peek-key '(:debounce 0.15 any))
-  ;; The file manager's own pane the same: j held through a directory
-  ;; opened a file every quarter second as it went.
+  ;; The file manager's own pane the same, so j held through a
+  ;; directory does not open every file it passes.
   (setq dirvish-input-debounce 0.15)
 
   ;; Dirvish kills the buffers it previewed with, and Doom records a jump
   ;; whenever a file buffer that is in a window is killed, so opening a
-  ;; file from a listing left the jump list holding every file the cursor
-  ;; had passed over: C-o then walked into those instead of back to the
-  ;; listing. Dirvish quiets undo-tree and recentf in this very function
+  ;; file from a listing would leave the jump list holding every file the
+  ;; cursor passed over, and C-o would walk into those instead of back to
+  ;; the listing. Dirvish quiets undo-tree and recentf in this function
   ;; for the same reason; this is one more of them.
   (declare-function dirvish--kill-buffer "dirvish")
   (declare-function doom-set-jump-h "doom-editor")
@@ -97,10 +95,10 @@ and what else the drawing depended on; see the redraw below.")
       (apply fn args)))
 
   ;; The icons and sizes are overlays, and before every redraw dirvish
-  ;; deleted them all and made them again, a hundred lines of them. Any
-  ;; overlay change has Emacs lay the whole window out afresh, so a
-  ;; listing on screen kept a third of a core busy doing nothing, and a
-  ;; C-d cost 40 to 70 ms. A redraw that finds the window as the last one
+  ;; deletes them all and makes them again. Any overlay change has Emacs
+  ;; lay the whole window out afresh, so a listing on screen would keep
+  ;; a core busy doing nothing and make scrolling slow. A redraw that
+  ;; finds the window as the last one
   ;; left it keeps what is there, and one where only the cursor moved
   ;; draws the line it left and the line it is on, for the highlight.
   ;; dirvish's own calls, as when an answer from git arrives, draw all.
@@ -184,9 +182,10 @@ really under once that is known.")
   ;; A project-relative candidate, the kind `SPC SPC' offers, is resolved
   ;; against `vc-root-dir', read in whatever buffer the peek happens to
   ;; run in. That is the minibuffer, whose directory is not the project's,
-  ;; so every candidate was looked for under the wrong root and the
-  ;; preview said it does not exist. The project is the one of the buffer
-  ;; the minibuffer was opened from, and that is known while it opens.
+  ;; so every candidate would be looked for under the wrong root and the
+  ;; preview would say it does not exist. The project is the one of the
+  ;; buffer the minibuffer was opened from, and that is known while it
+  ;; opens.
   (defadvice! +core--dirvish-peek-root-a (&rest _)
     :before #'dirvish-peek-setup-h
     (setq +core--peek-root
@@ -201,10 +200,10 @@ really under once that is known.")
       (apply fn args)))
 
   ;; dirvish skips a preview asked for the file it previewed last, and
-  ;; remembers that file from one prompt to the next: SPC SPC opening on
-  ;; the file the last prompt had shown, the usual case with the list in
-  ;; the order files were opened, previewed nothing until the cursor
-  ;; moved. Each prompt starts with nothing previewed.
+  ;; remembers that file from one prompt to the next, so a prompt opening
+  ;; on the file the last one showed (the usual case for SPC SPC) would
+  ;; preview nothing until the cursor moves. Each prompt starts with
+  ;; nothing previewed.
   (declare-function dirvish--run-with-delay "dirvish")
   (defadvice! +core--peek-fresh-a (&rest _)
     :before #'dirvish-peek-setup-h
@@ -230,14 +229,14 @@ really under once that is known.")
       (aset dv (cl-struct-slot-offset 'dirvish 'preview-window) main)))
 
   ;; dirvish-yank-sources is the symbol `all' by default, and it checks
-  ;; that value with `functionp' before using it as a name; Emacs 31 made
-  ;; `all' a function, so p, P and the links died with a wrong argument
-  ;; count. A function that does what `all' meant.
+  ;; that value with `functionp' before using it as a name; in Emacs 31
+  ;; `all' is a function, so p, P and the links would fail with a wrong
+  ;; argument count. A function that does what `all' means.
   (setq dirvish-yank-sources (lambda () (dirvish-yank--get-srcs 'all)))
 
   ;; dirvish wants vipsthumbnail, ffmpegthumbnailer and mediainfo for
-  ;; images, videos and audio. This machine has ImageMagick and ffmpeg, so
-  ;; these three use those, and vipsthumbnail the day it is installed.
+  ;; images, videos and audio. The three previews below use ImageMagick
+  ;; and ffmpeg instead, and vipsthumbnail when it is installed.
   (require 'dirvish-widgets)
 
   ;; A thumbnail is a JPEG by default, and JPEG holds no transparency: an
@@ -250,7 +249,7 @@ really under once that is known.")
     "The image formats that can carry transparency, thumbnailed to PNG.")
 
   ;; Nothing is made larger on disk: -thumbnail samples rather than
-  ;; interpolates, and a 66 pixel telltale blown up that way arrives in
+  ;; interpolates, and a small icon blown up that way arrives in
   ;; blocks. Emacs does the enlarging instead, at draw time and smoothly,
   ;; which is also why the cache stays small.
   (defvar +core-image-thumb-width 1000
@@ -285,17 +284,17 @@ image-mode and played it."
              (cache (dirvish--img-thumb-name file (concat "box" box)
                                               (if alpha ".png" ".jpg"))))
         (cond
-         ;; A thumbnail older than its picture is made again: the name is
-         ;; the path's, so an edited picture kept showing as it was.
+         ;; A thumbnail older than its picture is made again: the name
+         ;; comes from the path, so an edited picture would keep showing
+         ;; as it was.
          ((and (file-exists-p cache) (not (file-newer-than-file-p file cache)))
           `(img . ,(+core--preview-image cache w h)))
          ((equal ext "ico")
           `(img . ,(+core--preview-image file w h)))
-         ;; An SVG was drawn here, in Emacs, while the cursor waited: 2.4 s
-         ;; for a 2.7 MB one, then another second to show it. vips draws
-         ;; it in its own process, once, the pane waiting instead; and to
-         ;; fill the thumbnail's square whatever its own size, a drawing
-         ;; not being made of pixels to sample.
+         ;; vips draws an SVG in its own process, once, so a large one
+         ;; never holds the cursor up; and to fill the thumbnail's square
+         ;; whatever its own size, a drawing not being made of pixels to
+         ;; sample.
          ((executable-find dirvish-vipsthumbnail-program)
           `(cache . (,dirvish-vipsthumbnail-program ,file
                      "--size" ,(if (member ext '("svg" "svgz")) box (concat box ">"))
@@ -329,10 +328,9 @@ image-mode and played it."
 
   ;; Every other file as plain text, its first 64 KB read and nothing
   ;; run: no mode set up, no colour, no grammar built, so no file can hold
-  ;; the cursor up, a C header's mode starting, an Org file's, a minified
-  ;; script's colouring. dirvish's own set the mode up for each. A file
-  ;; with a NUL in it is a binary, said in a line; a pipe or a socket is
-  ;; not read at all, which would wait for good.
+  ;; the cursor up. dirvish's own preview sets the mode up for each. A
+  ;; file with a NUL in it is a binary, said in a line; a pipe or a
+  ;; socket is not read at all, which would wait for good.
   (dirvish-define-preview +core-text (file)
     "Preview any other file as its plain text."
     (cond
@@ -363,18 +361,19 @@ image-mode and played it."
 ;; type, which is Doom's; the rest of the file manager's own work is on
 ;; the localleader below, SPC m f to search the tree under here, SPC m n
 ;; to make a file or a directory, SPC m m to move the marked files here.
-;; Here: M-y is the menu of everything paste can do, r refreshes the
-;; listing, TAB and S-TAB fold it. Under y, next to Doom's copy name and
-;; path: yc puts the files themselves on the system clipboard, yv pastes
-;; files from it, yd duplicates, yt copies a file's text.
+;; In the listing: M-y is the menu of everything paste can do, r
+;; refreshes the listing, TAB and S-TAB fold it. Under y, next to Doom's
+;; copy name and path: yc puts the files themselves on the system
+;; clipboard, yv pastes files from it, yd duplicates, yt copies a file's
+;; text.
 ;; dirvish takes S and Y for itself, so the two link commands go on the
 ;; localleader next to Doom's omit toggle.
 (map! :after dirvish
       :map dirvish-mode-map
       :n "M-y" #'dirvish-yank-menu
-      ;; r meant redisplay the lines under the cursor, which in dirvish
-      ;; can leave a listing looking emptied; r now refreshes the whole
-      ;; listing, the same as gr, and never touches a file.
+      ;; dired's r redisplays the lines under the cursor, which in
+      ;; dirvish can leave a listing looking emptied; this r refreshes the
+      ;; whole listing, the same as gr, and never touches a file.
       :n "r"   #'revert-buffer
       ;; TAB opens the directory under the cursor, as it opens a heading
       ;; in an Org document; S-TAB is the other half, the whole listing
@@ -419,11 +418,10 @@ image-mode and played it."
 ;; Doom's two dired keys open the file manager with the preview pane: on
 ;; this file's directory, or on a directory asked for.
 ;; `dirvish-peek-mode' is turned on inside `after! dirvish', so the
-;; preview beside the minibuffer only appeared once a listing had been
-;; opened: SPC SPC in a session that had not opened one had none, and
-;; neither had SPC . or SPC f r. Load it at the first prompt, which is
-;; when it is first wanted, and set this prompt up too since the mode
-;; adds its own hook while the hook is already running.
+;; preview beside the minibuffer would appear only once a listing had
+;; been opened. Load it at the first prompt, which is when it is first
+;; wanted, and set this prompt up too since the mode adds its own hook
+;; while the hook is already running.
 (defun +core--peek-once-h ()
   "Load dirvish's minibuffer preview, once, at the first prompt."
   (remove-hook 'minibuffer-setup-hook #'+core--peek-once-h)

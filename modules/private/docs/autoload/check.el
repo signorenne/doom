@@ -3,9 +3,8 @@
 ;; Does every function the config refers to exist when the reference is
 ;; used? A name defined in an autoload file is void until that file
 ;; loads, and the file loads through a cookie, so a reference from any
-;; other file needs the definition cookied. Read from the files here;
-;; docs/doctor.el runs the same scan in doom doctor, and
-;; `+docs/check-autoloads' asks the running session on top.
+;; other file needs the definition cookied. doom doctor runs the scan on
+;; the files, and `+docs/check-autoloads' also asks the running session.
 
 (defconst +docs--definition-regexp
   (concat "^(\\(?:defun\\|cl-defun\\|defmacro\\|defsubst\\|defalias"

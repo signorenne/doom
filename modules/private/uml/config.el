@@ -2,7 +2,7 @@
 ;;
 ;; PlantUML: completion from a language server, a diagram beside the
 ;; text that follows your typing, and a template for each kind of
-;; diagram this machine actually draws.
+;; diagram.
 ;;
 ;; Doom's :lang plantuml brings the mode and the flycheck checker. What
 ;; this adds is the rendering path, the server and the templates. The
@@ -48,19 +48,16 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 ;;; The mode
 
 (after! plantuml-mode
-  ;; Render through our own server rather than a JVM per diagram: the
-  ;; first costs about a second, every one after it about 30 ms, which
-  ;; is what lets the preview follow typing at all.
+  ;; Render through our own server rather than a JVM per diagram, which
+  ;; is what lets the preview follow typing.
   (setq plantuml-executable-path (executable-find +uml-executable)
         plantuml-default-exec-mode 'executable
         plantuml-indent-level 2))
 
 ;; plantuml-mode's own autoload claims .pu, .uml, .plantuml, .pum and
-;; .plu, and Doom's module adds no :mode at all. .puml, which is the
-;; extension PlantUML's own documentation uses and every file here has,
-;; is in neither list, so those files opened in fundamental-mode: no
-;; keys, no completion, no preview. .iuml is an included fragment and
-;; .wsd is what the web editor saves.
+;; .plu, and Doom's module adds no :mode at all. .puml, the extension
+;; PlantUML's own documentation uses, is in neither list. .iuml is an
+;; included fragment and .wsd is what the web editor saves.
 (add-to-list 'auto-mode-alist
              '("\\.\\(puml\\|iuml\\|wsd\\)\\'" . plantuml-mode))
 

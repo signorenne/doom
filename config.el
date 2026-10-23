@@ -1,8 +1,8 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 ;;
-;; Loaded after Doom and every module. Only identity and look and feel live
-;; here; the rest is in modules/private/* (see the :private block in init.el).
-;; The keybinding reference is on SPC h / and F12.
+;; Loaded after Doom and every module. This file holds only identity and
+;; look and feel; the rest is in the private modules. The keybinding
+;; reference is on SPC h / and F12.
 
 ;;
 ;;; Identity
@@ -20,11 +20,10 @@
 ;;
 ;;; Fonts and theme
 
-;; On a Mac the theme is a pair, dark and light, and follows the system's
-;; appearance as the Mac's own apps do: Doom picks one as Emacs starts,
-;; and Emacs+ says when the appearance changes, below. Elsewhere it is
-;; the dark one. The pair is kept apart: Doom sets `doom-theme' to the
-;; one it loads.
+;; On macOS the theme is a dark and light pair that follows the system
+;; appearance: Doom picks one at startup, and Emacs+ reports each change.
+;; Elsewhere it is the dark one. The pair has its own variable because
+;; Doom sets `doom-theme' to the one it loads.
 (defvar +config-themes '(nexenne-night . nexenne-day)
   "The dark theme and the light one, worn as a Mac's appearance says.
 The config's own, in themes/: made for long reading, measured for it.")
@@ -45,17 +44,15 @@ The config's own, in themes/: made for long reading, measured for it.")
             (defun +config--follow-appearance-h (appearance)
               "Wear the light or the dark one of `+config-themes' for APPEARANCE."
               (let ((on (if (eq appearance 'light) (cdr +config-themes) (car +config-themes))))
-                ;; Every theme on goes, one picked with SPC h t too, or
-                ;; the pair's would be drawn over it.
+                ;; Disable every enabled theme, one picked with SPC h t
+                ;; too, so no two are drawn over each other.
                 (unless (equal custom-enabled-themes (list on))
                   (mapc #'disable-theme custom-enabled-themes)
                   (load-theme on t))))))
 
-;; Line numbers in code and text, as VS Code has them; SPC t l turns a
-;; buffer's to relative, then none. The column is as wide as the file's
-;; last line needs from the start, so the text does not shift sideways
-;; when a scroll reaches line 1000. A held j costs 5 ms a line with them
-;; and 4.4 without, 6.5 relative (2026-10-23).
+;; Line numbers in code and text; SPC t l turns a buffer's to relative,
+;; then none. The column is as wide as the file's last line needs from
+;; the start, so the text does not shift sideways while scrolling.
 (setq display-line-numbers-type t)
 (setq-default display-line-numbers-width-start t)
 

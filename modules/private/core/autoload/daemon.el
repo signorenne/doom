@@ -2,9 +2,9 @@
 ;;
 ;; One Emacs for everything: a daemon started at login, which emacsclient,
 ;; org-protocol and the Claude Code hooks reach, its windows opened by
-;; Emacs Client.app on macOS. Without it the first window waited for the
-;; whole config to load. Emacs Client.app still starts one when none runs
-;; (emacsclient -a ''), after a crash or a kill.
+;; Emacs Client.app on macOS. The first window then opens without
+;; waiting for the whole config to load. Emacs Client.app still starts a
+;; daemon when none runs (emacsclient -a ''), after a crash or a kill.
 
 (defvar +core-daemon-at-login t
   "Non-nil sets the login daemon up by itself on a machine that has none,

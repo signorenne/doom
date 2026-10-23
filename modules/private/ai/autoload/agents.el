@@ -98,9 +98,8 @@ With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
   "Tell Claude Code to notify Emacs when it stops or needs input.
 Writes to ~/.claude/settings.json, keeping a .bak copy.  Safe to re-run."
   (interactive)
-  ;; Before the file is read: a hand-edited settings.json would
-  ;; otherwise answer with a raw parse error where the missing hook
-  ;; script has a sentence ready.
+  ;; Checked before the file is read, so a missing script gets a clear
+  ;; message rather than a parse error from a hand-edited settings.json.
   (unless (file-executable-p +ai-hook-script)
     (user-error "Hook script %s is missing or not executable" +ai-hook-script))
   (let* ((file (expand-file-name "~/.claude/settings.json"))

@@ -9,9 +9,9 @@
 
 (declare-function +core-project-root "lib")
 (declare-function +core-project-root-or-nil "lib")
-(defvar +core-kit-map)                  ; config.el
-(defvar +core-kit-project-map)          ; config.el
-(defvar +core-projects-dir)             ; config.el
+(defvar +core-kit-map)
+(defvar +core-kit-project-map)
+(defvar +core-projects-dir)
 
 (defvar +core-builders nil
   "What each module can do with a project.
@@ -54,8 +54,8 @@ answers only when none of them claims it."
                                      +core-builders)))
         (fallback (seq-find (lambda (e) (plist-get (cddr e) :fallback))
                             +core-builders)))
-    ;; A module without the command used to hand it to the fallback, so
-    ;; a web project got the C++ run with arguments, which failed.
+    ;; A module without the command does not hand it to the fallback,
+    ;; which would give a web project the C++ run.
     (plist-get (cddr (or owner fallback)) what)))
 
 (defun +core--build-call (what missing)
@@ -183,10 +183,8 @@ and going to one."
   (interactive)
   (+core--build-call :panel "This kind of project has no panel"))
 
-;; A new project was asked of the module owning the project you were in,
-;; so it offered that language alone: from the dashboard or a C++ tree
-;; only C++ templates, and a Pascal, Rust or web project could not be
-;; started at all. The language is asked first now, yours offered first.
+;; Any kind of project can be started from anywhere: the language is
+;; asked first, the one of the project you are in offered first.
 ;;;###autoload
 (defun +core/new-project ()
   "Start a project, of any kind a module here can make: the language,

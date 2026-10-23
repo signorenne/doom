@@ -39,7 +39,7 @@
 ;; The two things read from other packages' insides, each behind one
 ;; accessor: the window transient shows its menu in, and the child frame
 ;; posframe made for a buffer, found by the frame parameter posframe sets
-;; on purpose (posframe 1.5.0, transient 0.11.0).
+;; on purpose.
 
 (defun +butler--transient-window ()
   "The window his menu is shown in, while it is up on this frame."
@@ -634,8 +634,8 @@ redraw without it, when a menu closed, lost the corner and a row.")
       (let ((posframe-mouse-banish-function #'ignore))
         (+butler--float))
     ;; In a terminal, a window as tall as what he says: the popup's own
-    ;; size, nine rows, cut a long answer off, its last line with it,
-    ;; and a window already up kept the size it had.
+    ;; size would cut a long answer off, and a window already up would
+    ;; keep the size it had.
     (when-let* ((window (display-buffer "*butler*")))
       (fit-window-to-buffer window)))
   (+butler--start-moving))

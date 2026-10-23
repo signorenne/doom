@@ -3,9 +3,9 @@
 ;; Writing into the notes without a capture: today's daily note, a task
 ;; for the inbox, a draft beside the graph. Other modules write through
 ;; these, the ai module for one, so every entry has the shape the
-;; templates give it and the formats live here only.
+;; templates give it and the formats live in one place.
 
-(defvar +notes-daily-name)              ; +roam.el
+(defvar +notes-daily-name)
 (defvar +notes-daily-head)
 (defvar org-roam-directory)
 (defvar org-roam-dailies-directory)

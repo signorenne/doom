@@ -1,16 +1,15 @@
 ;;; private/core/config.el -*- lexical-binding: t; -*-
 ;;
 ;; Global settings that don't belong to a bigger topic: environment, a few
-;; editing defaults, and contextual menus. Doom already tunes GC, scrolling and
-;; IPC in lisp/doom-start.el, so only the differences live here. The file
-;; manager and the image viewer are topics of their own, beside this file.
+;; editing defaults, and contextual menus. Doom already tunes GC, scrolling
+;; and IPC, so only the differences are set. The file manager and the
+;; image viewer are topics of their own.
 
 ;;
 ;;; Environment
 
 ;; The two directories the other modules build on: the notes, and where
-;; projects live. Set here, before the org module reads them; init.el
-;; sets the notes for this machine.
+;; projects live. Defined before the org module reads them.
 (defvar +core-notes-dir "~/org/"
   "Where the notes live; the org module sets `org-directory' from it.")
 (defvar +core-projects-dir "~/projects/"
@@ -26,11 +25,10 @@
 ;; Install tree-sitter grammars on first use instead of asking.
 (setq treesit-auto-install-grammar 'always)
 
-;; A file over a megabyte is large here: the header's function line, in
-;; the ui module, stands down in it when it has no syntax tree to ask.
-;; Doom kept that mark once, and now tells a large file by its lines, for
-;; so-long alone, so the mark is made here, in the file's own buffer, as
-;; it opens.
+;; A file over a megabyte is large: the header's function line, in the
+;; ui module, stands down in it when it has no syntax tree to ask. Doom
+;; tells a large file only by its line lengths, for so-long, so the mark
+;; is made in the file's own buffer as it opens.
 (defvar +core-large-file-size (* 1024 1024)
   "Past this size, in bytes, a file opened is large: `+core-large-file-p'.")
 
@@ -53,22 +51,16 @@ which show something other than the text.")
       (when (> size +core-large-file-size)
         (setq-local +core-large-file-p size)))))
 
-;; Emacs lays out every line on screen to its end, truncated or not, and
-;; a window of long lines dense with colour is a lot of layout: a table
-;; of 2 000 character rows took 83 to 108 ms a line scrolled and 100 to
-;; 230 ms a key typed (2026-10-23). Three things make it pay that again
-;; and again. A truncated line is walked to its end at each redraw, where
-;; a wrapped one shows all it holds; each character walked is looked at
-;; for a glyph composition; and with a header line, an edit that changes
-;; the column the modeline shows redraws the whole window, where Emacs
-;; otherwise redraws the line. Doom's so-long acts only past 10 000
-;; characters, and its mode is plain text. A code file whose lines
-;; average more than 100 characters keeps its mode, colour and language
-;; server, wraps, composes nothing, and the ui module takes its header
-;; line down: 4 to 14 ms a key and 15 to 27 a line moved in that table.
-;; At 100 characters a key cost 17 to 27 ms, 6 to 7 so; in a file of
-;; ordinary code, 38 characters a line on average, the header costs a
-;; key nothing that shows.
+;; Emacs lays out every line on screen to its end, truncated or not, so
+;; a window of long lines dense with colour is slow to redraw. A
+;; truncated line is walked to its end at each redraw, where a wrapped
+;; one shows all it holds; each character walked is checked for a glyph
+;; composition; and with a header line, an edit that changes the column
+;; the modeline shows redraws the whole window instead of the line.
+;; Doom's so-long acts only on far longer lines, and its mode is plain
+;; text. A code file whose lines average more than 100 characters keeps
+;; its mode, colour and language server, but wraps, composes nothing,
+;; and the ui module takes its header line down.
 (defvar +core-long-lines-mean 100
   "Past this mean line length, in characters, a code file opens with long
 lines: `+core-long-lines-p'.")
@@ -79,8 +71,8 @@ lines: `+core-long-lines-p'.")
 (defvar-local +core-long-lines-p nil
   "Non-nil in a code file whose lines average past `+core-long-lines-mean'.")
 
-;; Once the mode is the one the file keeps, the tree-sitter one or the
-;; older one put in its place: a new mode clears what is set here.
+;; Run once the file has the mode it keeps, the tree-sitter one or the
+;; older one put in its place, since a new mode clears these settings.
 (add-hook! 'find-file-hook :depth -80
   (defun +core--long-lines-h ()
     "Wrap a code file whose lines are long, and stop the redraws it pays for."
@@ -92,27 +84,20 @@ lines: `+core-long-lines-p'.")
       (run-hooks '+core-long-lines-hook))))
 
 ;; Tree-sitter reparses what an edit touched, and the node that holds it
-;; with all its children: in most files a function among a few thousand,
-;; a reparse of 2 ms in a megabyte of C++. But in a file that is one
-;; declaration, an image as a C array, that node is a list of 170 000
-;; values, and every key rebuilt it: 340 to 410 ms a key, 11 to 14 in
-;; c-mode. A file the grammar cannot read at all, nlohmann's json.hpp, is
-;; one error node, and nothing of it is reused. A file with a node that
-;; crowded, and a quarter of a megabyte that failed to parse, open in the
-;; mode Emacs had before tree-sitter. Size alone is no reason: that
-;; megabyte of C++ costs 11 ms a key in c++-ts-mode and 128 to 163 in
-;; c++-mode. A key here is a character typed, the reparse and the
-;; colouring of 6 KB around it, timed on the Mac the README names.
+;; with all its children: in most files one function, which is cheap.
+;; But in a file that is one declaration, an image as a C array, that
+;; node is a list of many thousands of values, rebuilt at every key. A
+;; file the grammar cannot read at all is one error node, and nothing of
+;; it is reused. A file with a node that crowded, or a large file that
+;; failed to parse, opens in the mode Emacs had before tree-sitter. Size
+;; alone is no reason: large ordinary code is faster with tree-sitter.
 (defvar +core-treesit-unparsed-max (* 256 1024)
   "Past this size a file tree-sitter could not parse opens without it.")
 
-;; And a file the grammar reads with many errors reparses slowly at every
-;; key wherever it is edited: a generated 1.5 MB C file with 2 579 error
-;; nodes, 90 ms a reparse and 190 ms a key, 18 to 34 in c-mode; a 1 MB
-;; register header with 930, 20 ms and 42 a key, which stays, cc-mode
-;; spending half a second at a key in places there. Ordinary C++ of the
-;; same size reparses in under a millisecond. Past the size above, one
-;; reparse is timed as the file opens.
+;; A file the grammar reads with many errors also reparses slowly at
+;; every key, wherever it is edited, while ordinary code of the same size
+;; reparses almost at once. Past the size above, one reparse is timed as
+;; the file opens.
 (defvar +core-treesit-reparse-max 0.04
   "Past `+core-treesit-unparsed-max', a file whose syntax tree takes longer
 than this, in seconds, to reparse after a one character edit opens without
@@ -158,12 +143,8 @@ key.  A node that holds most of the file holds the middle too."
   (car (or (rassq mode major-mode-remap-alist)
            (rassq mode (bound-and-true-p major-mode-remap-defaults)))))
 
-;; Decided as the mode is set, before eglot, at 0, attaches the buffer: a
-;; server already running for the project was sent the whole file as the
-;; tree-sitter mode came, and again as the older mode replaced it, the
-;; second time while it was still reading the first. A font array of
-;; 600 KB waited 3.6 s on the server's input, and opened in 4.5 s
-;; (2026-10-23). Once a visit: a mode chosen afterwards is kept.
+;; Decided before eglot attaches the buffer, so a running server is sent
+;; the file once, in the mode it keeps. Checked once per visit.
 (defvar-local +core--treesit-checked nil
   "Non-nil once this file's buffer was checked for a slow syntax tree.")
 (put '+core--treesit-checked 'permanent-local t)
@@ -187,12 +168,10 @@ key.  A node that holds most of the file holds the middle too."
       (funcall classic)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
-;; Whether a grammar is there is looked up on disk at every asking, 3 ms
-;; even with the library loaded, and markdown asks twice for each code
-;; block it colours: every block of a README, and each documentation
-;; popup's signature, 5.5 ms a block. A grammar found stays usable for
-;; the session; one not found is looked for again, so a grammar
-;; installed meanwhile is found.
+;; Whether a grammar is there is looked up on disk at every asking, and
+;; markdown asks twice for each code block it colours, documentation
+;; popups included. A grammar found stays usable for the session; one
+;; not found is looked for again, so a grammar installed later is found.
 (defvar +core--treesit-available (make-hash-table :test #'eq)
   "The languages whose grammar was found, as t.")
 
@@ -207,13 +186,12 @@ key.  A node that holds most of the file holds the middle too."
 ;; Doom installs a grammar it finds missing when it picks a tree-sitter
 ;; mode, cloning and compiling it while Emacs waits, and takes it to be
 ;; missing whenever `treesit-ready-p' says no, which it also says of a
-;; buffer past `treesit-max-buffer-size', 40 MB. Each C++ file that big
-;; cloned and built the C++ grammar again, two seconds, over the library
-;; the session had loaded. And a file only previewed, the cursor passing
-;; over it in SPC . or a search, built its language's grammar there and
-;; then: 1.8 s frozen for CSS, longer for TypeScript, on a machine new to
-;; them. Both get the older mode instead, with nothing installed; the
-;; grammar comes with the first file of its language opened for real.
+;; buffer past `treesit-max-buffer-size'. Such a file would rebuild the
+;; grammar over the one already loaded. And a file only previewed, the
+;; cursor passing over it in SPC . or a search, would build its
+;; language's grammar there and then. Both get the older mode instead,
+;; with nothing installed; the grammar comes with the first file of its
+;; language opened for real.
 (defvar treesit-auto-install-grammar)
 
 (defvar +core--previewing nil
@@ -224,12 +202,12 @@ dirvish beside a prompt.")
             (defun +core--treesit-no-install-a (fn mode)
               "Install no grammar for a buffer too big for tree-sitter, nor
 for a file previewed."
-              ;; Loaded first: bound before treesit.el had defined it,
-              ;; the binding was lexical, and the first file of a session
-              ;; failed to open with treesit loading inside it.
+              ;; Loaded first: bound before treesit.el defines it, the
+              ;; binding would be lexical, and the first file of a session
+              ;; would fail to open.
               (require 'treesit)
-              ;; Bound only to say never: bound to its own value, Doom's
-              ;; making it buffer-local once a grammar is in was warned of.
+              ;; Bound only to say never: bound to its own value, Emacs
+              ;; warns when Doom makes it buffer-local after an install.
               (if (or +core--previewing
                       (> (buffer-size) (or (bound-and-true-p treesit-max-buffer-size)
                                            most-positive-fixnum)))
@@ -238,16 +216,12 @@ for a file previewed."
                 (funcall fn mode)))
             '((depth . -90)))
 
-;; Past two megabytes a file is made by a program: an image as a C array,
-;; a Qt resource, compile_commands.json, a log. Reading one is quick, 50
-;; MB in a fifth of a second; its mode is slow, going over all of it
-;; before the first screen: 2.4 s for 8 MB of C++, 2.3 s for 2.5 MB of
-;; Org, and in a 50 MB resource array cc-mode spent minutes on one key.
-;; Such a file opens whole but as plain text, at once, and
-;; `+core/file-own-mode' gives it its mode. Reading the rest in pieces
-;; behind the first screen was tried and is worse: each piece sends the
-;; mode over the file again, 8.8 s in all for that C++ and 40 s for an 8
-;; MB JSON that opens in 0.4.
+;; Past 2 MB a file is made by a program: an image as a C array, a Qt
+;; resource, compile_commands.json, a log. Reading one is quick; its mode
+;; is slow, going over all of it before the first screen. Such a file
+;; opens whole but as plain text, at once, and `+core/file-own-mode'
+;; gives it its mode. Reading the rest in pieces behind the first screen
+;; is worse: each piece sends the mode over the file again.
 (defvar +core-plain-file-size (* 2 1024 1024)
   "Past this size a file opens as plain text, without its major mode.")
 
@@ -263,12 +237,9 @@ it, which a revert keeps.")
 
 ;; A file previewed in a prompt is a glance: plain text, whatever it is and
 ;; whatever its size, its mode never set up, so nothing a mode runs can
-;; hold the cursor up. Colouring a 900 KB header took a third of a second
-;; at each step through the list, and C headers and other files held SPC
-;; . up while their modes started. A binary shows nothing. Read whole up
-;; to 8 MB, where consult showed the first 10 KB of anything past a
-;; megabyte, so a search's match beyond them was not on screen. The file
-;; picked is opened afresh, in its own mode.
+;; hold the cursor up. A binary shows nothing. A file is read whole up to
+;; 8 MB, so a search's match deep in it is on screen. The file picked is
+;; opened afresh, in its own mode.
 (defun +core--previewing-a (fn &rest args)
   "Call FN with ARGS as a preview, `+core--previewing' set.
 No grammar is built for it, whoever asks: Doom's choice of mode, above,
@@ -283,8 +254,8 @@ starts, TOML's taking 1.4 s, Go's, Lua's or a Dockerfile's the same."
   (setq consult-preview-partial-size (* 8 1024 1024))
   (advice-add 'consult--find-file-temporarily :around #'+core--previewing-a))
 
-;; dirvish's beside a prompt, SPC . among them, and in its own pane: the
-;; text of a file, its first 64 KB, or the file opened.
+;; dirvish's previews, beside a prompt (SPC . among them) and in its own
+;; pane: the text of a file, its first 64 KB, or the file opened.
 (after! dirvish
   (advice-add 'dirvish--preview-file-maybe-truncate :around #'+core--previewing-a)
   (advice-add 'dirvish--find-file-temporarily :around #'+core--previewing-a))
@@ -319,7 +290,7 @@ are left alone, and so are `+core-plain-file-keep-modes'."
 
 ;; Nothing deleted from Emacs is gone: dired's D and x, SPC f D, and every
 ;; delete-file behind them move the file to the system's trash, the one
-;; Finder or Dolphin shows, and SPC f t opens it here. Put a file back
+;; Finder or Dolphin shows, and SPC f t opens it. Put a file back
 ;; from the trash listing with SPC m t; on macOS Emacs notes where each
 ;; file it deletes came from, since only Finder knows otherwise.
 (setq delete-by-moving-to-trash t)
@@ -350,24 +321,21 @@ are left alone, and so are `+core-plain-file-keep-modes'."
         ns-option-modifier 'meta
         ns-right-option-modifier 'none))
 
-;; vterm's module is native code built on this machine: on a new machine,
-;; or once the packages were rebuilt for a new Emacs, vterm asked whether
-;; to build it, and a daemon, with no one to answer, waited for good. It
-;; is built without asking; it needs cmake, and libvterm or the network.
+;; vterm's module is native code built locally. vterm asks before
+;; building it, and a daemon, with no one to answer, would wait for
+;; good, so it is built without asking. It needs cmake, and libvterm or
+;; the network.
 (setq vterm-always-compile-module t)
 
-;; A terminal keeps 20 000 lines, an agent's session or a build's log, not
-;; Doom's 5 000. Each line costs some 8 KB besides its text, in the cells
-;; the module keeps for it: 57 MB for 5 000, 397 for 50 000, and output
-;; reads 3 % slower at that end (2026-10-23).
+;; A terminal keeps 20 000 lines, enough for an agent's session or a
+;; build's log, not Doom's 5 000. Each line costs memory besides its
+;; text, in the cells the module keeps for it, so the limit stays modest.
 (after! vterm
   (setq vterm-max-scrollback 20000))
 
 ;; Doom reads 1 MB at a time from every process while a language server
-;; runs, for the server's sake. clangd's answers come no faster, a
-;; completion list in 14 to 15 ms and a file's semantic tokens in 4 at 64
-;; KB as at 1 MB, but a terminal reads its output a third slower: 200 000
-;; lines in 4.1 s instead of 2.8 to 3.1 (2026-10-23). The read size stays
+;; runs, for the server's sake. The server's answers come no faster for
+;; it, but a terminal reads its output slower. The read size stays
 ;; Doom's 64 KB; the rest of that mode, a higher GC threshold, stays too.
 (defvar +lsp--default-read-process-output-max)
 (add-hook! '+lsp-optimization-mode-hook
@@ -384,11 +352,11 @@ are left alone, and so are `+core-plain-file-keep-modes'."
 ;; And the keys that read a buffer, once nothing is listening.
 (add-hook 'compilation-finish-functions #'+core--run-finished-h)
 
-;; Builds start below the editor. At load 30 on twelve cores Emacs had
-;; under half a core, and every key waited its turn behind the compilers.
-;; A compilation starts under nice unless it runs a program or a
-;; benchmark, whose speed is the point, or takes input; a search is not
-;; a compilation here and keeps its pace. The command reads as it did.
+;; Builds start at a lower priority than the editor, so keys do not wait
+;; behind the compilers when the cores are busy. A compilation starts
+;; under nice unless it runs a program or a benchmark, whose speed is the
+;; point, or takes input; a search is not a compilation and keeps its
+;; pace. The command shown is unchanged.
 (defvar +core-build-niceness 10
   "The nice value builds start at, so typing goes first when the cores
 are short.  nil starts them at the editor's own priority.")
@@ -431,35 +399,31 @@ re-run starts it at the editor's priority again.")
                                 shell-file-name shell-command-switch command)
           (funcall fn name buffer command))))))
 
-;; A program's output was a plain window beside the source, not one of
-;; Doom's popups like the build's: the cursor stayed in the source and ESC
-;; left it standing. It opens as a popup on the right now, the cursor in
-;; it, and ESC or q closes it, from it or from the source. The buffer is
-;; kept, and what still runs in it, a dev server, goes on running.
+;; A program's output opens as a popup on the right, like the build's,
+;; with the cursor in it, so ESC or q closes it, from it or from the
+;; source. The buffer is kept, and what still runs in it, a dev server,
+;; goes on running.
 (set-popup-rule! "^\\*run[ :]" :side 'right :size 0.45 :select t :quit t :ttl nil)
 
-;; And a build, a test or a check this config starts is named for what it
-;; is, *build* or *clippy*, which none of Doom's popup rules knows: it
-;; stood as a plain window that ESC left, where *compilation* goes. It
-;; goes the same way now, at the bottom, the cursor left where it was.
+;; A build, a test or a check this config starts is named for what it
+;; is, *build* or *clippy*, which none of Doom's popup rules knows. It
+;; goes where *compilation* goes, at the bottom, the cursor left where it
+;; was, so ESC closes it.
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
 
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
-;; org-protocol, $EDITOR). Daemons already run one. Emacs here is the
-;; daemon that `+core/install-daemon' starts at login, its windows opened
-;; by Emacs Client.app; Emacs.app opened itself, from the Dock or Finder,
-;; found the daemon's server and ran none, so emacsclient went to an
-;; Emacs with no window and the files to one nothing could reach. A GUI
-;; Emacs whose server is taken now gives its files to that server, in a
-;; window of its own, and quits. EMACS_SERVER_NAME set to a name no
-;; server has gives an Emacs of its own, with its own server.
+;; org-protocol, $EDITOR). Daemons already run one. The usual Emacs is
+;; the daemon that `+core/install-daemon' starts at login. A GUI Emacs
+;; opened by itself whose server is taken gives its files to that
+;; server, in a window of its own, and quits, so emacsclient and the
+;; files reach the same Emacs. EMACS_SERVER_NAME set to a name no server
+;; has gives an Emacs of its own, with its own server.
 ;;
-;; Done once Emacs is idle, from a timer set here rather than from
+;; Done once Emacs is idle, from a timer rather than from
 ;; `doom-after-init-hook': an error in one of Doom's first hooks ends its
-;; startup there, the hooks after it with it, which left an Emacs with no
-;; server and its files with it (Emacs 31.1 failing now and then to load
-;; a package's native code as a GUI Emacs starts, 2026-10-23). And a file
-;; Finder hands over comes as an event just after startup.
+;; startup there, the hooks after it with it, which would leave an Emacs
+;; with no server. And a file Finder hands over comes as an event just
+;; after startup.
 (defun +core--start-server-h ()
   "Run the Emacs server, or hand this Emacs's files to the one running."
   (require 'server)
@@ -472,8 +436,8 @@ re-run starts it at the editor's priority again.")
 (unless (daemonp)
   (run-with-idle-timer 0.1 nil #'+core--start-server-h))
 
-;; And the daemon at login comes by itself to a machine without it, the
-;; launchd agent or the systemd unit (autoload/daemon.el).
+;; The login daemon, a launchd agent or a systemd unit, is set up by
+;; itself where there is none.
 (run-with-idle-timer 5 nil #'+core--ensure-daemon-agent)
 
 (defun +core--hand-off-to-server ()
@@ -498,30 +462,27 @@ Not when a file's buffer is modified, or when the server cannot be reached."
           (t (message "Server %s runs elsewhere and did not answer; this Emacs stays"
                       server-name)))))
 
-;; gcmh drops the GC threshold to 800 KB while Emacs is idle, but an agent
-;; streaming into vterm happens while idle: on a 350 MB heap that was a
-;; 100 ms freeze every 800 KB of output. It waits for 64 MB: with memory
-;; to spare a pause comes half as often as at 16 MB and lasts as long,
-;; 181 ms where it took 176 on a 178 MB heap; at 256 MB, a quarter as
-;; often again, 219 ms. Working, Doom's 64 MB is 256 here, below, and
-;; 512 once a language server runs, which Doom doubles it for.
+;; gcmh drops the GC threshold low while Emacs is idle, but an agent
+;; streaming into vterm happens while idle, and each little output then
+;; brought a long pause. At 64 MB a pause comes far less often and lasts
+;; about as long. Working, the threshold is 256 MB, below, and Doom
+;; doubles it once a language server runs.
 (setq gcmh-low-cons-threshold (* 64 1024 1024))
 
-;; And it collects once Emacs has rested ten times as long as the last
-;; collection took, Doom's setting: here that came to under half a
-;; second, so a pause to read a line ended in a collection of 40 to 150
-;; ms, and the key that ended the pause waited for it. Four seconds is a
-;; rest, not a glance. Doom sets its own as gcmh loads, with the first
-;; buffer, after this file: set before, the four seconds never held.
+;; It collects once Emacs has rested four seconds, a rest, not a glance.
+;; Doom's setting, ten times as long as the last collection took, is
+;; often under half a second, so a pause to read a line ended in a
+;; collection and the key that ended the pause waited for it. Set after
+;; gcmh loads, since Doom sets its own then.
 (after! gcmh
   (setq gcmh-idle-delay 4
         gcmh-high-cons-threshold (* 256 1024 1024)))
 
 ;; Doom compiles a few functions it calls often once Emacs is idle, and
 ;; natively where it can: `native-compile' runs a batch Emacs for each
-;; one and waits for it, a third of a second frozen, and a key pressed
-;; then waits too. Byte code is made in place in a few milliseconds and
-;; is most of the gain over the interpreter.
+;; one and waits for it, frozen, and a key pressed then waits too. Byte
+;; code is made in place almost at once and is most of the gain over the
+;; interpreter.
 (defadvice! +core--byte-compile-functions-a (&rest fns)
   "Byte-compile FNS the next time Emacs is idle."
   :override #'doom-compile-functions
@@ -532,26 +493,22 @@ Not when a file's buffer is modified, or when the server cannot be reached."
                  (let ((byte-compile-warnings nil))
                    (ignore-errors (byte-compile fn))))))))
 
-;; The first file of a session costs close to a second that the next one
-;; does not: eglot and what it needs load, version control and the diff
-;; gutter, the mode's own library, its tree-sitter queries are compiled
-;; and its snippets read, and the modules load their files. The first
-;; key costs a fifth of a second too, which-key mostly. Emacs does it
-;; while it waits after starting instead, one step at a time; a key
-;; pressed during a step stops it at once, and it is taken up again at
-;; the next pause. The modes set up ahead are those of the latest files,
-;; three at most: with only the latest one's, the first file of the
-;; second language of the day still paid for its mode, its library and
-;; its snippets as it opened, a third to half a second.
+;; The first file of a session costs much more than the next one: eglot
+;; and what it needs load, version control and the diff gutter, the
+;; mode's own library, its tree-sitter queries are compiled and its
+;; snippets read, and the modules load their files. The first key costs
+;; too, which-key mostly. Emacs does that work while it waits after
+;; starting instead, one step at a time; a key pressed during a step
+;; stops it at once, and it is taken up again at the next pause. The
+;; modes set up ahead are those of the latest files, three at most, so
+;; the second language of the day opens quickly too.
 (defvar +core-warm-up-features
   '(which-key vertico corfu
     ert eldoc xref jsonrpc external-completion flymake eglot markdown-mode yasnippet
     vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table
-    ;; And what the modules turned on since bring to the first file:
+    ;; And what the other modules bring to the first file:
     ;; editorconfig, direnv's environment, the wheel's scrolling, surround
-    ;; and expand-region for embrace, ffap for C and C++. 1.5 s of a first
-    ;; C++ file that took 2.75 to 3 s after the rest was loaded
-    ;; (2026-10-23).
+    ;; and expand-region for embrace, ffap for C and C++.
     editorconfig-core envrc pixel-scroll ultra-scroll mac-win
     evil-surround expand-region embrace evil-embrace ffap)
   "Libraries the first file of a session loads, loaded ahead while Emacs
@@ -576,11 +533,9 @@ sit over the dashboard.")
 ;; Doom turns on most of its global modes at the first key, the first
 ;; buffer and the first file, to start sooner: the undo, the surround and
 ;; snipe keys, which-key, winner, the trimming, editorconfig, direnv, the
-;; diff gutter. That was a fifth of a second at the first key, and 0.6 s
-;; of a first file even with everything else loaded ahead, setopt reading
-;; customize's tables among it. The warm-up runs them while Emacs waits,
-;; a function a step; Doom then finds the hooks empty, as after it ran
-;; them itself.
+;; diff gutter. That makes the first key and the first file slow. The
+;; warm-up runs them while Emacs waits, a function a step; Doom then
+;; finds the hooks empty, as after it ran them itself.
 (defvar +core-warm-up-skip-modes '(+cc-c-c++-objc-mode)
   "Modes the warm-up leaves out: each picks the mode for a file from the
 file itself, its name and the files beside it, and with no file fails;
@@ -684,17 +639,15 @@ pause again for the one after."
                       '((hook . doom-first-buffer-hook) (hook . doom-first-file-hook)))))
   (+core--warm-up))
 
-;; At the first pause after starting, from a timer set here rather than
-;; from `doom-after-init-hook', as the server is: an error in one of
-;; Doom's first hooks ends its startup there and the hooks after it, and
-;; nothing was warmed up for the rest of the session. The queue is made
-;; when the timer fires, the other modules' steps in it.
+;; At the first pause after starting, from a timer rather than from
+;; `doom-after-init-hook', as the server is: an error in one of Doom's
+;; first hooks ends its startup there and the hooks after it. The queue
+;; is made when the timer fires, the other modules' steps in it.
 (run-with-idle-timer 1 nil #'+core--warm-up-start)
 
 
-;; A 47 MB log opens in a fifth of a second here, in fundamental mode as
-;; Doom arranges for big files, so the "really open?" question can wait
-;; for files that are big even for that.
+;; A big log opens quickly in fundamental mode, as Doom arranges for big
+;; files, so the "really open?" question waits for files past 64 MB.
 (setq large-file-warning-threshold (* 64 1024 1024))
 
 ;; Opening the first file of a project starts its language server; Doom
@@ -703,29 +656,27 @@ pause again for the one after."
 ;; buffer back at once; the server attaches when it is ready.
 (after! eglot
   ;; What was typed goes to the server after a quarter second at rest,
-  ;; not half, so its diagnostics follow sooner; sending is a few ms here.
+  ;; not half, so its diagnostics follow sooner.
   (setq eglot-send-changes-idle-time 0.25)
   (setq eglot-sync-connect nil
         ;; The server's "a fix is available here" is a mark in the margin,
-        ;; as in every other IDE, not a line of text in the echo area: with
-        ;; that hint on, moving through a file with n made the echo area
-        ;; grow to three lines at every hit and read like a prompt.
+        ;; as in every other IDE, not a line of text in the echo area,
+        ;; which would grow at every search hit and read like a prompt.
         eglot-code-action-indications '(margin)))
 
 ;; eglot answers imenu from the server: every symbol of the file, asked
-;; for again after each edit by the header line's breadcrumbs, and an
-;; eleven thousand line JSON file froze five seconds at every pause.
-;; The mode's own index, tree-sitter's, is local and instant.
+;; for again after each edit by the header line's breadcrumbs, which
+;; freezes a large file at every pause. The mode's own index,
+;; tree-sitter's, is local and instant.
 (after! eglot
   (add-to-list 'eglot-stay-out-of 'imenu))
 
 ;; A server that formats as you type is asked, and waited for, at each
-;; newline: clangd did it on every RET, a round trip a busy server makes
-;; long. The mode indents the new line already, and the file is
-;; formatted when it is saved. Tried again on the Mac, a RET costs 8.5 ms
-;; without it, and with it clangd's edit lands inside the same insertion:
-;; Doom's comment continuation then finds no newline before point and
-;; RET signals an error.
+;; newline, a round trip a busy server makes long. The mode indents the
+;; new line already, and the file is formatted when it is saved. With
+;; it, clangd's edit also lands inside the same insertion: Doom's comment
+;; continuation then finds no newline before point and RET signals an
+;; error.
 (after! eglot
   (add-to-list 'eglot-ignored-server-capabilities :documentOnTypeFormattingProvider))
 
@@ -760,15 +711,14 @@ pause again for the one after."
               (funcall eglot-move-to-linepos-function col)))
           (if marker (copy-marker (point-marker)) (point)))))))
 
-;; Inlay hints, the parameter names before each argument, were asked for
-;; a screen at a time, as each part of the file was first drawn: every
-;; new screen scrolled to sent a request, and the text moved as the names
-;; came back. They are asked for the whole file when the hints come on,
-;; with the file or after SPC k l i; after an edit for what is on screen,
-;; as eglot does; and not for scrolling alone. The whole file goes in
-;; blocks, the one on screen first: painted at once, eleven thousand
-;; hints held Emacs a quarter of a second. Not again at each save: that
-;; many hints made again are garbage enough for a collection each time.
+;; Inlay hints, the parameter names before each argument, are asked for
+;; the whole file when the hints come on, with the file or after SPC k l
+;; i; after an edit for what is on screen, as eglot does; and not for
+;; scrolling alone, which would send a request at every new screen and
+;; move the text as the names came back. The whole file goes in blocks,
+;; the one on screen first, since painting many hints at once holds
+;; Emacs. Not again at each save: that many hints made again are garbage
+;; enough for a collection each time.
 (declare-function eglot--update-hints-1 "eglot")
 (declare-function eglot-current-server "eglot")
 (declare-function jsonrpc-connection-ready-p "jsonrpc")
@@ -827,9 +777,8 @@ it tells the server the file is open."
                  (mapcar (lambda (block) (* block +core-inlay-block-lines))
                          (sort blocks :key (lambda (block) (abs (- block here))))))))
 
-;; Asked for once, the hints of text changed off screen were lost with it
-;; and never asked for again: a format on save, a rename, a revert after
-;; git, and that part of the file had no hints until it was edited. The
+;; The hints of text changed off screen, by a format on save, a rename or
+;; a revert after git, would be lost until that part was edited. The
 ;; changed text is kept between two markers, and once the keys rest its
 ;; blocks are asked for, on screen or not.
 (defvar-local +core--inlay-dirty nil
@@ -926,13 +875,12 @@ asks again for it."
              (list (car bounds) (cdr bounds)))
             (t (list (point) (point)))))))
 
-;; With the buffer given back before the server answers (above), a second
-;; file of the project opened while its server is still starting, a
-;; header straight after its source, started a second server: eglot
-;; knows of a server only once it has answered. One of the two then died,
-;; and said so as an error. A start on its way is waited for now; when
-;; its server answers it takes every open file of the project, this one
-;; too. A start asked for by hand always goes ahead.
+;; With the buffer given back before the server answers, a second file
+;; of the project opened while its server is still starting would start
+;; a second server, since eglot knows of a server only once it has
+;; answered. A start on its way is waited for instead; when its server
+;; answers it takes every open file of the project. A start asked for by
+;; hand always goes ahead.
 (defvar +core--lsp-starting nil
   "((ROOT . MODES) . TIME) for each server started and not answering yet.")
 
@@ -971,22 +919,20 @@ MANAGED-MODES on its way already."
   (advice-add 'eglot--on-shutdown :after #'+core--lsp-started-h))
 
 ;; The echo area takes up to three lines for what is under the cursor.
-;; One line cut every diagnostic that did not fit, which is most of the
-;; ones worth reading; three holds nearly all of them and still does not
-;; grow into a page. K or SPC c H open the whole text when even that is
-;; not enough.
+;; One line cuts most diagnostics worth reading; three holds nearly all
+;; of them and still does not grow into a page. K or SPC c H open the
+;; whole text when even that is not enough.
 (setq eldoc-echo-area-use-multiline-p 3)
 
 ;; What is under the cursor shows after a quarter second at rest, not
-;; half. In C++ with clangd that rest asks for the signature, the hover
-;; and the highlights, 37 to 46 ms of work in all, the longest piece 19
-;; ms: a key pressed meanwhile waits no more than that (2026-10-23).
+;; half. The work it asks of the server comes in short pieces, so a key
+;; pressed meanwhile barely waits.
 (setq eldoc-idle-delay 0.25)
 
 ;; eglot renders documentation as markdown in gfm-view-mode, and the
-;; first reply of a session set the mode up: 20 ms of it, the next one
-;; 1 (2026-10-23). It is set up the way eglot does it while Emacs waits
-;; after starting (`+core-warm-up-functions').
+;; first reply of a session would pay for setting the mode up. It is set
+;; up the way eglot does it while Emacs waits after starting
+;; (`+core-warm-up-functions').
 (defun +core--warm-up-docs-h (_mode)
   "Render a little markdown as eglot renders documentation."
   (when (fboundp 'gfm-view-mode)
@@ -1000,15 +946,13 @@ MANAGED-MODES on its way already."
 (add-hook '+core-warm-up-functions #'+core--warm-up-docs-h 50)
 
 ;; SPC s k searches Doom's Dash docsets offline; the first file of a
-;; language opened installs its docsets in the background, on any
-;; machine (autoload/docsets.el).
+;; language opened installs its docsets in the background.
 (add-hook 'find-file-hook #'+core--docsets-h 90)
 
-;; At rest on a name the echo area showed the first line of the hover,
-;; "function debug_push_event": nothing a reader did not know. The hover
-;; carries the declaration as code, return type, name and parameters,
-;; and that is the line shown now, coloured as code; K and SPC c H still
-;; show the whole hover. clangd puts the declaration in the last code
+;; At rest on a name the echo area shows the declaration the hover
+;; carries, return type, name and parameters, coloured as code, rather
+;; than the hover's first line, which tells a reader little. K and SPC c
+;; H still show the whole hover. clangd puts the declaration in the last code
 ;; block, after the documentation; other servers in the first.
 ;;
 ;; After it, in gray, what clangd knows and the line does not say: the
@@ -1096,7 +1040,7 @@ what the hover says beside it."
                 plist))))))
 
 ;; One thing said once on screen. Between the parentheses of a call the
-;; server's signature help and the hover both named the function called:
+;; server's signature help and the hover both name the function called:
 ;; the signature stays, with the argument at point marked. And on the
 ;; head of a function the header already names it.
 (defun +core--hover-name (line)
@@ -1146,12 +1090,10 @@ taken out again with eglot's own when eglot lets the buffer go."
                             eldoc-documentation-functions))
       (remove-hook 'eldoc-documentation-functions #'+core--hover-eldoc-function t))))
 
-;; eldoc, which eglot brings from ELPA and which loads with the first
-;; file, primes its list of motion commands by running thirty prefixes
-;; one by one through every symbol there is: 76 000 of them in a session
-;; here, 235 ms, and 581 while the minibuffer folds case. One regexp for
-;; all thirty, matched in C in a single pass, finds the same 152 commands
-;; in 30 ms.
+;; eldoc, which loads with the first file, primes its list of motion
+;; commands by running thirty prefixes one by one through every symbol
+;; there is, which is slow. One regexp for all thirty, matched in C in a
+;; single pass, finds the same commands.
 (defadvice! +core--eldoc-command-completions-a (&rest names)
   "Add every command whose name starts with one of NAMES, in one pass."
   :override #'eldoc-add-command-completions
@@ -1168,17 +1110,17 @@ taken out again with eglot's own when eglot lets the buffer go."
 ;;
 ;;; Editing
 
-;; :lang sh has no +tree-sitter flag, so map the mode here.
+;; :lang sh has no +tree-sitter flag, so the mode is mapped by hand.
 (when (modulep! :tools tree-sitter)
   (set-tree-sitter! 'sh-mode 'bash-ts-mode
     '((bash :url "https://github.com/tree-sitter/tree-sitter-bash"))))
 
 ;; yasnippet reads a mode's snippets the first time the mode is used, a
-;; file at a time: for each, Emacs asked editorconfig the file's coding,
-;; and editorconfig looked for .editorconfig files up every directory,
-;; and yasnippet looked up the tree for a .yas-make-groups. Two thirds of
-;; it went there, half the cost of the first Elisp file of a session. The
-;; snippets are UTF-8, and a directory's groups file is looked for once.
+;; file at a time: for each, Emacs asks editorconfig the file's coding,
+;; and editorconfig looks for .editorconfig files up every directory,
+;; and yasnippet looks up the tree for a .yas-make-groups. That is most
+;; of the cost. The snippets are read as UTF-8, and a directory's groups
+;; file is looked for once.
 (defvar +core--yas-groups nil
   "While snippets load, (DIRECTORY . NAME) to where NAME was found above.")
 
@@ -1221,8 +1163,8 @@ taken out again with eglot's own when eglot lets the buffer go."
         tab-always-indent t))
 
 ;; Doom makes backspace reset the popup whenever a candidate is chosen,
-;; to take back the preview it puts in the buffer; with the first
-;; chosen from the start that was every backspace, and the typo stayed.
+;; to take back the preview it puts in the buffer; with the first chosen
+;; from the start that would be every backspace, and the typo would stay.
 ;; Backspace deletes; it resets only over a preview, which the first
 ;; candidate never is.
 (let ((reset `(menu-item "Reset completion" corfu-reset
@@ -1233,10 +1175,9 @@ taken out again with eglot's own when eglot lets the buffer go."
         "DEL" reset))
 
 ;; What the candidate under the cursor means, beside the list. Doom turns
-;; the popup on and binds nothing for it, so it could only be waited for:
-;; M-d asks for it at once, and M-n and M-p read a long one. By itself it
-;; comes 0.3 s after the list does, and follows the selection in 0.15:
-;; Doom waited half a second and then a whole one at each move.
+;; the popup on and binds nothing for it: M-d asks for it at once, and
+;; M-n and M-p read a long one. By itself it comes 0.3 s after the list
+;; does, and follows the selection in 0.15 s.
 (after! corfu-popupinfo
   (setq corfu-popupinfo-delay '(0.3 . 0.15)))
 (map! :after corfu-popupinfo
@@ -1246,10 +1187,10 @@ taken out again with eglot's own when eglot lets the buffer go."
       "M-p" #'corfu-popupinfo-scroll-down)
 
 
-;; zM and zR close and open every fold, which is what they do in Vim and
-;; what the sheet has always said. Doom puts those commands on zm and zr
-;; and leaves the capitals unbound in a code buffer; org-mode binds its
-;; own, and a mode map wins, so this only fills the gap.
+;; zM and zR close and open every fold, as they do in Vim. Doom puts
+;; those commands on zm and zr and leaves the capitals unbound in a code
+;; buffer; org-mode binds its own, and a mode map wins, so this only
+;; fills the gap.
 (map! :n "zM" #'+fold/close-all
       :n "zR" #'+fold/open-all)
 
@@ -1258,25 +1199,22 @@ taken out again with eglot's own when eglot lets the buffer go."
 ;;; Projects
 
 ;; Doom keeps projectile's file list in a cache that survives restarts, so
-;; a file added outside Emacs, an image dropped in by hand or a source
-;; written by Qt Creator, is not found until SPC p i. fd lists a project
-;; in milliseconds; ask it every time.
+;; a file added outside Emacs is not found until SPC p i. fd lists a
+;; project at once, so it is asked every time.
 (after! projectile
   (setq projectile-enable-caching nil))
 
-;; A project whose directory was deleted or moved stayed in SPC p p for
-;; good, and picking it failed. The list is checked each time it is
-;; asked for now: a root that is gone leaves it and projects.eld. So
-;; does one on a disk that is not mounted; a remote one is kept.
+;; A project whose directory was deleted or moved would stay in SPC p p,
+;; and picking it would fail. The list is checked each time it is asked
+;; for: a root that is gone leaves it and projects.eld. So does one on a
+;; disk that is not mounted; a remote one is kept.
 (after! projectile
   (setq projectile-auto-cleanup-known-projects t))
 
-;; SPC k was the C++ keys wherever you were: in a Pascal project most of
-;; them meant nothing, and outside a project nothing at all. It opens
-;; the keys of the module that owns the project now, C++, Pascal, Rust
-;; or the web; in a project none of them knows, what projection can do
-;; with it; outside one, starting a project and going to one. Each
-;; module registers its map with `+core-register-builder'.
+;; SPC k opens the keys of the module that owns the project, C++,
+;; Pascal, Rust or the web; in a project none of them knows, what
+;; projection can do with it; outside one, starting a project and going
+;; to one. Each module registers its map with `+core-register-builder'.
 (defvar +core-kit-map
   (+core-kit-keymap
    '(("n" "New project"            #'+core/new-project)
@@ -1308,9 +1246,9 @@ its sixty kinds, and the keys from outside a project.")
     (concat doom-leader-alt-key " k") "project"))
 
 ;; SPC SPC lists the project's files by how recently they were opened,
-;; so the first, the one it opens on and previews, was the file already
-;; on screen: its preview showed what was there and looked like none.
-;; That file goes to the end, and the list opens on the one before it.
+;; so the first, the one it opens on and previews, would be the file
+;; already on screen, and its preview would look like none. That file
+;; goes to the end, and the list opens on the one before it.
 (declare-function projectile-project-root "projectile")
 (defun +core--current-file-last (candidates)
   "CANDIDATES sorted as usual, with the file shown in the window the
@@ -1337,11 +1275,10 @@ the window the view stands beside."
 (map! :leader
       :desc "Find any file in project" "s F" #'+core/find-any-file)
 
-;; SPC s f and SPC f l are Doom's `locate', which shells out to locate(1):
-;; not installed here, and an index a cron job has to keep fresh is a
-;; poor way to find a file on a machine that has fd. consult-fd searches
-;; names live under the directory you are in, C-u for another one, and
-;; there is nothing to keep up to date.
+;; SPC s f and SPC f l are Doom's `locate', which shells out to
+;; locate(1) and needs an index a cron job keeps fresh. consult-fd
+;; searches names live under the directory you are in, C-u for another
+;; one, and there is nothing to keep up to date.
 (map! :leader
       :desc "Find a file by name, here and below" "s f" #'consult-fd
       :desc "Find a file by name, here and below" "f l" #'consult-fd)
@@ -1353,8 +1290,8 @@ the window the view stands beside."
       :desc "Search and replace menu" "s SPC" #'+core/search-menu
       :desc "Replace in the project"  "s R"   #'+core/replace-in-project)
 
-;; SPC s s lists every line of the buffer before its prompt opens: 1.9 s
-;; in a 50 MB log, and each key then sifted 430 000 lines. Past
+;; SPC s s lists every line of the buffer before its prompt opens, which
+;; is slow in a big file, and each key then sifts all of them. Past
 ;; `+core-search-buffer-max' it asks ripgrep about the file instead,
 ;; which answers as you type and moves the view as the line search does.
 ;; Changes not saved, or a selection over several lines, keep the line
@@ -1440,11 +1377,11 @@ the window the view stands beside."
 ;; The window's close button asks whether to save what is open, whether
 ;; to stop what still runs, whether to quit, in the minibuffer. KDE takes
 ;; that click without giving the window the keyboard, and Wayland lets no
-;; program take it: the frame is raised and given the focus here, which
-;; works under X and nowhere else. The click that then brings Emacs
-;; forward lands in a window and puts the cursor there, out of the
-;; minibuffer, so y or n went to the buffer and the question stayed.
-;; While quitting, a question reads the next key wherever the cursor is.
+;; program take it: raising the frame and giving it the focus works
+;; under X only. The click that then brings Emacs forward lands in a
+;; window and puts the cursor there, out of the minibuffer, so y or n
+;; would go to the buffer. While quitting, a question reads the next key
+;; wherever the cursor is.
 (defun +core--answer-anywhere-a (fn &rest args)
   "Call FN with ARGS, the questions it asks answered by the next key.
 It advises the commands that quit, SPC q q's among them."
@@ -1478,7 +1415,8 @@ It advises the commands that quit, SPC q q's among them."
 ;; SPC m SPC opens a transient menu listing what the current mode can
 ;; do, the way SPC k SPC, SPC g SPC and the others open a module's; C-o
 ;; stays evil's jump back. calc and isearch have no evil state, so the
-;; menu sits on C-o there. dired's is bound with its localleader above.
+;; menu sits on C-o there. dired's is bound with its other localleader
+;; keys.
 (use-package! casual
   :defer t
   :init

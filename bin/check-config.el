@@ -147,8 +147,8 @@ symbol; the library is loaded so the advice is in place to look at."
     problems))
 
 ;; A question asked in the daemon waits for an answer no one can give,
-;; and the check waited with it, for good: vterm offers to compile its
-;; module when it loads without one. It fails now, naming the question.
+;; so the check would hang (vterm, for one, offers to compile its
+;; module). Each question signals an error instead, naming itself.
 (defconst check-config--questions
   '(read-from-minibuffer read-key y-or-n-p yes-or-no-p)
   "What asks the user something, behind every prompt there is.")
@@ -161,11 +161,10 @@ symbol; the library is loaded so the advice is in place to look at."
   "Compile into OUT and write the report to LOG."
   (dolist (fn check-config--questions)
     (advice-add fn :before #'check-config--refuse-question))
-  (let* (;; Asked before anything is compiled: compiling defines every
-         ;; command in the config, and a command defined here but not in
-         ;; the session the sheet was generated from would read as drift.
-         ;; An error is a finding, a refused question among them: let
-         ;; go, it read as a sheet up to date.
+  (let* (;; Asked before compiling: compiling defines every command, and
+         ;; one missing from the session the sheet was generated from
+         ;; would read as drift. An error, a refused question among
+         ;; them, is reported rather than read as an up to date sheet.
          (stale (and (fboundp '+docs-sheet-stale-p)
                      (condition-case err (+docs-sheet-stale-p)
                        (error (list 'error err)))))

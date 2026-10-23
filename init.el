@@ -4,13 +4,12 @@
 ;; SPC h r s, and restart.
 ;;
 ;; Two notes: a language module needs its own +tree-sitter flag, and the
-;; :private block at the end holds this config's own modules, each with a
-;; README.org next to it.
+;; :private block at the end holds this config's own modules.
 
-;; Where the notes live on this machine. Set here, before any module and
-;; the doctor read them; a folder that is missing is made on first use.
-;; Unset, both are ~/org: the documents and library (`org-directory')
-;; and the knowledge graph (`org-roam-directory') share one root.
+;; Where the notes live. Set before any module or the doctor reads them;
+;; a missing folder is made on first use. Unset, both are ~/org: the
+;; documents and library (`org-directory') and the knowledge graph
+;; (`org-roam-directory') share one root.
 (setq +core-notes-dir "~/projects/personal/knowledge_base/"
       +notes-knowledge-dir "~/projects/personal/knowledge/")
 

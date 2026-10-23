@@ -5,7 +5,7 @@
 ;; reached by a rebase that stops there, amended, and the rebase goes
 ;; on; git does the same by hand, in three commands.
 
-(defvar +git-commit-types)              ; config.el
+(defvar +git-commit-types)
 (defvar +git-date-format)
 (declare-function magit-staged-files "magit-git")
 (declare-function magit-commit-at-point "magit-git")
@@ -76,10 +76,9 @@ be emptied for a commit that has none."
 (defvar +git-pick-commits 500
   "How many of the latest commits a prompt for a commit lists.")
 
-;; magit asks for a commit among branch names only, so one was reached by
-;; its hash or by standing on it first. This lists the latest commits,
-;; hash, date and subject, the one under the cursor first; a word of the
-;; message finds one.
+;; magit asks for a commit among branch names only. This lists the
+;; latest commits, hash, date and subject, the one under the cursor
+;; first, so a word of the message finds one.
 ;;;###autoload
 (defun +git--read-commit (prompt &optional everywhere)
   "A commit read with PROMPT from the latest of this branch, of every
@@ -140,9 +139,9 @@ non-nil when the rebase stopped there."
                                  (format "s/^pick \\(%s[0-9a-f]*\\)/edit \\1/" short)))
                         "GIT_EDITOR=true")
                   process-environment)))
-    ;; A commit of another branch has no pick line here, and the rebase
-    ;; ran to its end all the same: this branch, rebuilt on that one.
-    ;; And one behind a merge would come back with the merge flattened.
+    ;; A commit of another branch has no pick line here, so the rebase
+    ;; would run to its end and rebuild this branch on that one. And one
+    ;; behind a merge would come back with the merge flattened.
     (unless (magit-git-success "merge-base" "--is-ancestor" hash "HEAD")
       (user-error "%s is not in this branch's history; check out its branch first" short))
     (when (magit-git-string "rev-list" "--merges" "-n1" (concat hash "..HEAD"))

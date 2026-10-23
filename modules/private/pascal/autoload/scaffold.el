@@ -1,6 +1,6 @@
 ;;; private/pascal/autoload/scaffold.el -*- lexical-binding: t; -*-
 ;;
-;; A new Pascal project. There is no `cargo new' here, so the templates
+;; A new Pascal project. Pascal has no `cargo new', so the templates
 ;; carry the whole thing: the program file, a unit, and for an LCL
 ;; application the .lpi Lazarus reads.
 
