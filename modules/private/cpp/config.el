@@ -149,6 +149,15 @@ a choice.  Set with `+cpp/set-run-target', kept in .dir-locals.el.")
 Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 
 
+;; The offline docs SPC s k searches, and core installs on first use:
+;; Doom names them when cc-mode and cmake-mode load, which a tree-sitter
+;; buffer never makes happen, so a C++ file had no docsets at all.
+(when (modulep! :tools lookup +docsets)
+  (set-docsets! '(c-mode c-ts-mode) "C")
+  (set-docsets! '(c++-mode c++-ts-mode) "C++" "Boost")
+  (set-docsets! '(cmake-mode cmake-ts-mode) "CMake"))
+
+
 ;;
 ;;; Language server (eglot)
 
