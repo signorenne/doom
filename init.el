@@ -40,7 +40,7 @@
  ophints           ; highlight region affected by operations
  (popup +defaults) ; sane defaults for pop-up windows
  smooth-scroll     ; pixel scrolling
- tabs              ; a tab per open file above each window (centaur-tabs)
+ ;;tabs            ; off: a tab per open file said nothing the buffer list does not
  treemacs          ; project drawer, SPC o p
  ;;unicode           ; slow first run; :private ui sets the fontsets
  (vc-gutter +pretty) ; git diffs in the fringe; diff-hl is the only backend in Doom 3
