@@ -168,11 +168,6 @@ key.  A node that holds most of the file holds the middle too."
   "Non-nil once this file's buffer was checked for a slow syntax tree.")
 (put '+core--treesit-checked 'permanent-local t)
 
-(defvar-local +core-treesit-fallback-p nil
-  "Non-nil in a file opened in the older mode, tree-sitter's being slow
-there: a file the older mode is slow to walk too, the ui module's header
-looking for no function in it.")
-
 (add-hook! 'after-change-major-mode-hook :depth -90
   (defun +core--without-treesit-h ()
     "Open a file tree-sitter would make slow in the mode before it."
@@ -190,7 +185,6 @@ looking for no function in it.")
                      (and (> (buffer-size) +core-treesit-unparsed-max)
                           (+core--treesit-slow-reparse-p)))))
       (funcall classic)
-      (setq-local +core-treesit-fallback-p t)
       (message "%s opens in %s: tree-sitter would slow it down" (buffer-name) classic))))
 
 ;; Whether a grammar is there is looked up on disk at every asking, 3 ms

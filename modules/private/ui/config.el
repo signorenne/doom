@@ -178,144 +178,169 @@ draws on the dashboard moves on from here, inside
 ;;
 ;;; Visual aids
 
-;; Where you are, in the header line: the project path and the symbol
-;; path (file > class > function) from breadcrumb, replaced by the
-;; first line of the enclosing function while that line is scrolled off
-;; the top, the way VS Code and Zed pin it.  In code buffers.
-(defvar-local +ui--defun-cache nil
-  "(START END TICK TOP . LINE) of the function last found under the
-window's top TOP, or of the stretch between two functions TOP was in,
-with LINE nil: reused while the top stays inside it and the buffer
-unchanged, since the header line is asked on every redisplay, dozens a
-second while the wheel turns; and while the window stays still and only
-the text changes, until the typing stops.")
+;; Where you are, in the header line, from the syntax tree at point: the
+;; scope, namespace and class, then the function with its parameters and
+;; what it returns, and about that function the line you are on out of
+;; its length, its errors and warnings, and the changes in it since the
+;; last commit:
+;;
+;;   …::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2
+;;
+;; Without a tree, in the older modes, breadcrumb's symbol path. Never the
+;; file's path, which the modeline shows. The function was a first line pinned while scrolled off
+;; before, which said "namespace {" or "int" more often than anything.
+(defvar +ui-scope-node-types
+  (concat "\\`" (regexp-opt '("namespace_definition" "mod_item" "module"
+                              "internal_module" "class_specifier"
+                              "struct_specifier" "union_specifier"
+                              "enum_specifier" "class_definition"
+                              "class_declaration" "impl_item" "trait_item"))
+          "\\'")
+  "The syntax nodes that make a scope in the header line, in any language.")
 
-(defvar-local +ui--defun-refresh nil
-  "The idle timer that looks the function up again once typing stops.")
+(defvar +ui-function-node-types
+  (concat "\\`" (regexp-opt '("function_definition" "function_declaration"
+                              "function_item" "method_definition"
+                              "method_declaration" "lambda_expression"))
+          "\\'")
+  "The syntax nodes that are a function in the header line, in any language.")
 
-(defun +ui--defun-by-tree-p ()
-  "Non-nil where the buffer's functions are found from its syntax tree."
-  (and (fboundp 'treesit-defun-at-point)
-       (bound-and-true-p treesit-defun-type-regexp)
-       (treesit-parser-list)))
+(defun +ui--by-tree-p ()
+  "Non-nil where the header line reads the buffer's syntax tree."
+  (treesit-parser-list))
 
-(defun +ui--defun-around (top)
-  "(START . END) of the function holding TOP, or nil.  From the syntax
-tree where the buffer has one, in as many steps as it is deep: moving to
-the start and end of a defun walks every sibling on the way, and in a
-large object literal or array that was most of a scroll step's time."
-  (if (+ui--defun-by-tree-p)
-      (when-let* ((node (save-excursion (goto-char top) (treesit-defun-at-point))))
-        (cons (treesit-node-start node) (treesit-node-end node)))
-    (save-excursion
-      (goto-char top)
-      (when-let* ((start (and (ignore-errors (beginning-of-defun) t) (point)))
-                  (end (progn (ignore-errors (end-of-defun)) (point))))
-        (cons start end)))))
+(defun +ui--node-name (node)
+  "NODE's name: the mode's own for it, else its name field."
+  (pcase (treesit-node-type node)
+    ("lambda_expression" "λ")
+    ("namespace_definition"
+     (if-let* ((name (treesit-node-child-by-field-name node "name")))
+         (let ((parts (split-string (treesit-node-text name t) "::")))
+           (if (cdr parts) (concat "…::" (car (last parts))) (car parts)))
+       "(anonymous)"))
+    (_ (or (ignore-errors (treesit-defun-name node))
+           (when-let* ((name (treesit-node-child-by-field-name node "name")))
+             (treesit-node-text name t))
+           "?"))))
 
-(defun +ui--defun-gap (top range)
-  "(FROM . TO) round TOP, which no function holds, where no function
-starts; RANGE is the function found before TOP.  Without a syntax tree a
-lookup walks the code, 5 to 9 ms in cc-mode, and scrolling between two
-functions looked again at every line: the stretch to the next function
-is found once instead.  With a tree, or a function starting at TOP, the
-top line alone."
-  (if (or (+ui--defun-by-tree-p) (and range (>= (car range) top)))
-      (cons top (1+ top))
-    ;; The next start is sought from where RANGE ends, a character back:
-    ;; at the very start of a function the one found before TOP is the
-    ;; one before that, and from TOP its own start is passed over.
-    (let* ((from (if (and range (<= (cdr range) top)) (cdr range) top))
-           (next (save-excursion
-                   (goto-char (max (point-min) (1- from)))
-                   (and (ignore-errors (beginning-of-defun -1) t) (point)))))
-      (if (and next (> next top))
-          (cons from next)
-        (cons top (1+ top))))))
+(defun +ui--param-name (param)
+  "The name PARAM declares, or its text when it names nothing."
+  (let ((name (or (treesit-node-child-by-field-name param "declarator")
+                  (treesit-node-child-by-field-name param "name")
+                  (treesit-node-child-by-field-name param "pattern"))))
+    (if-let* ((id (and name (treesit-search-subtree name "\\`identifier\\'" nil t 4))))
+        (treesit-node-text id t)
+      (string-trim (replace-regexp-in-string "[ \t\n]+" " " (treesit-node-text (or name param) t))))))
 
-(defun +ui--scrolled-defun ()
-  "The first line of the function that holds the window's first line,
-when that first line is scrolled off; nil at the top of a function or
-between two.  Kept while the window's top stays inside that function.
-Typing with the window still keeps it too, and it is looked up again
-half a second after the typing stops: without a syntax tree the lookup
-walks the code, and in cc-mode it was half of what a key cost.  Not
-looked up in a file core calls large without a syntax tree: in a 2 MB
-header of declarations cc-mode walked back through them at every step,
-130 ms a line scrolled; the tree finds it in a megabyte in 10 µs.  Nor
-in one core gave the older mode for its slow tree, an image or a font
-as a C array: cc-mode took 300 to 420 ms to walk a 600 KB one, at
-every pause in the typing (2026-10-23)."
-  (let ((top (window-start)))
-    (when (and (> top (point-min))
-               (or (treesit-parser-list)
-                   (not (or +core-large-file-p +core-treesit-fallback-p))))
-      (pcase-let ((`(,from ,to ,tick ,old-top . ,line) +ui--defun-cache))
-        (cond
-         ;; A function's line holds while the top is past it: with the
-         ;; top on that line it is on screen, and the header doubled it.
-         ;; The entry for no function at all is the stretch between two.
-         ((and from (if line (< from top) (<= from top)) (< top to)
-               (eq tick (buffer-chars-modified-tick)))
-          line)
-         ((and from (eql top old-top))
-          (unless (timerp +ui--defun-refresh)
-            (let ((buffer (current-buffer)))
-              (setq +ui--defun-refresh
-                    (run-with-idle-timer
-                     0.5 nil (lambda ()
-                               (when (buffer-live-p buffer)
-                                 (with-current-buffer buffer
-                                   (setq +ui--defun-refresh nil +ui--defun-cache nil)
-                                   (force-mode-line-update))))))))
-          line)
-         (t
-          (let* ((range (+ui--defun-around top))
-                 (inside (and range (< (car range) top) (> (cdr range) top)))
-                 (span (if inside range (+ui--defun-gap top range)))
-                 (text (and inside
-                            (save-excursion
-                              (goto-char (car range))
-                              (font-lock-ensure (car range) (pos-eol))
-                              (string-trim-right (buffer-substring (car range) (pos-eol)))))))
-            (setq +ui--defun-cache
-                  (cons (car span)
-                        (cons (cdr span)
-                              (cons (buffer-chars-modified-tick) (cons top text)))))
-            text)))))))
+(defun +ui--function-label (fn)
+  "FN as name(params) → type, the parameters by name."
+  (let* ((params (treesit-search-subtree
+                  fn "\\`\\(?:parameter_list\\|parameters\\|formal_parameters\\)\\'" nil t 4))
+         (names (and params (mapcar #'+ui--param-name (treesit-node-children params t))))
+         (type (or (treesit-node-child-by-field-name fn "type")
+                   (treesit-node-child-by-field-name fn "return_type"))))
+    (concat (propertize (+ui--node-name fn) 'face 'font-lock-function-name-face)
+            "(" (string-join (if (> (length names) 5)
+                                 (append (seq-take names 4) '("…"))
+                               names)
+                             ", ")
+            ")"
+            (when type
+              (concat " → " (propertize (string-trim-left (treesit-node-text type t) "[-:> ]+")
+                                       'face 'font-lock-type-face))))))
+
+(defun +ui--function-facts (fn)
+  "About FN: the line point is on out of its lines, its errors and
+warnings, and its changed hunks; nothing that is zero."
+  (let* ((start (treesit-node-start fn))
+         (end (treesit-node-end fn))
+         (errors 0) (warnings 0)
+         (hunks (seq-count (lambda (o) (overlay-get o 'diff-hl-hunk)) (overlays-in start end))))
+    (when (bound-and-true-p flymake-mode)
+      (dolist (d (flymake-diagnostics start end))
+        (let* ((type (flymake-diagnostic-type d))
+               (category (if (keywordp type)
+                             (intern (concat "flymake-" (substring (symbol-name type) 1)))
+                           (get type 'flymake-category))))
+          (pcase category
+            ('flymake-error (cl-incf errors))
+            ('flymake-warning (cl-incf warnings))))))
+    (string-join
+     (delq nil (list (format "%d/%d" (1+ (count-lines start (pos-bol)))
+                             (count-lines start end))
+                     (unless (and (zerop errors) (zerop warnings))
+                       (string-join (delq nil (list (and (> errors 0) (propertize (format "✖%d" errors) 'face 'error))
+                                                    (and (> warnings 0) (propertize (format "⚠%d" warnings) 'face 'warning))))
+                                    " "))
+                     (and (> hunks 0) (propertize (format "±%d" hunks) 'face 'diff-changed))))
+     "  ")))
+
+(defvar-local +ui--scope-cache nil
+  "(LINE-START TICK FN . SCOPE): the scope and function of the line point
+was on, reused until point leaves the line or the buffer changes; the
+facts about the function, which servers and git change in between, are
+worked out at each redisplay, a few overlays counted.")
+
+(defun +ui--scope ()
+  "(FN . SCOPE): the function holding point, or nil, and the header's
+scope and function label."
+  (let ((here (pos-bol)) (tick (buffer-chars-modified-tick)))
+    (pcase-let ((`(,line ,old-tick ,fn . ,scope) +ui--scope-cache))
+      (if (and line (eq line here) (eq tick old-tick))
+          (cons fn scope)
+        (let* ((node (treesit-node-at (save-excursion (skip-chars-forward " \t") (point))))
+               (sep (propertize " › " 'face 'shadow))
+               fn parts)
+          (while node
+            (let ((type (treesit-node-type node)))
+              (cond ((string-match-p +ui-function-node-types type)
+                     (unless fn (setq fn node))
+                     (push (+ui--function-label node) parts))
+                    ((string-match-p +ui-scope-node-types type)
+                     (push (+ui--node-name node) parts))))
+            (setq node (treesit-node-parent node)))
+          (setq scope (and parts (string-join parts sep)))
+          (setq +ui--scope-cache (cons here (cons tick (cons fn scope))))
+          (cons fn scope))))))
 
 (defvar-local +ui--crumbs-cache nil
   "(LINE-START TICK . CRUMBS): the breadcrumbs of the line point is on,
 reused until point leaves the line or the buffer changes.")
 
 (defun +ui--crumbs ()
-  "The breadcrumbs of point: the project path, then the symbol path."
+  "The breadcrumbs of point: the symbol path.  Not the file's: the
+modeline has it."
   (let ((here (line-beginning-position)))
     (pcase-let ((`(,line ,tick . ,crumbs) +ui--crumbs-cache))
       (if (and line (eq line here) (eq tick (buffer-chars-modified-tick)))
           crumbs
-        (let ((text (string-join (seq-remove #'string-empty-p
-                                             (list (or (ignore-errors (breadcrumb-project-crumbs)) "")
-                                                   (or (ignore-errors (breadcrumb-imenu-crumbs)) "")))
-                                 (propertize "  >  " 'face 'shadow))))
+        (let ((text (or (ignore-errors (breadcrumb-imenu-crumbs)) "")))
           (setq +ui--crumbs-cache (cons here (cons (buffer-chars-modified-tick) text)))
           text)))))
 
 (defun +ui--where-line ()
-  "The header line: the enclosing function's first line while it is
-scrolled off, else the breadcrumbs."
-  (concat " " (or (+ui--scrolled-defun) (+ui--crumbs))))
+  "The header line: scope, function and facts about it from the tree,
+else the breadcrumbs."
+  (concat " "
+          (or (and (+ui--by-tree-p)
+                   (pcase-let ((`(,fn . ,scope) (+ui--scope)))
+                     (and scope
+                          (if fn
+                              (concat scope "    " (propertize (+ui--function-facts fn) 'face 'shadow))
+                            scope))))
+              (+ui--crumbs))))
 
 (define-minor-mode +ui-where-mode
-  "A header line saying where you are: the project and symbol paths,
-or the enclosing function's first line while it is scrolled off the top."
+  "A header line saying where you are: the scope and the function at
+point, with its parameters, return type, the line in it, its problems
+and its changes; or the symbol path without a syntax tree."
   :lighter nil
   (if +ui-where-mode
       (setq-local header-line-format '(:eval (+ui--where-line)))
     (kill-local-variable 'header-line-format)))
 
 (use-package! breadcrumb
-  :commands (breadcrumb-project-crumbs breadcrumb-imenu-crumbs)
+  :commands (breadcrumb-imenu-crumbs)
   :init (add-hook 'prog-mode-hook #'+ui-where-mode))
 
 ;; Not in a file of long lines: with a header line, each key there redrew
