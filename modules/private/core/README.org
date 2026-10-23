@@ -11,6 +11,13 @@ The small global things:
   on Linux) whose windows Emacs Client.app opens; Emacs.app opened by
   itself, from the Dock or Finder, hands its files to that daemon and
   quits (=EMACS_SERVER_NAME= set to an unused name keeps one of its own),
+- at rest on a name in a file with a language server, the echo area
+  shows its declaration as code, return type, name and parameters,
+  =void debug_push_event(event_type const type, ...)=, and in gray what
+  the line does not say: the type an =auto= stands for, a constant's or
+  an enumerator's value, a struct's or a field's size, alignment and
+  offset; never what the signature help or the header already shows. ~K~
+  and ~SPC c H~ show the whole hover with its documentation,
 - editing defaults: fine-grained undo with the whole history as a graph
   on ~U~, bash tree-sitter mode,
   completion as you type with the first candidate chosen, and what a

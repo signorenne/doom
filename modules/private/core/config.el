@@ -1001,6 +1001,148 @@ MANAGED-MODES on its way already."
 
 (add-hook '+core-warm-up-functions #'+core--warm-up-docs-h 50)
 
+;; At rest on a name the echo area showed the first line of the hover,
+;; "function debug_push_event": nothing a reader did not know. The hover
+;; carries the declaration as code, return type, name and parameters,
+;; and that is the line shown now, coloured as code; K and SPC c H still
+;; show the whole hover. clangd puts the declaration in the last code
+;; block, after the documentation; other servers in the first.
+;;
+;; After it, in gray, what clangd knows and the line does not say: the
+;; type an `auto' stands for, the value of a constant whose line shows an
+;; expression, an enumerator or a macro (not when the line has it,
+;; "#define X 15"), and on a struct or a field its size, alignment and
+;; offset, which a register map or a packet layout is about:
+;;
+;;   constexpr std::uint32_t TIMEOUT_MS = 10u * 3u   = 30 (0x1e)
+;;   public: std::uint32_t length   offset 4, size 4, align 4
+(declare-function eglot-hover-eldoc-function "eglot")
+(declare-function eglot-current-server "eglot")
+(declare-function jsonrpc--process "jsonrpc")
+
+(defun +core--hover-declaration (doc clangd)
+  "The declaration in DOC, a hover as eglot renders it, as one line:
+the last code block's code if CLANGD, else the first's, its comments
+left out; or nil."
+  (let (blocks)
+    (with-temp-buffer
+      (insert doc)
+      (goto-char (point-min))
+      (while (re-search-forward "^```[^\n]*\n\\(\\(?:.*\n\\)*?\\)```" nil t)
+        (push (cons (match-beginning 1) (match-end 1)) blocks)))
+    (when-let* ((block (if clangd (car blocks) (car (last blocks))))
+                (lines (split-string (substring doc (1- (car block)) (1- (cdr block))) "\n"))
+                (skip (lambda (line) (string-match-p "\\`[ \t]*\\(//\\|$\\)" line)))
+                ;; The code between the comments that may lead, "// In
+                ;; namespace x", and those that may follow, a macro's
+                ;; "// Expands to".
+                (code (string-join (seq-take-while (lambda (line) (not (funcall skip line)))
+                                                   (seq-drop-while skip lines))
+                                   " "))
+                ((not (string-empty-p code))))
+      (let ((line (string-trim
+                   (replace-regexp-in-string
+                    "\\`[ \t]*\\(?:public\\|protected\\|private\\): *" ""
+                    (replace-regexp-in-string "[ \t]+" " " code)))))
+        (remove-list-of-text-properties 0 (length line) '(invisible display) line)
+        line))))
+
+(defun +core--hover-fact (doc regexp)
+  "The first match of REGEXP's group 1 in DOC, plain, or nil."
+  (and (string-match regexp doc) (substring-no-properties (match-string 1 doc))))
+
+(defun +core--hover-facts (doc line)
+  "What DOC, a hover, says that LINE, its declaration, does not."
+  (let* ((type (+core--hover-fact doc "^Type: `\\([^`\n]+\\)`"))
+         (value (+core--hover-fact doc "^Value = `\\([^`\n]+\\)`"))
+         (size (+core--hover-fact doc "^Size: \\([0-9]+\\) bytes?"))
+         (align (+core--hover-fact doc "^Size: .*alignment \\([0-9]+\\) bytes?"))
+         (offset (+core--hover-fact doc "^Offset: \\([0-9]+\\) bytes?"))
+         (number (and value (car (split-string value)))))
+    (delq nil
+          (list (and type (string-match-p "\\_<auto\\_>" line)
+                     ;; Its namespaces dropped, the header names them:
+                     ;; worklouder::comms::channels::ble::drivers::x is x.
+                     (concat ": " (replace-regexp-in-string
+                                   "\\_<\\(?:[A-Za-z_][A-Za-z0-9_]*::\\)\\{2,\\}" ""
+                                   (replace-regexp-in-string " (aka [^)]*)" "" type))))
+                (and value
+                     (not (string-match-p (concat "\\_<" (regexp-quote number) "[uUlL]*\\_>") line))
+                     (concat "= " value))
+                (and (or size offset)
+                     (string-join (delq nil (list (and offset (concat "offset " offset))
+                                                  (and size (concat "size " size))
+                                                  (and align (concat "align " align))))
+                                  ", "))))))
+
+(defun +core--hover-eldoc-function (callback &rest _)
+  "`eglot-hover-eldoc-function', its echo the declaration hovered and
+what the hover says beside it."
+  (let ((clangd (when-let* ((server (eglot-current-server)))
+                  (string-match-p "clangd" (car (process-command (jsonrpc--process server)))))))
+    (eglot-hover-eldoc-function
+     (lambda (doc &rest plist)
+       (apply callback doc
+              (if-let* ((line (and (stringp doc) (+core--hover-declaration doc clangd))))
+                  (plist-put (plist-put plist :echo
+                                        (concat line
+                                                (mapconcat (lambda (fact) (propertize (concat "   " fact) 'face 'shadow))
+                                                           (+core--hover-facts (substring-no-properties doc) line)
+                                                           "")))
+                             :+core-hover t)
+                plist))))))
+
+;; One thing said once on screen. Between the parentheses of a call the
+;; server's signature help and the hover both named the function called:
+;; the signature stays, with the argument at point marked. And on the
+;; head of a function the header already names it.
+(defun +core--hover-name (line)
+  "The name LINE declares as a function, NAME of NAME(, or nil."
+  (and (string-match "\\(\\_<[A-Za-z_~][A-Za-z0-9_:~]*\\)(" line)
+       (car (last (split-string (match-string 1 line) "::")))))
+
+(defun +core--in-function-head-p ()
+  "Non-nil when point is in a function's head, before its body."
+  (when-let* (((treesit-parser-list))
+              (fn (treesit-parent-until
+                   (treesit-node-at (point))
+                   (lambda (n) (string-match-p "\\`\\(?:function_definition\\|function_declaration\\|method_definition\\|function_item\\)\\'"
+                                               (treesit-node-type n)))
+                   t))
+              (body (treesit-node-child-by-field-name fn "body")))
+    (< (point) (treesit-node-start body))))
+
+(defun +core--echo-once-a (args)
+  "Leave out of the echo a hover that another line, or the header, says."
+  (let* ((docs (car args))
+         (others (seq-remove (lambda (d) (plist-get (cdr d) :+core-hover)) docs))
+         (names (delq nil (mapcar (lambda (d) (+core--hover-name
+                                               (let ((e (plist-get (cdr d) :echo)))
+                                                 (if (stringp e) e (car d)))))
+                                  others))))
+    (cons (seq-remove
+           (lambda (d)
+             (and (plist-get (cdr d) :+core-hover)
+                  (when-let* ((name (+core--hover-name (plist-get (cdr d) :echo))))
+                    (or (member name names) (+core--in-function-head-p)))))
+           docs)
+          (cdr args))))
+
+(advice-add 'eldoc-display-in-echo-area :filter-args #'+core--echo-once-a)
+
+(add-hook! 'eglot-managed-mode-hook
+  (defun +core--hover-declaration-h ()
+    "Echo the declaration hovered, in place of the hover's first line;
+taken out again with eglot's own when eglot lets the buffer go."
+    (if (bound-and-true-p eglot--managed-mode)
+        (setq-local eldoc-documentation-functions
+                    (mapcar (lambda (fn)
+                              (if (eq fn #'eglot-hover-eldoc-function)
+                                  #'+core--hover-eldoc-function
+                                fn))
+                            eldoc-documentation-functions))
+      (remove-hook 'eldoc-documentation-functions #'+core--hover-eldoc-function t))))
+
 ;; eldoc, which eglot brings from ELPA and which loads with the first
 ;; file, primes its list of motion commands by running thirty prefixes
 ;; one by one through every symbol there is: 76 000 of them in a session
