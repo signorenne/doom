@@ -549,12 +549,12 @@ Not when a file's buffer is modified, or when the server cannot be reached."
   '(which-key vertico corfu
     ert eldoc xref jsonrpc external-completion flymake eglot markdown-mode yasnippet
     vc-git vc-dir diff-hl diff-hl-flydiff so-long saveplace whitespace disp-table
-    ;; And what the modules turned on since bring to the first file: the
-    ;; tabs, editorconfig, direnv's environment, the wheel's scrolling,
-    ;; surround and expand-region for embrace, ffap for C and C++. 1.5 s of
-    ;; a first C++ file that took 2.75 to 3 s after the rest was loaded
+    ;; And what the modules turned on since bring to the first file:
+    ;; editorconfig, direnv's environment, the wheel's scrolling, surround
+    ;; and expand-region for embrace, ffap for C and C++. 1.5 s of a first
+    ;; C++ file that took 2.75 to 3 s after the rest was loaded
     ;; (2026-10-23).
-    editorconfig-core centaur-tabs envrc pixel-scroll ultra-scroll mac-win
+    editorconfig-core envrc pixel-scroll ultra-scroll mac-win
     evil-surround expand-region embrace evil-embrace ffap)
   "Libraries the first file of a session loads, loaded ahead while Emacs
 waits after starting.")
@@ -570,10 +570,10 @@ are loaded: each with every mode of `+core--recent-file-modes' in turn.")
   "(MODE . STEPS): the warm-up steps left, and the mode they are for,
 `unknown' until the first function step asks.")
 
-(defvar +core-warm-up-hooks-keep '(centaur-tabs-mode)
+(defvar +core-warm-up-hooks-keep nil
   "Functions of Doom's first-buffer, first-key and first-file hooks the
-warm-up leaves for Doom: the tabs, which shown before a file is would sit
-over the dashboard.")
+warm-up leaves for Doom, such as a mode that shown before a file is would
+sit over the dashboard.")
 
 ;; Doom turns on most of its global modes at the first key, the first
 ;; buffer and the first file, to start sooner: the undo, the surround and
