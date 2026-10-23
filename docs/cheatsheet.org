@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-23 16:03
+#+generated: 2026-10-23 23:18
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3442,6 +3442,8 @@ bound.
   '+core-image-pan-step' at a time.
 - ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
 - ~+core/install-daemon~ :: Start an Emacs daemon at every login.
+- ~+core/install-docsets~ :: Install the docsets of this buffer's language
+  that are missing, again if a try failed; with ALL, the skipped ones too.
 - ~+core/latency-show~ (~SPC h D~) :: Show what the watch wrote down.
 - ~+core/new-project~ (~SPC k n~) :: Start a project, of any kind a module
   here can make: the language, then its templates.

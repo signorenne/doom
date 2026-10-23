@@ -19,7 +19,9 @@
                     '(("xdg-open" . "SPC f x, open a file in its desktop app")))
                 ("fd" . "SPC s F and the project file lists")
                 ("rg" . "SPC p t, the task scan of the notes, the AI's greps")
-                ("git" . "the notes repository and the copy menu's forge link")))
+                ("git" . "the notes repository and the copy menu's forge link")
+                ("curl" . "the offline docs SPC s k searches, installed by themselves")
+                ("tar" . "the offline docs SPC s k searches, installed by themselves")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
 

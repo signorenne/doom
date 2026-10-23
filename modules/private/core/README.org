@@ -18,6 +18,11 @@ The small global things:
   an enumerator's value, a struct's or a field's size, alignment and
   offset; never what the signature help or the header already shows. ~K~
   and ~SPC c H~ show the whole hover with its documentation,
+- the offline docs ~SPC s k~ searches, Doom's Dash docsets, install
+  themselves in the background the first time a file of their language
+  opens, on any machine (=bin/install-docset=, every mirror tried);
+  ~M-x +core/install-docsets~ tries again, ~+core-docsets-skip~ leaves
+  Boost out,
 - editing defaults: fine-grained undo with the whole history as a graph
   on ~U~, bash tree-sitter mode,
   completion as you type with the first candidate chosen, and what a
