@@ -11,8 +11,10 @@
   (the butler's), the date as it would be announced, and the entry points
   with their current keys; the same in a terminal,
 - where you are, in code buffers: a header line with the project path and
-  the symbol path, file > class > function, replaced by the first line of
-  the enclosing function while that is scrolled off the top; the symbol
+  the symbol path, file > class > function, replaced by the head of the
+  enclosing function, method or class while that is scrolled off the top,
+  its return type, name and parameters on one line (a namespace or a
+  block of statements is not one); the symbol
   outline at the side on ~SPC t o~; in the modeline, the line out of how
   many the buffer has, the column out of how many the line has, and how
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so

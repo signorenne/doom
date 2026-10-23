@@ -199,13 +199,38 @@ the text changes, until the typing stops.")
        (bound-and-true-p treesit-defun-type-regexp)
        (treesit-parser-list)))
 
+;; What the header pins is a function, a method or a class. The modes'
+;; own defuns take in a namespace, an extern "C" block and, in C and
+;; C++, a block of statements: the header said "namespace {" over a
+;; function in an anonymous namespace.
+(defvar +ui-defun-node-types
+  (concat "\\`" (regexp-opt '("function_definition" "function_declaration"
+                              "function_item" "method_definition"
+                              "method_declaration" "lambda_expression"
+                              "class_specifier" "struct_specifier"
+                              "union_specifier" "enum_specifier"
+                              "class_definition" "class_declaration"
+                              "impl_item" "trait_item"))
+          "\\'")
+  "The syntax nodes the header line pins, in any tree-sitter language.")
+
+(defun +ui--defun-node (pos)
+  "The innermost function, method or class holding POS, from the tree."
+  (when-let* ((node (treesit-node-at pos)))
+    (treesit-parent-until node (lambda (n) (string-match-p +ui-defun-node-types
+                                                           (treesit-node-type n)))
+                          t)))
+
 (defun +ui--defun-around (top)
   "(START . END) of the function holding TOP, or nil.  From the syntax
 tree where the buffer has one, in as many steps as it is deep: moving to
 the start and end of a defun walks every sibling on the way, and in a
-large object literal or array that was most of a scroll step's time."
+large object literal or array that was most of a scroll step's time.
+The tree is asked at the top line's first character: its indentation
+belongs to whatever node the whitespace falls between."
   (if (+ui--defun-by-tree-p)
-      (when-let* ((node (save-excursion (goto-char top) (treesit-defun-at-point))))
+      (when-let* ((node (+ui--defun-node
+                         (save-excursion (goto-char top) (skip-chars-forward " \t") (point)))))
         (cons (treesit-node-start node) (treesit-node-end node)))
     (save-excursion
       (goto-char top)
@@ -232,6 +257,23 @@ top line alone."
       (if (and next (> next top))
           (cons from next)
         (cons top (1+ top))))))
+
+(defun +ui--defun-head (start)
+  "The head of the function starting at START, as one line: from the
+tree, all of it up to its body, so a return type on a line of its own,
+\"int\", comes with the name and the parameters below it; without a
+tree, its first line."
+  (save-excursion
+    (goto-char start)
+    (let* ((node (and (+ui--defun-by-tree-p) (+ui--defun-node start)))
+           (body (and node (= (treesit-node-start node) start)
+                      (treesit-node-child-by-field-name node "body")))
+           (end (if body
+                    (min (treesit-node-start body) (+ start 400))
+                  (pos-eol))))
+      (font-lock-ensure start end)
+      (string-trim
+       (replace-regexp-in-string "[ \t\n]+" " " (buffer-substring start end))))))
 
 (defun +ui--scrolled-defun ()
   "The first line of the function that holds the window's first line,
@@ -273,11 +315,7 @@ every pause in the typing (2026-10-23)."
           (let* ((range (+ui--defun-around top))
                  (inside (and range (< (car range) top) (> (cdr range) top)))
                  (span (if inside range (+ui--defun-gap top range)))
-                 (text (and inside
-                            (save-excursion
-                              (goto-char (car range))
-                              (font-lock-ensure (car range) (pos-eol))
-                              (string-trim-right (buffer-substring (car range) (pos-eol)))))))
+                 (text (and inside (+ui--defun-head (car range)))))
             (setq +ui--defun-cache
                   (cons (car span)
                         (cons (cdr span)
