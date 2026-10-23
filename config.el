@@ -25,10 +25,11 @@
 ;; and Emacs+ says when the appearance changes, below. Elsewhere it is
 ;; the dark one. The pair is kept apart: Doom sets `doom-theme' to the
 ;; one it loads.
-(defvar +config-themes '(doom-one . doom-one-light)
-  "The dark theme and the light one, worn as a Mac's appearance says.")
+(defvar +config-themes '(nexenne-night . nexenne-day)
+  "The dark theme and the light one, worn as a Mac's appearance says.
+The config's own, in themes/: made for long reading, measured for it.")
 
-(setq doom-theme (if (featurep :system 'macos) +config-themes 'doom-one)
+(setq doom-theme (if (featurep :system 'macos) +config-themes (car +config-themes))
       doom-font (font-spec :family "JetBrains Mono" :size 15)
       doom-variable-pitch-font (font-spec :family "DejaVu Sans" :size 16)
       doom-big-font (font-spec :family "JetBrains Mono" :size 24) ; SPC t b

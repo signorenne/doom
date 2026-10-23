@@ -165,6 +165,43 @@ Colouring had its own waste:
   large it is not looked up at all; in a 2 MB header of declarations
   cc-mode walked back through them at every step, 130 ms a line scrolled.
 
+* The theme: nexenne-day and nexenne-night
+The config's own pair, in =themes/=: =nexenne-day= while macOS is light,
+=nexenne-night= while it is dark (=+config-themes= in =config.el=);
+elsewhere the night one. Both are made for long hours of reading and
+writing code, in any language:
+
+- Light by day, dark by night, following the room as macOS does.
+- Neither pure white nor pure black: warm paper by day, warm charcoal by
+  night, so the screen is never much brighter than the room.
+- Strong contrast for text, short of the maximum, so letters stay sharp
+  without glare. Comments are quieter than code but read without effort.
+- Every kind of token has its own colour, all of them equally bright and
+  calm, and far enough apart to be told at a glance, also by eyes that
+  confuse red and green. Function definitions are bold, calls are not.
+  Variables and operators stay plain text: colour marks what the code is
+  made of, not every word.
+- The same colours run through the whole of Doom: completion, git,
+  diffs, org and markdown headings, terminals, file trees, the modeline.
+
+| Role                     | Day       | Night     |
+|--------------------------+-----------+-----------|
+| background               | =#f5f1e8= | =#1c1915= |
+| text                     | =#37342d= | =#ece5de= |
+| comments                 | =#706d66= | =#b1aba4= |
+| keywords                 | =#7b519e= | =#dfb0ff= |
+| functions                | =#216183= | =#7ee8ff= |
+| types                    | =#226855= | =#6be9c5= |
+| strings                  | =#617307= | =#bacb86= |
+| numbers, constants       | =#834531= | =#ffbfa3= |
+| built-ins, preprocessor  | =#693856= | =#dcb7cb= |
+| properties, fields       | =#564912= | =#f0db88= |
+| cursor, matches          | =#9d420d= | =#fcb291= |
+
+The colours are computed, not picked: =bin/nexenne-palette= writes both
+themes from a few numbers per role and prints every colour's contrast.
+Change them there, never a hex in the theme files.
+
 * Configuration
 - ~+ui-symbol-fallback-font~, "Noto Sans Symbols 2" by default. =doom
   doctor= warns that Symbola is missing whatever fonts are set: it counts

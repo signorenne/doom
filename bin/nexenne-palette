@@ -1,0 +1,848 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Nicolò Plebani. All rights reserved.
+"""Write the nexenne themes, themes/nexenne-day-theme.el and
+themes/nexenne-night-theme.el, and print every text colour's contrast on
+its background.
+
+  bin/nexenne-palette
+
+Every colour is a lightness, a chroma and a hue in OKLCH. Change those
+numbers here, never a hex in the theme files, then read the table again:
+text should stay near Lc 90, the syntax colours at 68 or more, comments
+near 55 to 67.
+"""
+import math, os
+THEMES = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'themes')
+YEAR = 2026
+AUTHOR = 'Nicolò Plebani'
+
+
+def oklch_to_srgb(L, C, h):
+    a, b = C * math.cos(math.radians(h)), C * math.sin(math.radians(h))
+    l_ = L + 0.3963377774 * a + 0.2158037573 * b
+    m_ = L - 0.1055613458 * a - 0.0638541728 * b
+    s_ = L - 0.0894841775 * a - 1.2914855480 * b
+    l, m, s = l_ ** 3, m_ ** 3, s_ ** 3
+    r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+    g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+    bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+    f = lambda x: 12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055
+    return tuple(min(1, max(0, f(c))) for c in (r, g, bb))
+
+
+def hexc(rgb): return '#%02x%02x%02x' % tuple(round(c * 255) for c in rgb)
+def lin(c): return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def wcag(fg, bg):
+    Y = lambda rgb: 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2])
+    a, b = Y(fg), Y(bg)
+    return (max(a, b) + 0.05) / (min(a, b) + 0.05)
+
+
+def apca(fg, bg):
+    Y = lambda rgb: 0.2126729 * rgb[0] ** 2.4 + 0.7151522 * rgb[1] ** 2.4 + 0.0721750 * rgb[2] ** 2.4
+    t, b = Y(fg), Y(bg)
+    clamp = lambda y: y if y > 0.022 else y + (0.022 - y) ** 1.414
+    t, b = clamp(t), clamp(b)
+    if abs(b - t) < 0.0005: return 0
+    if b > t:
+        c = (b ** 0.56 - t ** 0.57) * 1.14
+        return 0 if c < 0.1 else (c - 0.027) * 100
+    c = (b ** 0.65 - t ** 0.62) * 1.14
+    return 0 if c > -0.1 else (c + 0.027) * 100
+
+
+P = lambda L, C, h: hexc(oklch_to_srgb(L, C, h))
+
+# Accents for the interface: errors, diffs, headings, terminals.
+H = dict(red=22, orange=50, yellow=85, green=128, teal=178, blue=238, violet=305, magenta=355)
+
+# The syntax: a hue for each kind of token, and its lightness and chroma
+# by night and by day, chosen so any two kinds stay apart, also with
+# red-green colour blindness, and each reads well on its background.
+ROLES = dict(keyword=(308, .830, .130, .514, .126), function=(236, .890, .130, .468, .084),
+             type=(172, .852, .124, .468, .076), string=(120, .813, .094, .521, .121),
+             constant=(39, .876, .104, .463, .091), builtin=(344, .817, .050, .412, .080),
+             property=(95, .890, .105, .408, .074))
+
+
+def palette(dark):
+    """Every colour of one theme, by name."""
+    if dark:
+        w, n, a, ac = 70, .010, .855, .068
+        g = dict(bg=P(.215, n, w), bg_alt=P(.245, n, w), bg_raised=P(.255, n, w), bg_low=P(.235, n, w),
+                 border=P(.275, n, w), faint=P(.52, n, w), dim=P(.68, n, w), comment=P(.745, .012, w),
+                 doc=P(.80, .014, w), fg=P(.925, .012, w), fg_strong=P(.96, .010, w),
+                 region=P(.34, .035, 250), search=P(.42, .07, 45), copper=P(a - .03, ac + .03, 45),
+                 add_bg=P(.30, .05, 140), del_bg=P(.30, .05, 25), chg_bg=P(.30, .04, 85),
+                 add_hi=P(.37, .07, 140), del_hi=P(.37, .07, 25), chg_hi=P(.37, .06, 85),
+                 ansi_black=P(.40, n, w), ansi_white=P(.925, .012, w))
+        bright = .06
+    else:
+        w, n, a, ac = 85, .012, .475, .105
+        g = dict(bg=P(.958, n, w), bg_alt=P(.935, n, w), bg_raised=P(.925, n, w), bg_low=P(.945, n, w),
+                 border=P(.88, n, w), faint=P(.68, n, w), dim=P(.56, n, w), comment=P(.535, .012, w),
+                 doc=P(.47, .014, w), fg=P(.325, .012, w), fg_strong=P(.25, .012, w),
+                 region=P(.90, .03, 250), search=P(.85, .06, 45), copper=P(a + .02, ac + .03, 45),
+                 add_bg=P(.92, .04, 140), del_bg=P(.91, .04, 25), chg_bg=P(.92, .04, 85),
+                 add_hi=P(.86, .07, 140), del_hi=P(.85, .07, 25), chg_hi=P(.86, .06, 85),
+                 ansi_black=P(.325, .012, w), ansi_white=P(.80, n, w))
+        bright = -.06
+    for k, h in H.items():
+        g[k] = P(a, ac, h)
+        g[k + '_bright'] = P(a + bright, ac, h)
+    for k, (h, ln, cn, ld, cd) in ROLES.items():
+        g['syn_' + k] = P(ln, cn, h) if dark else P(ld, cd, h)
+    return g
+
+
+def faces(dark):
+    """The face table: (face, attributes). A value naming a palette colour
+    is replaced by it; :inherit, :weight and the like are written as they are."""
+    F = []
+    def f(face, **kw): F.append((face, kw))
+    # Emacs itself.
+    f('default', fg='fg', bg='bg')
+    f('cursor', bg='copper')
+    f('fringe', fg='faint', bg='bg')
+    f('region', bg='region', extend=True)
+    f('secondary-selection', bg='border', extend=True)
+    f('highlight', bg='border', fg='fg_strong')
+    f('hl-line', bg='bg_alt', extend=True)
+    f('shadow', fg='dim')
+    f('link', fg='syn_function', underline=True)
+    f('link-visited', fg='syn_keyword', underline=True)
+    f('error', fg='red', weight='bold')
+    f('warning', fg='yellow', weight='bold')
+    f('success', fg='green', weight='bold')
+    f('match', fg='copper', weight='bold')
+    f('isearch', bg='copper', fg='bg', weight='bold')
+    f('isearch-fail', bg='del_hi', fg='fg')
+    f('lazy-highlight', bg='search', fg='fg')
+    f('query-replace', bg='copper', fg='bg')
+    f('minibuffer-prompt', fg='syn_function', weight='bold')
+    f('vertical-border', fg='border')
+    f('window-divider', fg='border')
+    f('window-divider-first-pixel', fg='border')
+    f('window-divider-last-pixel', fg='border')
+    f('internal-border', bg='border')
+    f('child-frame-border', bg='border')
+    f('header-line', bg='bg_alt', fg='fg')
+    f('header-line-highlight', fg='copper')
+    f('mode-line', bg='bg_raised', fg='fg')
+    f('mode-line-active', inherit='mode-line')
+    f('mode-line-inactive', bg='bg_low', fg='dim')
+    f('mode-line-buffer-id', weight='bold')
+    f('mode-line-emphasis', fg='copper', weight='bold')
+    f('mode-line-highlight', fg='copper')
+    f('line-number', fg='faint')
+    f('line-number-current-line', fg='fg', bg='bg_alt')
+    f('fill-column-indicator', fg='border')
+    f('show-paren-match', fg='copper', weight='bold', underline=True)
+    f('show-paren-mismatch', bg='del_hi', fg='fg')
+    f('trailing-whitespace', bg='del_bg')
+    f('escape-glyph', fg='syn_constant')
+    f('homoglyph', fg='syn_constant')
+    f('nobreak-space', fg='syn_constant', underline=True)
+    f('glyphless-char', fg='dim')
+    f('tooltip', bg='bg_raised', fg='fg')
+    f('help-key-binding', fg='syn_function', bg='bg_alt', box=True)
+    f('button', fg='syn_function', underline=True)
+    f('separator-line', fg='border')
+    f('tab-bar', bg='bg_low', fg='dim')
+    f('tab-bar-tab', bg='bg', fg='fg', weight='bold')
+    f('tab-bar-tab-inactive', bg='bg_low', fg='dim')
+    f('tab-line', bg='bg_low', fg='dim')
+    f('pulse-highlight-start-face', bg='search')
+    f('pulse-highlight-face', bg='search')
+    f('bookmark-face', fg='copper')
+    f('read-multiple-choice-face', fg='copper', weight='bold', underline=True)
+    f('completions-common-part', fg='syn_function', weight='bold')
+    f('completions-first-difference', fg='copper', weight='bold')
+    f('completions-annotations', fg='dim')
+    f('completions-group-title', fg='dim', slant='italic')
+    f('completions-highlight', bg='region')
+    f('widget-field', bg='bg_alt', fg='fg')
+    f('widget-single-line-field', bg='bg_alt', fg='fg')
+    f('widget-button', fg='syn_function', weight='bold')
+    f('widget-unselected', fg='dim')
+    f('custom-variable-tag', fg='syn_function', weight='bold')
+    f('custom-group-tag', fg='syn_keyword', weight='bold')
+    f('custom-state', fg='green')
+    f('custom-comment-tag', fg='dim')
+    f('custom-button', bg='bg_raised', fg='fg', box=True)
+    # The syntax.
+    f('font-lock-comment-face', fg='comment', slant='italic')
+    f('font-lock-comment-delimiter-face', fg='comment', slant='italic')
+    f('font-lock-doc-face', fg='doc', slant='italic')
+    f('font-lock-doc-markup-face', fg='syn_constant', slant='italic')
+    f('font-lock-keyword-face', fg='syn_keyword')
+    f('font-lock-builtin-face', fg='syn_builtin')
+    f('font-lock-preprocessor-face', fg='syn_builtin')
+    f('font-lock-function-name-face', fg='syn_function', weight='bold')
+    f('font-lock-function-call-face', fg='syn_function')
+    f('font-lock-type-face', fg='syn_type')
+    f('font-lock-string-face', fg='syn_string')
+    f('font-lock-constant-face', fg='syn_constant')
+    f('font-lock-number-face', fg='syn_constant')
+    f('font-lock-escape-face', fg='syn_constant', weight='bold')
+    f('font-lock-regexp-face', fg='syn_constant')
+    f('font-lock-regexp-grouping-backslash', fg='syn_constant', weight='bold')
+    f('font-lock-regexp-grouping-construct', fg='syn_constant', weight='bold')
+    f('font-lock-variable-name-face', fg='fg')
+    f('font-lock-variable-use-face', fg='fg')
+    f('font-lock-property-name-face', fg='syn_property')
+    f('font-lock-property-use-face', fg='syn_property')
+    f('font-lock-operator-face', fg='fg')
+    f('font-lock-punctuation-face', fg='dim')
+    f('font-lock-bracket-face', fg='dim')
+    f('font-lock-delimiter-face', fg='dim')
+    f('font-lock-misc-punctuation-face', fg='dim')
+    f('font-lock-negation-char-face', fg='red', weight='bold')
+    f('font-lock-warning-face', fg='yellow', weight='bold')
+    f('elisp-shorthand-font-lock-face', fg='syn_builtin')
+    # Headings everywhere: outline, org, markdown, info.
+    levels = ['syn_function', 'syn_keyword', 'syn_type', 'syn_constant',
+              'syn_string', 'syn_builtin', 'syn_property', 'fg']
+    for i, c in enumerate(levels, 1):
+        f(f'outline-{i}', fg=c, weight='bold')
+        f(f'org-level-{i}', inherit=f'outline-{i}')
+    for i, c in enumerate(levels[:6], 1):
+        f(f'markdown-header-face-{i}', inherit=f'outline-{i}')
+    f('markdown-header-face', weight='bold')
+    f('markdown-header-delimiter-face', fg='dim')
+    f('markdown-markup-face', fg='dim')
+    f('markdown-inline-code-face', fg='syn_string', bg='bg_alt')
+    f('markdown-code-face', bg='bg_alt', extend=True)
+    f('markdown-pre-face', fg='syn_string')
+    f('markdown-link-face', fg='syn_function')
+    f('markdown-url-face', fg='dim', underline=True)
+    f('markdown-blockquote-face', fg='doc', slant='italic')
+    f('markdown-list-face', fg='copper')
+    f('markdown-hr-face', fg='border')
+    f('markdown-table-face', fg='fg')
+    f('markdown-bold-face', weight='bold')
+    f('markdown-italic-face', slant='italic')
+    f('markdown-footnote-marker-face', fg='dim')
+    f('markdown-html-tag-delimiter-face', fg='dim')
+    f('markdown-html-tag-name-face', fg='syn_keyword')
+    f('markdown-html-attr-name-face', fg='syn_property')
+    f('markdown-html-attr-value-face', fg='syn_string')
+    f('info-title-1', inherit='outline-1', height=1.3)
+    f('info-title-2', inherit='outline-2', height=1.2)
+    f('info-title-3', inherit='outline-3', height=1.1)
+    f('info-title-4', inherit='outline-4')
+    f('info-menu-header', weight='bold')
+    f('info-node', fg='copper', weight='bold')
+    f('info-xref', fg='syn_function', underline=True)
+    f('info-menu-star', fg='copper')
+    f('helpful-heading', inherit='outline-1', height=1.15)
+    # Org.
+    f('org-document-title', fg='fg_strong', weight='bold', height=1.3)
+    f('org-document-info', fg='doc')
+    f('org-document-info-keyword', fg='dim')
+    f('org-meta-line', fg='dim')
+    f('org-block', bg='bg_alt', extend=True)
+    f('org-block-begin-line', fg='dim', bg='bg_alt', extend=True)
+    f('org-block-end-line', fg='dim', bg='bg_alt', extend=True)
+    f('org-code', fg='syn_string')
+    f('org-verbatim', fg='syn_constant')
+    f('org-quote', fg='doc', slant='italic', bg='bg_alt', extend=True)
+    f('org-table', fg='fg')
+    f('org-formula', fg='syn_constant')
+    f('org-todo', fg='copper', weight='bold')
+    f('org-done', fg='dim', weight='bold')
+    f('org-headline-done', fg='dim')
+    f('org-headline-todo', fg='fg')
+    f('org-date', fg='syn_type', underline=True)
+    f('org-tag', fg='dim', weight='normal')
+    f('org-link', fg='syn_function', underline=True)
+    f('org-footnote', fg='syn_property')
+    f('org-special-keyword', fg='dim')
+    f('org-property-value', fg='fg')
+    f('org-drawer', fg='dim')
+    f('org-checkbox', fg='copper', weight='bold')
+    f('org-checkbox-statistics-todo', fg='copper')
+    f('org-checkbox-statistics-done', fg='dim')
+    f('org-priority', fg='syn_builtin')
+    f('org-ellipsis', fg='dim')
+    f('org-hide', fg='bg')
+    f('org-indent', fg='bg')
+    f('org-latex-and-related', fg='syn_type')
+    f('org-macro', fg='syn_builtin')
+    f('org-target', fg='syn_property', underline=True)
+    f('org-cite', fg='syn_property')
+    f('org-cite-key', fg='syn_property', underline=True)
+    f('org-warning', fg='red', weight='bold')
+    f('org-scheduled', fg='fg')
+    f('org-scheduled-today', fg='syn_function', weight='bold')
+    f('org-scheduled-previously', fg='yellow')
+    f('org-upcoming-deadline', fg='copper')
+    f('org-upcoming-distant-deadline', fg='dim')
+    f('org-time-grid', fg='dim')
+    f('org-agenda-structure', fg='syn_keyword', weight='bold')
+    f('org-agenda-date', fg='syn_function')
+    f('org-agenda-date-today', fg='copper', weight='bold')
+    f('org-agenda-date-weekend', fg='syn_type')
+    f('org-agenda-done', fg='dim')
+    f('org-agenda-dimmed-todo-face', fg='dim')
+    f('org-agenda-current-time', fg='copper')
+    f('org-modern-label', fg='fg', bg='bg_alt')
+    f('org-modern-tag', fg='dim', bg='bg_alt')
+    f('org-modern-date-active', fg='syn_type', bg='bg_alt')
+    f('org-modern-date-inactive', fg='dim', bg='bg_alt')
+    f('org-modern-time-active', fg='bg', bg='syn_type')
+    f('org-modern-time-inactive', fg='bg', bg='dim')
+    f('org-modern-todo', fg='bg', bg='copper', weight='bold')
+    f('org-modern-done', fg='fg', bg='border', weight='bold')
+    f('org-modern-priority', fg='bg', bg='syn_builtin', weight='bold')
+    f('org-modern-statistics', fg='dim')
+    f('org-modern-block-name', fg='dim')
+    f('org-modern-keyword', fg='dim')
+    f('org-roam-title', weight='bold')
+    f('org-roam-olp', fg='dim')
+    f('org-roam-header-line', fg='syn_function', weight='bold')
+    f('org-roam-preview-heading', bg='bg_alt')
+    f('org-roam-preview-heading-highlight', bg='border')
+    f('org-roam-preview-heading-selection', bg='region', fg='copper')
+    f('org-roam-preview-region', bg='bg_alt')
+    f('org-habit-clear-face', bg='add_bg')
+    f('org-habit-ready-face', bg='add_hi')
+    f('org-habit-alert-face', bg='chg_hi')
+    f('org-habit-overdue-face', bg='del_hi')
+    # Diffs.
+    f('diff-added', fg='green', bg='add_bg', extend=True)
+    f('diff-removed', fg='red', bg='del_bg', extend=True)
+    f('diff-changed', fg='yellow', bg='chg_bg', extend=True)
+    f('diff-refine-added', bg='add_hi', fg='fg_strong')
+    f('diff-refine-removed', bg='del_hi', fg='fg_strong')
+    f('diff-refine-changed', bg='chg_hi', fg='fg_strong')
+    f('diff-indicator-added', fg='green')
+    f('diff-indicator-removed', fg='red')
+    f('diff-indicator-changed', fg='yellow')
+    f('diff-header', fg='fg', bg='bg_alt')
+    f('diff-file-header', fg='fg_strong', bg='bg_alt', weight='bold')
+    f('diff-hunk-header', fg='syn_keyword', bg='bg_alt')
+    f('diff-function', fg='syn_function')
+    f('diff-context', fg='dim')
+    f('diff-error', fg='red', weight='bold')
+    f('diff-hl-insert', fg='green', bg='green')
+    f('diff-hl-delete', fg='red', bg='red')
+    f('diff-hl-change', fg='yellow', bg='yellow')
+    f('smerge-upper', bg='del_bg', extend=True)
+    f('smerge-lower', bg='add_bg', extend=True)
+    f('smerge-base', bg='chg_bg', extend=True)
+    f('smerge-markers', fg='dim', bg='bg_alt', extend=True)
+    f('smerge-refined-added', bg='add_hi')
+    f('smerge-refined-removed', bg='del_hi')
+    for side, bgc, hic in (('A', 'del_bg', 'del_hi'), ('B', 'add_bg', 'add_hi'), ('C', 'chg_bg', 'chg_hi'), ('Ancestor', 'bg_alt', 'border')):
+        f(f'ediff-current-diff-{side}', bg=bgc, extend=True)
+        f(f'ediff-fine-diff-{side}', bg=hic, weight='bold')
+        f(f'ediff-even-diff-{side}', bg='bg_alt')
+        f(f'ediff-odd-diff-{side}', bg='bg_alt')
+    # Magit and transient.
+    f('magit-section-heading', fg='syn_keyword', weight='bold')
+    f('magit-section-heading-selection', fg='copper', weight='bold')
+    f('magit-section-highlight', bg='bg_alt', extend=True)
+    f('magit-section-secondary-heading', fg='syn_type', weight='bold')
+    f('magit-branch-local', fg='syn_function')
+    f('magit-branch-remote', fg='syn_string')
+    f('magit-branch-current', fg='syn_function', weight='bold', box=True)
+    f('magit-branch-remote-head', fg='syn_string', box=True)
+    f('magit-head', fg='syn_function')
+    f('magit-hash', fg='dim')
+    f('magit-tag', fg='syn_constant')
+    f('magit-filename', fg='fg')
+    f('magit-dimmed', fg='dim')
+    f('magit-keyword', fg='syn_property')
+    f('magit-header-line', fg='syn_keyword', weight='bold')
+    f('magit-log-author', fg='syn_constant')
+    f('magit-log-date', fg='dim')
+    f('magit-log-graph', fg='dim')
+    f('magit-process-ok', fg='green', weight='bold')
+    f('magit-process-ng', fg='red', weight='bold')
+    f('magit-diff-file-heading', fg='fg', weight='bold')
+    f('magit-diff-file-heading-highlight', fg='fg_strong', bg='bg_alt', weight='bold')
+    f('magit-diff-file-heading-selection', fg='copper', bg='region', weight='bold')
+    f('magit-diff-hunk-heading', fg='comment', bg='border', extend=True)
+    f('magit-diff-hunk-heading-highlight', fg='fg', bg='faint' if not dark else 'region', extend=True)
+    f('magit-diff-hunk-heading-selection', fg='copper', bg='region', extend=True)
+    f('magit-diff-hunk-region', weight='bold', extend=True)
+    f('magit-diff-lines-heading', fg='bg', bg='copper', extend=True)
+    f('magit-diff-lines-boundary', fg='bg', bg='copper', extend=True)
+    f('magit-diff-conflict-heading', fg='comment', bg='border', extend=True)
+    f('magit-diff-context', fg='dim', extend=True)
+    f('magit-diff-context-highlight', fg='fg', bg='bg_alt', extend=True)
+    f('magit-diff-added', fg='green', bg='add_bg', extend=True)
+    f('magit-diff-added-highlight', fg='green', bg='add_hi', extend=True)
+    f('magit-diff-removed', fg='red', bg='del_bg', extend=True)
+    f('magit-diff-removed-highlight', fg='red', bg='del_hi', extend=True)
+    f('magit-diff-base', fg='yellow', bg='chg_bg', extend=True)
+    f('magit-diff-base-highlight', fg='yellow', bg='chg_hi', extend=True)
+    f('magit-diff-our', inherit='magit-diff-removed')
+    f('magit-diff-our-highlight', inherit='magit-diff-removed-highlight')
+    f('magit-diff-their', inherit='magit-diff-added')
+    f('magit-diff-their-highlight', inherit='magit-diff-added-highlight')
+    f('magit-diff-revision-summary', fg='fg', bg='border', extend=True)
+    f('magit-diff-revision-summary-highlight', fg='fg_strong', bg='border', extend=True)
+    f('magit-diff-whitespace-warning', bg='del_bg')
+    f('magit-diffstat-added', fg='green')
+    f('magit-diffstat-removed', fg='red')
+    f('magit-blame-heading', fg='dim', bg='bg_alt', extend=True)
+    f('magit-blame-highlight', fg='fg', bg='bg_alt', extend=True)
+    f('magit-blame-hash', fg='dim')
+    f('magit-blame-name', fg='syn_constant')
+    f('magit-blame-date', fg='dim')
+    f('magit-blame-summary', fg='fg')
+    f('magit-blame-margin', fg='dim', bg='bg_alt')
+    f('magit-signature-good', fg='green')
+    f('magit-signature-bad', fg='red', weight='bold')
+    f('magit-signature-untrusted', fg='yellow')
+    f('magit-signature-expired', fg='dim')
+    f('magit-signature-error', fg='red')
+    f('magit-cherry-equivalent', fg='syn_keyword')
+    f('magit-cherry-unmatched', fg='syn_type')
+    f('magit-reflog-commit', fg='green')
+    f('magit-reflog-amend', fg='syn_keyword')
+    f('magit-reflog-merge', fg='green')
+    f('magit-reflog-checkout', fg='syn_function')
+    f('magit-reflog-reset', fg='red')
+    f('magit-reflog-rebase', fg='syn_keyword')
+    f('magit-reflog-cherry-pick', fg='green')
+    f('magit-reflog-remote', fg='syn_type')
+    f('magit-reflog-other', fg='syn_type')
+    f('magit-sequence-pick', fg='fg')
+    f('magit-sequence-stop', fg='green')
+    f('magit-sequence-part', fg='yellow')
+    f('magit-sequence-head', fg='syn_function')
+    f('magit-sequence-drop', fg='red')
+    f('magit-sequence-done', fg='dim')
+    f('magit-sequence-onto', fg='dim')
+    f('magit-bisect-good', fg='green')
+    f('magit-bisect-bad', fg='red')
+    f('magit-bisect-skip', fg='yellow')
+    f('transient-heading', fg='syn_keyword', weight='bold')
+    f('transient-key', fg='copper', weight='bold')
+    f('transient-key-stay', fg='syn_type', weight='bold')
+    f('transient-key-exit', fg='syn_builtin', weight='bold')
+    f('transient-key-return', fg='syn_constant', weight='bold')
+    f('transient-key-recurse', fg='syn_function', weight='bold')
+    f('transient-key-stack', fg='syn_property', weight='bold')
+    f('transient-key-noop', fg='faint')
+    f('transient-argument', fg='syn_string', weight='bold')
+    f('transient-value', fg='syn_string')
+    f('transient-inactive-argument', fg='dim')
+    f('transient-inactive-value', fg='dim')
+    f('transient-inapt-argument', fg='dim')
+    f('transient-inapt-suffix', fg='dim', slant='italic')
+    f('transient-unreachable', fg='dim')
+    f('transient-unreachable-key', fg='faint')
+    f('transient-disabled-suffix', fg='bg', bg='red')
+    f('transient-enabled-suffix', fg='bg', bg='green')
+    f('transient-higher-level', underline=True)
+    f('transient-delimiter', fg='dim')
+    f('transient-mismatched-key', underline=True)
+    f('transient-nonstandard-key', underline=True)
+    # Completion and search.
+    f('vertico-current', bg='region', extend=True)
+    f('vertico-group-title', fg='dim', slant='italic')
+    f('vertico-group-separator', fg='border', strike_through=True)
+    f('vertico-multiline', fg='dim')
+    for i, c in enumerate(['syn_function', 'syn_keyword', 'syn_string', 'syn_constant']):
+        f(f'orderless-match-face-{i}', fg=c, weight='bold')
+    f('marginalia-documentation', fg='dim', slant='italic')
+    f('marginalia-key', fg='copper')
+    f('marginalia-mode', fg='syn_type')
+    f('marginalia-type', fg='syn_type')
+    f('marginalia-value', fg='fg')
+    f('marginalia-size', fg='dim')
+    f('marginalia-date', fg='dim')
+    f('marginalia-file-name', fg='fg')
+    f('marginalia-file-owner', fg='dim')
+    f('marginalia-file-priv-dir', fg='syn_function')
+    f('marginalia-file-priv-read', fg='syn_string')
+    f('marginalia-file-priv-write', fg='syn_constant')
+    f('marginalia-file-priv-exec', fg='syn_builtin')
+    f('marginalia-file-priv-no', fg='faint')
+    f('marginalia-file-priv-link', fg='syn_type')
+    f('marginalia-modified', fg='yellow')
+    f('marginalia-archive', fg='syn_property')
+    f('marginalia-function', fg='syn_function')
+    f('marginalia-symbol', fg='syn_keyword')
+    f('marginalia-variable', fg='syn_property')
+    f('marginalia-version', fg='syn_constant')
+    f('marginalia-installed', fg='green')
+    f('marginalia-on', fg='green')
+    f('marginalia-off', fg='red')
+    f('marginalia-char', fg='syn_constant')
+    f('marginalia-number', fg='syn_constant')
+    f('marginalia-string', fg='syn_string')
+    f('marginalia-list', fg='syn_type')
+    f('marginalia-null', fg='faint')
+    f('marginalia-true', fg='green')
+    f('marginalia-lighter', fg='dim')
+    f('consult-file', fg='fg')
+    f('consult-line-number', fg='faint')
+    f('consult-line-number-prefix', fg='faint')
+    f('consult-line-number-wrapped', fg='copper')
+    f('consult-preview-line', bg='bg_alt', extend=True)
+    f('consult-preview-match', bg='search', fg='fg')
+    f('consult-preview-insertion', bg='bg_alt')
+    f('consult-highlight-match', fg='copper', weight='bold')
+    f('consult-grep-context', fg='dim')
+    f('consult-help', fg='dim')
+    f('consult-key', fg='copper')
+    f('consult-separator', fg='border')
+    f('consult-bookmark', fg='syn_function')
+    f('consult-buffer', fg='fg')
+    f('embark-keybinding', fg='copper', weight='bold')
+    f('embark-target', bg='region')
+    f('embark-collect-group-title', fg='dim', slant='italic')
+    f('embark-verbose-indicator-documentation', fg='dim')
+    f('embark-verbose-indicator-title', fg='syn_keyword', weight='bold')
+    f('corfu-default', bg='bg_raised', fg='fg')
+    f('corfu-current', bg='region', fg='fg_strong')
+    f('corfu-border', bg='border')
+    f('corfu-bar', bg='faint')
+    f('corfu-annotations', fg='dim')
+    f('corfu-deprecated', fg='dim', strike_through=True)
+    f('corfu-popupinfo', bg='bg_raised', fg='fg')
+    f('which-key-key-face', fg='copper', weight='bold')
+    f('which-key-separator-face', fg='faint')
+    f('which-key-note-face', fg='dim')
+    f('which-key-command-description-face', fg='fg')
+    f('which-key-group-description-face', fg='syn_keyword')
+    f('which-key-local-map-description-face', fg='syn_type')
+    f('which-key-special-key-face', fg='syn_builtin', weight='bold')
+    f('which-key-highlighted-command-face', fg='copper', weight='bold')
+    f('which-key-docstring-face', fg='dim')
+    # Editing helpers.
+    f('evil-ex-substitute-matches', bg='del_hi', fg='fg', strike_through=True)
+    f('evil-ex-substitute-replacement', bg='add_hi', fg='fg_strong', weight='bold')
+    f('evil-ex-info', fg='red', slant='italic')
+    f('evil-ex-lazy-highlight', bg='search', fg='fg')
+    f('evil-ex-search', bg='copper', fg='bg', weight='bold')
+    f('evil-goggles-default-face', bg='search')
+    f('evil-snipe-first-match-face', fg='copper', weight='bold', underline=True)
+    f('evil-snipe-matches-face', fg='copper', underline=True)
+    f('avy-lead-face', bg='copper', fg='bg', weight='bold')
+    f('avy-lead-face-0', bg='syn_function', fg='bg', weight='bold')
+    f('avy-lead-face-1', bg='syn_type', fg='bg', weight='bold')
+    f('avy-lead-face-2', bg='syn_keyword', fg='bg', weight='bold')
+    f('avy-background-face', fg='dim')
+    f('aw-leading-char-face', fg='copper', weight='bold', height=1.6)
+    f('aw-background-face', fg='dim')
+    f('aw-minibuffer-leading-char-face', fg='copper', weight='bold')
+    f('sp-show-pair-match-face', fg='copper', weight='bold', underline=True)
+    f('sp-show-pair-mismatch-face', bg='del_hi', fg='fg')
+    f('sp-wrap-overlay-opening-pair', fg='copper', weight='bold')
+    f('sp-wrap-overlay-closing-pair', fg='copper', weight='bold')
+    f('sp-pair-overlay-face', bg='bg_alt')
+    for i, c in enumerate(['syn_function', 'syn_keyword', 'syn_type', 'syn_constant', 'syn_string',
+                           'syn_builtin', 'syn_property', 'fg', 'dim'], 1):
+        f(f'rainbow-delimiters-depth-{i}-face', fg=c)
+    f('rainbow-delimiters-unmatched-face', fg='red', weight='bold')
+    f('rainbow-delimiters-mismatched-face', fg='red', weight='bold')
+    f('vundo-default', fg='dim')
+    f('vundo-node', fg='dim')
+    f('vundo-stem', fg='faint')
+    f('vundo-highlight', fg='copper', weight='bold')
+    f('vundo-saved', fg='green')
+    f('vundo-last-saved', fg='green', weight='bold')
+    f('whitespace-space', fg='border')
+    f('whitespace-tab', fg='border')
+    f('whitespace-newline', fg='border')
+    f('whitespace-indentation', fg='border')
+    f('whitespace-trailing', bg='del_bg')
+    f('whitespace-line', fg='red')
+    f('whitespace-empty', bg='bg_alt')
+    f('whitespace-space-before-tab', bg='chg_bg')
+    f('whitespace-space-after-tab', bg='chg_bg')
+    f('whitespace-big-indent', bg='chg_bg')
+    f('whitespace-missing-newline-at-eof', bg='chg_bg')
+    # Diagnostics and the language server.
+    f('flymake-error', underline=('wave', 'red'))
+    f('flymake-warning', underline=('wave', 'yellow'))
+    f('flymake-note', underline=('wave', 'teal'))
+    f('flymake-error-echo', fg='red')
+    f('flymake-warning-echo', fg='yellow')
+    f('flymake-note-echo', fg='teal')
+    f('flymake-end-of-line-diagnostics-face', fg='dim', slant='italic')
+    f('flymake-error-echo-at-eol', fg='red', slant='italic')
+    f('flymake-warning-echo-at-eol', fg='yellow', slant='italic')
+    f('flymake-note-echo-at-eol', fg='teal', slant='italic')
+    f('eglot-highlight-symbol-face', bg='border', weight='bold')
+    f('eglot-inlay-hint-face', fg='dim', height=0.9)
+    f('eglot-type-hint-face', fg='dim', height=0.9)
+    f('eglot-parameter-hint-face', fg='dim', height=0.9)
+    f('eglot-diagnostic-tag-unnecessary-face', fg='dim')
+    f('eglot-diagnostic-tag-deprecated-face', fg='dim', strike_through=True)
+    f('eglot-mode-line', fg='syn_function', weight='bold')
+    f('compilation-error', fg='red', weight='bold')
+    f('compilation-warning', fg='yellow', weight='bold')
+    f('compilation-info', fg='syn_function')
+    f('compilation-line-number', fg='syn_constant')
+    f('compilation-column-number', fg='dim')
+    f('compilation-mode-line-exit', fg='green', weight='bold')
+    f('compilation-mode-line-fail', fg='red', weight='bold')
+    f('compilation-mode-line-run', fg='copper', weight='bold')
+    # Files.
+    f('dired-directory', fg='syn_function', weight='bold')
+    f('dired-symlink', fg='syn_type')
+    f('dired-broken-symlink', fg='red', underline=True)
+    f('dired-mark', fg='copper', weight='bold')
+    f('dired-marked', fg='copper', weight='bold')
+    f('dired-flagged', fg='red', weight='bold')
+    f('dired-header', fg='syn_keyword', weight='bold')
+    f('dired-perm-write', fg='syn_constant')
+    f('dired-set-id', fg='syn_builtin')
+    f('dired-special', fg='syn_property')
+    f('dired-ignored', fg='dim')
+    f('dired-warning', fg='yellow', weight='bold')
+    f('dirvish-hl-line', bg='region', extend=True)
+    f('dirvish-hl-line-inactive', bg='bg_alt', extend=True)
+    f('dirvish-file-size', fg='dim')
+    f('dirvish-file-time', fg='dim')
+    f('dirvish-file-modes', fg='dim')
+    f('dirvish-file-user-id', fg='dim')
+    f('dirvish-file-group-id', fg='dim')
+    f('dirvish-file-link-number', fg='dim')
+    f('dirvish-file-inode-number', fg='dim')
+    f('dirvish-file-device-number', fg='dim')
+    f('dirvish-git-commit-message-face', fg='dim', slant='italic')
+    f('dirvish-vc-added-state', fg='green')
+    f('dirvish-vc-edited-state', fg='yellow')
+    f('dirvish-vc-removed-state', fg='red')
+    f('dirvish-vc-conflict-state', fg='red', weight='bold')
+    f('dirvish-vc-locked-state', fg='syn_keyword')
+    f('dirvish-vc-missing-state', fg='red')
+    f('dirvish-vc-needs-merge-face', fg='syn_keyword')
+    f('dirvish-vc-needs-update-face', fg='syn_keyword')
+    f('dirvish-vc-unregistered-face', fg='dim')
+    f('treemacs-root-face', fg='syn_keyword', weight='bold', height=1.1)
+    f('treemacs-directory-face', fg='syn_function')
+    f('treemacs-file-face', fg='fg')
+    f('treemacs-git-modified-face', fg='yellow')
+    f('treemacs-git-added-face', fg='green')
+    f('treemacs-git-untracked-face', fg='syn_type')
+    f('treemacs-git-ignored-face', fg='dim')
+    f('treemacs-git-conflict-face', fg='red', weight='bold')
+    f('treemacs-tags-face', fg='syn_property')
+    f('imenu-list-entry-face-0', fg='syn_function')
+    f('imenu-list-entry-face-1', fg='syn_keyword')
+    f('imenu-list-entry-face-2', fg='syn_type')
+    f('imenu-list-entry-face-3', fg='syn_constant')
+    f('imenu-list-entry-subalist-face-0', fg='syn_function', weight='bold')
+    f('imenu-list-entry-subalist-face-1', fg='syn_keyword', weight='bold')
+    f('imenu-list-entry-subalist-face-2', fg='syn_type', weight='bold')
+    f('imenu-list-entry-subalist-face-3', fg='syn_constant', weight='bold')
+    # Terminals.
+    for name in ('black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'):
+        base = {'black': 'ansi_black', 'white': 'ansi_white', 'cyan': 'teal'}.get(name, name)
+        hi = {'black': 'dim', 'white': 'fg_strong', 'cyan': 'teal_bright'}.get(name, name + '_bright')
+        f(f'ansi-color-{name}', fg=base, bg=base)
+        f(f'ansi-color-bright-{name}', fg=hi, bg=hi)
+        f(f'term-color-{name}', fg=base, bg=base)
+        f(f'term-color-bright-{name}', fg=hi, bg=hi)
+        f(f'vterm-color-{name}', fg=base, bg=base)
+        f(f'vterm-color-bright-{name}', fg=hi, bg=hi)
+    f('ansi-color-bold', weight='bold')
+    f('ansi-color-faint', fg='dim')
+    f('ansi-color-italic', slant='italic')
+    f('ansi-color-underline', underline=True)
+    f('eshell-prompt', fg='syn_function', weight='bold')
+    f('eshell-ls-directory', fg='syn_function', weight='bold')
+    f('eshell-ls-symlink', fg='syn_type')
+    f('eshell-ls-executable', fg='syn_string')
+    f('eshell-ls-archive', fg='syn_property')
+    f('eshell-ls-backup', fg='dim')
+    f('eshell-ls-missing', fg='red')
+    f('eshell-ls-product', fg='dim')
+    f('eshell-ls-readonly', fg='syn_constant')
+    f('eshell-ls-special', fg='syn_builtin')
+    f('eshell-ls-unreadable', fg='dim')
+    # Doom: dashboard, modeline, docs, popups.
+    f('doom-dashboard-banner', fg='copper')
+    f('doom-dashboard-menu-title', fg='syn_function', weight='bold')
+    f('doom-dashboard-menu-desc', fg='dim')
+    f('doom-dashboard-footer', fg='dim')
+    f('doom-dashboard-footer-icon', fg='dim')
+    f('doom-dashboard-loaded', fg='dim', slant='italic')
+    f('doom-modeline-bar', bg='copper')
+    f('doom-modeline-bar-inactive', bg='bg_low')
+    f('doom-modeline-highlight', fg='copper', weight='bold')
+    f('doom-modeline-alternate-highlight', fg='syn_function', weight='bold')
+    f('doom-docs-title', inherit='outline-1', height=1.3)
+    f('solaire-default-face', bg='bg_alt', fg='fg')
+    f('solaire-fringe-face', bg='bg_alt', fg='faint')
+    f('solaire-hl-line-face', bg='border', extend=True)
+    f('solaire-line-number-face', bg='bg_alt', fg='faint')
+    f('solaire-header-line-face', bg='bg_raised', fg='fg')
+    f('solaire-mode-line-face', bg='bg_raised', fg='fg')
+    f('solaire-mode-line-inactive-face', bg='bg_low', fg='dim')
+    f('solaire-org-hide-face', fg='bg_alt')
+    f('+ui-greeting', fg='doc', slant='italic')
+    f('+ui-date', fg='dim')
+    f('+git-blame-face', fg='dim', slant='italic')
+    f('+core-undo-changed', bg='search')
+    # Icons: each family of nerd-icons colours from the palette.
+    icon = dict(red='red', lred='red_bright', dred='red', pink='magenta', lpink='magenta_bright', dpink='magenta',
+                orange='orange', lorange='orange_bright', dorange='orange', yellow='yellow', lyellow='yellow_bright',
+                dyellow='yellow', green='green', lgreen='green_bright', dgreen='green', blue='blue', lblue='blue_bright',
+                dblue='blue', maroon='red', lmaroon='red_bright', dmaroon='red', purple='violet', lpurple='violet_bright',
+                dpurple='violet', cyan='teal', lcyan='teal_bright', dcyan='teal', silver='dim', lsilver='dim', dsilver='dim',
+                purple_alt='violet', red_alt='red', blue_alt='blue', cyan_alt='teal', orange_alt='orange')
+    for k, c in icon.items():
+        f('nerd-icons-' + k.replace('_', '-'), fg=c)
+    # Calendar and the rest.
+    f('calendar-today', fg='copper', weight='bold', underline=True)
+    f('calendar-weekday-header', fg='syn_keyword')
+    f('calendar-weekend-header', fg='syn_type')
+    f('calendar-month-header', fg='syn_function', weight='bold')
+    f('holiday', fg='syn_builtin')
+    f('diary', fg='syn_constant')
+    f('hl-todo', fg='copper', weight='bold')
+    f('gptel-context-highlight-face', bg='bg_alt')
+    # Everything else a session shows, so no colour comes from elsewhere.
+    for face, kw in (
+            ('custom-button-mouse', dict(bg='border', fg='fg_strong', box=True)),
+            ('custom-button-pressed', dict(bg='region', fg='fg', box=True)),
+            ('custom-button-pressed-unraised', dict(fg='syn_keyword', underline=True)),
+            ('custom-changed', dict(fg='bg', bg='syn_function')), ('custom-modified', dict(fg='bg', bg='syn_function')),
+            ('custom-set', dict(fg='bg', bg='green')), ('custom-themed', dict(fg='bg', bg='syn_type')),
+            ('custom-invalid', dict(fg='bg', bg='red')), ('custom-rogue', dict(fg='red', bg='bg_alt')),
+            ('custom-comment', dict(fg='doc', bg='bg_alt')), ('custom-group-tag-1', dict(fg='syn_keyword', weight='bold')),
+            ('custom-variable-obsolete', dict(fg='dim')),
+            ('widget-button-pressed', dict(fg='copper')), ('widget-documentation', dict(fg='doc')),
+            ('diff-changed-unspecified', dict(fg='yellow', bg='chg_bg')),
+            ('edebug-disabled-breakpoint', dict(bg='chg_bg')), ('edmacro-label', dict(fg='syn_function', weight='bold')),
+            ('elisp-condition', dict(fg='red')), ('elisp-major-mode-name', dict(fg='syn_type')),
+            ('elisp-rx', dict(fg='syn_constant')), ('elisp-symbol-at-mouse', dict(bg='border')),
+            ('elisp-symbol-role', dict(fg='syn_property')), ('elisp-symbol-role-definition', dict(fg='syn_property', weight='bold')),
+            ('elisp-unknown-call', dict(fg='dim')),
+            ('epa-field-body', dict(fg='fg')), ('epa-field-name', dict(fg='syn_keyword', weight='bold')),
+            ('epa-mark', dict(fg='copper', weight='bold')), ('epa-string', dict(fg='syn_string')),
+            ('epa-validity-high', dict(fg='green', weight='bold')), ('epa-validity-medium', dict(fg='yellow')),
+            ('epa-validity-low', dict(fg='dim')), ('epa-validity-disabled', dict(fg='dim', strike_through=True)),
+            ('eros-result-overlay-face', dict(fg='syn_constant', box=True)),
+            ('ert-test-result-expected', dict(fg='bg', bg='green')), ('ert-test-result-unexpected', dict(fg='bg', bg='red')),
+            ('flymake-popon-posframe-border', dict(fg='border')),
+            ('git-timemachine-minibuffer-author-face', dict(fg='syn_constant')),
+            ('git-timemachine-minibuffer-detail-face', dict(fg='syn_function')),
+            ('gptel-response-highlight', dict(bg='bg_alt')),
+            ('ibuffer-locked-buffer', dict(fg='red')), ('icon-button', dict(fg='fg', bg='border', box=True)),
+            ('isearch-group-1', dict(bg='chg_hi', fg='fg_strong')), ('isearch-group-2', dict(bg='add_hi', fg='fg_strong')),
+            ('line-number-major-tick', dict(fg='dim', weight='bold')), ('line-number-minor-tick', dict(fg='faint')),
+            ('magit-diff-added-indicator', dict(fg='green')), ('magit-diff-removed-indicator', dict(fg='red')),
+            ('magit-diff-base-heading', dict(fg='yellow', bg='chg_bg')), ('magit-diff-base-indicator', dict(fg='yellow')),
+            ('magit-diff-our-heading', dict(fg='red', bg='del_bg')), ('magit-diff-our-indicator', dict(fg='red')),
+            ('magit-diff-their-heading', dict(fg='green', bg='add_bg')), ('magit-diff-their-indicator', dict(fg='green')),
+            ('magit-refname', dict(fg='dim')), ('magit-refname-pullreq', dict(fg='syn_type')),
+            ('magit-refname-stash', dict(fg='syn_property')), ('magit-refname-wip', dict(fg='dim', slant='italic')),
+            ('magit-signature-revoked', dict(fg='syn_builtin')),
+            ('markdown-highlighting-face', dict(bg='search', fg='fg')), ('minibuffer-nonselected', dict(fg='dim')),
+            ('nobreak-hyphen', dict(fg='syn_constant')),
+            ('org-agenda-column-dateline', dict(bg='bg_alt')), ('org-agenda-restriction-lock', dict(bg='bg_alt')),
+            ('org-clock-overlay', dict(bg='bg_alt', fg='fg')), ('org-column', dict(bg='bg_alt')),
+            ('org-column-title', dict(bg='bg_raised', fg='fg', weight='bold')), ('org-date-selected', dict(bg='copper', fg='bg')),
+            ('org-dispatcher-highlight', dict(fg='copper', weight='bold')),
+            ('org-habit-alert-future-face', dict(bg='chg_bg')), ('org-habit-clear-future-face', dict(bg='add_bg')),
+            ('org-habit-overdue-future-face', dict(bg='del_bg')), ('org-habit-ready-future-face', dict(bg='add_bg')),
+            ('org-mode-line-clock-overrun', dict(fg='red', weight='bold')),
+            ('org-modern-progress-complete', dict(bg='green', fg='bg')), ('org-modern-progress-incomplete', dict(bg='border', fg='fg')),
+            ('org-roam-dim', dict(fg='dim')), ('org-sexp-date', dict(fg='syn_type')), ('org-table-header', dict(bg='bg_raised', fg='fg', weight='bold')),
+            ('package-mark-delete-line', dict(bg='del_bg', extend=True)), ('package-mark-install-line', dict(bg='add_bg', extend=True)),
+            ('persp-face-lighter-buffer-not-in-persp', dict(fg='red')),
+            ('reb-match-0', dict(bg='search', fg='fg')), ('reb-match-1', dict(bg='chg_hi', fg='fg')),
+            ('reb-match-2', dict(bg='add_hi', fg='fg')), ('reb-match-3', dict(bg='del_hi', fg='fg')),
+            ('rxt-highlight-face', dict(bg='search')),
+            ('sh-heredoc', dict(fg='syn_string')), ('sh-quoted-exec', dict(fg='syn_builtin')), ('sh-escaped-newline', dict(fg='dim')),
+            ('tab-bar-tab-highlight', dict(bg='border', fg='fg')), ('tool-bar', dict(bg='bg_raised', fg='fg')),
+            ('treemacs-fringe-indicator-face', dict(fg='copper')), ('treemacs-marked-file-face', dict(fg='copper', weight='bold')),
+            ('treemacs-on-failure-pulse-face', dict(bg='del_hi', fg='fg')), ('treemacs-on-success-pulse-face', dict(bg='add_hi', fg='fg')),
+            ('treemacs-peek-mode-indicator-face', dict(bg='syn_type')),
+            ('tty-menu-disabled-face', dict(bg='bg_raised', fg='dim')), ('tty-menu-enabled-face', dict(bg='bg_raised', fg='fg')),
+            ('tty-menu-selected-face', dict(bg='region', fg='fg_strong')),
+            ('wgrep-face', dict(bg='chg_bg', fg='fg')), ('wgrep-delete-face', dict(bg='del_bg', fg='red', strike_through=True)),
+            ('wgrep-done-face', dict(fg='green')), ('wgrep-file-face', dict(bg='bg_alt', fg='fg')),
+            ('wgrep-reject-face', dict(fg='red', weight='bold')),
+            ('log-view-file', dict(fg='syn_function', weight='bold')), ('log-view-message', dict(fg='syn_keyword')),
+            ('log-view-commit-body', dict(fg='fg')),
+            ('which-func', dict(fg='syn_function')), ('whitespace-hspace', dict(fg='border'))):
+        f(face, **kw)
+    return F
+
+
+def lisp_face(face, kw, g):
+    attrs = []
+    keymap = dict(fg=':foreground', bg=':background', weight=':weight', slant=':slant', underline=':underline',
+                  extend=':extend', inherit=':inherit', height=':height', box=':box', strike_through=':strike-through')
+    for k, v in kw.items():
+        key = keymap[k]
+        if k in ('fg', 'bg'):
+            attrs.append(f'{key} "{g[v]}"')
+        elif k in ('inherit', 'weight', 'slant'):
+            attrs.append(f"{key} {v}")
+        elif k == 'underline' and isinstance(v, tuple):
+            attrs.append(f'{key} (:style {v[0]} :color "{g[v[1]]}")')
+        elif k == 'box':
+            attrs.append(f'{key} (:line-width (1 . -1) :color "{g["border"]}")')
+        elif v is True:
+            attrs.append(f'{key} t')
+        elif k == 'strike_through':
+            attrs.append(f'{key} t')
+        else:
+            attrs.append(f'{key} {v}')
+    return f"   '({face} ((t ({' '.join(attrs)}))))"
+
+
+def write(name, dark, doc):
+    g = palette(dark)
+    mode = 'dark' if dark else 'light'
+    body = '\n'.join(lisp_face(face, kw, g) for face, kw in faces(dark))
+    text = f''';;; {name}-theme.el -*- lexical-binding: t; no-byte-compile: t; -*-
+;;
+;; {doc}
+;;
+;; Copyright (C) {YEAR} {AUTHOR}. All rights reserved.
+;;
+;; Nexenne, a pair for long hours of reading and writing code:
+;; nexenne-day when the system is light, nexenne-night when it is dark.
+;; Each kind of token has its own colour, set so that any two stay easy
+;; to tell apart, also with red-green colour blindness; text is strong
+;; but not maximal, comments quieter, and there is no pure white or pure
+;; black. Function definitions are bold, to find them at a glance.
+;; Written by bin/nexenne-palette: change colours there.
+
+(deftheme {name}
+  "{doc}"
+  :background-mode '{mode}
+  :kind 'color-scheme
+  :family 'nexenne)
+
+(custom-theme-set-faces
+ '{name}
+{body})
+
+(provide-theme '{name})
+
+;;; {name}-theme.el ends here
+'''
+    open(os.path.join(THEMES, f'{name}-theme.el'), 'w').write(text)
+    return g
+
+
+def report(name, g):
+    bg = tuple(int(g['bg'][i:i + 2], 16) / 255 for i in (1, 3, 5))
+    print(f"== {name}  background {g['bg']}")
+    for k in ['fg', 'comment', 'doc', 'dim'] + ['syn_' + r for r in ROLES] + list(H) + ['copper']:
+        c = tuple(int(g[k][i:i + 2], 16) / 255 for i in (1, 3, 5))
+        print(f"  {k:12} {g[k]}  APCA Lc {apca(c, bg):6.1f}  WCAG {wcag(c, bg):5.2f}:1")
+
+
+if __name__ == '__main__':
+    report('nexenne-night', write('nexenne-night', True,
+                                  'Nexenne by night: warm charcoal, distinct calm colours, for reading and writing code.'))
+    report('nexenne-day', write('nexenne-day', False,
+                                'Nexenne by day: warm paper, distinct calm colours, for reading and writing code.'))
