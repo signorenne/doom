@@ -186,8 +186,8 @@ draws on the dashboard moves on from here, inside
 ;;
 ;;   …::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2
 ;;
-;; Without a tree, in the older modes, the project path and breadcrumb's
-;; symbol path. The function was a first line pinned while scrolled off
+;; Without a tree, in the older modes, breadcrumb's symbol path. Never the
+;; file's path, which the modeline shows. The function was a first line pinned while scrolled off
 ;; before, which said "namespace {" or "int" more often than anything.
 (defvar +ui-scope-node-types
   (concat "\\`" (regexp-opt '("namespace_definition" "mod_item" "module"
@@ -308,15 +308,13 @@ scope and function label."
 reused until point leaves the line or the buffer changes.")
 
 (defun +ui--crumbs ()
-  "The breadcrumbs of point: the project path, then the symbol path."
+  "The breadcrumbs of point: the symbol path.  Not the file's: the
+modeline has it."
   (let ((here (line-beginning-position)))
     (pcase-let ((`(,line ,tick . ,crumbs) +ui--crumbs-cache))
       (if (and line (eq line here) (eq tick (buffer-chars-modified-tick)))
           crumbs
-        (let ((text (string-join (seq-remove #'string-empty-p
-                                             (list (or (ignore-errors (breadcrumb-project-crumbs)) "")
-                                                   (or (ignore-errors (breadcrumb-imenu-crumbs)) "")))
-                                 (propertize "  >  " 'face 'shadow))))
+        (let ((text (or (ignore-errors (breadcrumb-imenu-crumbs)) "")))
           (setq +ui--crumbs-cache (cons here (cons (buffer-chars-modified-tick) text)))
           text)))))
 
@@ -335,14 +333,14 @@ else the breadcrumbs."
 (define-minor-mode +ui-where-mode
   "A header line saying where you are: the scope and the function at
 point, with its parameters, return type, the line in it, its problems
-and its changes; or the project and symbol paths without a syntax tree."
+and its changes; or the symbol path without a syntax tree."
   :lighter nil
   (if +ui-where-mode
       (setq-local header-line-format '(:eval (+ui--where-line)))
     (kill-local-variable 'header-line-format)))
 
 (use-package! breadcrumb
-  :commands (breadcrumb-project-crumbs breadcrumb-imenu-crumbs)
+  :commands (breadcrumb-imenu-crumbs)
   :init (add-hook 'prog-mode-hook #'+ui-where-mode))
 
 ;; Not in a file of long lines: with a header line, each key there redrew

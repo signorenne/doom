@@ -15,7 +15,8 @@
   return type, and about that function the line you are on out of its
   length, its errors and warnings and its changed hunks,
   =…::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2=;
-  without a syntax tree, the project and symbol paths; the symbol
+  without a syntax tree, the symbol path (the file's is in the modeline);
+  the symbol
   outline at the side on ~SPC t o~; in the modeline, the line out of how
   many the buffer has, the column out of how many the line has, and how
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so
