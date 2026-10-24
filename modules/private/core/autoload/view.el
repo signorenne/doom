@@ -12,6 +12,8 @@
 
 (declare-function +core-image-uncenter "images")
 (declare-function evil-define-key* "evil-core")
+(declare-function flymake-make-diagnostic "flymake")
+(declare-function flymake-diag-region "flymake")
 
 (defvar +core-view-side 'right
   "Which side the view takes.")
@@ -635,6 +637,45 @@ wants a view gives it one again from its own hook."
     (+core-view--close))
   (+core-view--disable-h))
 
+;;
+;;; What failed, on its line
+
+(defvar-local +core-view--problem nil
+  "Why this buffer's last drawing failed, (MESSAGE . LINE), or nil.")
+
+(defvar-local +core-view--report nil
+  "flymake's report function for this buffer's last check.")
+
+(defun +core-view--flymake-send ()
+  "Tell flymake what the last drawing said: an error on its line, or
+nothing. A problem with no line stays in the view's header only."
+  (when +core-view--report
+    (funcall +core-view--report
+             (when-let* ((problem +core-view--problem)
+                         (line (cdr problem))
+                         (region (flymake-diag-region (current-buffer) line)))
+               (list (flymake-make-diagnostic (current-buffer) (car region) (cdr region)
+                                              :error (car problem))))
+             ;; The whole buffer each time: flymake clears a backend's
+             ;; old errors only at its first report, and adds the later
+             ;; ones to them unless told which part they replace.
+             :region (cons (point-min) (point-max)))))
+
+(defun +core-view--flymake (report-fn &rest _)
+  "A flymake backend for what the drawing says is wrong. The drawing
+comes after flymake asks, so this answers with what is known and answers
+again, through the same REPORT-FN, when the drawing is done."
+  (setq +core-view--report report-fn)
+  (+core-view--flymake-send))
+
+(defun +core-view--problem-h (source message line)
+  "Keep SOURCE's flymake in step with its drawing's MESSAGE and LINE."
+  (when (buffer-live-p source)
+    (with-current-buffer source
+      (when (memq #'+core-view--flymake flymake-diagnostic-functions)
+        (setq +core-view--problem (and message (cons message line)))
+        (+core-view--flymake-send)))))
+
 ;;;###autoload
 (defun +core-view-enable (draw &optional live side)
   "Give this buffer a view drawn by DRAW, beside it. LIVE draws it again
@@ -653,7 +694,13 @@ nil. See `+core-view-draw' for what DRAW returns."
               +core-view-live live
               +core-view-side-here side)
   (when live
-    (add-hook 'after-change-functions #'+core-view--schedule nil t))
+    (add-hook 'after-change-functions #'+core-view--schedule nil t)
+    ;; Where the drawing breaks is marked on its line, counted in the
+    ;; header with the buffer's other problems, and reached with the
+    ;; keys that go to the next problem.
+    (add-hook '+core-view-problem-functions #'+core-view--problem-h)
+    (add-hook 'flymake-diagnostic-functions #'+core-view--flymake nil t)
+    (flymake-mode 1))
   ;; Opened in a window: the view comes up as the command that opened it
   ;; ends, before anything is drawn, with a word in it until its drawing
   ;; is ready. Shown later, it would take half the window from a picture

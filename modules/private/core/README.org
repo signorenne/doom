@@ -219,7 +219,10 @@ such buffer you are in.
   sharp picture follows. Pictures are drawn at the screen's own density,
   two pixels to a point on a Retina screen.
 - When the drawing fails, halfway through a line, the view keeps what it
-  showed and says why in its header, so it never goes blank.
+  showed and says why in its header, so it never goes blank. When it
+  says which line, that line is marked as an error, counted in the
+  header with the buffer's other problems and reached with the keys
+  that go to the next one; the mark goes once the drawing works again.
 - It follows you between buffers that have one, and steps aside for a
   buffer that has none. A buffer says which side its view takes: right
   for a drawing beside its source, left for an image's insides, so the
