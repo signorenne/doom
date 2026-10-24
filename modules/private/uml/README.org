@@ -14,15 +14,18 @@ module adds the three things that make a diagram pleasant to write:
 * The preview
 Opening a diagram opens its drawing in a window on the right, which
 keeps up as you type. The redraw waits for a pause, so a burst of keys
-costs one drawing rather than one per key. A diagram opened in the
+costs one drawing rather than one per key, and the typing never waits
+for it: the server is asked without waiting for its answer, and the SVG
+it sends back is drawn for the window by =rsvg-convert= in a process of
+its own, sharp at any zoom, as core does for an SVG file. A diagram opened in the
 background, by a search or an export, opens no window and starts no
 server.
 
 The diagram is fitted to the window and centred in it, and fitted again
 when the window changes size. The window is one you can move into,
-~C-w l~, to zoom a large diagram with =+= and =-= or pan it with
-=h j k l=; ~q~ there closes it, and it stays closed for that diagram
-until ~SPC m p~.
+~C-w l~, to zoom a large diagram with =+= and =-=, fit it with =f= or pan
+it with =h j k l=; the zoom and the place stay while you edit. ~q~ there
+closes it, and it stays closed for that diagram until ~SPC m p~.
 
 | Key       | What it does                          |
 |-----------+---------------------------------------|
@@ -35,7 +38,8 @@ until ~SPC m p~.
 
 A diagram that does not parse leaves the last good drawing in place and
 says what PlantUML complained about, so the preview never goes blank
-while you are in the middle of a line.
+while you are in the middle of a line; the line PlantUML names is marked
+as an error, reached with the keys for the next problem.
 
 The preview is coloured for the theme. PlantUML writes its background as
 a CSS style on the SVG root and Emacs's renderer ignores that, so the
@@ -55,7 +59,11 @@ serve its own =picoweb= HTTP server: the first drawing pays for the JVM,
 every one after it costs about 30 milliseconds.
 
 So this module starts =plantuml -picoweb= on the first preview and keeps
-it. Measured here: 1.7 s for the first, then 0.03 s and 0.02 s.
+it. Measured here: 1.7 s for the first, then 0.03 s and 0.02 s. The
+start happens in the background, so opening the first diagram of a
+session does not freeze the editor while the JVM loads (it did, about
+3 s); the drawing appears once the server answers. An export started
+meanwhile waits for that same start.
 
 | Key       | What it does                       |
 |-----------+------------------------------------|

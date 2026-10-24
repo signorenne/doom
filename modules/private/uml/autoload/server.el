@@ -37,26 +37,91 @@
       (user-error "No free port for the PlantUML server near %d"
                   +uml-server-port)))
 
+(defvar +uml--server-waiters nil
+  "Functions waiting for the server started in the background, each
+called with its port, or nil and why it did not start.")
+
+(defvar +uml--server-starting nil
+  "The timer watching a server start in the background, or nil.")
+
+(defun +uml--server-start ()
+  "Start the picoweb process and return its port; it is not answering
+yet, since the first start has a JVM to load."
+  (unless (executable-find +uml-executable)
+    (user-error "No %s on PATH; SPC h r d says how to install it"
+                +uml-executable))
+  (let ((port (+uml--pick-port)))
+    (setq +uml--server-process
+          (make-process
+           :name "plantuml-picoweb"
+           :buffer (get-buffer-create " *plantuml server*")
+           :command (list +uml-executable (format "-picoweb:%d" port))
+           :noquery t
+           :sentinel
+           (lambda (_proc event)
+             (unless (string-match-p "\\`\\(run\\|open\\)" event)
+               (setq +uml--server-process nil +uml--server-port nil))))
+          +uml--server-port port)))
+
+(defun +uml--server-answering-p ()
+  "Non-nil once the started server listens: its port stops being free."
+  (and (+uml-server-running-p) (not (+uml--port-free-p +uml--server-port))))
+
+;;;###autoload
+(defun +uml-server-start-async (done)
+  "Start the server if it is not up, without waiting for it, and call
+DONE with its port once it answers, or with nil and why it did not. A
+start already under way is joined, not repeated."
+  (cond
+   ((and (+uml-server-running-p) (not +uml--server-starting))
+    (funcall done +uml--server-port nil))
+   (t
+    (push done +uml--server-waiters)
+    (unless +uml--server-starting
+      (condition-case err
+          (let ((deadline (+ (float-time) +uml-server-start-timeout))
+                (finish (lambda (port problem)
+                          (when (timerp +uml--server-starting)
+                            (cancel-timer +uml--server-starting))
+                          (setq +uml--server-starting nil)
+                          (unless port
+                            (when (+uml-server-running-p)
+                              (delete-process +uml--server-process))
+                            (setq +uml--server-process nil +uml--server-port nil))
+                          (let ((waiters (nreverse +uml--server-waiters)))
+                            (setq +uml--server-waiters nil)
+                            (dolist (waiter waiters)
+                              (funcall waiter port problem))))))
+            (+uml--server-start)
+            (message "Starting PlantUML...")
+            (setq +uml--server-starting
+                  (run-at-time
+                   0.1 0.1
+                   (lambda ()
+                     (cond ((+uml--server-answering-p)
+                            (funcall finish +uml--server-port nil))
+                           ((not (+uml-server-running-p))
+                            (funcall finish nil "the PlantUML server stopped as it started; see the buffer \" *plantuml server*\""))
+                           ((> (float-time) deadline)
+                            (funcall finish nil (format "the PlantUML server did not start within %ss"
+                                                        +uml-server-start-timeout))))))))
+        (error
+         (let ((waiters +uml--server-waiters))
+           (setq +uml--server-waiters nil)
+           (dolist (waiter waiters)
+             (funcall waiter nil (error-message-string err))))))))))
+
 ;;;###autoload
 (defun +uml-server-ensure ()
   "Start the picoweb server if it is not already up, and return its port.
 Waits for it to answer, since the first start has a JVM to load."
+  ;; One already starting in the background, for the preview: wait for
+  ;; that one, whose timer says when it answers.
+  (let ((deadline (+ (float-time) +uml-server-start-timeout)))
+    (while (and +uml--server-starting (< (float-time) deadline))
+      (sleep-for 0.1)))
   (unless (+uml-server-running-p)
-    (unless (executable-find +uml-executable)
-      (user-error "No %s on PATH; SPC h r d says how to install it"
-                  +uml-executable))
-    (let ((port (+uml--pick-port)))
-      (setq +uml--server-process
-            (make-process
-             :name "plantuml-picoweb"
-             :buffer (get-buffer-create " *plantuml server*")
-             :command (list +uml-executable (format "-picoweb:%d" port))
-             :noquery t
-             :sentinel
-             (lambda (_proc event)
-               (unless (string-match-p "\\`\\(run\\|open\\)" event)
-                 (setq +uml--server-process nil +uml--server-port nil))))
-            +uml--server-port port)
+    (let ((port (+uml--server-start)))
       ;; Wait for it to answer, rather than failing the render that asked
       ;; for it: the port stops being free once it listens. A server that
       ;; died at once (no java, say) is not waited for, since the wait
@@ -92,48 +157,95 @@ Waits for it to answer, since the first start has a JVM to load."
   (message "PlantUML server on port %d" (+uml-server-ensure)))
 
 ;;;###autoload
+(defun +uml--request (source format options)
+  "The request that renders SOURCE as FORMAT with OPTIONS, as the `url'
+variables to bind around a retrieval."
+  `((url-request-method . "POST")
+    (url-request-extra-headers . (("Content-Type" . "application/json")))
+    (url-request-data
+     . ,(encode-coding-string
+         (json-encode `((source . ,source)
+                        (options . ,(vconcat (list (format "-t%s" format))
+                                             options))))
+         'utf-8))))
+
+(defun +uml--read-response ()
+  "Read the server's answer in this buffer: (ok BYTES), or (problem
+MESSAGE LINE), LINE the diagram's line at fault or nil."
+  (goto-char (point-min))
+  (let* ((case-fold-search t)
+         (status (and (re-search-forward "^HTTP/[0-9.]+ \\([0-9]+\\)" nil t)
+                      (string-to-number (match-string 1))))
+         (end (save-excursion (and (re-search-forward "^\r?$" nil t) (point))))
+         ;; A diagram that does not parse still comes back 200, as a
+         ;; picture of the words "Syntax Error". The headers say so;
+         ;; read them, so the caller can keep the last good drawing
+         ;; and an export never writes the error picture to disk.
+         (problem (save-excursion
+                    (and (re-search-forward "^X-PlantUML-Diagram-Error: *\\(.*?\\)\r?$" end t)
+                         (match-string 1))))
+         (line (save-excursion
+                 (and (re-search-forward "^X-PlantUML-Diagram-Error-Line: *\\([0-9]+\\)" end t)
+                      (string-to-number (match-string 1))))))
+    (cond
+     (problem (list 'problem (if line (format "line %d: %s" line problem) problem) line))
+     ((not (search-forward "\n\n" nil t)) (list 'problem "PlantUML sent no body" nil))
+     (t (let ((body (buffer-substring-no-properties (point) (point-max))))
+          (if (and status (>= status 400))
+              (list 'problem (format "PlantUML: %s"
+                                     (string-trim (truncate-string-to-width body 200)))
+                    nil)
+            (list 'ok body)))))))
+
+;;;###autoload
 (defun +uml-render (source format &optional options)
   "Render SOURCE, PlantUML text, as FORMAT (a symbol, `svg' or `png').
 OPTIONS are extra PlantUML flags, a list of strings; the preview uses
 them to colour the diagram for the theme without touching the file.
 Returns the bytes, or signals with what PlantUML said."
-  (let* ((port (+uml-server-ensure))
-         (url-request-method "POST")
-         (url-request-extra-headers '(("Content-Type" . "application/json")))
-         (url-request-data
-          (encode-coding-string
-           (json-encode `((source . ,source)
-                          (options . ,(vconcat (list (format "-t%s" format))
-                                               options))))
-           'utf-8)))
-    (with-current-buffer
-        (url-retrieve-synchronously (format "http://127.0.0.1:%d/render" port)
-                                    t t +uml-render-timeout)
-      (goto-char (point-min))
-      (let* ((case-fold-search t)
-             (status (and (re-search-forward "^HTTP/[0-9.]+ \\([0-9]+\\)" nil t)
-                          (string-to-number (match-string 1))))
-             (end (save-excursion (and (re-search-forward "^\r?$" nil t) (point))))
-             ;; A diagram that does not parse still comes back 200, as a
-             ;; picture of the words "Syntax Error". The headers say so;
-             ;; read them, so the caller can keep the last good drawing
-             ;; and an export never writes the error picture to disk.
-             (problem (save-excursion
-                        (and (re-search-forward "^X-PlantUML-Diagram-Error: *\\(.*?\\)\r?$" end t)
-                             (match-string 1))))
-             (line (save-excursion
-                     (and (re-search-forward "^X-PlantUML-Diagram-Error-Line: *\\([0-9]+\\)" end t)
-                          (match-string 1)))))
-        (when problem
-          (kill-buffer)
-          (error "%s" (if line (format "line %s: %s" line problem) problem)))
-        (unless (search-forward "\n\n" nil t)
-          (error "PlantUML sent no body"))
-        (let ((body (buffer-substring-no-properties (point) (point-max))))
-          (prog1 (if (and status (>= status 400))
-                     (error "PlantUML: %s" (string-trim (truncate-string-to-width body 200)))
-                   body)
-            (kill-buffer)))))))
+  (let ((port (+uml-server-ensure)))
+    (let ((request (+uml--request source format options)))
+     (cl-progv (mapcar #'car request) (mapcar #'cdr request)
+      (let ((buffer (url-retrieve-synchronously
+                     (format "http://127.0.0.1:%d/render" port) t t +uml-render-timeout)))
+        (unless buffer (error "PlantUML did not answer within %ss" +uml-render-timeout))
+        (pcase (prog1 (with-current-buffer buffer (+uml--read-response))
+                 (kill-buffer buffer))
+          (`(ok ,body) body)
+          (`(problem ,message ,_) (error "%s" message))))))))
+
+;;;###autoload
+(defun +uml-render-async (source format options done)
+  "Render SOURCE as FORMAT with OPTIONS without holding up the editor,
+starting the server first when it is not up. DONE gets (ok BYTES) or
+\(problem MESSAGE LINE). Returns a function that stops the render."
+  (let (buffer cancelled)
+    (+uml-server-start-async
+     (lambda (port problem)
+       (cond
+        (cancelled)
+        ((not port) (funcall done (list 'problem problem nil)))
+        (t
+         (let ((request (+uml--request source format options)))
+          (cl-progv (mapcar #'car request) (mapcar #'cdr request)
+           (condition-case err
+               (setq buffer
+                     (url-retrieve
+                      (format "http://127.0.0.1:%d/render" port)
+                      (lambda (status)
+                        (let ((answer (if-let* ((err (plist-get status :error)))
+                                          (list 'problem (format "PlantUML: %s" (cadr err)) nil)
+                                        (+uml--read-response))))
+                          (kill-buffer (current-buffer))
+                          (unless cancelled (funcall done answer))))
+                      nil t t))
+             (error (funcall done (list 'problem (error-message-string err) nil))))))))))
+    (lambda ()
+      (setq cancelled t)
+      (when (buffer-live-p buffer)
+        (when-let* ((process (get-buffer-process buffer)))
+          (delete-process process))
+        (kill-buffer buffer)))))
 
 ;;;###autoload
 (defun +uml/server-status ()

@@ -2034,11 +2034,12 @@ replaces that when it arrives, because the first drawing of a session
 has a JVM to start. Move to another diagram and the preview follows.
 
 The redraw waits for a pause in the typing, so a burst of keys costs one
-drawing rather than one per key. A diagram opened in the background, by
-a search or an export, opens no window and starts no server. The
-preview is a window you can move into, ~C-w l~, to zoom a large diagram
-with =+= and =-= and pan it with =h j k l=; ~q~ there closes it until
-~SPC m p~.
+drawing rather than one per key, and the typing never waits for it: the
+server starts and answers in the background. A diagram opened in the
+background, by a search or an export, opens no window and starts no
+server. The preview is a window you can move into, ~C-w l~, to zoom a
+large diagram with =+= and =-=, fit it with =f= and pan it with =h j k l=;
+the zoom stays while you edit. ~q~ there closes it until ~SPC m p~.
 
 The drawing is coloured for your theme, not for paper: PlantUML puts its
 background in a CSS style that Emacs's renderer ignores, so on a dark
@@ -2057,7 +2058,7 @@ dark. What ~SPC m e~ writes out is unaffected.
 
 A diagram that does not parse keeps the last good drawing and says what
 PlantUML complained about, so the window never goes blank while you are
-in the middle of a line.
+in the middle of a line; the line it names is marked as an error.
 
 ** Why a server is running
 PlantUML is a Java program: rendering by running it costs about a second

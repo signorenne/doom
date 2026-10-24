@@ -467,27 +467,46 @@ last good drawing and says where the XML breaks."
                          (/ (float (cdr box)) (nth 5 geometry))))
              (copy (+core--svg-copy xml geometry (and here (- here (point-min))) units))
              (scale (+core-view-scale)))
-        (if (not (executable-find +core-svg-renderer))
-            (progn
-              (unless +core--svg-said-slow
-                (setq +core--svg-said-slow t)
-                (message "SVG is drawn in the editor: %s would draw it without pausing typing"
-                         +core-svg-renderer))
-              (list 'image copy 'svg :natural natural))
-          (list 'async
-                (lambda (done)
-                  (+core-view-pipe
-                   (list +core-svg-renderer "-f" "png" "-a"
-                         "-w" (number-to-string (min 8192 (max 1 (car box))))
-                         "-h" (number-to-string (min 8192 (max 1 (cdr box)))))
-                   copy
-                   (lambda (result)
-                     (funcall done
-                              (if (car result)
-                                  (list 'image (cdr result) 'png
-                                        :scale scale :natural natural)
-                                (list 'problem (or (cdr result) "the drawing failed")
-                                      nil))))))))))))
+        (list 'async
+              (lambda (done)
+                (+core-svg-picture-start copy box scale done natural)))))))
+
+;;;###autoload
+(defun +core-svg-picture-start (svg box scale done &optional natural)
+  "Draw SVG, UTF-8 bytes, to fit BOX, device pixels, by
+`+core-svg-renderer' in its own process, and call DONE with the view's
+result: the picture at SCALE, or the problem. NATURAL is the drawing's
+own size, read off SVG when not given. Returns a function that stops
+the drawing. Without the renderer Emacs draws it, once, and DONE is
+called at once."
+  (let ((natural
+         (or natural
+             (when-let* ((dom (with-temp-buffer
+                                (insert (decode-coding-string svg 'utf-8))
+                                (ignore-errors
+                                  (libxml-parse-xml-region (point-min) (point-max)))))
+                         ((eq (dom-tag dom) 'svg))
+                         (geometry (+core--svg-geometry dom)))
+               (cons (round (nth 0 geometry)) (round (nth 1 geometry)))))))
+    (if (not (executable-find +core-svg-renderer))
+        (progn
+          (unless +core--svg-said-slow
+            (setq +core--svg-said-slow t)
+            (message "SVG is drawn in the editor: %s would draw it without pausing typing"
+                     +core-svg-renderer))
+          (funcall done (append (list 'image svg 'svg) (and natural (list :natural natural))))
+          nil)
+      (+core-view-pipe
+       (list +core-svg-renderer "-f" "png" "-a"
+             "-w" (number-to-string (min 8192 (max 1 (car box))))
+             "-h" (number-to-string (min 8192 (max 1 (cdr box)))))
+       svg
+       (lambda (result)
+         (funcall done
+                  (if (car result)
+                      (append (list 'image (cdr result) 'png :scale scale)
+                              (and natural (list :natural natural)))
+                    (list 'problem (or (cdr result) "the drawing failed") nil))))))))
 
 ;;;###autoload
 (defun +core--svg-view-h ()

@@ -5,8 +5,11 @@
 ;; for other buffers are core's view (`+core-view-enable'); this is only
 ;; what goes in it.
 
-(declare-function +uml-render "server")
+(declare-function +uml-render-async "server")
 (declare-function +core-view-enable "view")
+(declare-function +core-view-scale "view")
+(declare-function +core-svg-picture-start "images")
+(defvar +core-view-box)
 
 (defun +uml--preview-options ()
   "The PlantUML flags that make a diagram readable against this theme.
@@ -28,12 +31,32 @@ None of this touches the file: the source stays as you wrote it, and
 
 ;;;###autoload
 (defun +uml--draw ()
-  "This diagram, for core's view. A diagram that does not parse signals,
-so the view keeps the last good drawing and says what is wrong."
-  (list 'image
-        (+uml-render (buffer-substring-no-properties (point-min) (point-max))
-                     +uml-preview-format (+uml--preview-options))
-        +uml-preview-format))
+  "This diagram, for core's view, drawn without holding up the editor:
+the server renders it, starting first when it is not up, and an SVG is
+then drawn to fit the view by core's SVG renderer, sharp at any zoom. A
+diagram that does not parse keeps the last good drawing, and its line
+is marked."
+  (let ((source (buffer-substring-no-properties (point-min) (point-max)))
+        (format +uml-preview-format)
+        (options (+uml--preview-options))
+        (box +core-view-box)
+        (scale (+core-view-scale)))
+    (list 'async
+          (lambda (done)
+            (let (picture)
+              (let ((render
+                     (+uml-render-async
+                      source format options
+                      (lambda (answer)
+                        (pcase answer
+                          (`(ok ,bytes)
+                           (if (eq format 'png)
+                               (funcall done (list 'image bytes 'png))
+                             (setq picture (+core-svg-picture-start bytes box scale done))))
+                          (_ (funcall done answer)))))))
+                (lambda ()
+                  (funcall render)
+                  (when picture (funcall picture)))))))))
 
 ;;;###autoload
 (defun +uml--view-h ()
