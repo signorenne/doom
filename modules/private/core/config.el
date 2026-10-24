@@ -39,6 +39,13 @@
   "Modes a file keeps at any size: a picture's, a PDF's, an archive's,
 which show something other than the text.")
 
+;; Their bytes are not lines of code: guessing the indentation as such a
+;; mode starts reads them as text, 52 s for a 3 MB BMP before it showed.
+(defvar +whitespace-guess-excluded-modes)
+(when (boundp '+whitespace-guess-excluded-modes)
+  (dolist (mode +core-large-file-excluded-modes)
+    (add-to-list '+whitespace-guess-excluded-modes mode)))
+
 (defvar-local +core-large-file-p nil
   "The size of this buffer's file when it is large, else nil.")
 
