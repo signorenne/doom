@@ -197,9 +197,10 @@ as the thing to replace. ~SPC s R~ is the project one without the menu.
 A diagram's picture beside its source, an SVG's drawing beside its XML,
 an image's structure beside the picture: one piece of machinery, in
 =autoload/view.el=. A buffer says how its view is drawn with
-~+core-view-enable~ and a function returning an image, text, or a command
-whose output to show; core keeps a side window showing the view of
-whichever such buffer you are in.
+~+core-view-enable~ and a function returning an image, text, a command
+whose output to show, or work to start in the background and finish with
+one of those; core keeps a side window showing the view of whichever
+such buffer you are in.
 
 - It opens with the buffer as the command that opened it ends, before
   anything is drawn, so a picture comes up in its place beside it. Shown
@@ -208,7 +209,15 @@ whichever such buffer you are in.
   first picture of a session. A buffer visited in the background, by a
   search or an export, opens no window.
 - A live view is drawn again after a pause in the typing, once per pause
-  rather than once per key.
+  rather than once per key. A drawing is made in a process of its own
+  and shown when it is ready, so the typing never waits for it; one that
+  comes back after a newer one was asked for is dropped.
+- A picture in it zooms with ~+~ and ~-~, fits with ~f~, takes its own size
+  with ~1~ and pans with ~h j k l~, the image viewer's keys. The zoom and
+  the place stay while the picture is drawn again, so a detail you zoomed
+  into stays in view as you edit. A zoom answers at once, scaled, and the
+  sharp picture follows. Pictures are drawn at the screen's own density,
+  two pixels to a point on a Retina screen.
 - When the drawing fails, halfway through a line, the view keeps what it
   showed and says why in its header, so it never goes blank.
 - It follows you between buffers that have one, and steps aside for a
@@ -280,9 +289,11 @@ compression, its colours, its structure chunk by chunk or marker by
 marker, exiftool's metadata, and its bytes in hex. The cheat sheet's
 Images section has the keys.
 
-A drawing made in memory is handed to Emacs's own SVG renderer, not
-ImageMagick's: image-mode picks by file name, and a buffer with no file
-went to ImageMagick in the build here, which draws an SVG as a sliver.
+The drawing is made by =rsvg-convert=, librsvg's own program, in a process
+of its own: in the editor a 1.8 MB drawing took 2 to 3 s at each pause,
+drawn four times over, and now the typing never waits. Its size comes
+from the XML, never from drawing it. Without =rsvg-convert= Emacs draws it
+itself, once per pause, and says so once.
 
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid

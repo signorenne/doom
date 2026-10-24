@@ -180,6 +180,7 @@ made in."
             (propertize (format " %s" (buffer-name source))
                         'face 'mode-line-buffer-id)))))
 
+;;;###autoload
 (defun +core-view-scale (&optional window)
   "The scale a picture rendered to `+core-view-box' is shown at: one over
 the screen's device pixels per point, of WINDOW or the view's window."
@@ -368,37 +369,59 @@ it prints, or its first line as the problem when it fails."
 (defun +core-view-pipe (command input done)
   "Run COMMAND, a list, with INPUT, a unibyte string or nil, on its
 standard input, without holding up the editor. DONE gets (t . OUTPUT),
-what it printed as a unibyte string, or (nil . MESSAGE) when it failed.
-Returns a function that stops it, for an (async START) result."
+what it printed as a unibyte string, or (nil . MESSAGE) when it failed:
+the first line it said on standard error, else on standard output, or
+nil when it said nothing.
+Returns a function that stops it, for an (async START) result.
+
+INPUT goes through a file of its own rather than the pipe: Emacs feeds a
+pipe a few kilobytes at a time and waits in between, 0.7 s of a frozen
+editor for a 1.7 MB drawing, where writing the file takes milliseconds."
   (let ((out (generate-new-buffer " *view-pipe*"))
-        (err (generate-new-buffer " *view-pipe-err*")))
+        (err (generate-new-buffer " *view-pipe-err*"))
+        (file (when input
+                (let ((coding-system-for-write 'no-conversion))
+                  (make-temp-file "view-input-" nil nil input)))))
     (with-current-buffer out (set-buffer-multibyte nil))
     (condition-case problem
-        (let ((process
-               (make-process
-                :name "view-pipe" :buffer out :command command :noquery t
-                :connection-type 'pipe :coding 'binary
-                :stderr (make-pipe-process :name "view-pipe-err" :buffer err
-                                           :noquery t :sentinel #'ignore)
-                :sentinel
-                (lambda (proc _event)
-                  (unless (process-live-p proc)
-                    (let ((output (with-current-buffer out (buffer-string)))
-                          (said (with-current-buffer err (string-trim (buffer-string)))))
-                      (kill-buffer out)
-                      (when (buffer-live-p err) (kill-buffer err))
-                      (funcall done
-                               (if (and (eq (process-status proc) 'exit)
-                                        (zerop (process-exit-status proc)))
-                                   (cons t output)
-                                 (cons nil (if (string-empty-p said)
-                                               (format "%s stopped" (car command))
-                                             (car (split-string said "\n" t))))))))))))
-          (when input
-            (process-send-string process input))
-          (process-send-eof process)
+        (let* ((stderr (make-pipe-process :name "view-pipe-err" :buffer err
+                                          :noquery t :sentinel #'ignore))
+               (process
+                (make-process
+                 :name "view-pipe" :buffer out :noquery t
+                 :command (if file
+                              (append (list "sh" "-c" "f=$1; shift; exec \"$@\" < \"$f\""
+                                            "sh" file)
+                                      command)
+                            command)
+                 :connection-type 'pipe :coding 'binary :stderr stderr
+                 :sentinel
+                 (lambda (proc _event)
+                   (unless (process-live-p proc)
+                     (when file (ignore-errors (delete-file file)))
+                     ;; What it said last on standard error can still be
+                     ;; on its way when it has exited.
+                     (when (process-live-p stderr) (accept-process-output stderr 0))
+                     (let ((output (with-current-buffer out (buffer-string)))
+                           (said (if (buffer-live-p err)
+                                     (with-current-buffer err (string-trim (buffer-string)))
+                                   "")))
+                       (kill-buffer out)
+                       (when (buffer-live-p err) (kill-buffer err))
+                       (when (process-live-p stderr) (delete-process stderr))
+                       (funcall done
+                                (if (and (eq (process-status proc) 'exit)
+                                         (zerop (process-exit-status proc)))
+                                    (cons t output)
+                                  (cons nil (car (split-string
+                                                  (if (string-empty-p said)
+                                                      (decode-coding-string output 'utf-8)
+                                                    said)
+                                                  "\n" t)))))))))))
+          (unless file (process-send-eof process))
           (lambda () (when (process-live-p process) (delete-process process))))
       (error (kill-buffer out) (kill-buffer err)
+             (when file (ignore-errors (delete-file file)))
              (funcall done (cons nil (error-message-string problem)))
              nil))))
 

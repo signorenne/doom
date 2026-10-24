@@ -235,7 +235,11 @@ This many at a time crosses it in a dozen.")
 ;;
 ;;; The picture beside the source, and what is inside a picture
 
+(require 'dom)
 (declare-function +core-view-enable "view")
+(declare-function +core-view-pipe "view")
+(declare-function +core-view-scale "view")
+(defvar +core-view-box)
 
 (defvar +core-image-inspector (file-name-concat doom-user-dir "bin/inspect-image")
   "The program that describes an image from the inside.")
@@ -244,58 +248,168 @@ This many at a time crosses it in a dozen.")
   (rx "." (or "png" "jpg" "jpeg" "gif" "webp" "bmp" "ico" "tif" "tiff") eos)
   "The image files that open with their inspector beside them.")
 
-(defun +core--svg-on-checker (svg)
-  "SVG, a unibyte string, laid over a checkerboard, as a new SVG.
+(defvar +core-svg-renderer "rsvg-convert"
+  "The program that draws an SVG for the view, in its own process, so a
+large drawing never holds up typing. librsvg's own: the same drawing as
+Emacs's, which draws it in the editor when this is missing.")
+
+(defvar +core-svg-background 'checker
+  "What the view draws an SVG over: `checker', `light' or `dark'.")
+
+(defvar +core-view-backgrounds '((light . "#f5f1e8") (dark . "#1c1915"))
+  "The plain backgrounds behind a drawing, those of nexenne-day and
+nexenne-night, so a drawing is seen as it will be in either.")
+
+(defvar +core--svg-said-slow nil
+  "Whether the view said once that SVG drawing is slower without
+`+core-svg-renderer'.")
+
+(defun +core--svg-length (value)
+  "VALUE, an SVG length, in pixels, or nil for a percentage or nothing."
+  (when (and (stringp value)
+             (string-match "\\`[ \t]*\\([0-9.]+\\(?:e[-+]?[0-9]+\\)?\\)[ \t]*\\([a-z]*\\)[ \t]*\\'"
+                           value))
+    (let ((n (string-to-number (match-string 1 value))))
+      (pcase (match-string 2 value)
+        ((or "" "px") n)
+        ("pt" (* n (/ 96.0 72)))
+        ("pc" (* n 16))
+        ("in" (* n 96))
+        ("cm" (* n (/ 96 2.54)))
+        ("mm" (* n (/ 96 25.4)))
+        (_ nil)))))
+
+(defun +core--svg-geometry (dom)
+  "The drawing's own size and its viewBox, from its root element DOM:
+(WIDTH HEIGHT VX VY VW VH). Read off the source, never by drawing it:
+a size asked of Emacs is a whole render, 0.4 s for a large one."
+  (let* ((attrs (dom-attributes dom))
+         (box (when-let* ((v (alist-get 'viewBox attrs))
+                          (nums (mapcar #'string-to-number
+                                        (split-string v "[ ,\t\n]+" t)))
+                          ((= (length nums) 4))
+                          ((> (nth 2 nums) 0))
+                          ((> (nth 3 nums) 0)))
+                nums))
+         (w (+core--svg-length (alist-get 'width attrs)))
+         (h (+core--svg-length (alist-get 'height attrs))))
+    ;; As a browser sizes it: a side missing takes the viewBox's shape,
+    ;; and with neither side nor viewBox it is 300 by 150.
+    (cond ((and w h))
+          ((and w box) (setq h (* w (/ (float (nth 3 box)) (nth 2 box)))))
+          ((and h box) (setq w (* h (/ (float (nth 2 box)) (nth 3 box)))))
+          (box (setq w (nth 2 box) h (nth 3 box)))
+          (t (setq w (or w 300) h (or h 150))))
+    (append (list (max 1 w) (max 1 h))
+            (or box (list 0 0 (max 1 w) (max 1 h))))))
+
+(defun +core--svg-root-end (xml)
+  "Where the root <svg> start tag ends in XML, after its >, or nil when
+there is none or it closes itself."
+  (when-let* ((start (string-match "<svg[ \t\n>]" xml)))
+    (let ((i (+ start 4)) (n (length xml)) quote end)
+      (while (and (not end) (< i n))
+        (let ((c (aref xml i)))
+          (cond (quote (when (eq c quote) (setq quote nil)))
+                ((memq c '(?\" ?\')) (setq quote c))
+                ((eq c ?>) (setq end (1+ i)))))
+        (setq i (1+ i)))
+      (and end (not (eq (aref xml (- end 2)) ?/)) end))))
+
+(defun +core--svg-backdrop (geometry)
+  "What goes under the drawing, as SVG: a mid grey checkerboard, or a
+plain background, over the whole viewBox in GEOMETRY.
 A drawing is often transparent: an icon for a light interface is dark
 strokes on nothing and vanishes on a dark theme, one for a dark display
 is white strokes and vanishes on a light one. The checkerboard is mid
 grey, not the usual white and light grey, because the usual one hides a
 white icon wherever it crosses a white square, and the icons here are
 often white."
-  (pcase-let ((`(,w . ,h) (image-size (create-image svg 'svg t) t)))
-    (let* ((w (max 1 (round w))) (h (max 1 (round h)))
-           ;; The view scales the drawing to fit, and the squares with it,
-           ;; so they are sized from the drawing: about two dozen across,
-           ;; whether it is a 16 pixel icon or a 2000 pixel poster.
-           (square (max 2 (/ (max w h) 24.0)))
-           (cell (* 2 square)))
-      (encode-coding-string
-       (format (concat
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-                "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
-                "width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\">"
-                "<defs><pattern id=\"c\" width=\"%g\" height=\"%g\" "
-                "patternUnits=\"userSpaceOnUse\">"
-                "<rect width=\"%g\" height=\"%g\" fill=\"#707070\"/>"
-                "<rect width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
-                "<rect x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
-                "</pattern></defs>"
-                "<rect width=\"%d\" height=\"%d\" fill=\"url(#c)\"/>"
-                "<image width=\"%d\" height=\"%d\" "
-                "xlink:href=\"data:image/svg+xml;base64,%s\"/></svg>")
-               w h w h cell cell cell cell square square square square square square
-               w h w h (base64-encode-string svg t))
-       'utf-8))))
+  (pcase-let ((`(,_ ,_ ,vx ,vy ,vw ,vh) geometry))
+    (if-let* ((colour (alist-get +core-svg-background +core-view-backgrounds)))
+        (format "<rect x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" fill=\"%s\"/>"
+                vx vy vw vh colour)
+      ;; About two dozen squares across, whether it is a 16 pixel icon
+      ;; or a 2000 pixel poster: the view scales them with the drawing.
+      (let* ((square (/ (max vw vh) 24.0))
+             (cell (* 2 square)))
+        (format (concat "<defs><pattern id=\"nexenne-checker\" x=\"%g\" y=\"%g\" "
+                        "width=\"%g\" height=\"%g\" patternUnits=\"userSpaceOnUse\">"
+                        "<rect width=\"%g\" height=\"%g\" fill=\"#707070\"/>"
+                        "<rect width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
+                        "<rect x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" fill=\"#909090\"/>"
+                        "</pattern></defs>"
+                        "<rect x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" "
+                        "fill=\"url(#nexenne-checker)\"/>")
+                vx vy cell cell cell cell square square square square square square
+                vx vy vw vh)))))
+
+(defun +core--svg-copy (xml geometry)
+  "XML as it is drawn in the view: the backdrop first inside the root, so
+it sits under everything, as UTF-8. The file is never touched."
+  (let ((end (+core--svg-root-end xml)))
+    (encode-coding-string
+     (if end
+         (concat (substring xml 0 end) (+core--svg-backdrop geometry) (substring xml end))
+       xml)
+     'utf-8)))
+
+(defun +core--svg-problem (xml)
+  "An (async START) that says where XML stops being well formed, as
+`bin/check-data' tells it, to the line, in its own process."
+  (list 'async
+        (lambda (done)
+          (+core-view-pipe
+           (list (file-name-concat doom-user-dir "bin/check-data") "xml")
+           (encode-coding-string xml 'utf-8)
+           (lambda (result)
+             (let ((said (or (cdr result) "")))
+               (funcall done
+                        (if (string-match "\\`\\([0-9]+\\):[0-9]+: \\(.*\\)" said)
+                            (list 'problem (format "line %s: %s" (match-string 1 said)
+                                                   (match-string 2 said))
+                                  (string-to-number (match-string 1 said)))
+                          (list 'problem "not well-formed XML yet" nil)))))))))
 
 (defun +core--svg-draw ()
-  "This SVG for core's view, once its XML parses.
-Halfway through typing a tag it does not, and librsvg would draw
-nothing; the view then keeps the last good drawing and says where the
-XML breaks, which `bin/check-data' can tell to the column."
-  (let ((xml (buffer-substring-no-properties (point-min) (point-max))))
-    (unless (with-temp-buffer
-              (insert xml)
-              (ignore-errors (libxml-parse-xml-region (point-min) (point-max))))
-      (let ((said (with-temp-buffer
-                    (insert xml)
-                    (call-process-region (point-min) (point-max)
-                                         (file-name-concat doom-user-dir "bin/check-data")
-                                         t t nil "xml")
-                    (string-trim (buffer-string)))))
-        (error "%s" (if (string-match "\\`\\([0-9]+\\):[0-9]+: \\(.*\\)" said)
-                        (format "line %s: %s" (match-string 1 said) (match-string 2 said))
-                      "not well-formed XML yet"))))
-    (list 'image (+core--svg-on-checker (encode-coding-string xml 'utf-8)) 'svg)))
+  "This SVG for core's view, drawn by `+core-svg-renderer' in its own
+process to fit `+core-view-box'. Halfway through typing a tag the XML
+does not parse and librsvg would draw nothing; the view then keeps the
+last good drawing and says where the XML breaks."
+  (let* ((xml (buffer-substring-no-properties (point-min) (point-max)))
+         (dom (with-temp-buffer
+                (insert xml)
+                (ignore-errors (libxml-parse-xml-region (point-min) (point-max))))))
+    (if (not (eq (dom-tag dom) 'svg))
+        (if dom
+            (list 'problem "the root element is not <svg>" nil)
+          (+core--svg-problem xml))
+      (let* ((geometry (+core--svg-geometry dom))
+             (natural (cons (round (nth 0 geometry)) (round (nth 1 geometry))))
+             (copy (+core--svg-copy xml geometry))
+             (box +core-view-box)
+             (scale (+core-view-scale)))
+        (if (not (executable-find +core-svg-renderer))
+            (progn
+              (unless +core--svg-said-slow
+                (setq +core--svg-said-slow t)
+                (message "SVG is drawn in the editor: %s would draw it without pausing typing"
+                         +core-svg-renderer))
+              (list 'image copy 'svg :natural natural))
+          (list 'async
+                (lambda (done)
+                  (+core-view-pipe
+                   (list +core-svg-renderer "-f" "png" "-a"
+                         "-w" (number-to-string (min 8192 (max 1 (car box))))
+                         "-h" (number-to-string (min 8192 (max 1 (cdr box)))))
+                   copy
+                   (lambda (result)
+                     (funcall done
+                              (if (car result)
+                                  (list 'image (cdr result) 'png
+                                        :scale scale :natural natural)
+                                (list 'problem (or (cdr result) "the drawing failed")
+                                      nil))))))))))))
 
 ;;;###autoload
 (defun +core--svg-view-h ()
