@@ -296,7 +296,9 @@ The drawing is made by =rsvg-convert=, librsvg's own program, in a process
 of its own: in the editor a 1.8 MB drawing took 2 to 3 s at each pause,
 drawn four times over, and now the typing never waits. Its size comes
 from the XML, never from drawing it. Without =rsvg-convert= Emacs draws it
-itself, once per pause, and says so once.
+itself, once per pause, and says so once. The element the cursor is in
+is outlined in the drawing, in the cursor's colour, a line of the same
+width at any zoom; ~SPC m P h~ turns it off.
 
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid

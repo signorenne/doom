@@ -239,6 +239,7 @@ This many at a time crosses it in a dozen.")
 (declare-function +core-view-enable "view")
 (declare-function +core-view-pipe "view")
 (declare-function +core-view-scale "view")
+(declare-function +core-view--schedule "view")
 (defvar +core-view-box)
 
 (defvar +core-image-inspector (file-name-concat doom-user-dir "bin/inspect-image")
@@ -344,13 +345,85 @@ often white."
                 vx vy cell cell cell cell square square square square square square
                 vx vy vw vh)))))
 
-(defun +core--svg-copy (xml geometry)
-  "XML as it is drawn in the view: the backdrop first inside the root, so
-it sits under everything, as UTF-8. The file is never touched."
+(defvar-local +core-svg-here t
+  "Whether the element the cursor is in is outlined in the drawing.")
+
+(defvar +core--svg-here-reach 65536
+  "How far back, in characters, the element at point is looked for.")
+
+(declare-function nxml-backward-up-element "nxml-mode")
+
+(defun +core--svg-start-tag-at (pos limit)
+  "Where the start tag POS is inside begins, or nil when it is in none:
+the < before POS, opening an element, with no > after it before POS."
+  (save-excursion
+    (goto-char pos)
+    (when-let* ((start (search-backward "<" limit t)))
+      (and (looking-at "<[[:alpha:]_]")
+           (not (search-forward ">" pos t))
+           start))))
+
+(defun +core--svg-here ()
+  "Where the start tag of the element the cursor is in begins, or nil.
+Inside a start tag, that element; elsewhere the element around point as
+nxml-mode knows it, and in a buffer too large for nxml-mode the start
+tag before point. Never the root, whose outline would be the drawing's
+whole edge."
+  (let* ((limit (max (point-min) (- (point) +core--svg-here-reach)))
+         (start (or (+core--svg-start-tag-at (point) limit)
+                    (if (derived-mode-p 'nxml-mode)
+                        ;; Within reach only: past the last child of a
+                        ;; large drawing, nxml walks back over all of it
+                        ;; to find the root, 95 ms in a 1.7 MB file.
+                        (ignore-errors
+                          (save-excursion
+                            (save-restriction
+                              (narrow-to-region limit (point-max))
+                              (nxml-backward-up-element)
+                              (point))))
+                      (save-excursion
+                        (and (re-search-backward "<[[:alpha:]_]" limit t) (point))))))
+         (root (save-excursion
+                 (goto-char (point-min))
+                 (and (re-search-forward "<svg[ \t\n>]" nil t) (match-beginning 0)))))
+    (and start (not (eql start root)) start)))
+
+(defun +core--svg-moved-h ()
+  "Draw again, once the cursor rests, when it has moved to another
+element: the drawing's state says which, so resting in the same one
+draws nothing."
+  (when +core-svg-here (+core-view--schedule)))
+
+;;;###autoload
+(defun +core/svg-here-toggle ()
+  "Outline the element the cursor is in, or stop."
+  (interactive)
+  (setq +core-svg-here (not +core-svg-here))
+  (message "The element at the cursor is %s" (if +core-svg-here "outlined" "not outlined"))
+  (when (fboundp '+core/view-refresh) (ignore-errors (+core/view-refresh))))
+
+(defun +core--svg-copy (xml geometry &optional here scale)
+  "XML as it is drawn in the view, as UTF-8: the backdrop first inside
+the root, so it sits under everything, and the element whose start tag
+is at HERE, an index in XML, outlined in the cursor's colour, a line
+about 3 device pixels wide at SCALE device pixels per user unit. The
+file is never touched."
   (let ((end (+core--svg-root-end xml)))
+    (when (and here end (> here end))
+      (when-let* ((name-end (string-match "[ \t\n/>]" xml (1+ here))))
+        (setq xml (concat (substring xml 0 name-end) " data-nexenne-here=\"\""
+                          (substring xml name-end)))))
     (encode-coding-string
      (if end
-         (concat (substring xml 0 end) (+core--svg-backdrop geometry) (substring xml end))
+         (concat (substring xml 0 end)
+                 (+core--svg-backdrop geometry)
+                 (when here
+                   (format (concat "<style>[data-nexenne-here], [data-nexenne-here] * "
+                                   "{ stroke: %s !important; stroke-width: %gpx !important; }"
+                                   "</style>")
+                           (or (face-background 'cursor nil t) "#fcb291")
+                           (/ 3.0 (max scale 1e-6))))
+                 (substring xml end))
        xml)
      'utf-8)))
 
@@ -386,8 +459,13 @@ last good drawing and says where the XML breaks."
           (+core--svg-problem xml))
       (let* ((geometry (+core--svg-geometry dom))
              (natural (cons (round (nth 0 geometry)) (round (nth 1 geometry))))
-             (copy (+core--svg-copy xml geometry))
              (box +core-view-box)
+             (here (and +core-svg-here (+core--svg-here)))
+             ;; Device pixels to a user unit, as rsvg-convert fits the
+             ;; viewBox to the box.
+             (units (min (/ (float (car box)) (nth 4 geometry))
+                         (/ (float (cdr box)) (nth 5 geometry))))
+             (copy (+core--svg-copy xml geometry (and here (- here (point-min))) units))
              (scale (+core-view-scale)))
         (if (not (executable-find +core-svg-renderer))
             (progn
@@ -413,9 +491,13 @@ last good drawing and says where the XML breaks."
 
 ;;;###autoload
 (defun +core--svg-view-h ()
-  "Give an SVG file its drawing beside it, drawn again as you type."
+  "Give an SVG file its drawing beside it, drawn again as you type, with
+the element the cursor is in outlined."
   (when (and buffer-file-name (string-match-p "\\.svg\\'" buffer-file-name))
-    (+core-view-enable #'+core--svg-draw t)))
+    (+core-view-enable #'+core--svg-draw t)
+    (setq-local +core-view-state-function
+                (lambda () (and +core-svg-here (+core--svg-here))))
+    (add-hook 'post-command-hook #'+core--svg-moved-h nil t)))
 
 (defun +core--image-inspect ()
   "What is inside this image, for core's view: `bin/inspect-image',

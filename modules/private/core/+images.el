@@ -179,6 +179,7 @@ has no cursor."
       (:prefix ("P" . "drawing")
        :desc "Draw it again now"    "r" #'+core/view-refresh
        :desc "Follow my typing"     "f" #'+core/view-follow-toggle
+       :desc "Outline the element here" "h" #'+core/svg-here-toggle
        :desc "Open it with the file, or not" "O" #'+core/view-on-open-toggle))
 
 (map! :after image-mode

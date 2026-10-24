@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 01:27
+#+generated: 2026-10-24 01:36
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -681,8 +681,13 @@ way every image editor shows transparency: an icon drawn for a light
 interface is dark strokes on nothing, and would vanish on a dark theme.
 The squares are mid-grey rather than white, so a white icon shows too.
 Halfway through a tag the XML does not parse, so the drawing stays as it
-was and its header says which line is broken. One exported as a single
-long line is taken over by ~so-long-mode~ and keeps its drawing.
+was, its header says what is wrong, and the broken line is marked as an
+error you reach with the keys for the next problem. The element the
+cursor is in is outlined in the drawing in the cursor's colour, so you
+see which path or group you are editing. The drawing is made in a
+process of its own, so even a large one never pauses the typing. One
+exported as a single long line is taken over by ~so-long-mode~ and keeps
+its drawing.
 
 | Key       | What it does                                   |
 |-----------+------------------------------------------------|
@@ -690,14 +695,17 @@ long line is taken over by ~so-long-mode~ and keeps its drawing.
 | ~SPC m r~   | read the image again, in an image              |
 | ~SPC m P r~ | draw the SVG again now                         |
 | ~SPC m P f~ | draw it as you type, or only when asked        |
+| ~SPC m P h~ | outline the element the cursor is in, or not   |
 | ~SPC m P O~ | open it with every file, or wait to be asked   |
 
 A drawing in the view is fitted to it and sits in its middle, both ways,
 and is fitted and centred again when the window changes size. The view
 is a window you can move into, with ~C-w h~ or ~C-w l~: to scroll and
 search an image's report, whose sections fold with ~TAB~ on their title
-and all at once with ~S-TAB~, or to zoom a drawing with the picture's
-own keys. ~q~ in it closes it, and it stays closed for that file until
+and all at once with ~S-TAB~, or to zoom a drawing: =+= and =-= zoom, =f=
+fits, =1= is its own size and =h j k l= pan. The zoom and the place stay
+as the drawing is made again, so a detail you zoomed into stays in view
+while you edit it. ~q~ in it closes it, and it stays closed for that file until
 ~SPC m p~ opens it again; other files still open theirs. It steps aside
 when you move to a buffer that has none and comes back when you return,
 so a glance at a photo does not leave half the screen taken. It is one
@@ -3486,6 +3494,7 @@ bound.
 - ~+core/search-project-with-flags~ :: Search the whole project.
 - ~+core/search-symbol-with-flags~ :: Search the project for the word under
   the cursor.
+- ~+core/svg-here-toggle~ :: Outline the element the cursor is in, or stop.
 - ~+core/toggle-transparency~ (~SPC t T~) :: Toggle background transparency
   of this frame.
 - ~+core/trash~ (~SPC f t~) :: The trash, in the file manager: what was

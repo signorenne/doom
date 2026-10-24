@@ -89,7 +89,13 @@ buffer, `+core-view-on-open' or not, until you open it again.")
   "The buffer whose view is on show.")
 
 (defvar +core-view--tick nil
-  "The modification tick of `+core-view--showing' when it was drawn.")
+  "The modification tick of `+core-view--showing' when it was drawn, with
+what its `+core-view-state-function' said then.")
+
+(defvar-local +core-view-state-function nil
+  "A function of no arguments saying what else, besides the text, this
+buffer's drawing depends on, such as the element at point. The view is
+drawn again when the text or this changes, and not otherwise.")
 
 (defvar +core-view--timer nil
   "The pending redraw, so a burst of keys costs one drawing.")
@@ -488,10 +494,12 @@ GENERATION, unless a newer drawing was asked for since."
   (when (and (buffer-live-p source)
              (buffer-local-value '+core-view-draw source))
     (with-current-buffer source
-      (let ((tick (buffer-chars-modified-tick)))
+      (let ((tick (cons (buffer-chars-modified-tick)
+                        (and +core-view-state-function
+                             (funcall +core-view-state-function)))))
         (unless (and (not force)
                      (eq +core-view--showing source)
-                     (eql +core-view--tick tick))
+                     (equal +core-view--tick tick))
           (unless (eq +core-view--showing source)
             (setq +core-view-zoom nil +core-view--pan '(0.5 . 0.5)))
           (+core-view--cancel-pending)
