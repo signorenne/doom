@@ -16,6 +16,7 @@
 (declare-function +core--image-center-h "images")
 (declare-function +core--image-recenter-a "images")
 (declare-function +core--image-refit-recenter-a "images")
+(declare-function image-converter-initialize "image-converter")
 
 ;; An SVG carries the size it is drawn at. ImageMagick reads one with a
 ;; renderer of its own that ignores it and draws it far too small, and
@@ -26,11 +27,27 @@
 (after! image
   (add-to-list 'imagemagick-types-inhibit 'SVG)
   ;; And the raster formats Emacs reads itself go to its own readers,
-  ;; which are far faster than ImageMagick on a large picture. What
-  ;; Emacs cannot read, BMP, PSD, HEIC, keeps ImageMagick, and
-  ;; image-mode still turns a JPEG by its EXIF.
+  ;; which are far faster than ImageMagick on a large picture; image-mode
+  ;; still turns a JPEG by its EXIF.
   (dolist (type '(PNG JPG JPEG JPE GIF TIF TIFF WEBP XPM XBM PBM PGM PPM PNM))
     (add-to-list 'imagemagick-types-inhibit type)))
+
+;; AVIF, JPEG XL, PSD and BMP open in the viewer like any other picture:
+;; Emacs reads none of them itself here, so each is converted to a PNG
+;; the first time it is opened and kept. HEIC it reads through macOS.
+(defvar +core-image-converted-exts '("avif" "jxl" "psd" "bmp")
+  "The picture formats the viewer opens through `+core--image-convert'.")
+
+(setq image-use-external-converter t)
+(add-to-list 'auto-mode-alist '("\\.\\(jxl\\|psd\\|JXL\\|PSD\\)\\'" . image-mode))
+(with-eval-after-load 'image-converter
+  ;; Emacs picks its converter on first use and then sets the list of
+  ;; suffixes it converts to that converter's own, which would drop
+  ;; these; picked now, the handlers are added after it.
+  (image-converter-initialize)
+  (dolist (ext +core-image-converted-exts)
+    (image-converter-add-handler ext #'+core--image-convert)
+    (image-converter-add-handler (upcase ext) #'+core--image-convert)))
 
 ;; An image file opens at the size of the window, small ones enlarged:
 ;; a small icon is there to be looked at, not squinted at. The window

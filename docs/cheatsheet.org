@@ -651,8 +651,11 @@ reopen as root, with the open buffers following. The listing below is
 for the others.
 
 ** Images
-A raster image, PNG, JPEG, GIF, WebP, BMP or an icon, opens the way an
-SVG does: what is inside it on the left, the picture on the right.
+A raster image, PNG, JPEG, GIF, WebP, HEIC, AVIF, JPEG XL, PSD, BMP or an
+icon, opens the way an SVG does: what is inside it on the left, the
+picture on the right. Emacs reads AVIF, JPEG XL, PSD and BMP through a
+PNG made by =vips= the first time one is opened and kept, so the next
+opening is as quick as any PNG's.
 
 - *The picture*: format, size, shape and megapixels, pixel type, bits a
   pixel and how far the file compresses the raw pixels, density, frames

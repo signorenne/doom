@@ -616,3 +616,79 @@ as you wrote it, without the view's backdrop or outline."
          (message "Could not write %s: %s" (abbreviate-file-name file)
                   (or (cdr result) "the drawing failed")))))
     (message "Writing %s..." (abbreviate-file-name file))))
+
+
+;;
+;;; Pictures Emacs cannot read itself
+
+(defvar +core-image-cache-dir (file-name-concat doom-cache-dir "images/")
+  "Where a picture converted for the viewer is kept, so it is converted
+once, not each time it is opened.")
+
+(defvar +core--image-cache-swept nil
+  "Whether this session has cleared old conversions out of the cache.")
+
+(defun +core--image-cache-file (file)
+  "Where FILE's conversion is kept: named for its path, size and time, so
+a changed file is converted again."
+  (let ((attrs (file-attributes file)))
+    (file-name-concat
+     +core-image-cache-dir
+     (concat (secure-hash 'sha1 (format "%s|%s|%s" (file-truename file)
+                                        (file-attribute-size attrs)
+                                        (float-time (file-attribute-modification-time attrs))))
+             ".png"))))
+
+(defun +core--image-sweep-cache ()
+  "Delete conversions older than 30 days, in the background, once a
+session."
+  (unless +core--image-cache-swept
+    (setq +core--image-cache-swept t)
+    (ignore-errors
+      (make-process :name "image-cache-sweep" :noquery t :buffer nil
+                    :command (list "find" +core-image-cache-dir "-name" "*.png"
+                                   "-mtime" "+30" "-delete")))))
+
+;;;###autoload
+(defun +core--image-convert (source data-type)
+  "Put SOURCE, a picture Emacs cannot read, in this buffer as a PNG, for
+`image-converter-add-handler'. SOURCE is a file, or the picture's bytes
+when DATA-TYPE, its MIME type, is non-nil. vips reads AVIF, HEIF and JPEG
+XL with libheif and libjxl and the rest through ImageMagick, which is the
+fallback when vips is missing. A converted file is kept, so the next
+opening only reads it."
+  (let* ((input (if data-type
+                    (let ((coding-system-for-write 'no-conversion))
+                      (make-temp-file "image-input-" nil
+                                      (concat "." (cadr (split-string (symbol-name data-type) "/")))
+                                      source))
+                  (expand-file-name source)))
+         (cache (if data-type
+                    (make-temp-file "image-output-" nil ".png")
+                  (+core--image-cache-file input))))
+    (unwind-protect
+        (progn
+          (when (or data-type (not (file-exists-p cache)))
+            (make-directory (file-name-directory cache) t)
+            ;; The lightest compression: the file stays on this disk, and
+            ;; the default compresses a 6 megapixel picture for 0.6 s of
+            ;; the first opening, against 0.35 s.
+            (let ((partial (concat cache ".part.png")))
+              (unless (zerop
+                       (cond ((executable-find "vips")
+                              (call-process "vips" nil nil nil "copy" input
+                                            (concat partial "[compression=1]")))
+                             ((executable-find "magick")
+                              (call-process "magick" nil nil nil (concat input "[0]")
+                                            "-define" "png:compression-level=1" partial))
+                             (t (error "Neither vips nor ImageMagick is installed to read %s"
+                                       (file-name-nondirectory input)))))
+                (ignore-errors (delete-file partial))
+                (error "Could not read %s" (file-name-nondirectory input)))
+              (rename-file partial cache t))
+            (+core--image-sweep-cache))
+          (set-buffer-multibyte nil)
+          (insert-file-contents-literally cache))
+      (when data-type
+        (ignore-errors (delete-file input))
+        (ignore-errors (delete-file cache))))))
