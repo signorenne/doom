@@ -14,6 +14,7 @@
 (declare-function evil-define-key* "evil-core")
 (declare-function flymake-make-diagnostic "flymake")
 (declare-function flymake-diag-region "flymake")
+(declare-function flymake-running-backends "flymake")
 
 (defvar +core-view-side 'right
   "Which side the view takes.")
@@ -84,6 +85,10 @@ the picture itself sits on the right the same way.")
 (defvar-local +core-view-closed nil
   "Non-nil once you closed this buffer's view. It stays closed for this
 buffer, `+core-view-on-open' or not, until you open it again.")
+
+(defvar-local +core-view--flymake-started nil
+  "Whether this buffer's view turned flymake on, which it does once: turned
+off by hand, it stays off.")
 
 (defvar +core-view--showing nil
   "The buffer whose view is on show.")
@@ -551,6 +556,12 @@ the view's alone: a file opened from inside it goes to the window it
 stands beside. It was not, and SPC SPC there put the next picture in the
 side window, its report in a new one on the other side, and the source
 in a sliver between them."
+  ;; flymake from the first showing, not as the buffer is made: a file a
+  ;; search or a consult preview only visits would start checks for nothing.
+  (with-current-buffer source
+    (when (and +core-view-live (not +core-view--flymake-started))
+      (setq +core-view--flymake-started t)
+      (flymake-mode 1)))
   (let ((side (or (buffer-local-value '+core-view-side-here source) +core-view-side))
         (window (+core-view--window)))
     (when (and window (not (eq (window-parameter window 'window-side) side)))
@@ -592,10 +603,13 @@ a command run from inside the view shows it."
 (advice-add 'switch-to-buffer :before #'+core-view--step-out-a)
 
 (defun +core-view--close ()
-  "Close the view's window and stop anything it was doing."
+  "Close the view's window and stop anything it was doing. The mark of a
+drawing that failed goes too: nothing draws again to take it away."
   (when (timerp +core-view--timer) (cancel-timer +core-view--timer))
   (when (timerp +core-view--zoom-timer) (cancel-timer +core-view--zoom-timer))
   (+core-view--cancel-pending)
+  (when (buffer-live-p +core-view--showing)
+    (+core-view--problem-h +core-view--showing nil nil))
   (setq +core-view--timer nil +core-view--zoom-timer nil +core-view--showing nil
         +core-view--tick nil +core-view--drawn nil +core-view--shown nil)
   (when-let* ((window (+core-view--window))) (delete-window window)))
@@ -668,7 +682,11 @@ wants a view gives it one again from its own hook."
 (defun +core-view--flymake-send ()
   "Tell flymake what the last drawing said: an error on its line, or
 nothing. A problem with no line stays in the view's header only."
-  (when +core-view--report
+  ;; flymake turned off, or on again and not yet asking: a report then
+  ;; finds no state for this backend and signals.
+  (when (and +core-view--report
+             (bound-and-true-p flymake-mode)
+             (memq '+core-view--flymake (flymake-running-backends)))
     (funcall +core-view--report
              (when-let* ((problem +core-view--problem)
                          (line (cdr problem))
@@ -686,6 +704,12 @@ comes after flymake asks, so this answers with what is known and answers
 again, through the same REPORT-FN, when the drawing is done."
   (setq +core-view--report report-fn)
   (+core-view--flymake-send))
+
+(defun +core-view--flymake-keep-h ()
+  "Keep the drawing's backend when eglot manages the buffer, which sets
+flymake to its own backend alone (a diagram has a language server)."
+  (when (and +core-view-live (bound-and-true-p eglot--managed-mode))
+    (add-hook 'flymake-diagnostic-functions #'+core-view--flymake nil t)))
 
 (defun +core-view--problem-h (source message line)
   "Keep SOURCE's flymake in step with its drawing's MESSAGE and LINE."
@@ -719,7 +743,7 @@ nil. See `+core-view-draw' for what DRAW returns."
     ;; keys that go to the next problem.
     (add-hook '+core-view-problem-functions #'+core-view--problem-h)
     (add-hook 'flymake-diagnostic-functions #'+core-view--flymake nil t)
-    (flymake-mode 1))
+    (add-hook 'eglot-managed-mode-hook #'+core-view--flymake-keep-h nil t))
   ;; Opened in a window: the view comes up as the command that opened it
   ;; ends, before anything is drawn, with a word in it until its drawing
   ;; is ready. Shown later, it would take half the window from a picture
