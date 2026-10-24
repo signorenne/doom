@@ -249,7 +249,9 @@ This many at a time crosses it in a dozen.")
   "The program that describes an image from the inside.")
 
 (defvar +core-image-inspected
-  (rx "." (or "png" "jpg" "jpeg" "gif" "webp" "bmp" "ico" "tif" "tiff") eos)
+  (rx "." (or "png" "jpg" "jpeg" "gif" "webp" "bmp" "ico" "tif" "tiff"
+             "heic" "heif" "avif" "jxl" "psd")
+      eos)
   "The image files that open with their inspector beside them.")
 
 (defvar +core-svg-renderer "rsvg-convert"

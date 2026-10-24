@@ -668,7 +668,9 @@ opening is as quick as any PNG's.
   A PNG's chunks, =IHDR= with the size and bit depth, =pHYs=, =iCCP=, the
   =IDAT= pixels, =IEND=; a JPEG's markers, =APP1= with its EXIF, =SOF= with
   its dimensions and whether it is progressive, each scan; a GIF's
-  frames; a WebP's RIFF chunks.
+  frames; a WebP's RIFF chunks; the boxes of a HEIC, AVIF or JPEG XL,
+  with the picture's size; a PSD's header and sections. What PIL cannot
+  read, HEIC and JPEG XL, is read by =vips=.
 - *Metadata*: what exiftool reads, camera, date, software, GPS, grouped.
 - *Bytes*: all of a small file in hex, the first kilobyte of a large one,
   where the chunk names above can be seen at the offsets they give.
@@ -676,7 +678,8 @@ opening is as quick as any PNG's.
 A file that is cut off or damaged is described as far as it goes, and
 the place it stops is said. The report is =bin/inspect-image=, which runs
 in the background, so a large file never holds up the editor; it was run
-over every image on this machine, 9 700 of them, without a failure.
+over every picture in this home folder outside =Library=, 5 095 of them,
+without a failure.
 
 An SVG opens as its XML, with the drawing on the right, drawn again
 after each pause in the typing. It is drawn over a checkerboard, the

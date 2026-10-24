@@ -314,7 +314,100 @@ def structure(data):
         return bmp(data)
     if data[:4] == b"\0\0\1\0":
         return ico(data)
+    if data[4:8] == b"ftyp" or data.startswith(b"\0\0\0\x0cJXL \r\n\x87\n"):
+        return bmff(data)
+    if data.startswith(b"\xff\x0a"):
+        return [header(), row(0, len(data), "jxl", "a bare JPEG XL codestream, no boxes around it")]
+    if data[:4] == b"8BPS":
+        return psd(data)
     return ["  no walk for this format; the metadata and the bytes below still apply"]
+
+
+# HEIC, HEIF, AVIF and JPEG XL: boxes, as in an MP4
+
+BOX = {"ftyp": "file type", "meta": "metadata", "mdat": "the pixels", "hdlr": "handler",
+       "pitm": "primary item", "iinf": "items", "iloc": "where items lie", "iprp": "properties",
+       "ipco": "property list", "ipma": "which item has which", "iref": "item references",
+       "idat": "item data", "ispe": "size", "hvcC": "HEVC setup", "av1C": "AV1 setup",
+       "colr": "colour", "pixi": "channels", "irot": "rotation", "imir": "mirror",
+       "clap": "crop", "auxC": "auxiliary", "JXL ": "JPEG XL signature", "jxlc": "codestream",
+       "jxlp": "codestream part", "jxll": "level", "Exif": "EXIF", "xml ": "XMP",
+       "jbrd": "JPEG to rebuild", "brob": "compressed metadata", "dinf": "data information", "grpl": "groups"}
+
+
+def boxes(data, start, end):
+    """Each box in data[start:end]: (offset, length, type, body start)."""
+    i = start
+    while i + 8 <= end:
+        size, kind = struct.unpack(">I4s", data[i:i + 8])
+        head = 8
+        if size == 1 and i + 16 <= end:
+            size, head = struct.unpack(">Q", data[i + 8:i + 16])[0], 16
+        elif size == 0:
+            size = end - i
+        if size < head:
+            yield i, None, None, None
+            return
+        yield i, size, kind.decode("latin-1", "replace"), i + head
+        i += size
+
+
+def bmff(data):
+    out = [header()]
+    count = 0
+
+    def walk(start, end, depth):
+        nonlocal count
+        for off, size, kind, body in boxes(data, start, end):
+            if size is None:
+                out.append(row(off, None, "", "a box too short: the structure breaks here"))
+                return
+            count += 1
+            if count > 60:
+                continue
+            detail = BOX.get(kind, "")
+            if kind == "ftyp":
+                brands = [data[k:k + 4].decode("latin-1") for k in range(body + 8, off + size, 4)]
+                detail = f"{data[body:body + 4].decode('latin-1')}, also {' '.join(brands)}"
+            elif kind == "ispe" and body + 12 <= off + size:
+                w, h = struct.unpack(">II", data[body + 4:body + 12])
+                detail = f"size: {w} x {h}"
+            out.append(row(off, size, (" " * depth + kind)[:6], detail))
+            # meta is a full box, four bytes of version and flags first.
+            if kind in ("meta", "iprp", "ipco", "dinf") and depth < 2:
+                walk(body + (4 if kind == "meta" else 0), off + size, depth + 1)
+
+    walk(0, len(data), 0)
+    if count > 60:
+        out.append(row(None, None, "", f"... {count} boxes in all"))
+    return out
+
+
+# PSD: a header and four sections
+
+PSD_MODE = {0: "bitmap", 1: "grey", 2: "indexed", 3: "RGB", 4: "CMYK", 7: "multichannel",
+            8: "duotone", 9: "Lab"}
+
+
+def psd(data):
+    version, channels, h, w, depth, mode = struct.unpack(">H6xHIIHH", data[4:26])
+    out = [header(), row(0, 26, "header", f"{'PSB' if version == 2 else 'PSD'}, {w} x {h}, "
+                                         f"{channels} channels of {depth} bits, "
+                                         f"{PSD_MODE.get(mode, mode)}")]
+    i = 26
+    for name, wide in (("colour mode data", False), ("image resources", False),
+                       ("layers and masks", version == 2)):
+        if i + 4 > len(data):
+            return out + [row(i, None, "", "cut off here")]
+        n = struct.unpack(">Q" if wide else ">I", data[i:i + (8 if wide else 4)])[0]
+        head = 8 if wide else 4
+        out.append(row(i, head + n, "sect", name))
+        i += head + n
+    if i + 2 <= len(data):
+        how = {0: "raw", 1: "RLE", 2: "ZIP", 3: "ZIP with prediction"}.get(
+            struct.unpack(">H", data[i:i + 2])[0], "unknown compression")
+        out.append(row(i, len(data) - i, "pixels", f"the merged picture, {how}"))
+    return out
 
 
 BITS = {"1": 1, "L": 8, "P": 8, "LA": 16, "RGB": 24, "RGBA": 32, "CMYK": 32,
@@ -380,7 +473,33 @@ def picture(path, data):
             if im.info.get("icc_profile"):
                 lines.append("  colour    carries an ICC profile")
     except Exception as e:  # noqa: BLE001 (describe, never fail)
-        lines.append(f"  format    not readable as a picture: {e}")
+        lines += vips_picture(path) or [f"  format    not readable as a picture: {e}"]
+    return lines
+
+
+def vips_picture(path):
+    """The picture as vips reads it, for what PIL cannot open: HEIC, JPEG
+    XL. Nothing when vips is missing or cannot read it either."""
+    try:
+        out = subprocess.run(["vipsheader", "-a", path], capture_output=True,
+                             text=True, timeout=20).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    fields = dict(line.split(": ", 1) for line in out.splitlines() if ": " in line)
+    if "width" not in fields:
+        return []
+    w, h = int(fields["width"]), int(fields["height"])
+    loader = fields.get("vips-loader", "").replace("load", "").replace("_source", "")
+    lines = [f"  format    {loader.upper() or 'unknown'}, {w} x {h}, read by vips",
+             f"  shape     {ratio(w, h)}, {w * h / 1e6:.2f} megapixels",
+             f"  pixels    {fields.get('bands', '?')} bands, {fields.get('interpretation', '?')}, "
+             f"{fields.get('format', '?')}"]
+    if fields.get("heif-compression"):
+        lines.append(f"  coding    {fields['heif-compression']}")
+    if int(fields.get("n-pages", "1") or 1) > 1:
+        lines.append(f"  pages     {fields['n-pages']}")
+    if "icc-profile-data" in fields:
+        lines.append("  colour    carries an ICC profile")
     return lines
 
 
@@ -395,6 +514,30 @@ def spark(hist, buckets=16):
     return "".join(BARS[min(7, int(v * 8 / top))] if v else " " for v in sums)
 
 
+def scaled_copy(path):
+    """The picture at most 512 pixels a side, as PIL, and the size it was.
+    What PIL cannot read, HEIC, JPEG XL, a PSD it stumbles on, is scaled
+    by vips first."""
+    from PIL import Image
+    try:
+        with Image.open(path) as im:
+            im.seek(0)
+            small = im.copy()
+            small.thumbnail((512, 512))
+            return small, im.size
+    except Exception:  # noqa: BLE001 (vips may read it)
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "small.png")
+            subprocess.run(["vipsthumbnail", path, "--size", "512", "-o", out],
+                           capture_output=True, timeout=60, check=True)
+            size = tuple(int(subprocess.run(["vipsheader", "-f", f, path], capture_output=True,
+                                            text=True, timeout=20).stdout or 0)
+                         for f in ("width", "height"))
+            with Image.open(out) as im:
+                return im.copy(), size
+
+
 def colours(path):
     """What the pixels are: how many colours, which, how transparent."""
     try:
@@ -402,18 +545,15 @@ def colours(path):
     except ImportError:
         return ["  python3 has no PIL; openSUSE: zypper in python3-Pillow"]
     try:
-        with Image.open(path) as im:
-            im.seek(0)
-            small = im.copy()
-            small.thumbnail((512, 512))
-            has_alpha = "A" in small.mode or "transparency" in small.info
-            rgba = small.convert("RGBA")
+        small, size = scaled_copy(path)
+        has_alpha = "A" in small.mode or "transparency" in small.info
+        rgba = small.convert("RGBA")
     except Exception as e:  # noqa: BLE001
         return [f"  the pixels could not be read: {e}"]
     lines = []
     n = rgba.width * rgba.height or 1
     counted = rgba.getcolors(65536)
-    note = " (on a copy scaled to 512)" if (rgba.width, rgba.height) != (im.width, im.height) else ""
+    note = " (on a copy scaled to 512)" if (rgba.width, rgba.height) != size else ""
     lines.append(f"  distinct  {human(len(counted))} colours{note}" if counted
                  else f"  distinct  more than 65 536 colours{note}")
     alpha = rgba.getchannel("A")
