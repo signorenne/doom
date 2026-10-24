@@ -447,10 +447,13 @@ margin is a title, and what is indented under it belongs to it."
     (buffer-string)))
 
 (defun +core-view--cancel-pending ()
-  "Stop the drawing still under way, if any."
+  "Stop the drawing still under way, if any. What it says as it stops is
+dropped: stopping a process runs its sentinel at once, and its \"killed\"
+would otherwise be shown as the current drawing's problem."
   (when +core-view--cancel
     (let ((cancel +core-view--cancel))
-      (setq +core-view--cancel nil)
+      (setq +core-view--cancel nil
+            +core-view--generation (1+ +core-view--generation))
       (ignore-errors (funcall cancel)))))
 
 (defun +core-view--show (source result generation)
@@ -460,19 +463,24 @@ GENERATION, unless a newer drawing was asked for since."
              (buffer-live-p source)
              (eq +core-view--showing source))
     (pcase result
-      (`(async ,start)
+      (`(async ,start . ,word)
        (unless (eq +core-view--drawn source)
-         (+core-view--put-text source (propertize "Drawing..." 'face 'shadow)))
-       (let ((cancel (funcall start (lambda (result)
-                                      (when (eql generation +core-view--generation)
-                                        (setq +core-view--cancel nil))
-                                      (+core-view--show source result generation)))))
+         (+core-view--put-text source (propertize (or (car word) "Drawing...") 'face 'shadow)))
+       ;; The box this drawing is for, kept for when it comes back: by
+       ;; then the binding is gone, and the picture would not know what
+       ;; it was rendered for, so a zoom could not scale it meanwhile.
+       (let* ((box +core-view-box)
+              (cancel (funcall start (lambda (result)
+                                       (when (eql generation +core-view--generation)
+                                         (setq +core-view--cancel nil))
+                                       (let ((+core-view-box box))
+                                         (+core-view--show source result generation))))))
          (when (eql generation +core-view--generation)
            (setq +core-view--cancel cancel))))
       (`(process ,command)
-       (+core-view--put-text source (propertize "Reading..." 'face 'shadow))
+       ;; An image's report replaces the last one, even of this buffer.
        (setq +core-view--drawn nil)
-       (+core-view--show source (list 'async (+core-view--process-start command))
+       (+core-view--show source (list 'async (+core-view--process-start command) "Reading...")
                          generation))
       (`(image ,data ,type . ,props)
        (+core-view--put-image source data type props)
@@ -527,10 +535,13 @@ sizes itself is exact already."
                                    (+core-view--draw +core-view--showing t)))))))
 
 (defun +core-view--resized-h (_window)
-  "Fit the picture to the view's new size at once, and sharp after."
+  "Fit the picture to the view's new size at once, and sharp after, when
+the size it is rendered for changed: the echo area growing for a line,
+or a key hint, leaves it as it is."
   (when +core-view--shown
     (+core-view--place)
-    (+core-view--redraw-soon)))
+    (unless (equal (plist-get +core-view--shown :box) (+core-view--box))
+      (+core-view--redraw-soon))))
 
 (defun +core-view--display (source)
   "Put the view in its side window, on SOURCE's side, leaving the cursor
