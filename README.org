@@ -30,8 +30,9 @@ brew install git ripgrep fd jq git-delta
 brew install llvm cmake ninja python
 # Notes, diagrams, export, spelling
 brew install graphviz plantuml pandoc aspell languagetool
-# Previews in the file manager, the terminal, per-project environments
-brew install ffmpeg exiftool vips imagemagick libvterm direnv
+# Previews in the file manager, pictures and drawings, the terminal,
+# per-project environments
+brew install ffmpeg exiftool vips imagemagick librsvg libvterm direnv
 # Data files, web
 brew install taplo node
 npm install -g vscode-langservers-extracted yaml-language-server prettier \

@@ -105,7 +105,10 @@ ln -sf ~/go/bin/plantuml-lsp ~/.local/bin/plantuml-lsp
 
 =graphviz= lays out every kind except sequence and timing, so without it
 some diagrams work and others do not, which is a confusing way to be
-broken. ~SPC h r d~ says what is missing.
+broken. =rsvg-convert= (=brew install librsvg= on macOS; on openSUSE
+=zypper what-provides rsvg-convert= names the package) draws the preview
+in a process of its own; without it Emacs draws it, and a large diagram
+pauses the typing. ~SPC h r d~ says what is missing.
 
 The language server is optional. It is early software, so it is looked
 for by name and everything here works without it; plantuml-mode's own

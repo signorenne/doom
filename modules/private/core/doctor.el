@@ -38,10 +38,19 @@
     (warn! "Couldn't find %s: no %s" (car tool) (cdr tool))))
 (unless (or (executable-find "vipsthumbnail") (executable-find "magick")
             (executable-find "convert"))
-  (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane")
+  (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane, and AVIF, JPEG XL, PSD and BMP do not open in the image viewer")
   (explain! (if (featurep :system 'macos)
                 "brew install vips, or imagemagick"
               "openSUSE: zypper in vips-tools, or ImageMagick")))
+
+;; The drawing beside an SVG or a PlantUML diagram is made by rsvg-convert
+;; in a process of its own. Without it Emacs draws it, and a large one
+;; pauses the typing at each redraw.
+(unless (executable-find "rsvg-convert")
+  (warn! "Couldn't find rsvg-convert: an SVG's or a diagram's drawing is made in the editor, and a large one pauses the typing")
+  (explain! (if (featurep :system 'macos)
+                "brew install librsvg"
+              "zypper what-provides rsvg-convert names the package")))
 
 ;; The data formats. A language server validates as you type; the other
 ;; tools are what `SPC m v' and the prettify and compact keys shell out
