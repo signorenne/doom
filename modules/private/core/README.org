@@ -296,6 +296,14 @@ it) the first time they are opened, kept in Doom's cache under
 =images/=, and opened from there after; a conversion older than 30
 days is deleted, and made again when the picture is next opened.
 
+A GIF or an animated WebP plays as it opens, looping, and keeps playing
+when it is fitted, zoomed or its window resized: Emacs ties an animation
+to the picture it started on, which each of those replaces, so it
+stopped and its timer ran on behind a picture no longer shown. The
+header line gives the frame and the keys; =RET= plays or pauses, =,= and
+=.= step a frame and pause (~+core-image-autoplay~ turns the playing on
+opening off).
+
 The drawing is made by =rsvg-convert=, librsvg's own program, in a process
 of its own: in the editor a 1.8 MB drawing took 2 to 3 s at each pause,
 drawn four times over, and now the typing never waits. Its size comes

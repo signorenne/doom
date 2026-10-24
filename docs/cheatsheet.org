@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 01:44
+#+generated: 2026-10-24 02:00
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -724,7 +724,17 @@ piece of machinery, shared with the diagrams.
 The picture itself sits in the middle of its window and there is no
 cursor on it. =+= and =-= zoom, =f= fills the window with it again and =1=
 shows it at the size it really is, =W= fits the width. ~SPC m SPC~ opens
-a menu of everything the image viewer does. Once it is larger
+a menu of everything the image viewer does.
+
+A moving picture, a GIF or an animated WebP, plays as it opens, looping,
+and goes on playing as it is fitted, zoomed or its window resized. Its
+header line says which frame it is on and whether it plays. =RET= plays
+or pauses it, =,= and =.= step back and on a frame and pause it, =F= goes
+to a frame by number, ={= and =}= halve and double the speed and =a r=
+plays it backwards, =a 0= back to its own speed. Its report on the left
+gives the frames, the length, the frames a second and each run of
+delays, so a held last frame shows, and each frame's delay in the
+structure. Once it is larger
 than the window, =h j k l= pan it and =C-d= and =C-u= scroll; =f= puts it
 back and forgets where you had scrolled to. =n= and =p= step to the next
 and previous file in the directory, =q= closes it. The preview pane of
@@ -3462,6 +3472,8 @@ bound.
 - ~+core/image-pan-right~ (~l~) :: Move the picture left under the window,
   '+core-image-pan-step' at a time.
 - ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
+- ~+core/image-play-toggle~ :: Play the moving picture, looping, or pause it
+  where it is.
 - ~+core/install-daemon~ :: Start an Emacs daemon at every login.
 - ~+core/install-docsets~ :: Install the docsets of this buffer's language
   that are missing, again if a try failed; with ALL, the skipped ones too.

@@ -692,3 +692,96 @@ opening only reads it."
       (when data-type
         (ignore-errors (delete-file input))
         (ignore-errors (delete-file cache))))))
+
+
+;;
+;;; Moving pictures
+
+(declare-function image-multi-frame-p "image")
+(declare-function image-current-frame "image")
+(declare-function image-animate "image")
+(declare-function image-animate-timer "image")
+(declare-function image-animate-get-speed "image")
+
+(defvar +core-image-autoplay t
+  "Whether a moving picture, a GIF or an animated WebP, plays as it
+opens, looping, the way a browser shows it.")
+
+(defvar-local +core--image-playing nil
+  "Whether this buffer's moving picture is playing, so it plays on when
+the picture is drawn again: fitted, zoomed, the window resized.")
+
+(defun +core--image-stop (spec)
+  "Stop SPEC's animation, if it has one going."
+  (when-let* ((spec) (timer (image-animate-timer spec)))
+    (cancel-timer timer)))
+
+;;;###autoload
+(defun +core--image-animate-h ()
+  "Play a moving picture as it opens, and say in the header line which
+frame it is on and the keys that move through it."
+  (let ((buffer (current-buffer)))
+    ;; After the fit, which draws the picture again, at the end of the
+    ;; command that opened it.
+    (run-at-time
+     0 nil
+     (lambda ()
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           (when-let* ((spec (+core--image-spec))
+                       ((image-multi-frame-p spec)))
+             (setq-local header-line-format '(:eval (+core--image-frames-line)))
+             (add-hook 'kill-buffer-hook
+                       (lambda () (+core--image-stop (+core--image-spec))) nil t)
+             (when +core-image-autoplay
+               (setq +core--image-playing t)
+               (image-animate spec nil t)))))))))
+
+(defun +core--image-frames-line ()
+  "The header line of a moving picture: its frame, whether it plays, and
+the keys."
+  (when-let* ((spec (+core--image-spec))
+              (frames (image-multi-frame-p spec)))
+    (let ((speed (image-animate-get-speed spec)))
+      (concat " "
+              (propertize (format "frame %d of %d" (1+ (image-current-frame spec)) (car frames))
+                          'face 'mode-line-buffer-id)
+              (propertize (concat "   " (if (image-animate-timer spec) "playing" "paused")
+                                  (unless (eql speed 1) (format ", speed %s" speed)))
+                          'face 'success)
+              (propertize "    RET play or pause   , . a frame   F go to   { } speed   a r reverse"
+                          'face 'shadow)))))
+
+;;;###autoload
+(defun +core--image-keep-playing-a (fn &rest args)
+  "Draw the picture again with FN and ARGS and, when it was playing, play
+the new one from the same frame. Emacs's animation belongs to the picture
+it was started on, which a fit or a zoom replaces, so it stopped there
+and kept running on a picture no longer shown."
+  (let* ((old (+core--image-spec))
+         (frame (and old (image-multi-frame-p old) (image-current-frame old))))
+    (+core--image-stop old)
+    (prog1 (apply fn args)
+      (when-let* ((+core--image-playing)
+                  (new (+core--image-spec))
+                  ((image-multi-frame-p new)))
+        (image-animate new frame t)))))
+
+;;;###autoload
+(defun +core--image-pause-a (&rest _)
+  "Pause before stepping a frame by hand: the playing would move it on."
+  (when +core--image-playing
+    (setq +core--image-playing nil)
+    (+core--image-stop (+core--image-spec))))
+
+;;;###autoload
+(defun +core/image-play-toggle ()
+  "Play the moving picture, looping, or pause it where it is."
+  (interactive nil image-mode)
+  (let ((spec (or (+core--image-spec) (user-error "No picture here"))))
+    (unless (image-multi-frame-p spec) (user-error "This picture does not move"))
+    (if (image-animate-timer spec)
+        (progn (setq +core--image-playing nil) (+core--image-stop spec))
+      (setq +core--image-playing t)
+      (image-animate spec (image-current-frame spec) t))
+    (force-mode-line-update)))

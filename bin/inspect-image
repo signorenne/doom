@@ -223,7 +223,15 @@ def gif(data):
             name = {0xF9: "graphic control", 0xFF: "application", 0xFE: "comment", 0x01: "plain text"}.get(label, "extension")
             if label == 0xFF:
                 name += ": " + data[i + 3:i + 14].decode("latin-1", "replace")
-            out.append(row(i, j + 1 - i, "ext", name))
+            if label == 0xF9 and i + 7 < n:
+                # The next frame's delay, what is left of it after, and
+                # whether a colour in it is see-through.
+                gflags, delay = data[i + 3], struct.unpack("<H", data[i + 4:i + 6])[0]
+                disposal = {0: "", 1: ", kept", 2: ", cleared to the background",
+                            3: ", put back"}.get((gflags >> 2) & 7, "")
+                name += f": {delay * 10} ms{disposal}" + (", transparent" if gflags & 1 else "")
+            if frames < 8:
+                out.append(row(i, j + 1 - i, "ext", name))
             i = j + 1
         elif b == 0x2C:
             fw, fh, fflags = struct.unpack("<4xHHB", data[i + 1:i + 10])
@@ -343,17 +351,29 @@ def picture(path, data):
                                 else "the file is not smaller"))
             frames = getattr(im, "n_frames", 1)
             if frames > 1:
-                total = 0
+                delays = []
                 for k in range(frames):
                     try:
                         im.seek(k)
-                        total += im.info.get("duration", 0) or 0
+                        delays.append(im.info.get("duration", 0) or 0)
                     except EOFError:
                         break
+                total = sum(delays)
                 loop = im.info.get("loop")
                 lines.append(f"  animated  {frames} frames"
                              + (f", {total / 1000:.2f} s" if total else "")
+                             + (f", {frames * 1000 / total:.1f} frames a second" if total else "")
                              + (", looping" if loop == 0 else f", {loop} plays" if loop else ""))
+                # Each run of equal delays once: "80 ms x 11, 600 ms" says
+                # the last frame is held, which a total hides.
+                runs = []
+                for d in delays:
+                    if runs and runs[-1][0] == d:
+                        runs[-1][1] += 1
+                    else:
+                        runs.append([d, 1])
+                shown = ", ".join(f"{d} ms" + (f" x {c}" if c > 1 else "") for d, c in runs[:12])
+                lines.append(f"  delays    {shown}" + (", ..." if len(runs) > 12 else ""))
             dpi = im.info.get("dpi")
             if dpi:
                 lines.append(f"  density   {round(dpi[0])} x {round(dpi[1])} dpi")

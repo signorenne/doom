@@ -173,6 +173,13 @@ has no cursor."
     (when (and +core-plain-mode (not (eq +core-plain-mode t)))
       (+core--svg-view-h))))
 
+;; A moving picture plays as it opens, looping, and goes on playing as it
+;; is fitted, zoomed and resized; stepping a frame by hand pauses it.
+(add-hook 'image-mode-hook #'+core--image-animate-h 90)
+(after! image-mode
+  (advice-add 'image-toggle-display-image :around #'+core--image-keep-playing-a)
+  (advice-add 'image-goto-frame :before #'+core--image-pause-a))
+
 ;; Any other image opens as the picture, with what is inside it beside:
 ;; its structure, chunk by chunk or marker by marker, its metadata, and
 ;; its first bytes. The view steps aside when you leave for a buffer that
@@ -205,6 +212,7 @@ has no cursor."
 
 (map! :after image-mode
       :map image-mode-map
+      :n "RET" #'+core/image-play-toggle
       :n "f" #'+core/image-fit
       :n "1" #'+core/image-original
       :n "n" #'image-next-file
