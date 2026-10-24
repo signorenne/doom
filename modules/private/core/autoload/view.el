@@ -303,8 +303,11 @@ place the last one was, when it is SOURCE's again."
                                 :box (and (plist-get props :scale) +core-view-box)))
   (with-current-buffer (+core-view--buffer)
     (unless (derived-mode-p 'special-mode) (special-mode))
+    ;; As image-mode does: redisplay would otherwise scroll back to
+    ;; point, the picture's first column, undoing every pan to the right.
     (setq-local cursor-type nil
                 truncate-lines t
+                auto-hscroll-mode nil
                 evil-normal-state-cursor nil
                 evil-motion-state-cursor nil)
     (when (bound-and-true-p outline-minor-mode) (outline-minor-mode -1))
@@ -327,6 +330,7 @@ place the last one was, when it is SOURCE's again."
       (insert text)
       (goto-char (point-min))
       (kill-local-variable 'cursor-type)
+      (kill-local-variable 'auto-hscroll-mode)
       (kill-local-variable 'evil-normal-state-cursor)
       (kill-local-variable 'evil-motion-state-cursor)
       (setq-local truncate-lines t)
