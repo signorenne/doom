@@ -92,6 +92,7 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 (map! :after plantuml-mode
       :map plantuml-mode-map
       :localleader
+      :desc "The preview's menu"    "SPC" #'+core/view-menu
       :desc "Preview, beside the text" "p" #'+core/view-toggle
       (:prefix ("P" . "preview")
        :desc "Draw it again now"    "r" #'+core/view-refresh

@@ -29,6 +29,7 @@ closes it, and it stays closed for that diagram until ~SPC m p~.
 
 | Key       | What it does                          |
 |-----------+---------------------------------------|
+| ~SPC m SPC~ | the preview's menu                    |
 | ~SPC m p~   | the preview, on or off                |
 | ~SPC m P O~ | open it with every diagram, or not    |
 | ~SPC m P r~ | draw it again now                     |

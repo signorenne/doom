@@ -12,6 +12,12 @@ place it stops is said, rather than the whole report failing.
 
 Emacs shows this beside an image; it is run over every image on the
 machine to catch a file it cannot describe before it reaches the editor.
+
+    inspect-image --svg < DRAWING
+
+describes an SVG read on standard input, as the editor has it, saved or
+not: its size, what it is made of, its ids, what it embeds and the fonts
+it names, or where it stops being well formed.
 """
 
 import os
@@ -448,9 +454,64 @@ def hexdump(data, count=256):
     return lines
 
 
+# SVG
+
+def svg_report(text):
+    import re
+    import xml.etree.ElementTree as ET
+    size = len(text.encode("utf-8"))
+    lines = [f"  bytes     {human(size)}, {human(text.count(chr(10)) + 1)} lines"]
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as e:
+        line, col = e.position
+        return [("The drawing", lines + [f"  not well formed at line {line}, column {col}: "
+                                         + str(e).split(":")[0]])]
+    local = lambda tag: tag.rsplit("}", 1)[-1] if isinstance(tag, str) else "?"
+    a = root.attrib
+    lines.append(f"  size      {a.get('width', 'not given')} x {a.get('height', 'not given')}")
+    lines.append(f"  viewBox   {a.get('viewBox', 'none')}")
+    counts, ids, embedded, linked, fonts = {}, [], [], [], set()
+    for el in root.iter():
+        name = local(el.tag)
+        counts[name] = counts.get(name, 0) + 1
+        if "id" in el.attrib:
+            ids.append(f"{el.attrib['id']} ({name})")
+        href = next((v for k, v in el.attrib.items() if local(k) == "href"), None)
+        if name == "image" and href:
+            if href.startswith("data:"):
+                kind = href[5:href.find(";")] if ";" in href else href[5:20]
+                payload = href.split(",", 1)[-1]
+                embedded.append((kind, len(payload) * 3 // 4))
+            else:
+                linked.append(href)
+        style = el.attrib.get("style", "") + ";" + (el.text or "" if name == "style" else "")
+        for family in [el.attrib.get("font-family")] + re.findall(r"font-family\s*:\s*([^;}]+)", style):
+            if family:
+                fonts.add(family.strip().strip("'\""))
+    out = [("The drawing", lines)]
+    out.append(("Made of", [f"  {n:<16} {human(c)}" for n, c in
+                            sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]))
+    out.append(("Ids", [f"  {i}" for i in ids[:80]]
+                + ([f"  and {human(len(ids) - 80)} more"] if len(ids) > 80 else [])
+                or ["  none"]))
+    pictures = [f"  {kind or 'unknown'}, about {human(n)} bytes, embedded" for kind, n in embedded]
+    pictures += [f"  {h}, linked" for h in linked]
+    if embedded:
+        pictures.insert(0, f"  {len(embedded)} embedded, about "
+                        f"{human(sum(n for _, n in embedded))} bytes in all")
+    out.append(("Pictures inside", pictures or ["  none"]))
+    out.append(("Fonts named", [f"  {f}" for f in sorted(fonts)] or ["  none"]))
+    return out
+
+
 def main():
+    if sys.argv[1:] == ["--svg"]:
+        text = sys.stdin.buffer.read().decode("utf-8", "replace")
+        print("\n\n".join(title + "\n" + "\n".join(lines) for title, lines in svg_report(text)))
+        return
     if len(sys.argv) != 2:
-        print("usage: inspect-image FILE")
+        print("usage: inspect-image FILE, or inspect-image --svg < DRAWING")
         sys.exit(1)
     path = sys.argv[1]
     try:

@@ -749,12 +749,12 @@ close it."
 
 ;;;###autoload
 (defun +core/view-refresh ()
-  "Draw this buffer's view again now."
+  "Draw the view again now, from the buffer or from the view itself."
   (interactive)
-  (unless +core-view-draw (user-error "This buffer has no view"))
-  (setq +core-view-closed nil)
-  (unless (+core-view--window) (+core-view--display (current-buffer)))
-  (+core-view--draw (current-buffer) t))
+  (with-current-buffer (+core-view-source)
+    (setq +core-view-closed nil)
+    (unless (+core-view--window) (+core-view--display (current-buffer)))
+    (+core-view--draw (current-buffer) t)))
 
 ;;;###autoload
 (defun +core/view-follow-toggle ()
@@ -772,6 +772,14 @@ close it."
   (message "A view %s" (if +core-view-on-open "opens with its buffer"
                          "opens when asked")))
 
+
+;;;###autoload
+(defun +core-view-source ()
+  "The buffer whose view a command means: this one when it has a view,
+else the one the view shows, so the same keys work from either side."
+  (cond (+core-view-draw (current-buffer))
+        ((buffer-live-p +core-view--showing) +core-view--showing)
+        (t (user-error "No view here"))))
 
 ;;
 ;;; Zooming and moving the picture
@@ -855,6 +863,7 @@ close it."
 (let ((keys '(("+" . +core/view-zoom-in) ("=" . +core/view-zoom-in)
               ("-" . +core/view-zoom-out) ("f" . +core/view-fit)
               ("1" . +core/view-original)
+              ("b" . +core/view-background) ("?" . +core/view-menu)
               ("h" . +core/view-pan-left) ("l" . +core/view-pan-right)
               ("k" . +core/view-pan-up) ("j" . +core/view-pan-down))))
   (dolist (key keys)

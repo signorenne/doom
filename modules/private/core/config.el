@@ -1422,6 +1422,7 @@ It advises the commands that quit, SPC q q's among them."
   :init
   (map! (:after ibuffer    :map ibuffer-mode-map        :localleader "SPC" #'casual-ibuffer-tmenu)
         (:after info       :map Info-mode-map           :localleader "SPC" #'casual-info-tmenu)
+        (:after image-mode :map image-mode-map          :localleader "SPC" #'casual-image-tmenu)
         (:after bookmark   :map bookmark-bmenu-mode-map :localleader "SPC" #'casual-bookmarks-tmenu)
         (:after org-agenda :map org-agenda-mode-map     :localleader "SPC" #'casual-agenda-tmenu)
         (:after re-builder :map reb-mode-map            :localleader "SPC" #'casual-re-builder-tmenu)

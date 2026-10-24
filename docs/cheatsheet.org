@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 01:36
+#+generated: 2026-10-24 01:44
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -691,11 +691,15 @@ its drawing.
 
 | Key       | What it does                                   |
 |-----------+------------------------------------------------|
+| ~SPC m SPC~ | the view's menu, every key below in one place  |
 | ~SPC m p~   | the view beside it, on or off                  |
+| ~SPC m e~   | write the SVG as a PNG, at a width you choose  |
 | ~SPC m r~   | read the image again, in an image              |
 | ~SPC m P r~ | draw the SVG again now                         |
 | ~SPC m P f~ | draw it as you type, or only when asked        |
 | ~SPC m P h~ | outline the element the cursor is in, or not   |
+| ~SPC m P b~ | draw it over the checkerboard, light or dark   |
+| ~SPC m P i~ | its facts in the view instead of the drawing   |
 | ~SPC m P O~ | open it with every file, or wait to be asked   |
 
 A drawing in the view is fitted to it and sits in its middle, both ways,
@@ -703,9 +707,12 @@ and is fitted and centred again when the window changes size. The view
 is a window you can move into, with ~C-w h~ or ~C-w l~: to scroll and
 search an image's report, whose sections fold with ~TAB~ on their title
 and all at once with ~S-TAB~, or to zoom a drawing: =+= and =-= zoom, =f=
-fits, =1= is its own size and =h j k l= pan. The zoom and the place stay
+fits, =1= is its own size and =h j k l= pan, =b= changes what an SVG is
+drawn over and =?= opens the view's menu. The zoom and the place stay
 as the drawing is made again, so a detail you zoomed into stays in view
-while you edit it. ~q~ in it closes it, and it stays closed for that file until
+while you edit it. An SVG's facts are its size and viewBox, what it is
+made of, element by element, its ids, the pictures it embeds or links
+and the fonts it names. ~q~ in it closes it, and it stays closed for that file until
 ~SPC m p~ opens it again; other files still open theirs. It steps aside
 when you move to a buffer that has none and comes back when you return,
 so a glance at a photo does not leave half the screen taken. It is one
@@ -713,7 +720,8 @@ piece of machinery, shared with the diagrams.
 
 The picture itself sits in the middle of its window and there is no
 cursor on it. =+= and =-= zoom, =f= fills the window with it again and =1=
-shows it at the size it really is, =W= fits the width. Once it is larger
+shows it at the size it really is, =W= fits the width. ~SPC m SPC~ opens
+a menu of everything the image viewer does. Once it is larger
 than the window, =h j k l= pan it and =C-d= and =C-u= scroll; =f= puts it
 back and forgets where you had scrolled to. =n= and =p= step to the next
 and previous file in the directory, =q= closes it. The preview pane of
@@ -2049,6 +2057,7 @@ dark. What ~SPC m e~ writes out is unaffected.
 
 | Key       | What it does                          |
 |-----------+---------------------------------------|
+| ~SPC m SPC~ | the preview's menu                    |
 | ~SPC m p~   | the preview, on or off                |
 | ~SPC m P O~ | open it with every diagram, or not    |
 | ~SPC m P r~ | draw it again now                     |
@@ -3495,6 +3504,11 @@ bound.
 - ~+core/search-project-with-flags~ :: Search the whole project.
 - ~+core/search-symbol-with-flags~ :: Search the project for the word under
   the cursor.
+- ~+core/svg-export~ :: Write this SVG as a PNG to FILE, WIDTH pixels wide,
+  by '+core-svg-renderer' in the background.
+- ~+core/svg-facts-toggle~ :: Show this SVG's facts in the view instead of
+  its drawing, or the drawing again: size, what it is made of, ids, what it
+  embeds, fonts.
 - ~+core/svg-here-toggle~ :: Outline the element the cursor is in, or stop.
 - ~+core/toggle-transparency~ (~SPC t T~) :: Toggle background transparency
   of this frame.
@@ -3513,11 +3527,14 @@ bound.
 - ~+core/undo-graph-start~ :: Go to the first state of this branch's line.
 - ~+core/undo-graph-up~ :: Go to the branch drawn COUNT lines above, onto
   the state drawn nearest.
+- ~+core/view-background~ :: Draw the SVG over the next background:
+  checkerboard, light, dark.
 - ~+core/view-close~ :: Close the view, from wherever you are, the view
   itself included.
 - ~+core/view-fit~ :: The whole picture in the view's window.
 - ~+core/view-follow-toggle~ :: Draw a live view again as you type, or only
   when asked.
+- ~+core/view-menu~ :: What the view beside this buffer can do.
 - ~+core/view-on-open-toggle~ :: Open a view with every buffer that has one,
   or wait to be asked.
 - ~+core/view-original~ :: The picture at its own size, a point to each of
@@ -3526,7 +3543,8 @@ bound.
 - ~+core/view-pan-left~ :: Look further left in the view's picture.
 - ~+core/view-pan-right~ :: Look further right in the view's picture.
 - ~+core/view-pan-up~ :: Look further up in the view's picture.
-- ~+core/view-refresh~ (~SPC m r~) :: Draw this buffer's view again now.
+- ~+core/view-refresh~ (~SPC m r~) :: Draw the view again now, from the
+  buffer or from the view itself.
 - ~+core/view-toggle~ (~SPC m p~) :: Show this buffer's view beside it, or
   close it.
 - ~+core/view-zoom-in~ :: Zoom into the view's picture.

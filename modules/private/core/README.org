@@ -298,7 +298,12 @@ drawn four times over, and now the typing never waits. Its size comes
 from the XML, never from drawing it. Without =rsvg-convert= Emacs draws it
 itself, once per pause, and says so once. The element the cursor is in
 is outlined in the drawing, in the cursor's colour, a line of the same
-width at any zoom; ~SPC m P h~ turns it off.
+width at any zoom; ~SPC m P h~ turns it off. ~SPC m P b~ draws it over the
+checkerboard, light or dark; ~SPC m P i~ shows its facts instead, what it
+is made of, its ids, what it embeds and the fonts it names
+(=bin/inspect-image --svg=); ~SPC m e~ writes it as a PNG at the width you
+ask. ~SPC m SPC~ beside an SVG or a diagram, and ~?~ in the view, open a
+menu of all of it.
 
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid

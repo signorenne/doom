@@ -240,6 +240,9 @@ This many at a time crosses it in a dozen.")
 (declare-function +core-view-pipe "view")
 (declare-function +core-view-scale "view")
 (declare-function +core-view--schedule "view")
+(declare-function +core-view--decorate "view")
+(declare-function +core-view-source "view")
+(declare-function +core/view-refresh "view")
 (defvar +core-view-box)
 
 (defvar +core-image-inspector (file-name-concat doom-user-dir "bin/inspect-image")
@@ -260,6 +263,9 @@ Emacs's, which draws it in the editor when this is missing.")
 (defvar +core-view-backgrounds '((light . "#f5f1e8") (dark . "#1c1915"))
   "The plain backgrounds behind a drawing, those of nexenne-day and
 nexenne-night, so a drawing is seen as it will be in either.")
+
+(defvar-local +core--svg-facts nil
+  "Whether the view shows this SVG's facts instead of its drawing.")
 
 (defvar +core--svg-said-slow nil
   "Whether the view said once that SVG drawing is slower without
@@ -453,10 +459,23 @@ last good drawing and says where the XML breaks."
          (dom (with-temp-buffer
                 (insert xml)
                 (ignore-errors (libxml-parse-xml-region (point-min) (point-max))))))
-    (if (not (eq (dom-tag dom) 'svg))
-        (if dom
-            (list 'problem "the root element is not <svg>" nil)
-          (+core--svg-problem xml))
+    (cond
+     (+core--svg-facts
+      (list 'async
+            (lambda (done)
+              (+core-view-pipe
+               (list +core-image-inspector "--svg") (encode-coding-string xml 'utf-8)
+               (lambda (result)
+                 (funcall done
+                          (if (car result)
+                              (list 'text (+core-view--decorate
+                                           (decode-coding-string (cdr result) 'utf-8)))
+                            (list 'problem (or (cdr result) "the report failed") nil))))))))
+     ((not (eq (dom-tag dom) 'svg))
+      (if dom
+          (list 'problem "the root element is not <svg>" nil)
+        (+core--svg-problem xml)))
+     (t
       (let* ((geometry (+core--svg-geometry dom))
              (natural (cons (round (nth 0 geometry)) (round (nth 1 geometry))))
              (box +core-view-box)
@@ -469,7 +488,7 @@ last good drawing and says where the XML breaks."
              (scale (+core-view-scale)))
         (list 'async
               (lambda (done)
-                (+core-svg-picture-start copy box scale done natural)))))))
+                (+core-svg-picture-start copy box scale done natural))))))))
 
 ;;;###autoload
 (defun +core-svg-picture-start (svg box scale done &optional natural)
@@ -530,3 +549,70 @@ sits on the right the way an SVG's drawing does."
   (when (and buffer-file-name
              (string-match-p +core-image-inspected (downcase buffer-file-name)))
     (+core-view-enable #'+core--image-inspect nil 'left)))
+
+
+;;
+;;; What the view can do with an SVG besides drawing it
+
+(defun +core--svg-buffer ()
+  "The SVG buffer a command means, from it or from its view."
+  (let ((buffer (+core-view-source)))
+    (unless (eq (buffer-local-value '+core-view-draw buffer) #'+core--svg-draw)
+      (user-error "The view does not show an SVG"))
+    buffer))
+
+;;;###autoload
+(defun +core/view-background ()
+  "Draw the SVG over the next background: checkerboard, light, dark."
+  (interactive)
+  (let ((buffer (+core--svg-buffer)))
+    (setq +core-svg-background
+          (pcase +core-svg-background ('checker 'light) ('light 'dark) (_ 'checker)))
+    (message "SVG drawn over %s" (pcase +core-svg-background
+                                   ('checker "the checkerboard") ('light "light") (_ "dark")))
+    (with-current-buffer buffer (+core/view-refresh))))
+
+;;;###autoload
+(defun +core/svg-facts-toggle ()
+  "Show this SVG's facts in the view instead of its drawing, or the
+drawing again: size, what it is made of, ids, what it embeds, fonts."
+  (interactive)
+  (with-current-buffer (+core--svg-buffer)
+    (setq +core--svg-facts (not +core--svg-facts))
+    (+core/view-refresh)))
+
+;;;###autoload
+(defun +core/svg-export (file width)
+  "Write this SVG as a PNG to FILE, WIDTH pixels wide, by
+`+core-svg-renderer' in the background. What is written is the drawing
+as you wrote it, without the view's backdrop or outline."
+  (interactive
+   (with-current-buffer (+core--svg-buffer)
+     (let* ((dom (with-temp-buffer
+                   (insert-buffer-substring (+core--svg-buffer))
+                   (ignore-errors (libxml-parse-xml-region (point-min) (point-max)))))
+            (natural (if (eq (dom-tag dom) 'svg) (car (+core--svg-geometry dom)) 512))
+            (default (concat (file-name-sans-extension
+                              (or buffer-file-name (expand-file-name "drawing")))
+                             ".png")))
+       (list (read-file-name "Write the PNG to: " (file-name-directory default) nil nil
+                             (file-name-nondirectory default))
+             (read-number "Width in pixels: " (* 2 (round natural)))))))
+  (unless (executable-find +core-svg-renderer)
+    (user-error "No %s on PATH; SPC h r d says how to install it" +core-svg-renderer))
+  (setq file (expand-file-name file))
+  (when (and (file-exists-p file)
+             (not (y-or-n-p (format "%s exists; replace it? " (abbreviate-file-name file)))))
+    (user-error "Nothing written"))
+  (let ((xml (with-current-buffer (+core--svg-buffer)
+               (buffer-substring-no-properties (point-min) (point-max)))))
+    (+core-view-pipe
+     (list +core-svg-renderer "-f" "png" "-a" "-w" (number-to-string (max 1 width))
+           "-o" file)
+     (encode-coding-string xml 'utf-8)
+     (lambda (result)
+       (if (car result)
+           (message "Wrote %s, %d pixels wide" (abbreviate-file-name file) width)
+         (message "Could not write %s: %s" (abbreviate-file-name file)
+                  (or (cdr result) "the drawing failed")))))
+    (message "Writing %s..." (abbreviate-file-name file))))

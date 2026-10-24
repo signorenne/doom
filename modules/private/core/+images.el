@@ -175,11 +175,15 @@ has no cursor."
 (map! :after nxml-mode
       :map nxml-mode-map
       :localleader
+      :desc "The view's menu"       "SPC" #'+core/view-menu
       :desc "Drawing, beside the source" "p" #'+core/view-toggle
+      :desc "Write it as a PNG"     "e" #'+core/svg-export
       (:prefix ("P" . "drawing")
        :desc "Draw it again now"    "r" #'+core/view-refresh
        :desc "Follow my typing"     "f" #'+core/view-follow-toggle
        :desc "Outline the element here" "h" #'+core/svg-here-toggle
+       :desc "Background"           "b" #'+core/view-background
+       :desc "Its facts, or its drawing" "i" #'+core/svg-facts-toggle
        :desc "Open it with the file, or not" "O" #'+core/view-on-open-toggle))
 
 (map! :after image-mode
