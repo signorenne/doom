@@ -814,6 +814,13 @@ close it."
     (+core-view--draw (current-buffer) t)))
 
 ;;;###autoload
+(defun +core-view-redraw (buffer)
+  "Draw BUFFER's view again when it is on show. A setting changed with
+the view closed is seen when it opens; the view is not opened for it."
+  (when (and (eq +core-view--showing buffer) (+core-view--window))
+    (+core-view--draw buffer t)))
+
+;;;###autoload
 (defun +core/view-follow-toggle ()
   "Draw a live view again as you type, or only when asked."
   (interactive)

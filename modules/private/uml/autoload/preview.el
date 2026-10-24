@@ -9,6 +9,8 @@
 (declare-function +core-view-enable "view")
 (declare-function +core-view-scale "view")
 (declare-function +core-svg-picture-start "images")
+(declare-function +core-view-redraw "view")
+(declare-function +core-view-source "view")
 (defvar +core-view-box)
 
 (defun +uml--preview-options ()
@@ -71,4 +73,4 @@ more faithfully."
   (interactive)
   (setq +uml-preview-format (if (eq +uml-preview-format 'svg) 'png 'svg))
   (message "The preview is drawn as %s" (upcase (symbol-name +uml-preview-format)))
-  (+core/view-refresh))
+  (+core-view-redraw (+core-view-source)))

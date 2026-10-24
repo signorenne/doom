@@ -243,6 +243,7 @@ This many at a time crosses it in a dozen.")
 (declare-function +core-view--decorate "view")
 (declare-function +core-view-source "view")
 (declare-function +core/view-refresh "view")
+(declare-function +core-view-redraw "view")
 (defvar +core-view-box)
 (defvar +core-view-box-max)
 
@@ -407,9 +408,12 @@ draws nothing."
 (defun +core/svg-here-toggle ()
   "Outline the element the cursor is in, or stop."
   (interactive)
-  (setq +core-svg-here (not +core-svg-here))
-  (message "The element at the cursor is %s" (if +core-svg-here "outlined" "not outlined"))
-  (when (fboundp '+core/view-refresh) (ignore-errors (+core/view-refresh))))
+  ;; In the SVG's buffer, whose setting it is: from the view's menu the
+  ;; current buffer is the view.
+  (with-current-buffer (+core--svg-buffer)
+    (setq +core-svg-here (not +core-svg-here))
+    (message "The element at the cursor is %s" (if +core-svg-here "outlined" "not outlined"))
+    (+core-view-redraw (current-buffer))))
 
 (defun +core--svg-copy (xml geometry &optional here scale)
   "XML as it is drawn in the view, as UTF-8: the backdrop first inside
