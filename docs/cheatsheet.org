@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-23 23:18
+#+generated: 2026-10-24 01:27
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3505,13 +3505,22 @@ bound.
   the state drawn nearest.
 - ~+core/view-close~ :: Close the view, from wherever you are, the view
   itself included.
+- ~+core/view-fit~ :: The whole picture in the view's window.
 - ~+core/view-follow-toggle~ :: Draw a live view again as you type, or only
   when asked.
 - ~+core/view-on-open-toggle~ :: Open a view with every buffer that has one,
   or wait to be asked.
+- ~+core/view-original~ :: The picture at its own size, a point to each of
+  its pixels.
+- ~+core/view-pan-down~ :: Look further down in the view's picture.
+- ~+core/view-pan-left~ :: Look further left in the view's picture.
+- ~+core/view-pan-right~ :: Look further right in the view's picture.
+- ~+core/view-pan-up~ :: Look further up in the view's picture.
 - ~+core/view-refresh~ (~SPC m r~) :: Draw this buffer's view again now.
 - ~+core/view-toggle~ (~SPC m p~) :: Show this buffer's view beside it, or
   close it.
+- ~+core/view-zoom-in~ :: Zoom into the view's picture.
+- ~+core/view-zoom-out~ :: Zoom out of the view's picture.
 - ~+core/yank-code-block~ :: Copy the region, or the whole buffer, as a
   fenced code block.
 - ~+core/yank-file-directory~ (~SPC f N~) :: Copy the absolute directory
