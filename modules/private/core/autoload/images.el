@@ -244,6 +244,7 @@ This many at a time crosses it in a dozen.")
 (declare-function +core-view-source "view")
 (declare-function +core/view-refresh "view")
 (defvar +core-view-box)
+(defvar +core-view-box-max)
 
 (defvar +core-image-inspector (file-name-concat doom-user-dir "bin/inspect-image")
   "The program that describes an image from the inside.")
@@ -519,8 +520,8 @@ called at once."
           nil)
       (+core-view-pipe
        (list +core-svg-renderer "-f" "png" "-a"
-             "-w" (number-to-string (min 8192 (max 1 (car box))))
-             "-h" (number-to-string (min 8192 (max 1 (cdr box)))))
+             "-w" (number-to-string (min +core-view-box-max (max 1 (car box))))
+             "-h" (number-to-string (min +core-view-box-max (max 1 (cdr box)))))
        svg
        (lambda (result)
          (funcall done

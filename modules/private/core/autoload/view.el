@@ -56,6 +56,11 @@ To say the buffer cannot be drawn right now, return a problem or signal
 an error: the view keeps what it last showed and says why in its header,
 so a half-typed line never blanks it.")
 
+(defvar +core-view-box-max 8192
+  "The largest side of a picture rendered for the view, in device
+pixels. A zoom stops where it would ask for more: 8192 square decodes to
+268 MB.")
+
 (defvar +core-view-box nil
   "While a draw function runs, the (WIDTH . HEIGHT) in device pixels its
 picture should fit: the view's window at the current zoom. Emacs shows
@@ -269,6 +274,13 @@ it is smaller, at `+core-view--pan' when it is larger."
            (window (+core-view--window))
            (left (max 0 (/ (- (car fit) (car size)) 2)))
            (top (max 0 (/ (- (cdr fit) (cdr size)) 2))))
+      ;; A picture replaced by another drawing, not by the same one moved
+      ;; or zoomed, leaves the image cache: a large one decodes to
+      ;; hundreds of megabytes, kept five minutes otherwise.
+      (when-let* ((old (get-text-property (point-min) 'display))
+                  ((eq (car-safe old) 'image))
+                  ((not (eq (plist-get (cdr old) :data) (plist-get (cdr spec) :data)))))
+        (image-flush old))
       (+core-image-uncenter)
       (erase-buffer)
       (insert-image spec)
@@ -823,10 +835,19 @@ else the one the view shows, so the same keys work from either side."
 ;;
 ;;; Zooming and moving the picture
 
+(defun +core-view--zoom-max ()
+  "The largest zoom: 32 times the fit, or less for a picture rendered for
+the view, whose box must stay within `+core-view-box-max'."
+  (if (plist-get (plist-get +core-view--shown :props) :scale)
+      (let ((fit (+core-view--fit)))
+        (min 32 (/ (* +core-view-box-max (+core-view-scale))
+                   (max (car fit) (cdr fit)))))
+    32))
+
 (defun +core-view--zoom-by (factor)
   "Zoom the view's picture by FACTOR: at once, scaled, then sharp."
   (unless +core-view--shown (user-error "The view holds no picture"))
-  (setq +core-view-zoom (max 0.1 (min 32 (* (or +core-view-zoom 1) factor))))
+  (setq +core-view-zoom (max 0.1 (min (+core-view--zoom-max) (* (or +core-view-zoom 1) factor))))
   (+core-view--place)
   (+core-view--redraw-soon 0.15))
 
@@ -858,8 +879,9 @@ else the one the view shows, so the same keys work from either side."
   (let ((natural (plist-get (plist-get +core-view--shown :props) :natural))
         (fit (+core-view--fit)))
     (unless natural (user-error "This picture does not say its own size"))
-    (setq +core-view-zoom (/ 1.0 (min (/ (float (car fit)) (max 1 (car natural)))
-                                      (/ (float (cdr fit)) (max 1 (cdr natural))))))
+    (setq +core-view-zoom (min (+core-view--zoom-max)
+                               (/ 1.0 (min (/ (float (car fit)) (max 1 (car natural)))
+                                           (/ (float (cdr fit)) (max 1 (cdr natural)))))))
     (+core-view--place)
     (+core-view--redraw-soon 0.15)))
 
