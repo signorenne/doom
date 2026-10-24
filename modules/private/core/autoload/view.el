@@ -311,6 +311,12 @@ viewer's do."
 (defun +core-view--put-image (source data type &optional props)
   "Show DATA, an image of TYPE with PROPS, in the view, at the zoom and
 place the last one was, when it is SOURCE's again."
+  ;; A PNG says its own size: with it the view fits a small one, zooms
+  ;; past it and shows it at it, which a drawing that only gave its bytes
+  ;; (a diagram as PNG) could not.
+  (unless (or (plist-get props :scale) (plist-get props :natural))
+    (when-let* ((size (+core-view--png-size data)))
+      (setq props (append props (list :natural size)))))
   (setq +core-view--shown (list :data data :type type :props props
                                 :box (and (plist-get props :scale) +core-view-box)))
   (with-current-buffer (+core-view--buffer)
