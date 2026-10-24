@@ -11,3 +11,6 @@ debug-adapters/
 
 # Python leaves these beside a script it imports, as the bin/ checks can be.
 __pycache__/
+
+# Local working notes and specs, never part of the config.
+.private/
