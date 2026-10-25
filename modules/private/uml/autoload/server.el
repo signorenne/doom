@@ -90,8 +90,11 @@ start already under way is joined, not repeated."
                             (setq +uml--server-process nil +uml--server-port nil))
                           (let ((waiters (nreverse +uml--server-waiters)))
                             (setq +uml--server-waiters nil)
+                            ;; One that fails does not leave the others
+                            ;; waiting for good.
                             (dolist (waiter waiters)
-                              (funcall waiter port problem))))))
+                              (with-demoted-errors "PlantUML preview: %S"
+                                (funcall waiter port problem)))))))
             (+uml--server-start)
             (message "Starting PlantUML...")
             (setq +uml--server-starting
@@ -109,7 +112,8 @@ start already under way is joined, not repeated."
          (let ((waiters +uml--server-waiters))
            (setq +uml--server-waiters nil)
            (dolist (waiter waiters)
-             (funcall waiter nil (error-message-string err))))))))))
+             (with-demoted-errors "PlantUML preview: %S"
+               (funcall waiter nil (error-message-string err)))))))))))
 
 ;;;###autoload
 (defun +uml-server-ensure ()
@@ -219,7 +223,14 @@ Returns the bytes, or signals with what PlantUML said."
   "Render SOURCE as FORMAT with OPTIONS without holding up the editor,
 starting the server first when it is not up. DONE gets (ok BYTES) or
 \(problem MESSAGE LINE). Returns a function that stops the render."
-  (let (buffer cancelled)
+  (let* (buffer cancelled timer
+         (stop (lambda ()
+                 (setq cancelled t)
+                 (when (timerp timer) (cancel-timer timer))
+                 (when (buffer-live-p buffer)
+                   (when-let* ((process (get-buffer-process buffer)))
+                     (delete-process process))
+                   (kill-buffer buffer)))))
     (+uml-server-start-async
      (lambda (port problem)
        (cond
@@ -233,19 +244,28 @@ starting the server first when it is not up. DONE gets (ok BYTES) or
                      (url-retrieve
                       (format "http://127.0.0.1:%d/render" port)
                       (lambda (status)
+                        (when (timerp timer) (cancel-timer timer))
                         (let ((answer (if-let* ((err (plist-get status :error)))
                                           (list 'problem (format "PlantUML: %s" (cadr err)) nil)
                                         (+uml--read-response))))
                           (kill-buffer (current-buffer))
                           (unless cancelled (funcall done answer))))
                       nil t t))
-             (error (funcall done (list 'problem (error-message-string err) nil))))))))))
-    (lambda ()
-      (setq cancelled t)
-      (when (buffer-live-p buffer)
-        (when-let* ((process (get-buffer-process buffer)))
-          (delete-process process))
-        (kill-buffer buffer)))))
+             (error (funcall done (list 'problem (error-message-string err) nil))))))
+         ;; A server that hangs would leave the view saying "Drawing..."
+         ;; for good, and the request's buffer behind.
+         (when buffer
+           (setq timer
+                 (run-at-time +uml-render-timeout nil
+                              (lambda ()
+                                (unless cancelled
+                                  (funcall stop)
+                                  (funcall done
+                                           (list 'problem
+                                                 (format "PlantUML did not answer within %ss"
+                                                         +uml-render-timeout)
+                                                 nil)))))))))))
+    stop))
 
 ;;;###autoload
 (defun +uml/server-status ()
