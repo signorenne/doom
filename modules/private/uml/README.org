@@ -121,5 +121,7 @@ completion stays underneath.
   typing are core's view, shared with SVG files and images:
   ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~ (0.4 s),
   ~+core-view-follow~ and ~+core-view-on-open~.
-- ~+uml-server-port~ (8135), ~+uml-server-start-timeout~ (30 s).
+- ~+uml-server-port~ (8135), ~+uml-server-start-timeout~ (30 s), and
+  ~+uml-render-timeout~ (20 s), how long a drawing or an export waits for
+  the server before it says so.
 - ~+uml-templates-dir~, =$DOOMDIR/templates/uml/= by default.
