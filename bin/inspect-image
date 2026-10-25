@@ -364,6 +364,10 @@ def bmff(data):
                 out.append(row(off, None, "", "a box too short: the structure breaks here"))
                 return
             count += 1
+            if off + size > end:
+                out.append(row(off, size, (" " * depth + kind)[:6],
+                               f"cut off: {human(end - off)} of {human(size)} bytes present"))
+                return
             if count > 60:
                 continue
             detail = BOX.get(kind, "")
@@ -402,6 +406,9 @@ def psd(data):
             return out + [row(i, None, "", "cut off here")]
         n = struct.unpack(">Q" if wide else ">I", data[i:i + (8 if wide else 4)])[0]
         head = 8 if wide else 4
+        if i + head + n > len(data):
+            return out + [row(i, head + n, "sect", f"{name}, cut off: "
+                              f"{human(len(data) - i)} of {human(head + n)} bytes present")]
         out.append(row(i, head + n, "sect", name))
         i += head + n
     if i + 2 <= len(data):
