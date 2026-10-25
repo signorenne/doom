@@ -38,10 +38,26 @@
     (warn! "Couldn't find %s: no %s" (car tool) (cdr tool))))
 (unless (or (executable-find "vipsthumbnail") (executable-find "magick")
             (executable-find "convert"))
-  (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane, and AVIF, JPEG XL, PSD and BMP do not open in the image viewer")
+  (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane")
   (explain! (if (featurep :system 'macos)
                 "brew install vips, or imagemagick"
               "openSUSE: zypper in vips-tools, or ImageMagick")))
+
+;; The image viewer opens AVIF, JPEG XL, PSD and BMP through vips, or
+;; ImageMagick 7's magick without it; ImageMagick 6's convert is not
+;; used, and ImageMagick reads JPEG XL only when built with libjxl.
+(unless (executable-find "vips")
+  (cond
+   ((not (executable-find "magick"))
+    (warn! "No vips or magick: AVIF, JPEG XL, PSD and BMP do not open in the image viewer")
+    (explain! (if (featurep :system 'macos)
+                  "brew install vips"
+                "openSUSE: zypper in vips-tools")))
+   ((not (string-match-p "^ *JXL" (shell-command-to-string "magick -list format")))
+    (warn! "No vips, and this ImageMagick reads no JPEG XL: .jxl files do not open in the image viewer")
+    (explain! (if (featurep :system 'macos)
+                  "brew install vips"
+                "openSUSE: zypper in vips-tools")))))
 
 ;; The drawing beside an SVG or a PlantUML diagram is made by rsvg-convert
 ;; in a process of its own. Without it Emacs draws it, and a large one

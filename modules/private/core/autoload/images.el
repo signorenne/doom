@@ -691,18 +691,22 @@ opening only reads it."
               ;; half-written file.
               (unwind-protect
                   (progn
-                    (unless (zerop
-                             (cond ((executable-find "vips")
-                                    (call-process "vips" nil nil nil "thumbnail" input
-                                                  (concat partial "[compression=1]")
-                                                  "4096" "--size" "down"))
-                                   ((executable-find "magick")
-                                    (call-process "magick" nil nil nil (concat input "[0]")
-                                                  "-resize" "4096x4096>"
-                                                  "-define" "png:compression-level=1" partial))
-                                   (t (error "Neither vips nor ImageMagick is installed to read %s"
-                                             (file-name-nondirectory input)))))
-                      (error "Could not read %s" (file-name-nondirectory input)))
+                    (let ((tool (cond ((executable-find "vips") "vips")
+                                      ((executable-find "magick") "ImageMagick")
+                                      (t (error "Neither vips nor ImageMagick is installed to read %s"
+                                                (file-name-nondirectory input))))))
+                      (unless (zerop
+                               (if (equal tool "vips")
+                                   (call-process "vips" nil nil nil "thumbnail" input
+                                                 (concat partial "[compression=1]")
+                                                 "4096" "--size" "down")
+                                 (call-process "magick" nil nil nil (concat input "[0]")
+                                               "-resize" "4096x4096>"
+                                               "-define" "png:compression-level=1" partial)))
+                        ;; Named, since ImageMagick reads JPEG XL only when
+                        ;; built with it: SPC h r d says whether this one is.
+                        (error "%s could not read %s; SPC h r d says why"
+                               tool (file-name-nondirectory input))))
                     (rename-file partial cache t))
                 (when (file-exists-p partial) (ignore-errors (delete-file partial)))))
             (+core--image-sweep-cache))
