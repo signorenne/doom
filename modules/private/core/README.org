@@ -292,7 +292,9 @@ compression, its colours, its structure chunk by chunk or marker by
 marker, exiftool's metadata, and its bytes in hex. The cheat sheet's
 Images section has the keys. AVIF, JPEG XL, PSD and BMP, which this
 Emacs cannot read, are converted to a PNG by =vips= (ImageMagick without
-it) the first time they are opened, kept in Doom's cache under
+it) the first time they are opened, at most 4096 pixels on the long
+side (more than the screen shows fitted, and a quarter faster for a 25
+megapixel photo), kept in Doom's cache under
 =images/=, and opened from there after; a conversion older than 30
 days is deleted, and made again when the picture is next opened.
 

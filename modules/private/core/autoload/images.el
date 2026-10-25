@@ -682,20 +682,29 @@ opening only reads it."
             (make-directory (file-name-directory cache) t)
             ;; The lightest compression: the file stays on this disk, and
             ;; the default compresses a 6 megapixel picture for 0.6 s of
-            ;; the first opening, against 0.35 s.
+            ;; the first opening, against 0.35 s. A picture past 4096
+            ;; pixels on its long side is kept at 4096, more than a
+            ;; Retina screen shows fitted: 0.73 s against 1.0 for a 25
+            ;; megapixel AVIF. Decoding is the rest, 0.6 s at 12.
             (let ((partial (concat cache ".part.png")))
-              (unless (zerop
-                       (cond ((executable-find "vips")
-                              (call-process "vips" nil nil nil "copy" input
-                                            (concat partial "[compression=1]")))
-                             ((executable-find "magick")
-                              (call-process "magick" nil nil nil (concat input "[0]")
-                                            "-define" "png:compression-level=1" partial))
-                             (t (error "Neither vips nor ImageMagick is installed to read %s"
-                                       (file-name-nondirectory input)))))
-                (ignore-errors (delete-file partial))
-                (error "Could not read %s" (file-name-nondirectory input)))
-              (rename-file partial cache t))
+              ;; A failure, or C-g while it converts, leaves no
+              ;; half-written file.
+              (unwind-protect
+                  (progn
+                    (unless (zerop
+                             (cond ((executable-find "vips")
+                                    (call-process "vips" nil nil nil "thumbnail" input
+                                                  (concat partial "[compression=1]")
+                                                  "4096" "--size" "down"))
+                                   ((executable-find "magick")
+                                    (call-process "magick" nil nil nil (concat input "[0]")
+                                                  "-resize" "4096x4096>"
+                                                  "-define" "png:compression-level=1" partial))
+                                   (t (error "Neither vips nor ImageMagick is installed to read %s"
+                                             (file-name-nondirectory input)))))
+                      (error "Could not read %s" (file-name-nondirectory input)))
+                    (rename-file partial cache t))
+                (when (file-exists-p partial) (ignore-errors (delete-file partial)))))
             (+core--image-sweep-cache))
           (set-buffer-multibyte nil)
           (insert-file-contents-literally cache))
