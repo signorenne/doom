@@ -402,7 +402,7 @@ whole edge."
   "Draw again, once the cursor rests, when it has moved to another
 element: the drawing's state says which, so resting in the same one
 draws nothing."
-  (when +core-svg-here (+core-view--schedule)))
+  (when (and +core-svg-here (not +core--svg-facts)) (+core-view--schedule)))
 
 ;;;###autoload
 (defun +core/svg-here-toggle ()
@@ -541,7 +541,7 @@ the element the cursor is in outlined."
   (when (and buffer-file-name (string-match-p "\\.svg\\'" buffer-file-name))
     (+core-view-enable #'+core--svg-draw t)
     (setq-local +core-view-state-function
-                (lambda () (and +core-svg-here (+core--svg-here))))
+                (lambda () (and +core-svg-here (not +core--svg-facts) (+core--svg-here))))
     (add-hook 'post-command-hook #'+core--svg-moved-h nil t)))
 
 (defun +core--image-inspect ()
