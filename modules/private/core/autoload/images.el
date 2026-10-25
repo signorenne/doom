@@ -577,7 +577,7 @@ sits on the right the way an SVG's drawing does."
           (pcase +core-svg-background ('checker 'light) ('light 'dark) (_ 'checker)))
     (message "SVG drawn over %s" (pcase +core-svg-background
                                    ('checker "the checkerboard") ('light "light") (_ "dark")))
-    (with-current-buffer buffer (+core/view-refresh))))
+    (+core-view-redraw buffer)))
 
 ;;;###autoload
 (defun +core/svg-facts-toggle ()
