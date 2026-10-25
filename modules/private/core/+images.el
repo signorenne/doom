@@ -34,12 +34,14 @@
 
 ;; AVIF, JPEG XL, PSD and BMP open in the viewer like any other picture:
 ;; Emacs reads none of them itself here, so each is converted to a PNG
-;; the first time it is opened and kept. HEIC it reads through macOS.
+;; the first time it is opened and kept. HEIC it reads through macOS,
+;; and HEIF too, the same container, though only .heic opens as a picture
+;; unless told.
 (defvar +core-image-converted-exts '("avif" "jxl" "psd" "bmp")
   "The picture formats the viewer opens through `+core--image-convert'.")
 
 (setq image-use-external-converter t)
-(add-to-list 'auto-mode-alist '("\\.\\(jxl\\|psd\\|JXL\\|PSD\\)\\'" . image-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(jxl\\|psd\\|heif\\|JXL\\|PSD\\|HEIF\\)\\'" . image-mode))
 (with-eval-after-load 'image-converter
   ;; Emacs picks its converter on first use and then sets the list of
   ;; suffixes it converts to that converter's own, which would drop
