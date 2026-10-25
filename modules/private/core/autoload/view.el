@@ -481,7 +481,10 @@ would otherwise be shown as the current drawing's problem."
     (let ((cancel +core-view--cancel))
       (setq +core-view--cancel nil
             +core-view--generation (1+ +core-view--generation))
-      (ignore-errors (funcall cancel)))))
+      ;; In the buffer it was called from: stopping a process can leave
+      ;; another current, and a draw that cancels then read *doom*'s
+      ;; empty draw function, "void: nil", and never drew the zoom sharp.
+      (save-current-buffer (ignore-errors (funcall cancel))))))
 
 (defun +core-view--show (source result generation)
   "Show RESULT, what SOURCE's draw function returned for drawing number
