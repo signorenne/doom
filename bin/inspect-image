@@ -24,6 +24,7 @@ import os
 import struct
 import subprocess
 import sys
+import urllib.parse
 import warnings
 import zlib
 
@@ -640,15 +641,20 @@ def svg_report(text):
         href = next((v for k, v in el.attrib.items() if local(k) == "href"), None)
         if name == "image" and href:
             if href.startswith("data:"):
-                kind = href[5:href.find(";")] if ";" in href else href[5:20]
-                payload = href.split(",", 1)[-1]
-                embedded.append((kind, len(payload) * 3 // 4))
+                # data:[type][;parameters][;base64],payload
+                meta, _, payload = href[5:].partition(",")
+                kind = meta.split(";", 1)[0]
+                size = (len(payload) * 3 // 4 if meta.endswith(";base64")
+                        else len(urllib.parse.unquote_to_bytes(payload)))
+                embedded.append((kind, size))
             else:
                 linked.append(href)
         style = el.attrib.get("style", "") + ";" + (el.text or "" if name == "style" else "")
         for family in [el.attrib.get("font-family")] + re.findall(r"font-family\s*:\s*([^;}]+)", style):
-            if family:
-                fonts.add(family.strip().strip("'\""))
+            # A list, first choice first: "Inter", sans-serif names two.
+            for one in (family or "").split(","):
+                if one.strip().strip("'\""):
+                    fonts.add(one.strip().strip("'\""))
     out = [("The drawing", lines)]
     out.append(("Made of", [f"  {n:<16} {human(c)}" for n, c in
                             sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]))
