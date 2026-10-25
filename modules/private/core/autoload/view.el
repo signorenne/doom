@@ -577,6 +577,10 @@ sizes itself is exact already."
 the size it is rendered for changed: the echo area growing for a line,
 or a key hint, leaves it as it is."
   (when +core-view--shown
+    ;; A larger window lowers the zoom's ceiling: past it the sharp
+    ;; picture would come back smaller than the one shown.
+    (when +core-view-zoom
+      (setq +core-view-zoom (min +core-view-zoom (+core-view--zoom-max))))
     (+core-view--place)
     (unless (equal (plist-get +core-view--shown :box) (+core-view--box))
       (+core-view--redraw-soon))))
