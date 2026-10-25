@@ -108,6 +108,11 @@ folder made without =git init= still has the Pascal keys.
 | ~M-d~ (corfu) | ~corfu-popupinfo-toggle~      | what the candidate means, ~M-n~ ~M-p~ read it |
 | ~f~ (image)   | ~+core/image-fit~             | fill the window, ~1~ the true size  |
 | ~n~ ~p~ (image) | ~image-next-file~           | the next and previous picture     |
+| ~RET~ (image) | ~+core/image-play-toggle~     | a moving picture plays or pauses, ~,~ ~.~ a frame |
+| ~SPC m SPC~ (SVG) | ~+core/view-menu~         | the view's menu: zoom, background, outline, export |
+| ~SPC m e~ (SVG) | ~+core/svg-export~          | the drawing as a PNG, its width asked |
+| ~+~ ~-~ (view)  | ~+core/view-zoom-in~        | zoom the picture, ~f~ fits, ~1~ its own size, ~h j k l~ pan |
+| ~b~ (view)    | ~+core/view-background~       | an SVG over the checkerboard, light, dark |
 
 The copy menu also copies the region as a fenced code block with the
 path:line on top, the symbol under the cursor, and the forge link.
@@ -633,6 +638,15 @@ What keeps it that way:
   file whole up to 8 MB: past a megabyte consult showed its first 10 KB,
   so a match further down was not on screen. The file picked opens
   afresh, in its own mode.
+- The view beside a buffer draws in a process of its own. Measured on
+  2026-10-24 on the Mac: an edit to a 1.7 MB SVG froze the editor 2.4 to
+  2.9 s while Emacs drew it, and is now a 14 ms call, the sharp drawing
+  arriving 0.9 s later; a zoom step takes 14 ms. A diagram's first
+  drawing is a 29 ms call while the PlantUML server starts, a redraw 1 ms,
+  its picture 0.2 s later. A 3 MB BMP took 52 s to open, Doom guessing
+  its indentation over the raw bytes, and takes 0.5 s; AVIF, JPEG XL and
+  PSD are converted once, 0.5 to 1.4 s, and open from the cache in about
+  0.1 s.
 
 Doom's own part, left as it is: ~read-process-output-max~ 1 MB under eglot, native
 compilation of every package ahead of time, so-long and fundamental mode
