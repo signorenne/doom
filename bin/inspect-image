@@ -402,7 +402,7 @@ def psd(data):
     i = 26
     for name, wide in (("colour mode data", False), ("image resources", False),
                        ("layers and masks", version == 2)):
-        if i + 4 > len(data):
+        if i + (8 if wide else 4) > len(data):
             return out + [row(i, None, "", "cut off here")]
         n = struct.unpack(">Q" if wide else ">I", data[i:i + (8 if wide else 4)])[0]
         head = 8 if wide else 4
