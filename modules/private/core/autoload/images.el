@@ -595,8 +595,9 @@ drawing again: size, what it is made of, ids, what it embeds, fonts."
 as you wrote it, without the view's backdrop or outline."
   (interactive
    (with-current-buffer (+core--svg-buffer)
-     (let* ((dom (with-temp-buffer
-                   (insert-buffer-substring (+core--svg-buffer))
+     (let* ((svg (current-buffer))
+            (dom (with-temp-buffer
+                   (insert-buffer-substring svg)
                    (ignore-errors (libxml-parse-xml-region (point-min) (point-max)))))
             (natural (if (eq (dom-tag dom) 'svg) (car (+core--svg-geometry dom)) 512))
             (default (concat (file-name-sans-extension
