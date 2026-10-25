@@ -263,6 +263,18 @@ be, so placing it does not decode it a second time."
         (cons (round (* (car size) scale)) (round (* (cdr size) scale)))
       (image-size spec t))))
 
+(defun +core-view--flush (&optional keep)
+  "Take the picture the view holds out of the image cache, unless it is
+KEEP, the spec about to replace it. Each drawing, zoom step and resize
+makes a new spec, decoded anew, and a large one is hundreds of megabytes
+kept five minutes otherwise. Run in the view's buffer."
+  (when-let* ((old (get-text-property (point-min) 'display))
+              ((eq (car-safe old) 'image))
+              ((not (equal old keep))))
+    ;; Every frame: the selected one may be a terminal's, where a flush
+    ;; of its own signals.
+    (image-flush old t)))
+
 (defun +core-view--place ()
   "Show `+core-view--shown' in the view: in the middle of the window when
 it is smaller, at `+core-view--pan' when it is larger."
@@ -274,13 +286,7 @@ it is smaller, at `+core-view--pan' when it is larger."
            (window (+core-view--window))
            (left (max 0 (/ (- (car fit) (car size)) 2)))
            (top (max 0 (/ (- (cdr fit) (cdr size)) 2))))
-      ;; A picture replaced by another drawing, not by the same one moved
-      ;; or zoomed, leaves the image cache: a large one decodes to
-      ;; hundreds of megabytes, kept five minutes otherwise.
-      (when-let* ((old (get-text-property (point-min) 'display))
-                  ((eq (car-safe old) 'image))
-                  ((not (eq (plist-get (cdr old) :data) (plist-get (cdr spec) :data)))))
-        (image-flush old))
+      (+core-view--flush spec)
       (+core-image-uncenter)
       (erase-buffer)
       (insert-image spec)
@@ -340,7 +346,9 @@ place the last one was, when it is SOURCE's again."
   (with-current-buffer (+core-view--buffer)
     (let ((inhibit-read-only t))
       ;; A picture drawn before leaves its centring overlay, the gap
-      ;; above it, which neither a mode nor erasing takes away.
+      ;; above it, which neither a mode nor erasing takes away, and its
+      ;; decoding in the image cache.
+      (+core-view--flush)
       (+core-image-uncenter)
       (unless (derived-mode-p 'special-mode) (special-mode))
       (set-buffer-multibyte t)
