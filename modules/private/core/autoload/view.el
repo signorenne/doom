@@ -825,7 +825,10 @@ close it."
   (interactive)
   (with-current-buffer (+core-view-source)
     (setq +core-view-closed nil)
-    (unless (+core-view--window) (+core-view--display (current-buffer)))
+    ;; Through the display when the view shows another buffer too: it
+    ;; takes this one's side and starts its error marks.
+    (unless (and (+core-view--window) (eq +core-view--showing (current-buffer)))
+      (+core-view--display (current-buffer)))
     (+core-view--draw (current-buffer) t)))
 
 ;;;###autoload
