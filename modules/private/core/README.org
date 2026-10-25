@@ -227,7 +227,8 @@ such buffer you are in.
   showed and says why in its header, so it never goes blank. When it
   says which line, that line is marked as an error, counted in the
   header with the buffer's other problems and reached with the keys
-  that go to the next one; the mark goes once the drawing works again.
+  that go to the next one; the mark goes once the drawing works again,
+  or when the view closes.
 - It follows you between buffers that have one, and steps aside for a
   buffer that has none. A buffer says which side its view takes: right
   for a drawing beside its source, left for an image's insides, so the
@@ -244,7 +245,9 @@ such buffer you are in.
   a session that never opens one pays nothing.
 
 Settings: ~+core-view-side~, ~+core-view-width~, ~+core-view-idle~,
-~+core-view-follow~, ~+core-view-on-open~. The diagrams of =:private uml=
+~+core-view-follow~, ~+core-view-on-open~, and ~+core-view-box-max~
+(8192), the largest side of a picture drawn for the view, where its zoom
+stops. The diagrams of =:private uml=
 use it; so do SVG files and images, below.
 
 * Undo
