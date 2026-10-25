@@ -638,11 +638,13 @@ once, not each time it is opened.")
 
 (defun +core--image-cache-file (file)
   "Where FILE's conversion is kept: named for its path, size and time, so
-a changed file is converted again."
-  (let ((attrs (file-attributes file)))
+a changed file is converted again. Those of the file a link points to,
+which is the one that changes."
+  (let* ((true (file-truename file))
+         (attrs (file-attributes true)))
     (file-name-concat
      +core-image-cache-dir
-     (concat (secure-hash 'sha1 (format "%s|%s|%s" (file-truename file)
+     (concat (secure-hash 'sha1 (format "%s|%s|%s" true
                                         (file-attribute-size attrs)
                                         (float-time (file-attribute-modification-time attrs))))
              ".png"))))
