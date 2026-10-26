@@ -134,6 +134,48 @@ bin/check-commit-msg accepts.")
     (unless (assq 'magit-rebase transient-values)
       (push '(magit-rebase "--autostash" "--autosquash") transient-values))))
 
+;; Settings for the git magit runs, on its command line, so a new machine
+;; needs nothing in ~/.gitconfig: conflicts show the base between the
+;; sides; a resolution is reused when the same conflict comes back (git
+;; then keeps doing so in that repository, outside Emacs too); the
+;; histogram diff the gutter uses; a commit-graph, which makes the log of
+;; a big history quick; the graph in the theme's colours; and a diff
+;; driver per kind of file, so a hunk names its function and a function's
+;; history finds its end, unless the user has an attributes file.
+(defvar +git-graph-colors "blue,magenta,cyan,green,yellow"
+  "The colours of the log graph's lanes, in git's names; no red, which
+reads as removed.")
+
+(defvar +git-attributes-file (expand-file-name "gitattributes" (dir!))
+  "Which diff driver each kind of file gets, for the git magit runs.")
+
+(declare-function magit-git-version< "magit-git")
+
+(defun +git--global-arguments ()
+  "The settings above, as arguments to every git magit runs."
+  (append
+   (list "-c" (if (magit-git-version< "2.35")
+                  "merge.conflictStyle=diff3"
+                "merge.conflictStyle=zdiff3")
+         "-c" "rerere.enabled=true"
+         "-c" "diff.algorithm=histogram"
+         "-c" "fetch.writeCommitGraph=true"
+         "-c" (concat "log.graphColors=" +git-graph-colors)
+         ;; Bracket classes, not backslashes, which git reads as escapes.
+         "-c" (concat "diff.elisp.xfuncname=^[[:space:]]*[(]((cl-|transient-)?def[^ ]*"
+                      "|define-[^ ]+|use-package!?)[ ]+[^ ]+")
+         "-c" "diff.org.xfuncname=^([*]+[ ]+.*)$")
+   (unless (or (let ((default-directory "~/"))
+                 (ignore-errors (process-lines "git" "config" "--includes" "core.attributesFile")))
+               (file-exists-p (expand-file-name "git/attributes"
+                                                (or (getenv "XDG_CONFIG_HOME") "~/.config"))))
+     (list "-c" (concat "core.attributesFile=" +git-attributes-file)))))
+
+(after! magit
+  (unless (member "diff.algorithm=histogram" magit-git-global-arguments)
+    (setq magit-git-global-arguments
+          (append magit-git-global-arguments (+git--global-arguments)))))
+
 ;; The commit subject: 72 columns, the house rule and the hook's; the
 ;; body wraps at 72 as well.
 (after! git-commit
@@ -158,16 +200,6 @@ bin/check-commit-msg accepts.")
 ;; refinement. It is a process per diff, so it stands down on a large one.
 (defvar +git-delta-max-size (* 400 1024)
   "The largest diff delta is asked to colour, in characters.
-(defvar-local +git--largest-diff 0
-  "The largest diff washed in this buffer's current refresh.")
-
-(defvar-local +git--refine-chosen nil
-  "Non-nil once refinement was toggled by hand in this buffer.")
-
-(defun +git--paint-reset-a (&rest _)
-  "Start a refresh with no diff washed yet."
-  (setq +git--largest-diff 0))
-
 Past this magit paints it the plain way.")
 
 (defvar +git-refine-all-max-size (* 64 1024)
@@ -178,6 +210,16 @@ paints the diff itself; past it, the hunk under the cursor only.")
   '(magit-diff-context-highlight magit-diff-added magit-diff-added-highlight
     magit-diff-removed magit-diff-removed-highlight)
   "The faces magit-delta turns plain, so its colours show alone.")
+
+(defvar-local +git--largest-diff 0
+  "The largest diff washed in this buffer's current refresh.")
+
+(defvar-local +git--refine-chosen nil
+  "Non-nil once refinement was toggled by hand in this buffer.")
+
+(defun +git--paint-reset-a (&rest _)
+  "Start a refresh with no diff washed yet."
+  (setq +git--largest-diff 0))
 
 (defun +git--paint-plan-h ()
   "Decide who colours this buffer's diffs and how much magit refines.
@@ -197,18 +239,18 @@ decides for all of them."
                                     face-remapping-alist)
                         (and delta (mapcar (lambda (face) (cons face 'default))
                                            +git--delta-faces))))))
+
 (defun +git--refine-chosen-a (&rest _)
   "Keep a refinement toggled by hand through later refreshes."
   (setq +git--refine-chosen t))
 
-
 (add-hook 'magit-diff-wash-diffs-hook #'+git--paint-plan-h -90)
-
-;; diff-mode leaves a hunk past `diff-refine-threshold' unrefined, since
-;; one can take seconds; magit refines it anyway.
 (after! magit
   (advice-add 'magit-refresh-buffer :before #'+git--paint-reset-a)
   (advice-add 'magit-diff-toggle-refine-hunk :after #'+git--refine-chosen-a))
+
+;; diff-mode leaves a hunk past `diff-refine-threshold' unrefined, since
+;; one can take seconds; magit refines it anyway.
 (defadvice! +git--refine-within-reach-a (args)
   "In magit, refine no hunk past `diff-refine-threshold'."
   :filter-args #'diff-refine-hunk
