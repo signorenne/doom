@@ -333,7 +333,9 @@ paints it the plain way instead."
         ;; that is read every time.
         magit-todos-auto-group-items 10
         magit-todos-group-by '(magit-todos-item-first-path-component
-                               magit-todos-item-keyword))
+                               magit-todos-item-keyword)
+        ;; A search of the whole tree: once a minute, not every refresh.
+        magit-todos-update 60)
   ;; RET on a TODO pops the file into a second window and records no
   ;; jump, so there is nothing to close it with: q in a source buffer
   ;; is evil's macro recorder, and C-o has nowhere to return. Visit it
