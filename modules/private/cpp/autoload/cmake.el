@@ -385,32 +385,95 @@ and restarts the server, which is pointed at the kit's database."
 ;;
 ;;; Inspecting
 
-(defun +cpp--tool-version (kit program &rest args)
-  "The version PROGRAM reports for ARGS where KIT runs, or a note that it
-is missing there.  A kit in a container has its tools there, not on the
-host's PATH."
-  (let ((container (+cpp-kit-container kit)))
-    (with-temp-buffer
-      (let ((code (condition-case nil
-                      (if container
-                          (call-process "distrobox" nil t nil "enter" container "--"
-                                        "sh" "-c" (format "command -v %s >/dev/null && %s %s"
-                                                          (shell-quote-argument program)
-                                                          (shell-quote-argument program)
-                                                          (mapconcat #'shell-quote-argument args " ")))
-                        (if-let* ((binary (executable-find program)))
-                            (apply #'call-process binary nil t nil args)
-                          127))
-                    (error 127))))
-        (if (= code 127)
-            (format "not installed %s" (+cpp-kit-where kit))
-          (let ((lines (split-string (buffer-string) "\n" t)))
-            ;; Some tools print their name first and the version underneath.
-            (concat (or (seq-find (lambda (line) (string-match-p "[0-9]+\\.[0-9]+" line))
-                                  lines)
-                        (car lines)
-                        "unknown")
-                    (if container (format "  (in %s)" container) ""))))))))
+(defun +cpp--tool-version-command (kit program args)
+  "The command that asks PROGRAM for its version with ARGS where KIT
+runs, or nil when it is not on the host's PATH.  A kit in a container
+has its tools there, not on the host's PATH."
+  (if-let* ((container (+cpp-kit-container kit)))
+      (list "distrobox" "enter" container "--"
+            ;; 127, what the check below reads as not installed.
+            "sh" "-c" (format "command -v %s >/dev/null || exit 127; %s %s"
+                              (shell-quote-argument program)
+                              (shell-quote-argument program)
+                              (mapconcat #'shell-quote-argument args " ")))
+    (when-let* ((binary (executable-find program)))
+      (cons binary args))))
+
+(defun +cpp--tool-version-text (kit code output)
+  "What the status says of a tool that exited with CODE, nil when it
+did not start, having printed OUTPUT."
+  (if (memq code '(nil 127))
+      (format "not installed %s" (+cpp-kit-where kit))
+    (let ((lines (split-string output "\n" t)))
+      ;; Some tools print their name first and the version underneath.
+      (concat (or (seq-find (lambda (line) (string-match-p "[0-9]+\\.[0-9]+" line))
+                            lines)
+                  (car lines)
+                  "unknown")
+              (if-let* ((container (+cpp-kit-container kit)))
+                  (format "  (in %s)" container)
+                "")))))
+
+(defvar +cpp--status-run 0
+  "Counts the status reports, so a probe still asking for an earlier one
+does not write into the report that replaced it.")
+
+(defvar +cpp--status-probes nil
+  "The probes asking for the report on show, stopped when another starts.")
+
+(defvar +cpp-tool-probe-timeout 10
+  "Seconds a tool has to say its version, so a container that will not
+start does not leave the line asking for good.")
+
+(defun +cpp--insert-tool-version (kit label program &rest args)
+  "Insert LABEL's line with PROGRAM's version where KIT runs, asked in
+the background, since a container takes its time: the line says
+\"asking...\" until the answer replaces it."
+  (insert (format "%-12s" label))
+  (let* ((beg (point-marker))
+         (end (progn (insert (propertize "asking..." 'face 'shadow)) (point-marker)))
+         (buffer (current-buffer))
+         (run +cpp--status-run)
+         (command (+cpp--tool-version-command kit program args))
+         timed-out
+         (answer
+          (lambda (text)
+            (when (and (eq run +cpp--status-run) (buffer-live-p buffer))
+              (with-current-buffer buffer
+                (let ((inhibit-read-only t))
+                  (save-excursion
+                    (goto-char beg)
+                    (delete-region beg end)
+                    (insert text))))))))
+    (insert "\n")
+    (if (not command)
+        (funcall answer (+cpp--tool-version-text kit nil ""))
+      (let ((out (generate-new-buffer " *cpp tool version*")))
+        (condition-case nil
+            (let ((probe
+                   (make-process
+                    :name "cpp-tool-version" :buffer out :command command
+                    :noquery t :connection-type 'pipe
+                    :sentinel
+                    (lambda (proc _event)
+                      (unless (process-live-p proc)
+                        (setq +cpp--status-probes (delq proc +cpp--status-probes))
+                        (unwind-protect
+                            (funcall answer
+                                     (if timed-out
+                                         (format "no answer within %ss" +cpp-tool-probe-timeout)
+                                       (+cpp--tool-version-text
+                                        kit (process-exit-status proc)
+                                        (with-current-buffer out (buffer-string)))))
+                          (kill-buffer out)))))))
+              (push probe +cpp--status-probes)
+              (run-at-time +cpp-tool-probe-timeout nil
+                           (lambda ()
+                             (when (process-live-p probe)
+                               (setq timed-out t)
+                               (delete-process probe)))))
+          (error (kill-buffer out)
+                 (funcall answer (+cpp--tool-version-text kit nil ""))))))))
 
 ;;;###autoload
 (defun +cpp/project-status ()
@@ -424,6 +487,11 @@ The first place to look when a build, an index or a debugger misbehaves."
          (db (+cpp--compile-commands-file))
          (root-db (expand-file-name "compile_commands.json" root))
          (buffer (get-buffer-create "*cpp project status*")))
+    ;; A report asked for again replaces the one on show: its probes stop,
+    ;; and what they would say is dropped.
+    (setq +cpp--status-run (1+ +cpp--status-run))
+    (mapc #'delete-process +cpp--status-probes)
+    (setq +cpp--status-probes nil)
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -482,11 +550,10 @@ The first place to look when a build, an index or a debugger misbehaves."
                               (t "no compile_commands.json, SPC k c"))))
         (insert (format "server      %s\n" (+cpp--lsp-status)))
         (let ((kit (+cpp--kit root)))
-          (insert (format "clangd      %s\n" (+cpp--tool-version kit "clangd" "--version")))
-          (insert (format "cmake       %s\n" (+cpp--tool-version kit "cmake" "--version")))
-          (insert (format "gdb         %s\n" (+cpp--tool-version kit "gdb" "--version")))
-          (insert (format "clang-tidy  %s\n"
-                          (+cpp--tool-version kit "clang-tidy" "--version"))))
+          (+cpp--insert-tool-version kit "clangd" "clangd" "--version")
+          (+cpp--insert-tool-version kit "cmake" "cmake" "--version")
+          (+cpp--insert-tool-version kit "gdb" "gdb" "--version")
+          (+cpp--insert-tool-version kit "clang-tidy" "clang-tidy" "--version"))
         (insert "\n")
         (insert (format "style       %s, %s\n"
                         (if (file-exists-p (expand-file-name ".clang-format" root))
