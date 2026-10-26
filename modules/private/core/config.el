@@ -328,6 +328,12 @@ are left alone, and so are `+core-plain-file-keep-modes'."
         ns-option-modifier 'meta
         ns-right-option-modifier 'none))
 
+;; man.el runs `man -k' as it loads to learn its flags, which is slow on
+;; macOS, and it loads with far more than M-x man (Python's pyvenv brings
+;; it in). The answer here is "-k", so it is given.
+(when (featurep :system 'macos)
+  (defvar Man-man-k-flags '("-k")))
+
 ;; vterm's module is native code built locally. vterm asks before
 ;; building it, and a daemon, with no one to answer, would wait for
 ;; good, so it is built without asking. It needs cmake, and libvterm or
