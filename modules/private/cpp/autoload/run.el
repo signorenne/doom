@@ -103,15 +103,45 @@ Makefiles and Ninja both provide, asked where the kit runs."
          (dir (+cpp-kit-abs-dir kit root)))
     (or (+cpp--file-api-target-names dir)
         (and (file-exists-p (expand-file-name "CMakeCache.txt" dir))
-             (let ((output (shell-command-to-string
-                            (+cpp--kit-shell kit
-                                             (format "cmake --build %s --target help"
-                                                     (shell-quote-argument dir))
-                                             root))))
-               (cl-loop for line in (split-string output "\n" t)
-                        ;; Makefiles: "... name"; Ninja: "name: phony".
-                        when (string-match "\\`\\(?:\\.\\.\\. \\([^ ]+\\)\\|\\([^ :]+\\): \\)" line)
-                        collect (or (match-string 1 line) (match-string 2 line))))))))
+             (+cpp--help-target-names kit dir root)))))
+
+(defvar +cpp--help-targets (make-hash-table :test #'equal)
+  "Build directory to (STAMP . NAMES), the targets its generator listed.")
+
+(defun +cpp--help-target-names (kit dir root)
+  "The targets of KIT's build directory DIR, as its generator's help
+target lists them, asked where the kit runs. Kept until the build file,
+the cache or the top CMakeLists.txt changes."
+  (let* ((build (seq-find #'file-exists-p
+                          (mapcar (lambda (f) (expand-file-name f dir))
+                                  '("build.ninja" "Makefile"))))
+         (stamp (and build
+                     (mapcar (lambda (file)
+                               (cons file (file-attribute-modification-time
+                                           (file-attributes file))))
+                             (list build
+                                   (expand-file-name "CMakeCache.txt" dir)
+                                   (expand-file-name "CMakeLists.txt" root)))))
+         (have (gethash dir +cpp--help-targets)))
+    (if (and stamp (equal (car have) stamp))
+        (cdr have)
+      (let* ((code nil)
+             (output (with-temp-buffer
+                       (setq code (process-file shell-file-name nil t nil
+                                                shell-command-switch
+                                                (+cpp--kit-shell kit
+                                                                 (format "cmake --build %s --target help"
+                                                                         (shell-quote-argument dir))
+                                                                 root)))
+                       (buffer-string)))
+             (names (cl-loop for line in (split-string output "\n" t)
+                             ;; Makefiles: "... name"; Ninja: "name: phony".
+                             when (string-match "\\`\\(?:\\.\\.\\. \\([^ ]+\\)\\|\\([^ :]+\\): \\)" line)
+                             collect (or (match-string 1 line) (match-string 2 line)))))
+        ;; Only an answer: a failure's lines would pass for targets.
+        (when (and stamp names (eql code 0))
+          (puthash dir (cons stamp names) +cpp--help-targets))
+        names))))
 
 (defun +cpp--file-api-ask (kit)
   "Have CMake write the shared codemodel for KIT's build directory: the

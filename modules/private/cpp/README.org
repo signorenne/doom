@@ -119,7 +119,13 @@ project's scripts, executables under =scripts/=, =tools/=, =bin/= or a
 shell script at the top, where the kit runs, with the arguments last
 given. Targets come from the file API reply of the build directory,
 the shared one Qt Creator writes, or from the generator's help when
-there is none, so custom targets are there whoever configured.
+there is none, so custom targets are there whoever configured. The
+generator's list is kept until its build file changes: asked in a
+container, it took half a second at every menu.
+
+=SPC k I= opens at once and asks the four tools for their versions side
+by side, each line filled in when its answer comes: in a container that
+was half a second a tool, two seconds before the status showed.
 
 =.dir-locals.el= is a snapshot, not something to type: every setter
 writes its own key, and =SPC k w= writes the whole setup as it stands,
