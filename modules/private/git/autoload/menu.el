@@ -86,7 +86,9 @@ transients is one key away on /, its dispatch."
     ("d" "Diff"                magit-diff)
     ("b" "Switch branch"       magit-branch-checkout)
     ("B" "Blame this file"     magit-blame-addition)
-    ("L" "This file's history" magit-log-buffer-file)
+    ("L" "This file's history, the region's lines if any" magit-log-buffer-file)
+    ("a" "This function's history" magit-log-trace-definition)
+    ("v" "This file as it was before" magit-blob-previous)
     ("t" "Time machine"        git-timemachine-toggle
      :if (lambda () (fboundp 'git-timemachine-toggle)))]
    ["Menus"
