@@ -513,8 +513,9 @@ Not when a file's buffer is modified, or when the server cannot be reached."
 ;; too, which-key mostly. Emacs does that work while it waits after
 ;; starting instead, one step at a time; a key pressed during a step
 ;; stops it at once, and it is taken up again at the next pause. The
-;; modes set up ahead are those of the latest files, three at most, so
-;; the second language of the day opens quickly too.
+;; modes set up ahead are those of the recent files, six at most, the
+;; most used first, read from enough of them that a day of one language
+;; does not hide the others.
 (defvar +core-warm-up-features
   '(which-key vertico corfu
     ert eldoc xref jsonrpc external-completion flymake eglot markdown-mode yasnippet
@@ -531,8 +532,11 @@ waits after starting.")
   "Called one at a time, each at a pause, once `+core-warm-up-features'
 are loaded: each with every mode of `+core--recent-file-modes' in turn.")
 
-(defvar +core-warm-up-modes 3
-  "How many modes of the latest files are set up ahead.")
+(defvar +core-warm-up-modes 6
+  "How many modes of the recent files are set up ahead.")
+
+(defvar +core-warm-up-recent-files 50
+  "How many of the latest recent files the warm-up reads their modes from.")
 
 (defvar +core--warm-up-queue nil
   "(MODE . STEPS): the warm-up steps left, and the mode they are for,
@@ -560,7 +564,7 @@ the one most of them open in first, the latest first among equals."
   (require 'recentf)
   (unless recentf-list (recentf-load-list))
   (let (modes)
-    (dolist (file (seq-take recentf-list 10))
+    (dolist (file (seq-take recentf-list +core-warm-up-recent-files))
       ;; Remote names are passed over by their shape: asking Emacs
       ;; whether one is remote loads TRAMP.
       (unless (string-match-p "\\`/[^/:]+:" file)
