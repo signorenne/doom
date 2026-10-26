@@ -77,6 +77,7 @@ def palette(dark):
                  region=P(.34, .035, 250), search=P(.42, .07, 45), copper=P(a - .03, ac + .03, 45),
                  add_bg=P(.30, .05, 140), del_bg=P(.30, .05, 25), chg_bg=P(.30, .04, 85),
                  add_hi=P(.37, .07, 140), del_hi=P(.37, .07, 25), chg_hi=P(.37, .06, 85),
+                 add_ref=P(.45, .10, 140), del_ref=P(.45, .10, 25), chg_ref=P(.45, .09, 85),
                  ansi_black=P(.40, n, w), ansi_white=P(.925, .012, w))
         bright = .06
     else:
@@ -87,6 +88,7 @@ def palette(dark):
                  region=P(.90, .03, 250), search=P(.85, .06, 45), copper=P(a + .02, ac + .03, 45),
                  add_bg=P(.92, .04, 140), del_bg=P(.91, .04, 25), chg_bg=P(.92, .04, 85),
                  add_hi=P(.86, .07, 140), del_hi=P(.85, .07, 25), chg_hi=P(.86, .06, 85),
+                 add_ref=P(.79, .10, 140), del_ref=P(.78, .10, 25), chg_ref=P(.79, .09, 85),
                  ansi_black=P(.325, .012, w), ansi_white=P(.80, n, w))
         bright = -.06
     for k, h in H.items():
@@ -315,9 +317,11 @@ def faces(dark):
     f('diff-added', fg='green', bg='add_bg', extend=True)
     f('diff-removed', fg='red', bg='del_bg', extend=True)
     f('diff-changed', fg='yellow', bg='chg_bg', extend=True)
-    f('diff-refine-added', bg='add_hi', fg='fg_strong')
-    f('diff-refine-removed', bg='del_hi', fg='fg_strong')
-    f('diff-refine-changed', bg='chg_hi', fg='fg_strong')
+    # A step past the selected hunk's own background, so the words that
+    # changed still stand out in the hunk under the cursor.
+    f('diff-refine-added', bg='add_ref', fg='fg_strong')
+    f('diff-refine-removed', bg='del_ref', fg='fg_strong')
+    f('diff-refine-changed', bg='chg_ref', fg='fg_strong')
     f('diff-indicator-added', fg='green')
     f('diff-indicator-removed', fg='red')
     f('diff-indicator-changed', fg='yellow')
@@ -334,8 +338,8 @@ def faces(dark):
     f('smerge-lower', bg='add_bg', extend=True)
     f('smerge-base', bg='chg_bg', extend=True)
     f('smerge-markers', fg='dim', bg='bg_alt', extend=True)
-    f('smerge-refined-added', bg='add_hi')
-    f('smerge-refined-removed', bg='del_hi')
+    f('smerge-refined-added', bg='add_ref', fg='fg_strong')
+    f('smerge-refined-removed', bg='del_ref', fg='fg_strong')
     for side, bgc, hic in (('A', 'del_bg', 'del_hi'), ('B', 'add_bg', 'add_hi'), ('C', 'chg_bg', 'chg_hi'), ('Ancestor', 'bg_alt', 'border')):
         f(f'ediff-current-diff-{side}', bg=bgc, extend=True)
         f(f'ediff-fine-diff-{side}', bg=hic, weight='bold')
