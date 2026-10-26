@@ -23,3 +23,10 @@
   (explain! (if (featurep :system 'macos)
                 "brew install git-delta"
               "openSUSE: zypper in git-delta")))
+
+;; delta draws code in nexenne's colours from a theme cache bat builds.
+(when (and (executable-find "delta") (not (executable-find "bat")))
+  (warn! "Couldn't find bat: delta colours code with its own theme, not nexenne's")
+  (explain! (if (featurep :system 'macos)
+                "brew install bat"
+              "openSUSE: zypper in bat")))

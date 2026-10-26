@@ -16,7 +16,8 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - a diff that shows what changed: tab width taken from the file's mode
   rather than assumed to be eight, indentation with the wrong character
   highlighted, the =^M= of a CRLF file hidden, the code's own syntax
-  colours inside the hunks when =delta= is installed, the words that
+  colours inside the hunks, nexenne's, when =delta= and =bat= are
+  installed, the words that
   changed set apart from the hunk under the cursor, and each hunk's =@@=
   line naming the function it is in,
 - git told what makes it pleasant, on the command line of the git magit

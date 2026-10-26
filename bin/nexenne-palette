@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Nicolò Plebani. All rights reserved.
 """Write the nexenne themes, themes/nexenne-day-theme.el and
-themes/nexenne-night-theme.el, and print every text colour's contrast on
-its background.
+themes/nexenne-night-theme.el, delta's .tmTheme beside each, and print
+every text colour's contrast on its background.
 
   bin/nexenne-palette
 
@@ -837,6 +837,53 @@ def write(name, dark, doc):
     return g
 
 
+# The same roles for delta, which colours code in diffs from a TextMate
+# theme: scope, palette colour, font style.
+TM_SCOPES = [
+    ('comment, punctuation.definition.comment', 'comment', 'italic'),
+    ('string, punctuation.definition.string', 'syn_string', ''),
+    ('constant.numeric, constant.language, constant.character, constant.other', 'syn_constant', ''),
+    ('constant.character.escape', 'syn_constant', 'bold'),
+    ('keyword, storage.modifier, keyword.control', 'syn_keyword', ''),
+    ('keyword.operator', 'fg', ''),
+    ('storage.type, entity.name.type, entity.name.class, entity.name.struct, '
+     'entity.name.enum, support.type, support.class', 'syn_type', ''),
+    ('entity.name.function', 'syn_function', 'bold'),
+    ('support.function, meta.function-call, variable.function', 'syn_function', ''),
+    ('support.constant, variable.language, meta.preprocessor, keyword.control.directive', 'syn_builtin', ''),
+    ('variable.other.member, variable.other.property, support.variable.property, '
+     'entity.other.attribute-name, meta.object-literal.key', 'syn_property', ''),
+    ('entity.name.tag', 'syn_function', ''),
+    ('punctuation, meta.brace', 'dim', ''),
+    ('markup.heading, entity.name.section', 'syn_function', 'bold'),
+    ('markup.bold', 'fg_strong', 'bold'),
+    ('markup.italic', 'fg', 'italic'),
+    ('markup.raw, markup.inline.raw', 'syn_string', ''),
+    ('markup.underline.link', 'blue', 'underline'),
+    ('invalid', 'red', 'bold'),
+]
+
+
+def write_tmtheme(name, g):
+    def entry(scope, color, style):
+        style = f'<key>fontStyle</key><string>{style}</string>' if style else ''
+        return (f'<dict><key>scope</key><string>{scope}</string><key>settings</key>'
+                f'<dict><key>foreground</key><string>{g[color]}</string>{style}</dict></dict>')
+    rules = '\n'.join(entry(*rule) for rule in TM_SCOPES)
+    text = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- {name}: delta's colours for code, from bin/nexenne-palette.
+     Copyright (C) {YEAR} {AUTHOR}. All rights reserved. -->
+<plist version="1.0"><dict>
+<key>name</key><string>{name}</string>
+<key>settings</key><array>
+<dict><key>settings</key><dict><key>background</key><string>{g['bg']}</string><key>foreground</key><string>{g['fg']}</string></dict></dict>
+{rules}
+</array></dict></plist>
+'''
+    open(os.path.join(THEMES, f'{name}.tmTheme'), 'w').write(text)
+
+
 def report(name, g):
     bg = tuple(int(g['bg'][i:i + 2], 16) / 255 for i in (1, 3, 5))
     print(f"== {name}  background {g['bg']}")
@@ -846,7 +893,11 @@ def report(name, g):
 
 
 if __name__ == '__main__':
-    report('nexenne-night', write('nexenne-night', True,
-                                  'Nexenne by night: warm charcoal, distinct calm colours, for reading and writing code.'))
-    report('nexenne-day', write('nexenne-day', False,
-                                'Nexenne by day: warm paper, distinct calm colours, for reading and writing code.'))
+    night = write('nexenne-night', True,
+                  'Nexenne by night: warm charcoal, distinct calm colours, for reading and writing code.')
+    day = write('nexenne-day', False,
+                'Nexenne by day: warm paper, distinct calm colours, for reading and writing code.')
+    write_tmtheme('nexenne-night', night)
+    write_tmtheme('nexenne-day', day)
+    report('nexenne-night', night)
+    report('nexenne-day', day)

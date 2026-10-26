@@ -256,13 +256,81 @@ decides for all of them."
   :filter-args #'diff-refine-hunk
   (if (derived-mode-p 'magit-mode) (list t) args))
 
+;; delta colours code with nexenne too: the themes' .tmTheme files, built
+;; into a bat cache of the config's own that only delta reads.
+(defvar magit-delta-delta-args)
+(defvar magit-delta-default-dark-theme)
+(defvar magit-delta-default-light-theme)
+(defvar +git--delta-cache (file-name-concat doom-cache-dir "delta/")
+  "Where delta's theme cache is built.")
+
+(defvar +git--delta-themes-ready nil
+  "Non-nil once the cache holds the nexenne themes.")
+
+(defun +git--delta-themes-check ()
+  "Use the cache once delta lists the themes from it: a bat of another
+version may write one this delta cannot read."
+  (make-process
+   :name "delta-themes-check" :noquery t :buffer (generate-new-buffer " *delta-themes*")
+   :command (list "env" (concat "XDG_CACHE_HOME=" +git--delta-cache)
+                  "delta" "--list-syntax-themes")
+   :sentinel (lambda (process _event)
+               (unless (process-live-p process)
+                 (let ((buffer (process-buffer process)))
+                   (setq +git--delta-themes-ready
+                         (with-current-buffer buffer
+                           (string-match-p "nexenne-night" (buffer-string))))
+                   (kill-buffer buffer))))))
+
+(defun +git--delta-themes-build ()
+  "Build delta's theme cache in the background when it is older than the
+themes, then check it."
+  (let* ((cache (file-name-concat +git--delta-cache "bat/"))
+         (themes (file-name-concat cache "themes.bin")))
+    (if (and (file-exists-p themes)
+             (seq-every-p (lambda (theme) (file-newer-than-file-p themes theme))
+                          (directory-files (file-name-concat doom-user-dir "themes/") t "\\.tmTheme\\'")))
+        (+git--delta-themes-check)
+      (when (executable-find "bat")
+        (make-directory cache t)
+        (make-process
+         :name "delta-themes" :noquery t :buffer nil
+         :command (list "bat" "cache" "--build" "--source" doom-user-dir "--target" cache)
+         :sentinel (lambda (process _event)
+                     (when (and (not (process-live-p process))
+                                (zerop (process-exit-status process)))
+                       (+git--delta-themes-check))))))))
+
+(defun +git--delta-style-args ()
+  "delta's theme, light or dark as Emacs is, and its added and removed
+backgrounds, the theme's diff faces where they have a colour."
+  (let ((dark (eq (frame-parameter nil 'background-mode) 'dark)))
+    (append
+     (list "--syntax-theme"
+           (cond ((not +git--delta-themes-ready)
+                  (if dark magit-delta-default-dark-theme magit-delta-default-light-theme))
+                 (dark "nexenne-night")
+                 (t "nexenne-day"))
+           (if dark "--dark" "--light"))
+     (mapcan (lambda (style)
+               (let ((colour (face-background (cdr style) nil t)))
+                 (and (stringp colour) (string-prefix-p "#" colour)
+                      (list (car style) (concat "syntax " colour)))))
+             '(("--plus-style" . magit-diff-added)
+               ("--minus-style" . magit-diff-removed)
+               ("--plus-emph-style" . diff-refine-added)
+               ("--minus-emph-style" . diff-refine-removed))))))
+
 (defun +git--delta-only-when-small-a (fn &rest args)
-  "Skip delta on a diff larger than `+git-delta-max-size\='.
-A diff of a whole release is not worth a second of colouring; magit
-paints it the plain way instead."
-  (if (> (- (point-max) (point-min)) +git-delta-max-size)
-      nil
-    (apply fn args)))
+  "Run delta with the theme's colours, unless this refresh has a diff
+too large for it, which magit paints instead."
+  (unless (> +git--largest-diff +git-delta-max-size)
+    (let ((process-environment
+           (if +git--delta-themes-ready
+               (cons (concat "XDG_CACHE_HOME=" +git--delta-cache) process-environment)
+             process-environment))
+          (magit-delta-delta-args (append (+git--delta-style-args) magit-delta-delta-args)))
+      (apply fn args))))
 
 (use-package! magit-delta
   :when (executable-find "delta")
@@ -278,7 +346,8 @@ paints it the plain way instead."
         ;; delta draws the + and - markers itself; magit's would double them.
         magit-delta-hide-plus-minus-markers t)
   (advice-add 'magit-delta-call-delta-and-convert-ansi-escape-sequences
-              :around #'+git--delta-only-when-small-a))
+              :around #'+git--delta-only-when-small-a)
+  (+git--delta-themes-build))
 
 
 ;;

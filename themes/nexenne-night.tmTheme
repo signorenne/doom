@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- nexenne-night: delta's colours for code, from bin/nexenne-palette.
+     Copyright (C) 2026 Nicolò Plebani. All rights reserved. -->
+<plist version="1.0"><dict>
+<key>name</key><string>nexenne-night</string>
+<key>settings</key><array>
+<dict><key>settings</key><dict><key>background</key><string>#1c1915</string><key>foreground</key><string>#ece5de</string></dict></dict>
+<dict><key>scope</key><string>comment, punctuation.definition.comment</string><key>settings</key><dict><key>foreground</key><string>#b1aba4</string><key>fontStyle</key><string>italic</string></dict></dict>
+<dict><key>scope</key><string>string, punctuation.definition.string</string><key>settings</key><dict><key>foreground</key><string>#bacb86</string></dict></dict>
+<dict><key>scope</key><string>constant.numeric, constant.language, constant.character, constant.other</string><key>settings</key><dict><key>foreground</key><string>#ffbfa3</string></dict></dict>
+<dict><key>scope</key><string>constant.character.escape</string><key>settings</key><dict><key>foreground</key><string>#ffbfa3</string><key>fontStyle</key><string>bold</string></dict></dict>
+<dict><key>scope</key><string>keyword, storage.modifier, keyword.control</string><key>settings</key><dict><key>foreground</key><string>#dfb0ff</string></dict></dict>
+<dict><key>scope</key><string>keyword.operator</string><key>settings</key><dict><key>foreground</key><string>#ece5de</string></dict></dict>
+<dict><key>scope</key><string>storage.type, entity.name.type, entity.name.class, entity.name.struct, entity.name.enum, support.type, support.class</string><key>settings</key><dict><key>foreground</key><string>#6be9c5</string></dict></dict>
+<dict><key>scope</key><string>entity.name.function</string><key>settings</key><dict><key>foreground</key><string>#7ee8ff</string><key>fontStyle</key><string>bold</string></dict></dict>
+<dict><key>scope</key><string>support.function, meta.function-call, variable.function</string><key>settings</key><dict><key>foreground</key><string>#7ee8ff</string></dict></dict>
+<dict><key>scope</key><string>support.constant, variable.language, meta.preprocessor, keyword.control.directive</string><key>settings</key><dict><key>foreground</key><string>#dcb7cb</string></dict></dict>
+<dict><key>scope</key><string>variable.other.member, variable.other.property, support.variable.property, entity.other.attribute-name, meta.object-literal.key</string><key>settings</key><dict><key>foreground</key><string>#f0db88</string></dict></dict>
+<dict><key>scope</key><string>entity.name.tag</string><key>settings</key><dict><key>foreground</key><string>#7ee8ff</string></dict></dict>
+<dict><key>scope</key><string>punctuation, meta.brace</string><key>settings</key><dict><key>foreground</key><string>#9c9792</string></dict></dict>
+<dict><key>scope</key><string>markup.heading, entity.name.section</string><key>settings</key><dict><key>foreground</key><string>#7ee8ff</string><key>fontStyle</key><string>bold</string></dict></dict>
+<dict><key>scope</key><string>markup.bold</string><key>settings</key><dict><key>foreground</key><string>#f6f1eb</string><key>fontStyle</key><string>bold</string></dict></dict>
+<dict><key>scope</key><string>markup.italic</string><key>settings</key><dict><key>foreground</key><string>#ece5de</string><key>fontStyle</key><string>italic</string></dict></dict>
+<dict><key>scope</key><string>markup.raw, markup.inline.raw</string><key>settings</key><dict><key>foreground</key><string>#bacb86</string></dict></dict>
+<dict><key>scope</key><string>markup.underline.link</string><key>settings</key><dict><key>foreground</key><string>#a6d7f7</string><key>fontStyle</key><string>underline</string></dict></dict>
+<dict><key>scope</key><string>invalid</string><key>settings</key><dict><key>foreground</key><string>#f9bebb</string><key>fontStyle</key><string>bold</string></dict></dict>
+</array></dict></plist>
