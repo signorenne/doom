@@ -139,9 +139,66 @@ transients is one key away on /, its dispatch."
 (declare-function smerge-vc-next-conflict "smerge-mode")
 (defvar smerge-mode)
 
+(declare-function smerge-match-conflict "smerge-mode")
+(declare-function magit-rebase-in-progress-p "magit-sequence")
+
 (defun +git--conflicted-p ()
   "Non-nil when this buffer has conflict markers in it."
   (bound-and-true-p smerge-mode))
+
+(defun +git--conflict-has-base-p ()
+  "Non-nil when the conflict at point shows the base between its sides:
+git writes it with zdiff3, which the git module asks for, or diff3."
+  (and (+git--conflicted-p)
+       (save-excursion
+         (ignore-errors (smerge-match-conflict) (match-beginning 2)))))
+
+(defun +git--rebasing-p ()
+  "Non-nil while a rebase is in progress here, which swaps the sides."
+  (and (featurep 'magit)
+       (ignore-errors (magit-rebase-in-progress-p))))
+
+(declare-function vc-find-conflicted-file "vc")
+
+(defun +git--keep-then-next (keep)
+  "Resolve the conflict at point with KEEP, then move to the next one,
+in this file or, once it has none, saved, in the next that has one."
+  (funcall keep)
+  (if (bound-and-true-p smerge-mode)
+      (ignore-errors (smerge-next))
+    (save-buffer)
+    (ignore-errors (vc-find-conflicted-file))))
+
+;;;###autoload
+(defun +git/conflict-keep-upper ()
+  "Keep the upper side of this conflict, then go to the next."
+  (interactive)
+  (+git--keep-then-next #'smerge-keep-upper))
+
+;;;###autoload
+(defun +git/conflict-keep-lower ()
+  "Keep the lower side of this conflict, then go to the next."
+  (interactive)
+  (+git--keep-then-next #'smerge-keep-lower))
+
+;;;###autoload
+(defun +git/conflict-keep-base ()
+  "Keep the base of this conflict, as it was before either side, then
+go to the next."
+  (interactive)
+  (+git--keep-then-next #'smerge-keep-base))
+
+;;;###autoload
+(defun +git/conflict-keep-current ()
+  "Keep the side point is in, then go to the next conflict."
+  (interactive)
+  (+git--keep-then-next #'smerge-keep-current))
+
+;;;###autoload
+(defun +git/conflict-keep-all ()
+  "Keep both sides of this conflict, then go to the next."
+  (interactive)
+  (+git--keep-then-next #'smerge-keep-all))
 
 ;;;###autoload
 (defun +git/next-conflict ()
@@ -162,20 +219,36 @@ transients is one key away on /, its dispatch."
     (user-error "No conflict in this buffer"))
   (smerge-prev))
 
+;; The sides are named by what they are: in a merge, a cherry-pick or a
+;; revert the upper is yours and the lower the change coming in; in a
+;; rebase it is the other way round.
 ;;;###autoload (autoload '+git/conflicts "private/git/autoload/menu" nil t)
 (transient-define-prefix +git/conflicts ()
-  "What to do with a conflict: which side to keep, and where the next one is."
+  "What to do with a conflict: which side to keep, and where the next one is.
+Keeping a side moves to the next conflict, the menu staying open."
+  :refresh-suffixes t
   [:description
    (lambda ()
-     (if (bound-and-true-p smerge-mode)
-         "Conflict: keep which side?"
-       "No conflict here; n finds the next file with one"))
-   ["Keep"
-    ("u" "Mine, the upper one"   smerge-keep-upper :if +git--conflicted-p)
-    ("l" "Theirs, the lower one" smerge-keep-lower :if +git--conflicted-p)
-    ("b" "The base, as it was"   smerge-keep-base  :if +git--conflicted-p)
-    ("a" "Both, one after the other" smerge-keep-all :if +git--conflicted-p)
-    ("c" "The one point is in"   smerge-keep-current :if +git--conflicted-p)]
+     (cond ((not (bound-and-true-p smerge-mode))
+            "No conflict here; n finds the next file with one")
+           ((+git--rebasing-p)
+            "Conflict, while rebasing: upper is the branch rebased onto, lower your commit")
+           (t "Conflict: upper is yours, lower the change coming in")))
+   ["Keep, then the next"
+    ("u" +git/conflict-keep-upper :if +git--conflicted-p :transient t
+     :description (lambda () (if (+git--rebasing-p)
+                                 "The branch rebased onto, upper"
+                               "Yours, upper")))
+    ("l" +git/conflict-keep-lower :if +git--conflicted-p :transient t
+     :description (lambda () (if (+git--rebasing-p)
+                                 "Your commit, lower"
+                               "The change coming in, lower")))
+    ("b" "The base, before either" +git/conflict-keep-base
+     :if +git--conflicted-p :inapt-if-not +git--conflict-has-base-p :transient t)
+    ("a" "Both, one after the other" +git/conflict-keep-all
+     :if +git--conflicted-p :transient t)
+    ("c" "The one point is in" +git/conflict-keep-current
+     :if +git--conflicted-p :transient t)]
    ["Look closer"
     ("e" "Ediff this one"        smerge-ediff :if +git--conflicted-p)
     ("R" "Refine: what differs inside it" smerge-refine :if +git--conflicted-p)

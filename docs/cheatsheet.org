@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 02:00
+#+generated: 2026-10-24 11:38
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3877,6 +3877,16 @@ bound.
   committer DATE.
 - ~+git/commit-split~ :: Take COMMIT, at point or asked, apart: its changes
   come back unstaged, to be staged and committed in pieces.
+- ~+git/conflict-keep-all~ :: Keep both sides of this conflict, then go to
+  the next.
+- ~+git/conflict-keep-base~ :: Keep the base of this conflict, as it was
+  before either side, then go to the next.
+- ~+git/conflict-keep-current~ :: Keep the side point is in, then go to the
+  next conflict.
+- ~+git/conflict-keep-lower~ :: Keep the lower side of this conflict, then
+  go to the next.
+- ~+git/conflict-keep-upper~ :: Keep the upper side of this conflict, then
+  go to the next.
 - ~+git/conflicts~ (~SPC g x~) :: What to do with a conflict: which side to
   keep, and where the next one is.
 - ~+git/delete-merged~ :: Delete every local branch already merged into
