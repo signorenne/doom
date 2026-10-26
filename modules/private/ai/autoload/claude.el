@@ -63,7 +63,7 @@ the tool."
     (setq default-directory (file-name-as-directory (+ai--tool-root)))
     (let* ((root default-directory)
            (command (+ai--tool-build-command root target))
-           (wait (min 120 (max 2 (or wait-seconds 20))))
+           (wait (min 10 (max 2 (or wait-seconds 3))))
            (compilation-ask-about-save nil)
            (buffer (+core-compile "build" command root)))
       (+ai--tool-wait-for-compilation buffer wait)
@@ -75,8 +75,9 @@ the tool."
   "The status and tail of the build, test or run that started last,
 whether this tool, a key or a menu started it."
   (if-let* ((buffer (+core-last-compilation-buffer)))
+      ;; Short while it runs: every poll stays in Claude's context.
       (concat (format "buffer: %s\n" (buffer-name buffer))
-              (+ai--tool-compilation-tail buffer 8000))
+              (+ai--tool-compilation-tail buffer (if (get-buffer-process buffer) 1500 8000)))
     "No build, test or run has started yet."))
 
 (defun +ai--tool-project-todos ()
@@ -102,19 +103,21 @@ whether this tool, a key or a menu started it."
    (concat "Build the current project the way Emacs does (CMake preset and "
            "target through projection, PlatformIO, or make) and return the "
            "compiler output. Use it after editing code. Waits up to "
-           "wait_seconds (default 20); if the build is still running, call "
-           "emacs_last_compilation afterwards.")
+           "wait_seconds (default 3), during which the editor is frozen; if "
+           "the build is still running, call emacs_last_compilation until it "
+           "has finished.")
    :args '((:name "target" :type string :optional t
             :description "Build target; omit for the default one")
            (:name "wait_seconds" :type integer :optional t
-            :description "Seconds to wait, 2 to 120, default 20"))
+            :description "Seconds to wait, 2 to 10, default 3"))
    :category "Build")
   (claude-code-ide-make-tool
    :function #'+ai--tool-last-compilation
    :name "emacs_last_compilation"
    :description
    (concat "Return whether the last Emacs build or test is still running, "
-           "and the end of its output.")
+           "and the end of its output: a short end while it runs, so space "
+           "the calls a few seconds apart.")
    :args nil
    :category "Build")
   (claude-code-ide-make-tool
