@@ -197,7 +197,13 @@ matching parenthesis does.
   the =Parsed= declared above it.
 - In a =uses= clause, every installed unit by the name its source spells:
   =sysu= gives =SysUtils=. The LCL's in a Lazarus project only, and the
-  project's own units. The list is read once and kept in Doom's cache.
+  project's own units. The installed ones are read once and kept in
+  Doom's cache, the project's again every ten seconds; both greps run in
+  the background, from the moment a project's Pascal file opens, so a
+  key does not wait for them: one in a project of 600 units took 54 ms
+  when the list was due, now under a millisecond. The walk over the
+  compiled units stays in Emacs, once a machine. A file outside any
+  project offers no project units.
 - A new =.pas= or =.pp= file starts as a unit named after it, a new =.lpr=
   as a program.
 
