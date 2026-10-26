@@ -10,6 +10,12 @@ part that is this config's:
   has no Svelte module and Emacs no mode, so both are new here.
 - *Tailwind*: in a project that uses it the Tailwind server takes the CSS
   files, where the plain CSS server reads =@tailwind base= as an error.
+- *TypeScript 7*: the native compiler has no =tsserver.js= for
+  typescript-language-server, and serves the language itself with
+  =tsc --lsp --stdio=. A project that pins TypeScript 6 or older keeps
+  typescript-language-server; a file under TypeScript 7, the project's
+  or only the global one, gets =tsc --lsp=. Before, a file outside a
+  project that pins its own got no server at all.
 - *The project's own tools*: =node_modules/.bin= goes on ~exec-path~, so the
   prettier and the typescript that run here are the ones the project
   pins, not whatever is newest on this machine.

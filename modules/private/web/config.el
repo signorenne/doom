@@ -54,8 +54,8 @@
 ;;
 ;;; The servers
 
-;; eglot already knows typescript-language-server for js and ts, the
-;; css server for css, and the html server for html. Svelte is ours, and
+;; eglot already knows the css server for css and the html server for
+;; html. JavaScript and TypeScript are ours, for TypeScript 7, Svelte, and
 ;; so is Tailwind: in a project that uses it the plain css server reads
 ;; `@tailwind base' as an error, and the Tailwind server is a superset
 ;; that understands it and completes classes besides.
@@ -67,6 +67,15 @@
 (after! eglot
   (add-to-list 'eglot-server-programs
                '(svelte-mode . ("svelteserver" "--stdio")))
+
+  ;; See `+web-typescript-server'; the language ids are eglot's.
+  (add-to-list 'eglot-server-programs
+               '(((js-mode :language-id "javascript")
+                  (js-ts-mode :language-id "javascript")
+                  (tsx-ts-mode :language-id "typescriptreact")
+                  (typescript-ts-mode :language-id "typescript")
+                  (typescript-mode :language-id "typescript"))
+                 . +web-typescript-server))
 
   (add-to-list 'eglot-server-programs
                `((css-mode css-ts-mode scss-mode less-css-mode)

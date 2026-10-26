@@ -82,6 +82,33 @@ else is an ordinary answer."
                parsed)))))
 
 
+(defun +web--typescript-7-p (dir)
+  "Non-nil when DIR is TypeScript's package, version 7 or later."
+  (ignore-errors
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "package.json" dir))
+      (let ((manifest (json-parse-buffer :object-type 'alist)))
+        (and (equal (alist-get 'name manifest) "typescript")
+             (version<= "7" (alist-get 'version manifest)))))))
+
+;;;###autoload
+(defun +web-typescript-server (&optional _interactive _project)
+  "The command that serves JavaScript and TypeScript here, for eglot.
+TypeScript 7, the project's or else the global one, has no tsserver.js
+for typescript-language-server and serves itself with `tsc --lsp'."
+  (let ((typescript
+         (and (not (file-remote-p default-directory))
+              (or (when-let* ((dir (locate-dominating-file
+                                    default-directory "node_modules/typescript/package.json")))
+                    (expand-file-name "node_modules/typescript/" dir))
+                  (when-let* ((tsc (executable-find "tsc")))
+                    ;; .../typescript/bin/tsc, through npm's link.
+                    (file-name-directory
+                     (directory-file-name (file-name-directory (file-truename tsc)))))))))
+    (if (and typescript (+web--typescript-7-p typescript))
+        (list (expand-file-name "bin/tsc" typescript) "--lsp" "--stdio")
+      (list "typescript-language-server" "--stdio"))))
+
 ;;;###autoload
 (defun +web-tailwind-p (&optional root)
   "Non-nil when the project uses Tailwind.
