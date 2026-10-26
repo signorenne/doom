@@ -7,15 +7,20 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 
 - settings that show more and ask less: every menu argument visible
   (transient level 7), file buffers saved before status, word diffs in
-  every hunk, dates instead of ages in the logs, the branch prompt
+  every hunk of a diff that is not large, dates instead of ages in the
+  logs, the branch prompt
   sorted by date, file icons, the repository list on =~/projects=,
 - a log you can read down: refs printed after the summary, not before
-  it, so every summary starts at the same column; the graph's own lines
-  in the theme's colours, which is =log.graphColors= in =~/.gitconfig=,
+  it, so every summary starts at the same column; the graph's lanes in
+  the theme's colours,
 - a diff that shows what changed: tab width taken from the file's mode
   rather than assumed to be eight, indentation with the wrong character
-  highlighted, the =^M= of a CRLF file hidden, and the code's own syntax
-  colours inside the hunks when =delta= is installed,
+  highlighted, the =^M= of a CRLF file hidden, the code's own syntax
+  colours inside the hunks when =delta= is installed, the words that
+  changed set apart from the hunk under the cursor, and each hunk's =@@=
+  line naming the function it is in,
+- git told what makes it pleasant, on the command line of the git magit
+  runs, so nothing is set up by hand on a new machine (below),
 - the repository's TODO and FIXME comments as a section in the status
   buffer, grouped by directory,
 - a safety net: ~magit-wip-mode~ keeps work-in-progress refs before every
@@ -32,6 +37,10 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   branches swept, the diff and the log against main,
 - =C-c C-t= in the commit buffer: the conventional subject with the
   scope read off the staged paths,
+- the history of the function at point (=a= in the hub) and of the
+  region's lines (=L= with a region), and the file as it was before
+  (=v=),
+- the diff gutter updated as you type on macOS too,
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
@@ -67,6 +76,17 @@ they do in vim, and carry on into the next file that has one once this
 buffer is clean; ~SPC g x~ (~x~ in the hub) is the menu for which side to
 keep, with ediff and refine for the ones that are not obvious.
 
+The menu names the sides by what they are. In a merge, a cherry-pick or
+a revert the upper side is yours and the lower the change coming in; in
+a rebase it is the other way round, the upper the branch rebased onto
+and the lower your commit, and the menu says so. Keeping a side moves to
+the next conflict with the menu still open. The base, the text before
+either side changed it, is greyed out when the conflict does not show
+it; every conflict magit's git makes does (=zdiff3=, below). Once a
+file has no conflict left it is saved and the next file with one opens.
+A resolution
+made once is replayed when the same conflict comes back (=rerere=).
+
 * Configuration
 - ~+git-commit-types~: the types =C-c C-t= offers, the hook's list.
 - ~+git-date-format~: how a commit's date is shown and read.
@@ -75,21 +95,45 @@ keep, with ediff and refine for the ones that are not obvious.
   when the menu was never saved (=C-x C-s= in it keeps your own).
 - ~+git-delta-max-size~, 400k: past that a diff is painted the plain way,
   since delta is a process per diff and a release-sized one is not worth
-  the wait.
+  the wait. It is painted in magit's colours then; it lost them all
+  before, delta's plain faces staying on.
+- ~+git-refine-all-max-size~, 64k: magit, painting a diff itself (past
+  delta's limit, or without delta), marks the changed words in every
+  hunk up to this size, and in the hunk under the cursor past it, and
+  never in a hunk past ~diff-refine-threshold~ (30 000 characters), as
+  diff-mode does. Refining is what magit's painting costs: a 249 KB diff
+  refreshed in 2.5 s refining every hunk, 0.8 s now.
+- What the git magit runs is told, by =-c= on its command line, so
+  =~/.gitconfig= stays yours:
+  =merge.conflictStyle=zdiff3= (=diff3= before git 2.35), =rerere.enabled=
+  (which git then keeps on in that repository, outside Emacs too),
+  =diff.algorithm=histogram=
+  (the gutter's), =fetch.writeCommitGraph= (the ten latest commits of a
+  150 000 commit history read in 0.5 s without the graph, at once with
+  it), =log.graphColors= from ~+git-graph-colors~ (the theme's blue,
+  magenta, cyan, green and yellow; no red, which reads as removed), and
+  each file kind's diff driver from =gitattributes= in this module, with
+  patterns for elisp and org that git lacks. The attributes file is not
+  used over one of your own (=core.attributesFile=, or
+  =~/.config/git/attributes=).
+- ~+git-gutter-as-you-type~, on: Doom updates the gutter only on save on
+  macOS, for trouble seen with another build of Emacs; here the update
+  runs in the background as on Linux. Nil puts it back.
+- magit-todos scans the tree once a minute at most, not at every
+  refresh of the status buffer.
 - ~+git-blame-max-size~, 1M: the blame turns itself on below it. It is
   one =git blame= of the whole buffer, taken in the background when the
   buffer has changed and the cursor rests, and read line by line from
   there; ~+git-blame-idle~ (0.5 s), ~+git-blame-column~ (40) and
   ~+git-blame-summary-length~ (50) shape it.
-- The graph's colours are git's, not Emacs's: =log.graphColors= in
-  =~/.gitconfig=, set to the theme's blue, violet, cyan, green, magenta,
-  grey, orange and red.
 - =delta= has to be installed for the coloured diffs: =sudo zypper in
   git-delta=. Without it nothing breaks and magit paints its own way.
 - Options, not installed: =forge= (issues and pull requests from magit;
   the =+forge= flag on =:tools magit= and a GitHub token in
   =~/.authinfo.gpg=, =machine api.github.com login USER^forge password
-  TOKEN=).
+  TOKEN=). Magit 4.6's own syntax colours in diffs are left off: on
+  this config's history they were slower than delta (453 ms against
+  94 to refresh a 9 KB diff) and stopped on an org hunk.
 - The files: =config.el= (settings, keys), =autoload/menu.el= (the three
   menus), =autoload/commit.el= (the subject, date, author, split,
   uncommit), =autoload/branch.el= (from main, delete merged, against
