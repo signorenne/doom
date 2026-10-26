@@ -70,7 +70,8 @@ bin/check-commit-msg accepts.")
    ;; Save the file buffers before status, silently: what is staged is
    ;; what is in the buffers.
    magit-save-repository-buffers 'dontask
-   ;; Word diffs in every hunk, not only the selected one.
+   ;; Word diffs in every hunk, not only the selected one; a large diff
+   ;; and delta's own decide otherwise, below.
    magit-diff-refine-hunk 'all
    ;; A tab in a diff is drawn eight columns wide unless magit is told
    ;; to ask the file's own mode, so a tab-indented hunk would show at
@@ -152,21 +153,66 @@ bin/check-commit-msg accepts.")
 ;;; Diffs with the code's own colours
 
 ;; A magit diff paints every line green or red and leaves the code
-;; inside it uncoloured, so a hunk is read as a wall of one colour.
-;; delta highlights the code as its language, inside the + and - lines.
-;; It is a process per diff, so it stands down on a large one, where it
-;; would be the slow part of opening the buffer.
+;; inside it uncoloured. delta highlights the code as its language and
+;; marks the words that changed; it is also faster than magit's own word
+;; refinement. It is a process per diff, so it stands down on a large one.
 (defvar +git-delta-max-size (* 400 1024)
   "The largest diff delta is asked to colour, in characters.
-Past this it is faster to read a plain diff than to wait for a pretty
-one; magit falls back to its own painting.")
+(defvar-local +git--largest-diff 0
+  "The largest diff washed in this buffer's current refresh.")
 
-(defun +git--delta-owns-refinement-h ()
-  "Leave the word diff to whichever of the two is drawing it.
-delta does its own, and better; magit refining on top of it paints
-twice and the two disagree at the edges of a word."
-  (setq-local magit-diff-refine-hunk
-              (unless (bound-and-true-p magit-delta-mode) 'all)))
+(defvar-local +git--refine-chosen nil
+  "Non-nil once refinement was toggled by hand in this buffer.")
+
+(defun +git--paint-reset-a (&rest _)
+  "Start a refresh with no diff washed yet."
+  (setq +git--largest-diff 0))
+
+Past this magit paints it the plain way.")
+
+(defvar +git-refine-all-max-size (* 64 1024)
+  "The largest diff magit refines word by word in every hunk, when it
+paints the diff itself; past it, the hunk under the cursor only.")
+
+(defvar +git--delta-faces
+  '(magit-diff-context-highlight magit-diff-added magit-diff-added-highlight
+    magit-diff-removed magit-diff-removed-highlight)
+  "The faces magit-delta turns plain, so its colours show alone.")
+
+(defun +git--paint-plan-h ()
+  "Decide who colours this buffer's diffs and how much magit refines.
+magit-delta turns its faces plain for the whole buffer, so a diff it
+stands down on would show no colour: the largest diff of the refresh
+decides for all of them."
+  (setq +git--largest-diff (max +git--largest-diff (- (point-max) (point-min))))
+  (let ((delta (and (bound-and-true-p magit-delta-mode)
+                    (<= +git--largest-diff +git-delta-max-size))))
+    (unless +git--refine-chosen
+      (setq-local magit-diff-refine-hunk
+                  (cond (delta nil)
+                        ((<= +git--largest-diff +git-refine-all-max-size) 'all)
+                        (t t))))
+    (setq-local face-remapping-alist
+                (append (seq-remove (lambda (entry) (memq (car entry) +git--delta-faces))
+                                    face-remapping-alist)
+                        (and delta (mapcar (lambda (face) (cons face 'default))
+                                           +git--delta-faces))))))
+(defun +git--refine-chosen-a (&rest _)
+  "Keep a refinement toggled by hand through later refreshes."
+  (setq +git--refine-chosen t))
+
+
+(add-hook 'magit-diff-wash-diffs-hook #'+git--paint-plan-h -90)
+
+;; diff-mode leaves a hunk past `diff-refine-threshold' unrefined, since
+;; one can take seconds; magit refines it anyway.
+(after! magit
+  (advice-add 'magit-refresh-buffer :before #'+git--paint-reset-a)
+  (advice-add 'magit-diff-toggle-refine-hunk :after #'+git--refine-chosen-a))
+(defadvice! +git--refine-within-reach-a (args)
+  "In magit, refine no hunk past `diff-refine-threshold'."
+  :filter-args #'diff-refine-hunk
+  (if (derived-mode-p 'magit-mode) (list t) args))
 
 (defun +git--delta-only-when-small-a (fn &rest args)
   "Skip delta on a diff larger than `+git-delta-max-size\='.
@@ -189,7 +235,6 @@ paints it the plain way instead."
   (setq magit-delta-default-dark-theme "TwoDark"  ; Atom One Dark, as doom-one is
         ;; delta draws the + and - markers itself; magit's would double them.
         magit-delta-hide-plus-minus-markers t)
-  (add-hook 'magit-delta-mode-hook #'+git--delta-owns-refinement-h)
   (advice-add 'magit-delta-call-delta-and-convert-ansi-escape-sequences
               :around #'+git--delta-only-when-small-a))
 
