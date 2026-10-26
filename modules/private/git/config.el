@@ -282,6 +282,25 @@ paints it the plain way instead."
 
 
 ;;
+;;; The gutter as you type
+
+;; Doom updates the gutter only on save on macOS, for trouble seen with
+;; another build of Emacs; the update runs in the background here.
+(defvar diff-hl-mode)
+(defvar diff-hl-flydiff-mode)
+(defvar +git-gutter-as-you-type t
+  "Non-nil updates the diff gutter as you type on macOS too.")
+
+(defun +git--gutter-as-you-type-h ()
+  "Follow the typing in the gutter, unless turned off."
+  (when (and diff-hl-mode +git-gutter-as-you-type (featurep :system 'macos)
+             (not diff-hl-flydiff-mode))
+    (diff-hl-flydiff-mode 1)))
+
+(add-hook 'diff-hl-mode-hook #'+git--gutter-as-you-type-h)
+
+
+;;
 ;;; Coming back from a magit buffer
 
 ;; C-o is the way back from everywhere else. better-jumper records a
