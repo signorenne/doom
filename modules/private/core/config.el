@@ -1218,6 +1218,24 @@ taken out again with eglot's own when eglot lets the buffer go."
 (after! projectile
   (setq projectile-auto-cleanup-known-projects t))
 
+;; envrc holds the editor until direnv is done, which for a Nix or Guix
+;; environment can take long. Past 2 s it finishes in the background, and
+;; Doom restarts the language servers started without it.
+(after! envrc
+  (setq envrc-async 2))
+
+;; That restart runs from envrc's process buffer, whose environment is
+;; Emacs's own, so a server is reconnected from one of its own buffers.
+(declare-function eglot--managed-buffers "eglot")
+(after! eglot
+  (defadvice! +core--reconnect-from-own-buffer-a (fn server &rest args)
+    "Reconnect SERVER from one of its buffers, with that buffer's
+environment, which direnv may have set."
+    :around #'eglot-reconnect
+    (if-let* ((buffer (seq-find #'buffer-live-p (eglot--managed-buffers server))))
+        (with-current-buffer buffer (apply fn server args))
+      (apply fn server args))))
+
 ;; SPC k opens the keys of the module that owns the project, C++,
 ;; Pascal, Rust or the web; in a project none of them knows, what
 ;; projection can do with it; outside one, starting a project and going

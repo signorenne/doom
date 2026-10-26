@@ -562,6 +562,10 @@ What keeps it that way:
   gets the older mode with nothing installed: Doom took the limit for a
   missing grammar, and built the C++ one again at every such file.
 - Projectile has no cache; fd lists a project in milliseconds.
+- direnv holds the first file of a directory with a .envrc 2 s at most,
+  then finishes in the background (~envrc-async~), and the language
+  servers started without its environment are restarted: a .envrc that
+  took 5 s held the file's opening 5.1 s, now 2.3 s.
 - gcmh lets 64 MB of garbage gather at rest and 256 MB at work, 512 with
   a language server, which Doom doubles it for: a collection of a 178 MB
   heap took 176 ms at 16 MB and 181 at 64, and comes half as often; at
