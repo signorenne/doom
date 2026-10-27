@@ -16,6 +16,36 @@
   "Docsets never installed by themselves: Boost, which Doom names for
 C++, is large and no project here uses it.")
 
+(defvar +core-docsets-npm
+  '(("AngularJS" . "angular") ("AngularTS" . "@angular/core")
+    ("Backbone" . "backbone") ("BackboneJS" . "backbone")
+    ("Bootstrap" . "bootstrap") ("D3JS" . "d3") ("EmberJS" . "ember-source")
+    ("Express" . "express") ("ExtJS" . "@sencha/ext") ("JQuery" . "jquery")
+    ("JQuery_Mobile" . "jquery-mobile") ("JQuery_UI" . "jquery-ui")
+    ("KnockoutJS" . "knockout") ("Lo-Dash" . "lodash")
+    ("MarionetteJS" . "backbone.marionette") ("MomentJS" . "moment")
+    ("PrototypeJS" . "prototypejs") ("React" . "react")
+    ("RequireJS" . "requirejs") ("SailsJS" . "sails")
+    ("UnderscoreJS" . "underscore") ("VueJS" . "vue") ("ZeptoJS" . "zepto"))
+  "Library docsets Doom names for every JavaScript file, each installed
+only where the project's package.json uses its package.")
+
+(defun +core--docsets-npm-used (names)
+  "NAMES without the library docsets this project's package.json does not
+use."
+  (let* ((dir (locate-dominating-file default-directory "package.json"))
+         (manifest (and dir (ignore-errors
+                              (with-temp-buffer
+                                (insert-file-contents (expand-file-name "package.json" dir))
+                                (json-parse-buffer :object-type 'alist)))))
+         (packages (mapcar (lambda (dep) (symbol-name (car dep)))
+                           (append (alist-get 'dependencies manifest)
+                                   (alist-get 'devDependencies manifest)))))
+    (seq-filter (lambda (name)
+                  (let ((package (cdr (assoc name +core-docsets-npm))))
+                    (or (null package) (member package packages))))
+                names)))
+
 (defvar +core--docsets-started nil
   "Docsets whose installation this session started, done or not.")
 
@@ -57,7 +87,8 @@ C++, is large and no project here uses it.")
   "Start installing the docsets of this file's language that are missing."
   (when-let* ((+core-docsets-auto-install)
               ((not (file-remote-p default-directory)))
-              (names (seq-difference (bound-and-true-p dash-docs-docsets)
+              (names (seq-difference (+core--docsets-npm-used
+                                      (bound-and-true-p dash-docs-docsets))
                                      (append +core-docsets-skip +core--docsets-started)))
               (missing (+core--docsets-missing names)))
     (+core--docsets-install missing)))
