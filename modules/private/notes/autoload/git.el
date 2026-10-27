@@ -112,6 +112,33 @@ index.lock), which is reported rather than swallowed."
          (message "Notes not committed, git said: %s" (cdr result))
          nil)))))
 
+(defvar +notes--autocommit-script
+  "d=$(git rev-parse --git-dir) || exit 0
+for s in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD; do
+  [ -e \"$d/$s\" ] && exit 0
+done
+git status --porcelain | grep -qE '^(U.|.U|AA|DD) ' && exit 0
+git add -A && { git diff --cached --quiet || git commit -q -m \"$1\"; }"
+  "The idle commit, as `+notes--autocommit' decides it, in one shell.")
+
+;;;###autoload
+(defun +notes--autocommit-in-background ()
+  "Commit the notes as `+notes--autocommit' does, for the idle timer, in
+the background: git never holds up the editor."
+  (when (and (+notes-repo-p)
+             (not (process-live-p (get-process "notes-autocommit"))))
+    (let ((default-directory (file-name-as-directory (expand-file-name org-directory)))
+          (buffer (generate-new-buffer " *notes autocommit*")))
+      (make-process
+       :name "notes-autocommit" :buffer buffer :noquery t
+       :command (list "sh" "-c" +notes--autocommit-script "sh" (+notes--message))
+       :sentinel (lambda (process _event)
+                   (unless (process-live-p process)
+                     (unless (zerop (process-exit-status process))
+                       (message "Notes not committed, git said: %s"
+                                (string-trim (with-current-buffer buffer (buffer-string)))))
+                     (kill-buffer buffer)))))))
+
 (defvar +notes--sync-process nil
   "The pull or push running for `+notes/sync', so a second sync waits.")
 

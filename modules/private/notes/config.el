@@ -161,7 +161,7 @@ startup from loading it; .git is a file in a worktree."
   (when (and +notes-commit-idle
              (file-exists-p (expand-file-name ".git" org-directory)))
     (setq +notes--timer
-          (run-with-idle-timer +notes-commit-idle t #'+notes--autocommit))
+          (run-with-idle-timer +notes-commit-idle t #'+notes--autocommit-in-background))
     (add-hook 'kill-emacs-hook #'+notes--autocommit)))
 
 (+notes--watch)
