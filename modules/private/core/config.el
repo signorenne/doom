@@ -46,6 +46,13 @@ which show something other than the text.")
   (dolist (mode +core-large-file-excluded-modes)
     (add-to-list '+whitespace-guess-excluded-modes mode)))
 
+;; Nor are they searched for conflict markers.
+(defadvice! +core--no-conflict-search-a (fn)
+  "Skip Doom's conflict marker search in a file shown as something else."
+  :around #'+vc-init-smerge-mode-h
+  (unless (apply #'derived-mode-p +core-large-file-excluded-modes)
+    (funcall fn)))
+
 (defvar-local +core-large-file-p nil
   "The size of this buffer's file when it is large, else nil.")
 
@@ -524,7 +531,9 @@ Not when a file's buffer is modified, or when the server cannot be reached."
     ;; editorconfig, direnv's environment, the wheel's scrolling, surround
     ;; and expand-region for embrace, ffap for C and C++.
     editorconfig-core envrc pixel-scroll ultra-scroll mac-win
-    evil-surround expand-region embrace evil-embrace ffap)
+    evil-surround expand-region embrace evil-embrace ffap
+    ;; The first picture asks GraphicsMagick for its formats.
+    image-converter)
   "Libraries the first file of a session loads, loaded ahead while Emacs
 waits after starting.")
 
