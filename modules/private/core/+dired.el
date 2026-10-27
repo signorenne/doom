@@ -355,7 +355,18 @@ image-mode and played it."
           `(buffer . ,buffer))))))
 
   (setq dirvish-preview-dispatchers
-        '(+core-image +core-video +core-audio archive font pdf +core-text)))
+        '(+core-image +core-video +core-audio archive font pdf +core-text))
+
+  ;; A thumbnail is named for its file's path alone, so a video, a font or
+  ;; a PDF changed since kept its old one: one older than its file goes.
+  (defadvice! +core--thumb-fresh-a (fn file &rest args)
+    "Drop FILE's thumbnail when the file is newer than it."
+    :around #'dirvish--img-thumb-name
+    (let ((cache (apply fn file args)))
+      (dolist (made (list cache (concat cache ".jpg")))
+        (when (and (file-exists-p made) (file-newer-than-file-p file made))
+          (delete-file made)))
+      cache)))
 
 ;; The keys that make it a file manager. M-n narrows the listing as you
 ;; type, which is Doom's; the rest of the file manager's own work is on

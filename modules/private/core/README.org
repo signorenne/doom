@@ -146,8 +146,9 @@ and ~SPC f d~ (~F~ hides it). Images, video frames and audio details are
 made with ImageMagick, ffmpeg and ffprobe, which this machine has; with
 =vipsthumbnail= installed (package =vips-tools=) images use that, SVG
 among them. A picture is shown from a thumbnail within 1000 by 1000,
-made once in the background and again when the picture changes; a text
-file from its first 64 KB. ~b~
+made once in the background and again when the picture changes, as a
+video's frame, a font's sample and a PDF's first page are; a text file
+from its first 64 KB. ~b~
 jumps to a quick access entry (home, notes, projects, doom, downloads,
 documents, media, scratch, ~+core-quick-access~), and ~SPC m b~ adds the
 directory you are in under a letter, kept by savehist in
