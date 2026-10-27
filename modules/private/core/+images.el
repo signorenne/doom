@@ -32,11 +32,9 @@
   (dolist (type '(PNG JPG JPEG JPE GIF TIF TIFF WEBP XPM XBM PBM PGM PPM PNM))
     (add-to-list 'imagemagick-types-inhibit type)))
 
-;; AVIF, JPEG XL, PSD and BMP open in the viewer like any other picture:
-;; Emacs reads none of them itself here, so each is converted to a PNG
-;; the first time it is opened and kept. HEIC it reads through macOS,
-;; and HEIF too, the same container, though only .heic opens as a picture
-;; unless told.
+;; AVIF, JPEG XL, PSD and BMP open like any other picture: Emacs cannot
+;; read them here, so each is converted to a PNG once and kept. HEIC and
+;; HEIF it reads through macOS.
 (defvar +core-image-converted-exts '("avif" "jxl" "psd" "bmp")
   "The picture formats the viewer opens through `+core--image-convert'.")
 

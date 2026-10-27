@@ -58,8 +58,8 @@ so a half-typed line never blanks it.")
 
 (defvar +core-view-box-max 8192
   "The largest side of a picture rendered for the view, in device
-pixels. A zoom stops where it would ask for more: 8192 square decodes to
-268 MB.")
+pixels. A zoom stops where it would ask for more, which would take
+hundreds of megabytes to decode.")
 
 (defvar +core-view-box nil
   "While a draw function runs, the (WIDTH . HEIGHT) in device pixels its
@@ -271,8 +271,7 @@ kept five minutes otherwise. Run in the view's buffer."
   (when-let* ((old (get-text-property (point-min) 'display))
               ((eq (car-safe old) 'image))
               ((not (equal old keep))))
-    ;; Every frame: the selected one may be a terminal's, where a flush
-    ;; of its own signals.
+    ;; Every frame: a terminal's own flush signals.
     (image-flush old t)))
 
 (defun +core-view--place ()
@@ -317,9 +316,8 @@ viewer's do."
 (defun +core-view--put-image (source data type &optional props)
   "Show DATA, an image of TYPE with PROPS, in the view, at the zoom and
 place the last one was, when it is SOURCE's again."
-  ;; A PNG says its own size: with it the view fits a small one, zooms
-  ;; past it and shows it at it, which a drawing that only gave its bytes
-  ;; (a diagram as PNG) could not.
+  ;; A PNG says its own size, so the view can fit and zoom one given
+  ;; without it, a diagram as PNG.
   (unless (or (plist-get props :scale) (plist-get props :natural))
     (when-let* ((size (+core-view--png-size data)))
       (setq props (append props (list :natural size)))))
@@ -327,8 +325,7 @@ place the last one was, when it is SOURCE's again."
                                 :box (and (plist-get props :scale) +core-view-box)))
   (with-current-buffer (+core-view--buffer)
     (unless (derived-mode-p 'special-mode) (special-mode))
-    ;; As image-mode does: redisplay would otherwise scroll back to
-    ;; point, the picture's first column, undoing every pan to the right.
+    ;; As image-mode does: redisplay would scroll back to point and undo a pan.
     (setq-local cursor-type nil
                 truncate-lines t
                 auto-hscroll-mode nil
@@ -418,8 +415,8 @@ nil when it said nothing.
 Returns a function that stops it, for an (async START) result.
 
 INPUT goes through a file of its own rather than the pipe: Emacs feeds a
-pipe a few kilobytes at a time and waits in between, 0.7 s of a frozen
-editor for a 1.7 MB drawing, where writing the file takes milliseconds."
+pipe a few kilobytes at a time and waits in between, which freezes the
+editor for a large drawing."
   (let ((out (generate-new-buffer " *view-pipe*"))
         (err (generate-new-buffer " *view-pipe-err*"))
         (file (when input
@@ -489,9 +486,7 @@ would otherwise be shown as the current drawing's problem."
     (let ((cancel +core-view--cancel))
       (setq +core-view--cancel nil
             +core-view--generation (1+ +core-view--generation))
-      ;; In the buffer it was called from: stopping a process can leave
-      ;; another current, and a draw that cancels then read *doom*'s
-      ;; empty draw function, "void: nil", and never drew the zoom sharp.
+      ;; Stopping a process can leave another buffer current.
       (save-current-buffer (ignore-errors (funcall cancel))))))
 
 (defun +core-view--show (source result generation)
@@ -504,9 +499,8 @@ GENERATION, unless a newer drawing was asked for since."
       (`(async ,start . ,word)
        (unless (eq +core-view--drawn source)
          (+core-view--put-text source (propertize (or (car word) "Drawing...") 'face 'shadow)))
-       ;; The box this drawing is for, kept for when it comes back: by
-       ;; then the binding is gone, and the picture would not know what
-       ;; it was rendered for, so a zoom could not scale it meanwhile.
+       ;; The box it is drawn for, still known when it comes back, so a
+       ;; zoom can scale it meanwhile.
        (let* ((box +core-view-box)
               (cancel (funcall start (lambda (result)
                                        (when (eql generation +core-view--generation)
@@ -577,8 +571,7 @@ sizes itself is exact already."
 the size it is rendered for changed: the echo area growing for a line,
 or a key hint, leaves it as it is."
   (when +core-view--shown
-    ;; A larger window lowers the zoom's ceiling: past it the sharp
-    ;; picture would come back smaller than the one shown.
+    ;; A larger window lowers the zoom's ceiling.
     (when +core-view-zoom
       (setq +core-view-zoom (min +core-view-zoom (+core-view--zoom-max))))
     (+core-view--place)
@@ -593,8 +586,7 @@ the view's alone: a file opened from inside it goes to the window it
 stands beside. It was not, and SPC SPC there put the next picture in the
 side window, its report in a new one on the other side, and the source
 in a sliver between them."
-  ;; flymake from the first showing, not as the buffer is made: a file a
-  ;; search or a consult preview only visits would start checks for nothing.
+  ;; flymake from the first showing, not for a file only visited.
   (with-current-buffer source
     (when (and +core-view-live (not +core-view--flymake-started))
       (setq +core-view--flymake-started t)
@@ -719,8 +711,7 @@ wants a view gives it one again from its own hook."
 (defun +core-view--flymake-send ()
   "Tell flymake what the last drawing said: an error on its line, or
 nothing. A problem with no line stays in the view's header only."
-  ;; flymake turned off, or on again and not yet asking: a report then
-  ;; finds no state for this backend and signals.
+  ;; A report while flymake is off, or not yet asking, signals.
   (when (and +core-view--report
              (bound-and-true-p flymake-mode)
              (memq '+core-view--flymake (flymake-running-backends)))
@@ -730,9 +721,7 @@ nothing. A problem with no line stays in the view's header only."
                          (region (flymake-diag-region (current-buffer) line)))
                (list (flymake-make-diagnostic (current-buffer) (car region) (cdr region)
                                               :error (car problem))))
-             ;; The whole buffer each time: flymake clears a backend's
-             ;; old errors only at its first report, and adds the later
-             ;; ones to them unless told which part they replace.
+             ;; The whole buffer, or flymake adds to the old errors.
              :region (cons (point-min) (point-max)))))
 
 (defun +core-view--flymake (report-fn &rest _)
@@ -775,9 +764,7 @@ nil. See `+core-view-draw' for what DRAW returns."
               +core-view-side-here side)
   (when live
     (add-hook 'after-change-functions #'+core-view--schedule nil t)
-    ;; Where the drawing breaks is marked on its line, counted in the
-    ;; header with the buffer's other problems, and reached with the
-    ;; keys that go to the next problem.
+    ;; The line a drawing breaks on is marked as an error.
     (add-hook '+core-view-problem-functions #'+core-view--problem-h)
     (add-hook 'flymake-diagnostic-functions #'+core-view--flymake nil t)
     (add-hook 'eglot-managed-mode-hook #'+core-view--flymake-keep-h nil t))
@@ -825,8 +812,8 @@ close it."
   (interactive)
   (with-current-buffer (+core-view-source)
     (setq +core-view-closed nil)
-    ;; Through the display when the view shows another buffer too: it
-    ;; takes this one's side and starts its error marks.
+    ;; Displayed again when it shows another buffer, for this one's side
+    ;; and error marks.
     (unless (and (+core-view--window) (eq +core-view--showing (current-buffer)))
       (+core-view--display (current-buffer)))
     (+core-view--draw (current-buffer) t)))

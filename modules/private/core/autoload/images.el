@@ -292,8 +292,8 @@ nexenne-night, so a drawing is seen as it will be in either.")
 
 (defun +core--svg-geometry (dom)
   "The drawing's own size and its viewBox, from its root element DOM:
-(WIDTH HEIGHT VX VY VW VH). Read off the source, never by drawing it:
-a size asked of Emacs is a whole render, 0.4 s for a large one."
+(WIDTH HEIGHT VX VY VW VH). Read off the source: a size asked of Emacs
+is a whole render."
   (let* ((attrs (dom-attributes dom))
          (box (when-let* ((v (alist-get 'viewBox attrs))
                           (nums (mapcar #'string-to-number
@@ -382,9 +382,8 @@ whole edge."
   (let* ((limit (max (point-min) (- (point) +core--svg-here-reach)))
          (start (or (+core--svg-start-tag-at (point) limit)
                     (if (derived-mode-p 'nxml-mode)
-                        ;; Within reach only: past the last child of a
-                        ;; large drawing, nxml walks back over all of it
-                        ;; to find the root, 95 ms in a 1.7 MB file.
+                        ;; Within reach only: past a large drawing's last
+                        ;; child, nxml walks back over all of it.
                         (ignore-errors
                           (save-excursion
                             (save-restriction
@@ -408,8 +407,7 @@ draws nothing."
 (defun +core/svg-here-toggle ()
   "Outline the element the cursor is in, or stop."
   (interactive)
-  ;; In the SVG's buffer, whose setting it is: from the view's menu the
-  ;; current buffer is the view.
+  ;; In the SVG's buffer: from the view's menu the view is current.
   (with-current-buffer (+core--svg-buffer)
     (setq +core-svg-here (not +core-svg-here))
     (message "The element at the cursor is %s" (if +core-svg-here "outlined" "not outlined"))
@@ -680,12 +678,8 @@ opening only reads it."
         (progn
           (when (or data-type (not (file-exists-p cache)))
             (make-directory (file-name-directory cache) t)
-            ;; The lightest compression: the file stays on this disk, and
-            ;; the default compresses a 6 megapixel picture for 0.6 s of
-            ;; the first opening, against 0.35 s. A picture past 4096
-            ;; pixels on its long side is kept at 4096, more than a
-            ;; Retina screen shows fitted: 0.73 s against 1.0 for a 25
-            ;; megapixel AVIF. Decoding is the rest, 0.6 s at 12.
+            ;; The lightest compression, since the file stays on this disk,
+            ;; and at most 4096 pixels, more than the screen shows fitted.
             (let ((partial (concat cache ".part.png")))
               ;; A failure, or C-g while it converts, leaves no
               ;; half-written file.
@@ -703,8 +697,8 @@ opening only reads it."
                                  (call-process "magick" nil nil nil (concat input "[0]")
                                                "-resize" "4096x4096>"
                                                "-define" "png:compression-level=1" partial)))
-                        ;; Named, since ImageMagick reads JPEG XL only when
-                        ;; built with it: SPC h r d says whether this one is.
+                        ;; Named: ImageMagick reads JPEG XL only when built
+                        ;; with it.
                         (error "%s could not read %s; SPC h r d says why"
                                tool (file-name-nondirectory input))))
                     (rename-file partial cache t))

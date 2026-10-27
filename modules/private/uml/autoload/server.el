@@ -182,9 +182,7 @@ MESSAGE LINE), LINE the diagram's line at fault or nil."
                       (string-to-number (match-string 1))))
          (end (save-excursion (and (re-search-forward "^\r?$" nil t) (point))))
          ;; A diagram that does not parse still comes back 200, as a
-         ;; picture of the words "Syntax Error". The headers say so;
-         ;; read them, so the caller can keep the last good drawing
-         ;; and an export never writes the error picture to disk.
+         ;; picture of "Syntax Error"; the headers say so.
          (problem (save-excursion
                     (and (re-search-forward "^X-PlantUML-Diagram-Error: *\\(.*?\\)\r?$" end t)
                          (match-string 1))))
