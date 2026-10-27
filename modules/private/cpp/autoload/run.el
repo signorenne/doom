@@ -126,18 +126,31 @@ the cache or the top CMakeLists.txt changes."
     (if (and stamp (equal (car have) stamp))
         (cdr have)
       (let* ((code nil)
-             (output (with-temp-buffer
-                       (setq code (process-file shell-file-name nil t nil
-                                                shell-command-switch
-                                                (+cpp--kit-shell kit
-                                                                 (format "cmake --build %s --target help"
-                                                                         (shell-quote-argument dir))
-                                                                 root)))
-                       (buffer-string)))
+             (ask (lambda (args)
+                    (with-temp-buffer
+                      (setq code (process-file shell-file-name nil t nil
+                                               shell-command-switch
+                                               (+cpp--kit-shell kit
+                                                                (format "cmake --build %s %s"
+                                                                        (shell-quote-argument dir) args)
+                                                                root)))
+                      (buffer-string))))
+             (output (funcall ask "--target help"))
              (names (cl-loop for line in (split-string output "\n" t)
                              ;; Makefiles: "... name"; Ninja: "name: phony".
                              when (string-match "\\`\\(?:\\.\\.\\. \\([^ ]+\\)\\|\\([^ :]+\\): \\)" line)
                              collect (or (match-string 1 line) (match-string 2 line)))))
+        ;; Ninja's help leaves out the programs and libraries, which its
+        ;; full list names by their link rule.
+        (when (and (eql code 0) (string-suffix-p "build.ninja" build))
+          (let ((linked (funcall ask "-- -t targets all")))
+            (when (eql code 0)
+              (setq names
+                    (delete-dups
+                     (append names
+                             (cl-loop for line in (split-string linked "\n" t)
+                                      when (string-match "_\\(?:EXECUTABLE\\|STATIC_LIBRARY\\|SHARED_LIBRARY\\|MODULE\\)_LINKER__\\(.+\\)_\\'" line)
+                                      collect (match-string 1 line))))))))
         ;; Only an answer: a failure's lines would pass for targets.
         (when (and stamp names (eql code 0))
           (puthash dir (cons stamp names) +cpp--help-targets))
@@ -159,19 +172,6 @@ afterwards."
        (+cpp--kit-shell kit (format "cmake %s" (shell-quote-argument dir))))
       (+cpp--file-api-codemodel dir))))
 
-(defun +cpp--runnable-p (artifacts)
-  "Non-nil when ARTIFACTS holds something to run and not only tests."
-  (seq-some (lambda (a) (eq (alist-get 'type a) 'cmake-executable)) artifacts))
-
-(defun +cpp--executable-artifacts (kit)
-  "Executables CMake knows about in KIT's build directory, or nil.
-Read from the file API reply: projection's client query, which a
-configure through SPC k c writes, else the shared codemodel of a
-directory Qt Creator configured, else one asked for now, for a
-directory configured on the command line.
-
-Each answer is taken only if it holds an executable.  A directory
-configured outside projection leaves it with the ctest targets and
 (defvar +cpp--file-api-asked nil
   "Build directories asked for their codemodel in the background.")
 
@@ -195,6 +195,19 @@ it rather than waiting for CMake."
          :command (list shell-file-name shell-command-switch
                         (+cpp--kit-shell kit (format "cmake %s" (shell-quote-argument dir)))))))))
 
+(defun +cpp--runnable-p (artifacts)
+  "Non-nil when ARTIFACTS holds something to run and not only tests."
+  (seq-some (lambda (a) (eq (alist-get 'type a) 'cmake-executable)) artifacts))
+
+(defun +cpp--executable-artifacts (kit)
+  "Executables CMake knows about in KIT's build directory, or nil.
+Read from the file API reply: projection's client query, which a
+configure through SPC k c writes, else the shared codemodel of a
+directory Qt Creator configured, else one asked for now, for a
+directory configured on the command line.
+
+Each answer is taken only if it holds an executable.  A directory
+configured outside projection leaves it with the ctest targets and
 nothing to run, which is an answer, and the shorter kind of `or' would
 stop at it and never read the reply that has the program in it."
   (let ((projection (and (not (+cpp-kit-configs kit))
