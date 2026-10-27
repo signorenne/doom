@@ -172,6 +172,29 @@ directory configured on the command line.
 
 Each answer is taken only if it holds an executable.  A directory
 configured outside projection leaves it with the ctest targets and
+(defvar +cpp--file-api-asked nil
+  "Build directories asked for their codemodel in the background.")
+
+;;;###autoload
+(defun +cpp--file-api-prefetch ()
+  "Ask CMake in the background for the codemodel of this project's build
+directory when it has no file API reply, so running or debugging finds
+it rather than waiting for CMake."
+  (ignore-errors
+    (let* ((kit (+cpp--kit))
+           (dir (+cpp-kit-abs-dir kit)))
+      (when (and (file-exists-p (expand-file-name "CMakeCache.txt" dir))
+                 (not (file-directory-p (expand-file-name ".cmake/api/v1/reply" dir)))
+                 (not (member dir +cpp--file-api-asked)))
+        (push dir +cpp--file-api-asked)
+        (let ((query (expand-file-name ".cmake/api/v1/query/codemodel-v2" dir)))
+          (make-directory (file-name-directory query) t)
+          (unless (file-exists-p query) (write-region "" nil query nil 'silent)))
+        (make-process
+         :name "cmake-file-api" :noquery t :buffer nil
+         :command (list shell-file-name shell-command-switch
+                        (+cpp--kit-shell kit (format "cmake %s" (shell-quote-argument dir)))))))))
+
 nothing to run, which is an answer, and the shorter kind of `or' would
 stop at it and never read the reply that has the program in it."
   (let ((projection (and (not (+cpp-kit-configs kit))

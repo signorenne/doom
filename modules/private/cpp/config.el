@@ -237,7 +237,13 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
     "Ask for the compilation database when the file is C or C++."
     (when (derived-mode-p 'c-mode 'c++-mode 'c-ts-mode 'c++-ts-mode)
       (+pio--compiledb-h)
-      (+cpp--compdb-h))))
+      (+cpp--compdb-h)
+      ;; And what a run will ask CMake, once the opening is over.
+      (let ((buffer (current-buffer)))
+        (run-with-idle-timer 2 nil (lambda ()
+                                     (when (buffer-live-p buffer)
+                                       (with-current-buffer buffer
+                                         (+cpp--file-api-prefetch)))))))))
 
 ;; CMakeLists.txt: completion and documentation for commands and variables.
 (set-eglot-client! '(cmake-mode cmake-ts-mode)
