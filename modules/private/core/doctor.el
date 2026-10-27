@@ -31,11 +31,22 @@
   (warn! "No wl-copy (Wayland) or xclip (X11): files cannot go to or come from other apps, dired's yc and yv"))
 
 ;; dirvish's previews: video frames and audio details need ffmpeg and
-;; ffprobe, images one of the two thumbnailers.
+;; ffprobe, a PDF's first page pdftoppm, an archive's listing 7z, images
+;; one of the two thumbnailers.
 (dolist (tool '(("ffmpeg" . "video frames in the preview pane")
-                ("ffprobe" . "audio and video details in the preview pane")))
+                ("ffprobe" . "audio and video details in the preview pane")
+                ("pdftoppm" . "PDF pages in the preview pane")))
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: no %s" (car tool) (cdr tool))))
+(unless (executable-find "pdftoppm")
+  (explain! (if (featurep :system 'macos)
+                "brew install poppler"
+              "openSUSE: zypper in poppler-tools")))
+(unless (or (executable-find "7zz") (executable-find "7z"))
+  (warn! "Couldn't find 7z: no archive listings in the preview pane")
+  (explain! (if (featurep :system 'macos)
+                "brew install p7zip"
+              "zypper what-provides 7z names the package")))
 (unless (or (executable-find "vipsthumbnail") (executable-find "magick")
             (executable-find "convert"))
   (warn! "No vipsthumbnail or ImageMagick: no image thumbnails in the preview pane")

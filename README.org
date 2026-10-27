@@ -32,7 +32,7 @@ brew install llvm cmake ninja python
 brew install graphviz plantuml pandoc aspell languagetool
 # Previews in the file manager, pictures and drawings, the terminal,
 # per-project environments
-brew install ffmpeg exiftool vips imagemagick librsvg libvterm direnv
+brew install ffmpeg exiftool vips imagemagick librsvg poppler p7zip libvterm direnv
 # Data files, web
 brew install taplo node
 npm install -g vscode-langservers-extracted yaml-language-server prettier \
