@@ -79,20 +79,46 @@ name of a profile the project defines.  Kept in .dir-locals.el.")
     (when (file-readable-p file)
       (with-temp-buffer (insert-file-contents file) (buffer-string)))))
 
+(defvar +rust--metadata-cache (make-hash-table :test #'equal)
+  "Project root to (STAMP . METADATA), what cargo said and when.")
+
+(defun +rust--metadata-stamp (root manifests)
+  "The modification times of ROOT's Cargo.toml and Cargo.lock and of
+MANIFESTS, the packages' own."
+  (mapcar (lambda (file) (file-attribute-modification-time (file-attributes file)))
+          (append (list (expand-file-name "Cargo.toml" root)
+                        (expand-file-name "Cargo.lock" root))
+                  manifests)))
+
 (defun +rust--metadata ()
   "What `cargo metadata' says about the project, as an alist, or nil.
 Asked of cargo rather than read out of Cargo.toml: a workspace member
-can be a glob, and a feature can come from a dependency."
+can be a glob, and a feature can come from a dependency. Kept until a
+manifest or the lock file changes, since cargo takes its time."
   (when (executable-find "cargo")
-    (let ((default-directory (+rust-root)))
-      (with-temp-buffer
-        (when (zerop (or (ignore-errors
-                           (call-process "cargo" nil t nil "metadata"
-                                         "--no-deps" "--format-version" "1"))
-                         1))
-          (goto-char (point-min))
-          (ignore-errors (json-parse-buffer :object-type 'alist
-                                            :array-type 'list)))))))
+    (let* ((root (+rust-root))
+           (have (gethash root +rust--metadata-cache))
+           (manifests (lambda (metadata)
+                        (mapcar (lambda (package) (alist-get 'manifest_path package))
+                                (alist-get 'packages metadata)))))
+      (if (and have (equal (car have)
+                           (+rust--metadata-stamp root (funcall manifests (cdr have)))))
+          (cdr have)
+        (let* ((default-directory root)
+               (metadata
+                (with-temp-buffer
+                  (when (zerop (or (ignore-errors
+                                     (call-process "cargo" nil t nil "metadata"
+                                                   "--no-deps" "--format-version" "1"))
+                                   1))
+                    (goto-char (point-min))
+                    (ignore-errors (json-parse-buffer :object-type 'alist
+                                                      :array-type 'list))))))
+          (when metadata
+            (puthash root (cons (+rust--metadata-stamp root (funcall manifests metadata))
+                                metadata)
+                     +rust--metadata-cache))
+          metadata)))))
 
 
 ;;
