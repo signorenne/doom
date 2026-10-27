@@ -66,6 +66,10 @@ session does not freeze the editor while the JVM loads (it did, about
 3 s); the drawing appears once the server answers. An export started
 meanwhile waits for that same start.
 
+When diagrams are among the recent files, the server starts and draws
+once while Emacs waits after starting, so the first diagram of a session
+shows in about 0.24 s instead of 2.
+
 | Key       | What it does                       |
 |-----------+------------------------------------|
 | ~SPC m s i~ | is it running, and on what port    |
