@@ -347,6 +347,24 @@ output go to =*Conversions*=.
 - PDF (poppler): each page as a picture, the marked ones merged, each
   page as a PDF of its own.
 
+* File tools
+~SPC m x~ in the file manager, on the marked files or the one at point:
+
+- Checksums: SHA-256 copied, or MD5, SHA-1, SHA-512 (openssl, in the
+  background). A checksum pasted is checked against the file, its kind
+  told by its length; a =SHA256SUMS= or =.sha256= file has every file it
+  lists checked, OK, FAILED or MISSING.
+- Compare two files: the same, or where they first differ; two text
+  files side by side in ediff.
+- Duplicates under the folder: files of one size hashed, the same ones
+  grouped in a buffer where =m= marks, =u= unmarks and =x= sends the
+  marked to the trash.
+- Rename with a preview: replace text, a prefix, a suffix, numbered,
+  lower or upper case, or the date a photo was taken. The preview shows
+  every new name and refuses when two clash; =C-c C-c= renames, swapping
+  names included.
+- Hex: the file in hexl.
+
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid
 and takes you to where it is not; ~SPC m =~ and ~SPC m -~ reshape it,

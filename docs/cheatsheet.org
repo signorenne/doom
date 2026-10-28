@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 14:36
+#+generated: 2026-10-24 14:40
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3427,6 +3427,16 @@ bound.
   the build worked.
 - ~+core/build-panel~ (~SPC k m~) :: The panel of what this project's build
   depends on.
+- ~+core/checksum~ :: The checksum of the marked files, SHA-256 unless
+  ALGORITHM; one file's is copied, several are listed.
+- ~+core/checksum-choose~ :: The checksum of the marked files, as ALGORITHM.
+- ~+core/checksum-verify~ :: Check the file at point against EXPECTED, a
+  checksum pasted, its kind told by its length.
+- ~+core/checksum-verify-list~ :: Check every file SUMS-FILE lists, as
+  sha256sum and friends write it: a checksum, then a file name, a line each.
+- ~+core/compare-files~ :: Whether files A and B are the same, and where
+  they first differ; two text files that differ can be compared side by
+  side.
 - ~+core/convert~ (~SPC m c~) :: Convert the marked files, or the one at
   point or in this buffer, into new files beside them.
 - ~+core/convert-clip~ :: A clip of each selected video from START to END,
@@ -3496,8 +3506,14 @@ bound.
   buffer, then offer to restart.
 - ~+core/doom-upgrade~ (~SPC h r u~) :: Update Doom and its packages, then
   rebuild them.
+- ~+core/duplicates-mark~ :: Mark this file.
+- ~+core/duplicates-trash~ :: Send the marked files to the trash.
+- ~+core/duplicates-unmark~ :: Unmark this file.
+- ~+core/duplicates-visit~ :: Visit the file on this line.
 - ~+core/file-own-mode~ :: Give a file opened as plain text the major mode
   it would have had.
+- ~+core/file-tools~ (~SPC m x~) :: Tools for the marked files, or the one
+  at point.
 - ~+core/files-from-clipboard~ (~y v~) :: Copy the files on the system
   clipboard into this directory.
 - ~+core/files-to-clipboard~ (~y c~) :: Put the marked files, or this file,
@@ -3505,8 +3521,11 @@ bound.
 - ~+core/find-any-file~ (~SPC s F~) :: Find a file anywhere under the
   project, ignored ones included: build output, generated files, untracked
   assets.
+- ~+core/find-duplicates~ :: Find the files under DIR that are the same as
+  another: those of one size are hashed, in the background.
 - ~+core/find-file-in-other-project~ (~SPC p >~) :: Choose another project,
   then a file in it.
+- ~+core/hex-view~ :: The file at point, in hex.
 - ~+core/image-fit~ (~f~) :: Fill the window with the picture, the size it
   opens at.
 - ~+core/image-original~ (~1~) :: The picture at the size it really is.
@@ -3533,6 +3552,19 @@ bound.
   menu, under KEY, described as DESC, for this session and the next ones.
 - ~+core/quick-access-remove~ (~SPC m B~) :: Drop an entry added with
   '+core/quick-access-add' from the b menu.
+- ~+core/rename-apply~ :: Rename the files as the preview shows.
+- ~+core/rename-lower~ :: Rename the marked files in lower case.
+- ~+core/rename-number~ :: Rename the marked files BASE and a number from
+  START, in their order, each keeping its extension.
+- ~+core/rename-photo-date~ :: Rename the marked photos by when they were
+  taken; one without a date keeps its name.
+- ~+core/rename-prefix~ :: Rename the marked files with PREFIX before each
+  name.
+- ~+core/rename-replace~ :: Rename the marked files, FROM, a regexp,
+  replaced by TO in each name.
+- ~+core/rename-suffix~ :: Rename the marked files with SUFFIX after each
+  name, before its extension.
+- ~+core/rename-upper~ :: Rename the marked files in upper case.
 - ~+core/replace-in-buffer~ :: Replace through this buffer, with the menu's
   options: a literal string with F, whole words with w, either case with i.
 - ~+core/replace-in-buffer-suffix~ :: Replace in this buffer.
