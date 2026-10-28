@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 11:38
+#+generated: 2026-10-24 14:32
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -69,6 +69,7 @@ Each module keeps its own notes, reachable with =SPC h d M=:
 [[file:../modules/private/device/README.org][device]],
 [[file:../modules/private/docs/README.org][docs]],
 [[file:../modules/private/git/README.org][git]],
+[[file:../modules/private/media/README.org][media]],
 [[file:../modules/private/notes/README.org][notes]],
 [[file:../modules/private/pascal/README.org][pascal]],
 [[file:../modules/private/qtcreator/README.org][qtcreator]],
@@ -3015,6 +3016,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o A~   | Org agenda                   |
 | ~SPC o E~   | Open eshell here             |
 | ~SPC o F~   | Select frame                 |
+| ~SPC o M~   | Media player                 |
 | ~SPC o O~   | Reveal project in Finder     |
 | ~SPC o P~   | Find file in project sidebar |
 | ~SPC o R~   | REPL (same window)           |
@@ -3914,6 +3916,31 @@ bound.
   here made a plain tag.
 - ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
   commit again differently.
+
+** Media
+- ~+media/back~ (~h~) :: Five seconds back.
+- ~+media/back-more~ (~H~) :: A minute back.
+- ~+media/forward~ (~l~) :: Five seconds on.
+- ~+media/forward-more~ (~L~) :: A minute on.
+- ~+media/louder~ (~0~) :: Raise the volume.
+- ~+media/mute~ (~m~) :: Mute, or not.
+- ~+media/next~ (~>~) :: The next track.
+- ~+media/pause~ (~p~) :: Pause, or play on.
+- ~+media/play-at-point~ (~RET~) :: Play the queue entry on this line, or
+  pause and play on elsewhere.
+- ~+media/play-file~ :: Play FILE, or every media file under it, now.
+- ~+media/player~ (~SPC o M~) :: Show the player, starting mpv if it is not
+  running.
+- ~+media/previous~ (~<~) :: The track before.
+- ~+media/queue-files~ (~a~) :: Add FILES, or what is under them, to the
+  queue.
+- ~+media/queue-marked~ :: Add the marked files, or the one at point, to the
+  player's queue.
+- ~+media/quieter~ (~9~) :: Lower the volume.
+- ~+media/remove-at-point~ (~d~) :: Take the queue entry on this line out.
+- ~+media/repeat~ (~r~) :: Repeat nothing, then the queue, then the track.
+- ~+media/shuffle~ (~z~) :: Shuffle the queue.
+- ~+media/stop~ (~s~) :: Stop and empty the queue.
 
 ** Notes
 - ~+notes/align-tables~ (~SPC m b A~) :: Widen every table in this buffer

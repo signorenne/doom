@@ -1,0 +1,48 @@
+#+title:    :private media
+#+subtitle: a player on mpv, in a buffer of its own
+
+* Description
+A media player inside Emacs. mpv plays: music in the background, a video
+in mpv's own window. The player's buffer shows what plays, with its
+cover, artist and album, where it is and how long it lasts, the volume,
+and the queue; its keys are mpv's own where Emacs leaves them free.
+
+Opening music or a video plays it: =RET= on it in the file manager, or
+=SPC f f=. =SPC m p= in the file manager adds the marked files, or a
+folder with everything under it, to the queue. Killing the player's
+buffer stops mpv; hiding it (=q=) leaves the music playing.
+
+The cover is a =cover.jpg=, =folder.jpg= or =front.jpg= beside the file,
+else the picture inside it, taken out once by ffmpeg and kept.
+
+* Keybindings
+| Key       | Command              | What it does                     |
+|-----------+----------------------+----------------------------------|
+| ~SPC o M~   | ~+media/player~        | the player, mpv started if need be |
+| ~SPC m p~   | ~+media/queue-marked~  | in the file manager: queue them  |
+
+In the player:
+
+| Key     | What it does                                   |
+|---------+------------------------------------------------|
+| =p=       | pause, play on                                 |
+| =RET=     | play the track on this line, elsewhere pause   |
+| =< >=     | previous, next                                 |
+| =h l=     | five seconds back, on                          |
+| =H L=     | a minute back, on                              |
+| =9 0=     | volume down, up                                |
+| =m=       | mute                                           |
+| =r=       | repeat: the queue, the track, nothing          |
+| =z=       | shuffle the queue                              |
+| =s=       | stop                                           |
+| =d=       | take the track on this line out of the queue   |
+| =a=       | add a file or folder to the queue              |
+| =q=       | hide the player; the music plays on            |
+
+* Configuration
+- ~+media-audio-extensions~, ~+media-video-extensions~: what plays.
+- ~+media-mpv-args~: more arguments for mpv.
+
+* Setup
+=brew install mpv= (openSUSE: =zypper in mpv=); ffmpeg for covers inside
+files. ~SPC h r d~ says when either is missing.
