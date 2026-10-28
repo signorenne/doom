@@ -175,6 +175,11 @@ has no cursor."
 
 ;; A moving picture plays as it opens, looping, and goes on playing as it
 ;; is fitted, zoomed and resized; stepping a frame by hand pauses it.
+(map! :after image-mode
+      :map image-mode-map
+      :localleader
+      :desc "Convert into a new file" "c" #'+core/convert)
+
 (add-hook 'image-mode-hook #'+core--image-animate-h 90)
 (after! image-mode
   (advice-add 'image-toggle-display-image :around #'+core--image-keep-playing-a)

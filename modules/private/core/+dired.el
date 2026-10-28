@@ -424,7 +424,8 @@ image-mode and played it."
       :desc "The other pane"        "2" #'+core/dirvish-other-pane
       :desc "Open the marked files" "o" #'+core/dired-open-marked
       :desc "Quick access: add here" "b" #'+core/quick-access-add
-      :desc "Quick access: drop one" "B" #'+core/quick-access-remove)
+      :desc "Quick access: drop one" "B" #'+core/quick-access-remove
+      :desc "Convert into new files" "c" #'+core/convert)
 
 ;; Doom's two dired keys open the file manager with the preview pane: on
 ;; this file's directory, or on a directory asked for.

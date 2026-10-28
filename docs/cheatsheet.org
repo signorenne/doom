@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 14:32
+#+generated: 2026-10-24 14:36
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3427,6 +3427,44 @@ bound.
   the build worked.
 - ~+core/build-panel~ (~SPC k m~) :: The panel of what this project's build
   depends on.
+- ~+core/convert~ (~SPC m c~) :: Convert the marked files, or the one at
+  point or in this buffer, into new files beside them.
+- ~+core/convert-clip~ :: A clip of each selected video from START to END,
+  as m:ss or seconds.
+- ~+core/convert-compress-video~ :: Smaller videos for sending: at most 1280
+  wide, H.264 at a lower quality.
+- ~+core/convert-gif~ :: A GIF of each selected video, LENGTH seconds from
+  START.
+- ~+core/convert-menu~ :: Convert the selected files into new ones beside
+  them.
+- ~+core/convert-pdf-merge~ :: The selected PDFs as one, in the order they
+  are listed.
+- ~+core/convert-pdf-pages~ :: Each page of the selected PDFs as a PNG, in a
+  folder beside it.
+- ~+core/convert-pdf-split~ :: Each page of the selected PDFs as a PDF of
+  its own, in a folder beside it.
+- ~+core/convert-resize~ :: Resize the selected pictures: SIZE is the long
+  side in pixels, or a percentage such as 50%.
+- ~+core/convert-strip-metadata~ :: Copies of the selected pictures without
+  their metadata: place, camera, dates.
+- ~+core/convert-to-avif~ :: Pictures to AVIF.
+- ~+core/convert-to-docx~ :: Documents to Word.
+- ~+core/convert-to-flac~ :: Audio, or a video's sound, to FLAC.
+- ~+core/convert-to-html~ :: Documents to a web page.
+- ~+core/convert-to-jpg~ :: Pictures to JPEG.
+- ~+core/convert-to-m4a~ :: Audio, or a video's sound, to M4A.
+- ~+core/convert-to-markdown~ :: Documents to Markdown.
+- ~+core/convert-to-mp3~ :: Audio, or a video's sound, to MP3.
+- ~+core/convert-to-mp4~ :: Videos to MP4 (H.264 and AAC), which plays
+  everywhere.
+- ~+core/convert-to-odt~ :: Documents to OpenDocument.
+- ~+core/convert-to-ogg~ :: Audio, or a video's sound, to Ogg.
+- ~+core/convert-to-org~ :: Documents to Org.
+- ~+core/convert-to-pdf~ :: Documents to PDF.
+- ~+core/convert-to-png~ :: Pictures to PNG.
+- ~+core/convert-to-wav~ :: Audio, or a video's sound, to WAV.
+- ~+core/convert-to-webm~ :: Videos to WebM (VP9 and Opus).
+- ~+core/convert-to-webp~ :: Pictures to WebP.
 - ~+core/copy-file-contents~ (~y t~) :: Copy the whole text of this file to
   the kill ring, without opening it.
 - ~+core/copy-menu~ (~SPC f k~) :: Copy something about this file; each line

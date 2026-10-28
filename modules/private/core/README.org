@@ -329,6 +329,24 @@ is made of, its ids, what it embeds and the fonts it names
 ask. ~SPC m SPC~ beside an SVG or a diagram, and ~?~ in the view, open a
 menu of all of it.
 
+* Converting files
+~SPC m c~ on the marked files in the file manager, or in a picture's
+buffer, opens a menu of what fits them, and each conversion makes a new
+file beside the original, numbered when the name is taken; nothing is
+overwritten. It runs in the background, and a failure's command and
+output go to =*Conversions*=.
+
+- Pictures (vips, or ImageMagick): to PNG, JPEG, WebP or AVIF; resized
+  to a long side or a percentage; a copy without metadata (place,
+  camera, dates; exiftool), the way up kept.
+- Video (ffmpeg): to MP4 or WebM, a smaller copy for sending, a clip
+  between two times, a GIF.
+- Audio, or a video's sound: to MP3, FLAC, M4A, Ogg or WAV.
+- Documents (pandoc): Markdown, Org, HTML, Word, OpenDocument, and PDF
+  where a LaTeX is installed.
+- PDF (poppler): each page as a picture, the marked ones merged, each
+  page as a PDF of its own.
+
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid
 and takes you to where it is not; ~SPC m =~ and ~SPC m -~ reshape it,
