@@ -25,14 +25,14 @@ not need it. macOS:
 
 #+begin_src sh
 # Search, files, git, the offline docs
-brew install git ripgrep fd jq git-delta
+brew install git ripgrep fd jq git-delta bat
 # C and C++: clangd, clang-format and clang-tidy come with llvm
 brew install llvm cmake ninja python
 # Notes, diagrams, export, spelling
 brew install graphviz plantuml pandoc aspell languagetool
-# Previews in the file manager, pictures and drawings, the terminal,
-# per-project environments
-brew install ffmpeg exiftool vips imagemagick librsvg poppler p7zip libvterm direnv
+# Previews in the file manager, pictures and drawings, music and video,
+# the terminal, per-project environments
+brew install ffmpeg exiftool vips imagemagick librsvg poppler p7zip mpv libvterm direnv
 # Data files, web
 brew install taplo node
 npm install -g vscode-langservers-extracted yaml-language-server prettier \
