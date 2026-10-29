@@ -147,8 +147,10 @@ made with ImageMagick, ffmpeg and ffprobe, which this machine has; with
 =vipsthumbnail= installed (package =vips-tools=) images use that, SVG
 among them. A picture is shown from a thumbnail within 1000 by 1000,
 made once in the background and again when the picture changes, as a
-video's frame, a font's sample and a PDF's first page are; a text file
-from its first 64 KB. ~b~
+video's frame, a font's sample and a PDF's first page are; a GIF plays.
+A text file shows its first 64 KB as plain text at once and, once the
+cursor rests on it for 0.15 s (~+core-preview-live-delay~), in its own
+mode with its colours, as it would open. ~b~
 jumps to a quick access entry (home, notes, projects, doom, downloads,
 documents, media, scratch, ~+core-quick-access~), and ~SPC m b~ adds the
 directory you are in under a letter, kept by savehist in
@@ -672,14 +674,23 @@ What keeps it that way:
   files, which the agenda reads in org-mode only, are not touched. Reading such a file in pieces behind the first screen was
   measured and is worse: each piece sends the mode over the whole file
   again, 8.8 s in all for that C++ and 40 s for an 8 MB JSON.
-- A file previewed, beside ~SPC .~, in the file manager's pane or in a
-  search, is plain text, whatever it is and whatever its size: its mode
-  is never set up, so nothing it runs can hold the cursor up. A font
-  kept as a C array took 115 to 390 ms to show in ~c-ts-mode~, a 900 KB
-  header a third of a second to colour at each step; plain, a preview
-  takes a millisecond. Pictures, videos, PDFs and fonts are drawn by
-  their own programs outside Emacs, a GIF as its first frame; a binary
-  says so in a line, a pipe or a socket is not read. A search reads a
+- A file previewed, beside ~SPC .~ or in the file manager's pane, is
+  plain text first, its first 64 KB, so moving through a listing never
+  waits on a mode: a font kept as a C array took 115 to 390 ms to show
+  in ~c-ts-mode~ whole, a 900 KB header a third of a second to colour at
+  each step, and plain a preview takes under a millisecond. When the
+  cursor rests on it, it takes its own mode without the mode's hooks,
+  which start servers and side views, and colours what shows; a key
+  pressed meanwhile stops that and leaves it plain. Measured on the
+  Mac, a mode already loaded: 1 to 50 ms, 72 ms for that font's first
+  64 KB; a mode's first use loads it, 100 to 650 ms, the six of the
+  recent files being set up ahead at startup. A file with a line past
+  1000 characters, minified CSS or one-line JSON, stays plain, and
+  Markdown's code blocks are not coloured by their own languages, which
+  took 350 ms. Pictures, videos, PDFs and fonts are drawn by their own
+  programs outside Emacs; a GIF up to 16 MB plays, and stops when the
+  preview moves on; a binary says so in a line, a pipe or a socket is
+  not read. A search's preview stays plain, and reads a
   file whole up to 8 MB: past a megabyte consult showed its first 10 KB,
   so a match further down was not on screen. The file picked opens
   afresh, in its own mode.

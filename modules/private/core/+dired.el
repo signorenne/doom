@@ -272,10 +272,13 @@ the pane, the way an image viewer does."
                       :scale (min (/ (float w) (car size))
                                   (/ (float h) (cdr size)))))))
 
+  (defvar +core-preview-gif-max (* 16 1024 1024)
+    "A GIF up to this size plays in the preview; a larger one shows its
+first frame.")
+
   (dirvish-define-preview +core-image (file ext preview-window)
     "Preview images, a thumbnail made by vipsthumbnail or ImageMagick.
-A GIF as well, its first frame: dirvish's own opened it whole in
-image-mode and played it."
+A GIF is drawn by Emacs, to play."
     (when (or (member ext dirvish-image-exts) (equal ext "gif"))
       (let* ((w (dirvish-media--img-size preview-window))
              (h (dirvish-media--img-size preview-window 'height))
@@ -289,7 +292,9 @@ image-mode and played it."
          ;; as it was.
          ((and (file-exists-p cache) (not (file-newer-than-file-p file cache)))
           `(img . ,(+core--preview-image cache w h)))
-         ((equal ext "ico")
+         ((or (equal ext "ico")
+              (and (equal ext "gif")
+                   (< (or (file-attribute-size (file-attributes file)) 0) +core-preview-gif-max)))
           `(img . ,(+core--preview-image file w h)))
          ;; vips draws an SVG in its own process, once, so a large one
          ;; never holds the cursor up; and to fill the thumbnail's square
@@ -326,13 +331,25 @@ image-mode and played it."
     (when (and (member ext dirvish-audio-exts) (executable-find "ffprobe"))
       `(shell . ("ffprobe" "-hide_banner" ,file))))
 
+  ;; A moving picture plays until the preview shows something else: the
+  ;; animation stops by itself once its text is gone.
+  (cl-defmethod dirvish-preview-dispatch :after ((recipe (head img)) dv)
+    "Play RECIPE's picture when it moves."
+    (with-current-buffer (dirvish--special-buffer 'preview dv t)
+      (let ((image (cdr recipe)))
+        (when-let* (((image-multi-frame-p image))
+                    (position (text-property-any (point-min) (point-max) 'display image)))
+          (image-animate image nil t position)))))
+
   ;; Every other file as plain text, its first 64 KB read and nothing
-  ;; run: no mode set up, no colour, no grammar built, so no file can hold
-  ;; the cursor up. dirvish's own preview sets the mode up for each. A
-  ;; file with a NUL in it is a binary, said in a line; a pipe or a
-  ;; socket is not read at all, which would wait for good.
+  ;; run, so moving through a listing never waits on a mode. Once the
+  ;; cursor rests on it, it takes its own mode, coloured as it would
+  ;; open, without the mode's hooks: they start servers and side views.
+  ;; A key pressed meanwhile stops that and leaves it plain. A file with
+  ;; a NUL in it is a binary, said in a line; a pipe or a socket is not
+  ;; read at all, which would wait for good.
   (dirvish-define-preview +core-text (file)
-    "Preview any other file as its plain text."
+    "Preview any other file as its plain text, then in its own mode."
     (cond
      ((file-directory-p file) nil)
      ((not (file-regular-p file))
@@ -341,6 +358,8 @@ image-mode and played it."
       (let ((buffer (get-buffer-create " *+core-preview*"))
             (size (file-attribute-size (file-attributes file))))
         (with-current-buffer buffer
+          (+core--preview-plain)
+          (setq +core--preview-file file)
           (let ((inhibit-read-only t))
             (erase-buffer)
             (condition-case err
@@ -352,6 +371,10 @@ image-mode and played it."
         (if (with-current-buffer buffer
               (search-forward "\0" (min (point-max) 8192) t))
             `(info . ,(format "Binary, %s" (file-size-human-readable (or size 0))))
+          (when (timerp +core--preview-live-timer) (cancel-timer +core--preview-live-timer))
+          (setq +core--preview-live-timer
+                (run-with-idle-timer +core-preview-live-delay nil
+                                     #'+core--preview-live buffer file))
           `(buffer . ,buffer))))))
 
   (setq dirvish-preview-dispatchers
@@ -367,6 +390,59 @@ image-mode and played it."
         (when (and (file-exists-p made) (file-newer-than-file-p file made))
           (delete-file made)))
       cache)))
+
+(defvar +core-preview-live-delay 0.15
+  "How long the cursor rests on a file before its preview takes the
+file's own mode.")
+
+(defvar +core--preview-live-timer nil
+  "The wait before the preview takes its file's mode.")
+
+(defvar-local +core--preview-file nil
+  "The file the preview buffer shows.")
+(put '+core--preview-file 'permanent-local t)
+
+(defun +core--preview-long-lines-p ()
+  "Non-nil when a line of this buffer is too long to colour quickly."
+  (save-excursion
+    (goto-char (point-min))
+    (let (long)
+      (while (and (not long) (not (eobp)))
+        (setq long (> (- (line-end-position) (point)) 1000))
+        (forward-line 1))
+      long)))
+
+(defun +core--preview-live (buffer file)
+  "Give BUFFER, previewing FILE, FILE's own mode, if it still shows it."
+  (when-let* (((buffer-live-p buffer))
+              ((equal (buffer-local-value '+core--preview-file buffer) file))
+              (window (get-buffer-window buffer t)))
+    (with-current-buffer buffer
+      (unless (+core--preview-long-lines-p)
+        (if (eq t (condition-case nil
+                      (while-no-input
+                        (let ((buffer-file-name file) (inhibit-message t) (message-log-max nil)
+                              (non-essential t))
+                          (delay-mode-hooks (set-auto-mode)))
+                        ;; Each code block would set its own language up.
+                        (setq-local markdown-fontify-code-blocks-natively nil)
+                        ;; What shows: font-lock-mode stays off in a hidden buffer.
+                        (font-lock-ensure (point-min)
+                                          (save-excursion
+                                            (goto-char (window-start window))
+                                            (forward-line (window-height window))
+                                            (point)))
+                        nil)
+                    (error t)))
+            (+core--preview-plain)
+          (setq buffer-read-only t truncate-lines t))))))
+
+(defun +core--preview-plain ()
+  "Make this preview buffer plain again, its grammar gone."
+  (unless (eq major-mode 'fundamental-mode)
+    (when (fboundp 'treesit-parser-list)
+      (mapc #'treesit-parser-delete (treesit-parser-list)))
+    (fundamental-mode)))
 
 ;; The keys that make it a file manager. M-n narrows the listing as you
 ;; type, which is Doom's; the rest of the file manager's own work is on
