@@ -294,11 +294,11 @@ def faces(dark):
     f('org-modern-tag', fg='dim', bg='bg_alt')
     f('org-modern-date-active', fg='syn_type', bg='bg_alt')
     f('org-modern-date-inactive', fg='dim', bg='bg_alt')
-    f('org-modern-time-active', fg='bg', bg='syn_type')
-    f('org-modern-time-inactive', fg='bg', bg='dim')
-    f('org-modern-todo', fg='bg', bg='copper', weight='bold')
+    f('org-modern-time-active', chip='syn_type')
+    f('org-modern-time-inactive', chip='dim')
+    f('org-modern-todo', chip='copper', weight='bold')
     f('org-modern-done', fg='fg', bg='border', weight='bold')
-    f('org-modern-priority', fg='bg', bg='syn_builtin', weight='bold')
+    f('org-modern-priority', chip='syn_builtin', weight='bold')
     f('org-modern-statistics', fg='dim')
     f('org-modern-block-name', fg='dim')
     f('org-modern-keyword', fg='dim')
@@ -713,9 +713,9 @@ def faces(dark):
             ('custom-button-mouse', dict(bg='border', fg='fg_strong', box=True)),
             ('custom-button-pressed', dict(bg='region', fg='fg', box=True)),
             ('custom-button-pressed-unraised', dict(fg='syn_keyword', underline=True)),
-            ('custom-changed', dict(fg='bg', bg='syn_function')), ('custom-modified', dict(fg='bg', bg='syn_function')),
-            ('custom-set', dict(fg='bg', bg='green')), ('custom-themed', dict(fg='bg', bg='syn_type')),
-            ('custom-invalid', dict(fg='bg', bg='red')), ('custom-rogue', dict(fg='red', bg='bg_alt')),
+            ('custom-changed', dict(chip='syn_function')), ('custom-modified', dict(chip='syn_function')),
+            ('custom-set', dict(chip='green')), ('custom-themed', dict(chip='syn_type')),
+            ('custom-invalid', dict(chip='red')), ('custom-rogue', dict(fg='red', bg='bg_alt')),
             ('custom-comment', dict(fg='doc', bg='bg_alt')), ('custom-group-tag-1', dict(fg='syn_keyword', weight='bold')),
             ('custom-variable-obsolete', dict(fg='dim')),
             ('widget-button-pressed', dict(fg='copper')), ('widget-documentation', dict(fg='doc')),
@@ -730,7 +730,7 @@ def faces(dark):
             ('epa-validity-high', dict(fg='green', weight='bold')), ('epa-validity-medium', dict(fg='yellow')),
             ('epa-validity-low', dict(fg='dim')), ('epa-validity-disabled', dict(fg='dim', strike_through=True)),
             ('eros-result-overlay-face', dict(fg='syn_constant', box=True)),
-            ('ert-test-result-expected', dict(fg='bg', bg='green')), ('ert-test-result-unexpected', dict(fg='bg', bg='red')),
+            ('ert-test-result-expected', dict(chip='green')), ('ert-test-result-unexpected', dict(chip='red')),
             ('flymake-popon-posframe-border', dict(fg='border')),
             ('git-timemachine-minibuffer-author-face', dict(fg='syn_constant')),
             ('git-timemachine-minibuffer-detail-face', dict(fg='syn_function')),
@@ -749,12 +749,12 @@ def faces(dark):
             ('nobreak-hyphen', dict(fg='syn_constant')),
             ('org-agenda-column-dateline', dict(bg='bg_alt')), ('org-agenda-restriction-lock', dict(bg='bg_alt')),
             ('org-clock-overlay', dict(bg='bg_alt', fg='fg')), ('org-column', dict(bg='bg_alt')),
-            ('org-column-title', dict(bg='bg_raised', fg='fg', weight='bold')), ('org-date-selected', dict(bg='copper', fg='bg')),
+            ('org-column-title', dict(bg='bg_raised', fg='fg', weight='bold')), ('org-date-selected', dict(chip='copper')),
             ('org-dispatcher-highlight', dict(fg='copper', weight='bold')),
             ('org-habit-alert-future-face', dict(bg='chg_bg')), ('org-habit-clear-future-face', dict(bg='add_bg')),
             ('org-habit-overdue-future-face', dict(bg='del_bg')), ('org-habit-ready-future-face', dict(bg='add_bg')),
             ('org-mode-line-clock-overrun', dict(fg='red', weight='bold')),
-            ('org-modern-progress-complete', dict(bg='green', fg='bg')), ('org-modern-progress-incomplete', dict(bg='border', fg='fg')),
+            ('org-modern-progress-complete', dict(chip='green')), ('org-modern-progress-incomplete', dict(bg='border', fg='fg')),
             ('org-roam-dim', dict(fg='dim')), ('org-sexp-date', dict(fg='syn_type')), ('org-table-header', dict(bg='bg_raised', fg='fg', weight='bold')),
             ('package-mark-delete-line', dict(bg='del_bg', extend=True)), ('package-mark-install-line', dict(bg='add_bg', extend=True)),
             ('persp-face-lighter-buffer-not-in-persp', dict(fg='red')),
@@ -783,6 +783,13 @@ def lisp_face(face, kw, g):
     keymap = dict(fg=':foreground', bg=':background', weight=':weight', slant=':slant', underline=':underline',
                   extend=':extend', inherit=':inherit', height=':height', box=':box', strike_through=':strike-through')
     for k, v in kw.items():
+        # A chip, text in the background's colour on a colour of its own,
+        # is that colour drawn inverse. hl-line's overlay sets the
+        # current line's background over the text's, which took a chip's
+        # colour away; inverse, that background becomes its text instead.
+        if k == 'chip':
+            attrs.append(f':foreground "{g[v]}" :inverse-video t')
+            continue
         key = keymap[k]
         if k in ('fg', 'bg'):
             attrs.append(f'{key} "{g[v]}"')
