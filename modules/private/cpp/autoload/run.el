@@ -179,11 +179,18 @@ afterwards."
 (defun +cpp--file-api-prefetch ()
   "Ask CMake in the background for the codemodel of this project's build
 directory when it has no file API reply, so running or debugging finds
-it rather than waiting for CMake."
+it rather than waiting for CMake. Not for a remote file or a container
+kit, which a run asks for itself, nor during a build."
   (ignore-errors
     (let* ((kit (+cpp--kit))
            (dir (+cpp-kit-abs-dir kit)))
-      (when (and (file-exists-p (expand-file-name "CMakeCache.txt" dir))
+      (when (and (not (file-remote-p dir))
+                 (not (+cpp-kit-container kit))
+                 (not (seq-some (lambda (process)
+                                  (and (process-live-p process)
+                                       (string-prefix-p "compilation" (process-name process))))
+                                (process-list)))
+                 (file-exists-p (expand-file-name "CMakeCache.txt" dir))
                  (not (file-directory-p (expand-file-name ".cmake/api/v1/reply" dir)))
                  (not (member dir +cpp--file-api-asked)))
         (push dir +cpp--file-api-asked)
