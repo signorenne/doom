@@ -72,12 +72,17 @@ is copied, several are listed."
     (message "Hashing %d file%s..." (length files) (if (cdr files) "s" ""))
     (+core--digest files algorithm
                    (lambda (sums)
-                     (if (cdr sums)
-                         (+core--show-lines (format "*%s*" (upcase algorithm))
-                                            (mapcar (lambda (sum)
-                                                      (format "%s  %s" (cdr sum)
-                                                              (file-name-nondirectory (car sum))))
-                                                    sums))
+                     (if (cdr files)
+                         (let ((unread (- (length files) (length sums))))
+                           (+core--show-lines (format "*%s*" (upcase algorithm))
+                                              (append
+                                               (mapcar (lambda (sum)
+                                                         (format "%s  %s" (cdr sum)
+                                                                 (file-name-nondirectory (car sum))))
+                                                       sums)
+                                               (and (> unread 0)
+                                                    (list (format "%d file%s could not be read"
+                                                                  unread (if (= unread 1) "" "s")))))))
                        (kill-new (cdar sums))
                        (message "%s %s, copied" (upcase algorithm) (cdar sums)))))))
 
@@ -131,8 +136,10 @@ a checksum, then a file name, a line each."
            (lambda (sums)
              (let ((lines (mapcar (lambda (entry)
                                     (let ((got (cdr (assoc (car entry) sums))))
-                                      (format "%-7s %s"
-                                              (cond ((null got) "MISSING")
+                                      (format "%-10s %s"
+                                              (cond ((and (null got) (file-exists-p (car entry)))
+                                                     "UNREADABLE")
+                                                    ((null got) "MISSING")
                                                     ((equal got (cdr entry)) "OK")
                                                     (t "FAILED"))
                                               (file-relative-name (car entry) dir))))
@@ -327,22 +334,22 @@ or q leaves them as they are.")
 (defun +core--photo-dates (files)
   "When each of FILES, photos, was taken, as YYYY-MM-DD HH.MM.SS, in a
 table by file; one run of exiftool for them all."
+  (unless (executable-find "exiftool") (user-error "No exiftool: brew install exiftool"))
   (let ((dates (make-hash-table :test #'equal))
         (args (make-temp-file "exiftool-args")))
-    (when (executable-find "exiftool")
-      (unwind-protect
-          (progn
-            (with-temp-file args (insert (string-join files "\n") "\n"))
-            (with-temp-buffer
-              (call-process "exiftool" nil (list t nil) nil "-q" "-m" "-T"
-                            "-d" "%Y-%m-%d %H.%M.%S" "-Directory" "-FileName" "-DateTimeOriginal"
-                            "-@" args)
-              (dolist (line (split-string (buffer-string) "\n" t))
-                (pcase (split-string line "\t")
-                  (`(,dir ,name ,date)
-                   (unless (equal date "-")
-                     (puthash (expand-file-name name dir) date dates)))))))
-        (delete-file args)))
+    (unwind-protect
+        (progn
+          (with-temp-file args (insert (string-join files "\n") "\n"))
+          (with-temp-buffer
+            (call-process "exiftool" nil (list t nil) nil "-q" "-m" "-T"
+                          "-d" "%Y-%m-%d %H.%M.%S" "-Directory" "-FileName" "-DateTimeOriginal"
+                          "-@" args)
+            (dolist (line (split-string (buffer-string) "\n" t))
+              (pcase (split-string line "\t")
+                (`(,dir ,name ,date)
+                 (unless (equal date "-")
+                   (puthash (expand-file-name name dir) date dates)))))))
+      (delete-file args))
     dates))
 
 (defun +core--same-name-p (a b)
@@ -356,16 +363,31 @@ ignore case."
       (string-search "/" name)
       (> (string-bytes (encode-coding-string name 'utf-8)) 255)))
 
+(defun +core--name-key (name)
+  "NAME as this system's disks compare it: macOS's ignore case."
+  (if (eq system-type 'darwin) (downcase name) name))
+
 (defun +core--rename-clashes (plan)
   "The entries of PLAN whose new name is not a name, is taken by a file
 the plan does not move, or is given to two files."
-  (seq-filter (lambda (entry)
-                (let ((new (cdr entry)))
-                  (or (+core--bad-name-p (file-name-nondirectory new))
-                      (and (file-exists-p new)
-                           (not (seq-some (lambda (other) (file-equal-p new (car other))) plan)))
-                      (> (seq-count (lambda (other) (+core--same-name-p (cdr other) new)) plan) 1))))
-              plan))
+  (let ((olds (make-hash-table :test #'equal))
+        (news (make-hash-table :test #'equal)))
+    (dolist (entry plan)
+      (puthash (+core--name-key (car entry)) t olds)
+      (let ((key (+core--name-key (cdr entry))))
+        (puthash key (1+ (gethash key news 0)) news)))
+    (seq-filter (lambda (entry)
+                  (let ((new (cdr entry)))
+                    (or (+core--bad-name-p (file-name-nondirectory new))
+                        (> (gethash (+core--name-key new) news) 1)
+                        (and (not (equal new (car entry)))
+                             (not (gethash (+core--name-key new) olds))
+                             (file-exists-p new)
+                             ;; The same file by another spelling, such as
+                             ;; another Unicode form.
+                             (not (seq-some (lambda (other) (file-equal-p new (car other)))
+                                            plan))))))
+                plan)))
 
 (defun +core--rename-preview (plan)
   "Show PLAN, ((OLD . NEW) ...), and wait for C-c C-c."
@@ -392,9 +414,15 @@ the plan does not move, or is given to two files."
   (interactive)
   (unless +core--rename-plan (user-error "Nothing to rename, or names clash"))
   (let ((plan (seq-remove (lambda (entry) (equal (car entry) (cdr entry))) +core--rename-plan))
-        (dirs nil) (moved nil))
+        (dirs nil) (moved nil) (buffers nil))
     (when (+core--rename-clashes plan)
       (user-error "A name was taken since the preview: nothing renamed"))
+    ;; Taken before any rename: after one, a buffer of the plan may already
+    ;; visit another entry's old name.
+    (setq buffers (delq nil (mapcar (lambda (entry)
+                                      (when-let* ((buffer (get-file-buffer (car entry))))
+                                        (cons buffer (cdr entry))))
+                                    plan)))
     ;; Through temporary names, so swapping two names works. Each step is
     ;; (OLD TEMP NEW AT-NEW), so a failure puts every file back.
     (condition-case err
@@ -415,10 +443,9 @@ the plan does not move, or is given to two files."
        (dolist (step moved)
          (ignore-errors (rename-file (nth 1 step) (nth 0 step))))
        (user-error "Nothing renamed: %s" (error-message-string err))))
-    (dolist (entry plan)
-      (push (file-name-directory (cdr entry)) dirs)
-      (when-let* ((buffer (get-file-buffer (car entry))))
-        (with-current-buffer buffer (set-visited-file-name (cdr entry) nil t))))
+    (dolist (entry plan) (push (file-name-directory (cdr entry)) dirs))
+    (pcase-dolist (`(,buffer . ,new) buffers)
+      (with-current-buffer buffer (set-visited-file-name new t t)))
     (quit-window t)
     (when (fboundp 'dired-buffers-for-dir)
       (dolist (dir (delete-dups dirs))
@@ -490,17 +517,32 @@ each keeping its extension."
 keeps its name."
   (interactive)
   (message "Reading when the photos were taken...")
-  (let ((dates (+core--photo-dates (+core--tool-files)))
-        (given (make-hash-table :test #'equal)))
+  (let* ((files (+core--tool-files))
+         (dates (+core--photo-dates files))
+         (names (make-hash-table :test #'equal))
+         (taken (make-hash-table :test #'equal)))
+    ;; A photo already named for its date keeps that name, so running this
+    ;; again changes nothing.
+    (dolist (file files)
+      (when-let* ((date (gethash file dates))
+                  ((string-match-p (concat "\\`" (regexp-quote date) "\\(-[0-9]+\\)?\\'")
+                                   (file-name-base file))))
+        (puthash file (file-name-nondirectory file) names)
+        (puthash (downcase (file-name-nondirectory file)) t taken)))
     ;; Photos of one burst share their second, so the later ones are numbered.
-    (+core--rename (lambda (file _i)
-                     (if-let* ((date (gethash file dates)))
-                         (let* ((ext (downcase (cdr (+core--name-and-ext file))))
-                                (n (puthash (downcase (concat date ext))
-                                            (1+ (gethash (downcase (concat date ext)) given 0))
-                                            given)))
-                           (concat date (if (> n 1) (format "-%d" n) "") ext))
-                       (file-name-nondirectory file))))))
+    (dolist (file files)
+      (unless (gethash file names)
+        (puthash file
+                 (if-let* ((date (gethash file dates)))
+                     (let* ((ext (downcase (cdr (+core--name-and-ext file))))
+                            (name (concat date ext)) (n 1))
+                       (while (gethash (downcase name) taken)
+                         (setq n (1+ n) name (format "%s-%d%s" date n ext)))
+                       (puthash (downcase name) t taken)
+                       name)
+                   (file-name-nondirectory file))
+                 names)))
+    (+core--rename (lambda (file _i) (gethash file names)))))
 
 
 ;;
