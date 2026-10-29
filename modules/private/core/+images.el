@@ -40,14 +40,22 @@
 
 (setq image-use-external-converter t)
 (add-to-list 'auto-mode-alist '("\\.\\(jxl\\|psd\\|heif\\|JXL\\|PSD\\|HEIF\\)\\'" . image-mode))
+(defvar image-converter--extra-converters)
+(defun +core--image-converter-setup (&rest _)
+  "Add this config's converter for `+core-image-converted-exts', once.
+Emacs picks its converter on first use and then sets the list of
+suffixes it converts to that converter's own, which would drop these;
+picked first, the handlers are added after it."
+  (unless (gethash (car +core-image-converted-exts) image-converter--extra-converters)
+    (image-converter-initialize)
+    (dolist (ext +core-image-converted-exts)
+      (image-converter-add-handler ext #'+core--image-convert)
+      (image-converter-add-handler (upcase ext) #'+core--image-convert))))
+;; Asked again before each conversion: a warm-up stopped by a key can
+;; leave the library loaded and these not added.
 (with-eval-after-load 'image-converter
-  ;; Emacs picks its converter on first use and then sets the list of
-  ;; suffixes it converts to that converter's own, which would drop
-  ;; these; picked now, the handlers are added after it.
-  (image-converter-initialize)
-  (dolist (ext +core-image-converted-exts)
-    (image-converter-add-handler ext #'+core--image-convert)
-    (image-converter-add-handler (upcase ext) #'+core--image-convert)))
+  (+core--image-converter-setup)
+  (advice-add 'image-convert-p :before #'+core--image-converter-setup))
 
 ;; An image file opens at the size of the window, small ones enlarged:
 ;; a small icon is there to be looked at, not squinted at. The window
