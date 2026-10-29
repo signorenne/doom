@@ -16,9 +16,9 @@
   "Play FILENAME when it is music or a video and a command opens it."
   :around #'find-file
   (if (and this-command (stringp filename) (+media-file-p filename)
-           (not (file-remote-p filename))
+           (not (file-remote-p (expand-file-name filename)))
            (file-regular-p filename))
-      (+media/play-file filename (derived-mode-p 'dired-mode))
+      (+media/play-file (expand-file-name filename) (derived-mode-p 'dired-mode))
     (apply fn filename args)))
 
 ;;;###autoload
