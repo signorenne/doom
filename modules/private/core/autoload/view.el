@@ -95,6 +95,10 @@ buffer, `+core-view-on-open' or not, until you open it again.")
   "Whether this buffer's view turned flymake on, which it does once: turned
 off by hand, it stays off.")
 
+(defvar-local +core-view-server-checks nil
+  "Non-nil when this buffer's language server finds what its drawing
+would: the drawing's own error marks step aside while the server runs.")
+
 (defvar +core-view--showing nil
   "The buffer whose view is on show.")
 
@@ -734,7 +738,8 @@ again, through the same REPORT-FN, when the drawing is done."
 (defun +core-view--flymake-keep-h ()
   "Keep the drawing's backend when eglot manages the buffer, which sets
 flymake to its own backend alone (a diagram has a language server)."
-  (when (and +core-view-live (bound-and-true-p eglot--managed-mode))
+  (when (and +core-view-live (not +core-view-server-checks)
+             (bound-and-true-p eglot--managed-mode))
     (add-hook 'flymake-diagnostic-functions #'+core-view--flymake nil t)))
 
 (defun +core-view--problem-h (source message line)

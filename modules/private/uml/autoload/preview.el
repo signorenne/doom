@@ -12,6 +12,7 @@
 (declare-function +core-view-redraw "view")
 (declare-function +core-view-source "view")
 (defvar +core-view-box)
+(defvar +core-view-server-checks)
 
 (defun +uml--preview-options ()
   "The PlantUML flags that make a diagram readable against this theme.
@@ -63,6 +64,9 @@ is marked."
 ;;;###autoload
 (defun +uml--view-h ()
   "Give a diagram its preview, drawn again as you type."
+  ;; plantuml-lsp reports what `plantuml -syntax' finds, the drawing's
+  ;; errors too, so with it running each would show twice.
+  (setq-local +core-view-server-checks t)
   (+core-view-enable #'+uml--draw t))
 
 ;;;###autoload

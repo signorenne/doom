@@ -40,7 +40,9 @@ closes it, and it stays closed for that diagram until ~SPC m p~.
 A diagram that does not parse leaves the last good drawing in place and
 says what PlantUML complained about, so the preview never goes blank
 while you are in the middle of a line; the line PlantUML names is marked
-as an error, reached with the keys for the next problem.
+as an error, reached with the keys for the next problem. With
+=plantuml-lsp= running the mark is the server's, which finds the same
+errors, so each shows once.
 
 The preview is coloured for the theme. PlantUML writes its background as
 a CSS style on the SVG root and Emacs's renderer ignores that, so the
