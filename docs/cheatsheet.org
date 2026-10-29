@@ -1133,7 +1133,8 @@ From there, in the file itself:
 | ~SPC g r~   | revert this one change, ~SPC g R~ the whole file            |
 | ~SPC g .~   | this file in magit: diff, log, blame, stage               |
 
-The marks follow your typing, a moment after you pause.
+The marks follow your typing on Linux, a moment after you pause; on
+macOS they change when you save, as Doom sets it there.
 
 The popup is the quickest answer to "what did I just change here": it
 shows the old lines in place, and ~c~ puts them in the kill ring if you

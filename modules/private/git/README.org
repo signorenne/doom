@@ -41,7 +41,6 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - the history of the function at point (=a= in the hub) and of the
   region's lines (=L= with a region), and the file as it was before
   (=v=),
-- the diff gutter updated as you type on macOS too,
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
@@ -117,10 +116,6 @@ made once is replayed when the same conflict comes back (=rerere=).
   patterns for elisp and org that git lacks. The attributes file is not
   used over one of your own (=core.attributesFile=, or
   =~/.config/git/attributes=).
-- ~+git-gutter-as-you-type~, on: Doom updates the gutter only on save on
-  macOS, for trouble seen with another build of Emacs; here the update
-  runs in the background as on Linux. Nil puts it back from the next
-  start; =M-x diff-hl-flydiff-mode= turns it off for this session.
 - magit-todos scans the tree once a minute at most, not at every
   refresh of the status buffer.
 - ~+git-blame-max-size~, 1M: the blame turns itself on below it. It is
