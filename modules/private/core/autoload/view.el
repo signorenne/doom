@@ -847,7 +847,9 @@ the view closed is seen when it opens; the view is not opened for it."
   "The buffer whose view a command means: this one when it has a view,
 else the one the view shows, so the same keys work from either side."
   (cond (+core-view-draw (current-buffer))
-        ((buffer-live-p +core-view--showing) +core-view--showing)
+        ((and (buffer-live-p +core-view--showing)
+              (equal (buffer-name) +core-view-buffer-name))
+         +core-view--showing)
         (t (user-error "No view here"))))
 
 ;;
