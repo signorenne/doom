@@ -57,16 +57,26 @@ and what else the drawing depended on; see the redraw below.")
 (defvar org-startup-with-inline-images)
 (defvar org-startup-with-latex-preview)
 
-(defvar +core-preview-live-delay 0.15
-  "How long the cursor rests on a file before its preview takes the
-file's own mode.")
+(defvar +core-preview-buffers-max 8
+  "How many kinds of file keep a preview buffer already in their mode.")
 
-(defvar +core--preview-live-timer nil
-  "The wait before the preview takes its file's mode.")
+(defvar +core-preview-fresh-modes '(org-mode)
+  "Modes set up again for each file previewed: cheaper than a buffer
+reused, and they keep settings read from the file.")
+
+(defvar +core--preview-buffers nil
+  "(KIND . BUFFER) for each kind of file previewed lately, the latest first.")
+
+(defvar +core--preview-finish-timer nil
+  "Colours, once the cursor rests, what a key stopped.")
 
 (defvar-local +core--preview-file nil
   "The file the preview buffer shows.")
 (put '+core--preview-file 'permanent-local t)
+
+(defun +core--preview-kind (file)
+  "FILE's kind of preview buffer: its extension, or its name."
+  (downcase (or (file-name-extension file) (file-name-nondirectory file))))
 
 (defun +core--preview-long-lines-p ()
   "Non-nil when a line of this buffer is too long to colour quickly."
@@ -78,41 +88,6 @@ file's own mode.")
         (forward-line 1))
       long)))
 
-(defun +core--preview-live (buffer file)
-  "Give BUFFER, previewing FILE, FILE's own mode, if it still shows it."
-  (when-let* (((buffer-live-p buffer))
-              ((equal (buffer-local-value '+core--preview-file buffer) file))
-              ((not (file-remote-p file)))
-              (window (get-buffer-window buffer t)))
-    (require 'treesit)
-    (with-current-buffer buffer
-      (unless (+core--preview-long-lines-p)
-        (if (eq t (condition-case nil
-                      (while-no-input
-                        ;; No grammar built and no -*- cookie obeyed for a
-                        ;; file only looked at.
-                        (let ((buffer-file-name file) (inhibit-message t) (message-log-max nil)
-                              (non-essential t) (enable-local-variables nil)
-                              (treesit-auto-install-grammar 'never)
-                              ;; What an Org file starts with that keeps
-                              ;; working on idle timers.
-                              (org-startup-indented nil)
-                              (org-startup-with-inline-images nil)
-                              (org-startup-with-latex-preview nil))
-                          (delay-mode-hooks (set-auto-mode)))
-                        ;; Each code block would set its own language up.
-                        (setq-local markdown-fontify-code-blocks-natively nil)
-                        ;; What shows: font-lock-mode stays off in a hidden buffer.
-                        (font-lock-ensure (point-min)
-                                          (save-excursion
-                                            (goto-char (window-start window))
-                                            (forward-line (window-height window))
-                                            (point)))
-                        nil)
-                    (error t)))
-            (+core--preview-plain)
-          (setq buffer-read-only t truncate-lines t))))))
-
 (defun +core--preview-plain ()
   "Make this preview buffer plain again, its grammar gone."
   (unless (eq major-mode 'fundamental-mode)
@@ -121,6 +96,71 @@ file's own mode.")
     (when (fboundp 'treesit-parser-list)
       (mapc #'treesit-parser-delete (treesit-parser-list)))
     (fundamental-mode)))
+
+(defun +core--preview-buffer (kind)
+  "KIND's preview buffer, made when there is none; past
+`+core-preview-buffers-max' the one used longest ago goes."
+  (let ((entry (assoc kind +core--preview-buffers)))
+    (unless (and entry (buffer-live-p (cdr entry)))
+      (setq entry (cons kind (generate-new-buffer (format " *+core-preview %s*" kind)))))
+    (setq +core--preview-buffers
+          (cons entry (seq-remove (lambda (other) (equal (car other) kind))
+                                  +core--preview-buffers)))
+    (dolist (old (nthcdr +core-preview-buffers-max +core--preview-buffers))
+      (when (buffer-live-p (cdr old))
+        (with-current-buffer (cdr old) (+core--preview-plain))
+        (kill-buffer (cdr old))))
+    (setq +core--preview-buffers (seq-take +core--preview-buffers +core-preview-buffers-max))
+    (cdr entry)))
+
+(defun +core--preview-colour (buffer file window)
+  "Colour BUFFER, which holds FILE's text, the way FILE opens: its mode set
+up when the buffer has none yet, or has one of `+core-preview-fresh-modes',
+then the lines WINDOW shows coloured. A key pressed stops it; non-nil
+when it got to the end."
+  (require 'treesit)
+  (with-current-buffer buffer
+    (let* ((stage 'mode)
+           (done
+            (condition-case nil
+                (eq 'done
+                    (while-no-input
+                      (when (or (eq major-mode 'fundamental-mode)
+                                (memq major-mode +core-preview-fresh-modes))
+                        (+core--preview-plain)
+                        ;; No grammar built and no -*- cookie obeyed for a
+                        ;; file only looked at, and nothing an Org file
+                        ;; starts with that keeps working on idle timers.
+                        (let ((buffer-file-name file) (inhibit-message t) (message-log-max nil)
+                              (non-essential t) (enable-local-variables nil)
+                              (treesit-auto-install-grammar 'never)
+                              (org-startup-indented nil)
+                              (org-startup-with-inline-images nil)
+                              (org-startup-with-latex-preview nil))
+                          (delay-mode-hooks (set-auto-mode)))
+                        ;; Each code block would set its own language up.
+                        (setq-local markdown-fontify-code-blocks-natively nil))
+                      (setq stage 'colour)
+                      ;; What shows, the top: font-lock-mode stays off in a
+                      ;; hidden buffer.
+                      (font-lock-ensure (point-min)
+                                        (save-excursion
+                                          (goto-char (point-min))
+                                          (forward-line (window-body-height window))
+                                          (point)))
+                      'done))
+              (error (setq stage 'mode) nil))))
+      ;; A mode stopped half set up is no mode to keep.
+      (when (and (not done) (eq stage 'mode)) (+core--preview-plain))
+      (setq buffer-read-only t truncate-lines t)
+      done)))
+
+(defun +core--preview-finish (buffer file)
+  "Colour BUFFER, if it still shows FILE."
+  (when-let* (((buffer-live-p buffer))
+              ((equal (buffer-local-value '+core--preview-file buffer) file))
+              (window (get-buffer-window buffer t)))
+    (+core--preview-colour buffer file window)))
 
 (after! dirvish
   (setq dirvish-default-layout '(0 0 0.45)
@@ -411,24 +451,26 @@ A GIF is drawn by Emacs, to play."
                     (position (text-property-any (point-min) (point-max) 'display image)))
           (image-animate image nil t position)))))
 
-  ;; Every other file as plain text, its first 64 KB read and nothing
-  ;; run, so moving through a listing never waits on a mode. Once the
-  ;; cursor rests on it, it takes its own mode, coloured as it would
-  ;; open, without the mode's hooks: they start servers and side views.
-  ;; A key pressed meanwhile stops that and leaves it plain. A file with
-  ;; a NUL in it is a binary, said in a line; a pipe or a socket is not
-  ;; read at all, which would wait for good.
-  (dirvish-define-preview +core-text (file)
-    "Preview any other file as its plain text, then in its own mode."
+  ;; Every other file in its own mode, coloured as it opens, its first
+  ;; 64 KB read, but without the mode's hooks: they start servers and side
+  ;; views. The pane draws only once the cursor stops, so the colouring
+  ;; holds nothing up, and a key pressed meanwhile stops it, the rest
+  ;; coloured at the next pause. Each kind of file keeps a buffer in its
+  ;; mode, so a mode is set up once rather than for each file: 1 to 5 ms a
+  ;; file for most code. A remote file, or one with a line too long to
+  ;; colour quickly, shows plain. A file with a NUL in it is a binary,
+  ;; said in a line; a pipe or a socket is not read at all, which would
+  ;; wait for good.
+  (dirvish-define-preview +core-text (file _ext preview-window)
+    "Preview any other file in its own mode, coloured."
     (cond
      ((file-directory-p file) nil)
      ((not (file-regular-p file))
       '(info . "Not a regular file: a pipe, a socket or a device"))
      (t
-      (let ((buffer (get-buffer-create " *+core-preview*"))
+      (let ((buffer (+core--preview-buffer (+core--preview-kind file)))
             (size (file-attribute-size (file-attributes file))))
         (with-current-buffer buffer
-          (+core--preview-plain)
           (setq +core--preview-file file)
           (let ((inhibit-read-only t))
             (erase-buffer)
@@ -441,10 +483,15 @@ A GIF is drawn by Emacs, to play."
         (if (with-current-buffer buffer
               (search-forward "\0" (min (point-max) 8192) t))
             `(info . ,(format "Binary, %s" (file-size-human-readable (or size 0))))
-          (when (timerp +core--preview-live-timer) (cancel-timer +core--preview-live-timer))
-          (setq +core--preview-live-timer
-                (run-with-idle-timer +core-preview-live-delay nil
-                                     #'+core--preview-live buffer file))
+          (when (timerp +core--preview-finish-timer) (cancel-timer +core--preview-finish-timer))
+          (unless (or (file-remote-p file)
+                      (with-current-buffer buffer (+core--preview-long-lines-p))
+                      (not (window-live-p preview-window))
+                      (+core--preview-colour buffer file preview-window))
+            (unless (or (file-remote-p file)
+                        (with-current-buffer buffer (+core--preview-long-lines-p)))
+              (setq +core--preview-finish-timer
+                    (run-with-idle-timer 0.15 nil #'+core--preview-finish buffer file))))
           `(buffer . ,buffer))))))
 
   (setq dirvish-preview-dispatchers

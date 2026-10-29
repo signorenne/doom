@@ -789,10 +789,9 @@ Inside vterm: =C-c C-t= copy mode, =C-q= sends the next key through raw,
 ~SPC o -~ opens it on the file you are in: the listing on the left with
 icons, sizes and git state, and on the right a preview of whatever the
 cursor is on, text, image, PDF, video frame, archive contents, audio
-details. Move, and the preview follows. A text file shows as plain text
-at once and, when the cursor rests on it a moment, in its own mode with
-its colours, as it would open; a key pressed meanwhile keeps it plain,
-so running down a listing never waits. A GIF plays. Every dired buffer is dirvish
+details. Move, and the preview follows once you stop: a text file in
+its own mode with its colours, as it would open, and a key pressed
+meanwhile is never held up. A GIF plays. Every dired buffer is dirvish
 underneath, so these are the keys you actually have; ~SPC m SPC~ opens a
 menu of all of it when one slips your mind.
 
