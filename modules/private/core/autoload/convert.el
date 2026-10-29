@@ -9,7 +9,7 @@
 
 (defvar +core-convert-kinds
   '((image "png" "jpg" "jpeg" "webp" "avif" "heic" "heif" "gif" "bmp" "tif" "tiff" "psd" "jxl")
-    (video "mp4" "m4v" "mkv" "mov" "webm" "avi" "wmv" "flv" "mpg" "mpeg" "ts" "3gp")
+    (video "mp4" "m4v" "mkv" "mov" "webm" "avi" "wmv" "flv" "mpg" "mpeg" "3gp")
     (audio "mp3" "flac" "m4a" "aac" "ogg" "oga" "opus" "wav" "aif" "aiff" "wma")
     (document "md" "markdown" "org" "html" "htm" "docx" "odt" "rst" "tex" "epub" "txt")
     (pdf "pdf"))
@@ -17,6 +17,10 @@
 
 (defvar +core--convert-files nil
   "The files the converter's menu was opened on.")
+
+(defvar +core--convert-taken nil
+  "The new names a batch has given out so far, so two of its files do
+not get the same one.")
 
 (defun +core--convert-kind (file)
   "The kind of FILE, a symbol of `+core-convert-kinds', or nil."
@@ -33,8 +37,9 @@ when such a file exists already."
   (let* ((base (concat (file-name-sans-extension file) (if suffix (concat "-" suffix) "")))
          (target (concat base "." ext))
          (n 1))
-    (while (file-exists-p target)
+    (while (or (file-exists-p target) (member target +core--convert-taken))
       (setq n (1+ n) target (format "%s-%d.%s" base n ext)))
+    (push target +core--convert-taken)
     target))
 
 (defun +core--convert-dir (file suffix)
@@ -57,7 +62,9 @@ such a folder exists, made."
 (defun +core--convert-run (jobs &optional parallel)
   "Run JOBS, each (COMMAND . OUTPUT), PARALLEL at a time (one by default),
 in the background, and say how it went. A failed one's output is
-deleted."
+deleted, when it made it."
+  (when-let* ((missing (seq-find (lambda (job) (not (executable-find (caar job)))) jobs)))
+    (user-error "No %s: see doom doctor" (caar missing)))
   (let ((queue jobs) (running 0) (done 0) (failed nil) (total (length jobs))
         (dirs (delete-dups (mapcar (lambda (job) (file-name-directory (cdr job))) jobs)))
         next)
@@ -65,42 +72,45 @@ deleted."
           (lambda ()
             (while (and queue (< running (or parallel 1)))
               (pcase-let* ((`(,command . ,output) (pop queue))
-                           (buffer (generate-new-buffer " *convert*")))
+                           (buffer (generate-new-buffer " *convert*"))
+                           (existed (file-exists-p output))
+                           ;; Beside the file, where pandoc finds its pictures.
+                           (default-directory (file-name-directory (directory-file-name output)))
+                           ;; ffmpeg colours its errors, which the log would show raw.
+                           (process-environment (cons "AV_LOG_FORCE_NOCOLOR=1" process-environment)))
                 (setq running (1+ running))
-                (let ((process-environment
-                       ;; ffmpeg colours its errors, which the log would show raw.
-                       (cons "AV_LOG_FORCE_NOCOLOR=1" process-environment)))
-                  (make-process
-                   :name "convert" :buffer buffer :noquery t :command command
-                   :sentinel
-                   (lambda (process _event)
-                     (unless (process-live-p process)
-                       (setq running (1- running) done (1+ done))
-                       (unless (zerop (process-exit-status process))
-			 (push (file-name-nondirectory output) failed)
-			 (ignore-errors
+                (make-process
+                 :name "convert" :buffer buffer :noquery t :command command
+                 :sentinel
+                 (lambda (process _event)
+                   (unless (process-live-p process)
+                     (setq running (1- running) done (1+ done))
+                     (unless (zerop (process-exit-status process))
+                       (push (file-name-nondirectory output) failed)
+                       (unless (and existed (not (file-directory-p output)))
+                         (ignore-errors
                            (if (file-directory-p output)
                                (delete-directory output t)
-                             (delete-file output)))
-			 (let ((said (with-current-buffer buffer (buffer-string))))
-                           (with-current-buffer (get-buffer-create +core--convert-log)
-                             (goto-char (point-max))
-                             (insert (format "$ %s\n%s\n" (mapconcat #'shell-quote-argument command " ")
-                                             said)))))
-                       (kill-buffer buffer)
-                       (if (< done total)
-                           (progn (message "Converting... %d of %d" done total)
-                                  (funcall next))
-			 (when (fboundp 'dired-buffers-for-dir)
-                           (dolist (dir dirs)
-                             (dolist (dired (dired-buffers-for-dir dir))
-                               (with-current-buffer dired (revert-buffer)))))
-			 (message (if failed
-                                      (format "Converted %d of %d; %s failed, see %s"
-                                              (- total (length failed)) total
-                                              (string-join (nreverse failed) ", ")
-                                              +core--convert-log)
-                                    (format "Converted %d file%s" total (if (= total 1) "" "s")))))))))))))
+                             (delete-file output))))
+                       (let ((said (with-current-buffer buffer (buffer-string))))
+                         (with-current-buffer (get-buffer-create +core--convert-log)
+                           (goto-char (point-max))
+                           (insert (format "$ %s\n%s\n" (mapconcat #'shell-quote-argument command " ")
+                                           said)))))
+                     (kill-buffer buffer)
+                     (if (< done total)
+                         (progn (message "Converting... %d of %d" done total)
+                                (funcall next))
+                       (when (fboundp 'dired-buffers-for-dir)
+                         (dolist (dir dirs)
+                           (dolist (dired (dired-buffers-for-dir dir))
+                             (with-current-buffer dired (revert-buffer)))))
+                       (message (if failed
+                                    (format "Converted %d of %d; %s failed, see %s"
+                                            (- total (length failed)) total
+                                            (string-join (nreverse failed) ", ")
+                                            +core--convert-log)
+                                  (format "Converted %d file%s" total (if (= total 1) "" "s"))))))))))))
     (if (null jobs)
         (user-error "Nothing here to convert that way")
       (message "Converting %d file%s..." total (if (= total 1) "" "s"))
@@ -108,7 +118,8 @@ deleted."
 
 (defun +core--convert-each (kind make &optional parallel)
   "Run MAKE on each selected file of KIND, which returns (COMMAND . OUTPUT)."
-  (+core--convert-run (mapcar make (+core--convert-of kind)) parallel))
+  (let ((+core--convert-taken nil))
+    (+core--convert-run (mapcar make (+core--convert-of kind)) parallel)))
 
 
 ;;
@@ -148,6 +159,8 @@ percentage such as 50%."
      'image
      (lambda (file)
        (let* ((ext (downcase (file-name-extension file)))
+              ;; vips writes neither of these.
+              (ext (if (member ext '("bmp" "psd")) "png" ext))
               (out (+core--convert-target file ext (if percent (format "%dpc" n) (number-to-string n)))))
          (cons (cond ((not (executable-find "vips"))
                       (list "magick" file "-resize" (if percent size (format "%dx%d>" n n)) out))
@@ -159,15 +172,17 @@ percentage such as 50%."
 ;;;###autoload
 (defun +core/convert-strip-metadata ()
   "Copies of the selected pictures without their metadata: place, camera,
-dates. The way up is kept."
+dates. The way up and the colour profile are kept."
   (interactive)
   (+core--convert-each
    'image
    (lambda (file)
      (let ((out (+core--convert-target file (downcase (file-name-extension file)) "clean")))
        (cons (if (executable-find "exiftool")
-                 (list "exiftool" "-q" "-all=" "-tagsfromfile" "@" "-Orientation" "-o" out file)
-               (list "vips" "copy" file (concat out "[strip]")))
+                 (list "exiftool" "-q" "-all=" "-tagsfromfile" "@" "-icc_profile" "-Orientation"
+                       "-o" out file)
+               ;; Without exiftool the picture is turned upright instead.
+               (list "vips" "autorot" file (concat out "[strip]")))
              out)))
    4))
 
@@ -177,7 +192,7 @@ dates. The way up is kept."
 
 (defun +core--ffmpeg (input output &rest args)
   "An ffmpeg command from INPUT to OUTPUT with ARGS between."
-  `("ffmpeg" "-nostdin" "-hide_banner" "-loglevel" "error" "-i" ,input ,@args ,output))
+  `("ffmpeg" "-nostdin" "-n" "-hide_banner" "-loglevel" "error" "-i" ,input ,@args ,output))
 
 ;;;###autoload
 (defun +core/convert-to-mp4 ()
@@ -230,7 +245,7 @@ dates. The way up is kept."
    'video
    (lambda (file)
      (let ((out (+core--convert-target file "mp4" "clip")))
-       (cons `("ffmpeg" "-nostdin" "-hide_banner" "-loglevel" "error"
+       (cons `("ffmpeg" "-nostdin" "-n" "-hide_banner" "-loglevel" "error"
                "-ss" ,start "-to" ,end "-i" ,file "-c:v" "libx264" "-crf" "18"
                "-c:a" "aac" "-b:a" "160k" "-movflags" "+faststart" ,out)
              out)))))
@@ -244,7 +259,7 @@ dates. The way up is kept."
    'video
    (lambda (file)
      (let ((out (+core--convert-target file "gif")))
-       (cons `("ffmpeg" "-nostdin" "-hide_banner" "-loglevel" "error"
+       (cons `("ffmpeg" "-nostdin" "-n" "-hide_banner" "-loglevel" "error"
                "-ss" ,start "-t" ,(number-to-string length) "-i" ,file
                "-vf" "fps=12,scale=480:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"
                ,out)
@@ -276,12 +291,13 @@ dates. The way up is kept."
 
 (defun +core--audio-to (ext)
   "The selected audio, and the sound of the selected videos, as EXT."
-  (+core--convert-run
-   (mapcar (lambda (file)
-             (let ((out (+core--convert-target file ext)))
-               (cons (apply #'+core--ffmpeg file out "-vn" (+core--audio-args ext)) out)))
-           (append (+core--convert-of 'audio) (+core--convert-of 'video)))
-   2))
+  (let ((+core--convert-taken nil))
+    (+core--convert-run
+     (mapcar (lambda (file)
+               (let ((out (+core--convert-target file ext)))
+                 (cons (apply #'+core--ffmpeg file out "-vn" (+core--audio-args ext)) out)))
+             (append (+core--convert-of 'audio) (+core--convert-of 'video)))
+     2)))
 
 ;;;###autoload
 (defun +core/convert-to-mp3 () "Audio, or a video's sound, to MP3." (interactive) (+core--audio-to "mp3"))
@@ -348,7 +364,8 @@ dates. The way up is kept."
   (interactive)
   (let ((pdfs (+core--convert-of 'pdf)))
     (when (< (length pdfs) 2) (user-error "Mark two PDFs or more"))
-    (let ((out (+core--convert-target (car pdfs) "pdf" "merged")))
+    (let* ((+core--convert-taken nil)
+           (out (+core--convert-target (car pdfs) "pdf" "merged")))
       (+core--convert-run (list (cons (append '("pdfunite") pdfs (list out)) out))))))
 
 ;;;###autoload
@@ -359,7 +376,8 @@ dates. The way up is kept."
    'pdf
    (lambda (file)
      (let ((dir (+core--convert-dir file "split")))
-       (cons (list "pdfseparate" file (expand-file-name (concat (file-name-base file) "-%d.pdf") dir))
+       ;; Not the file's own name: pdfseparate reads a % in it as its own.
+       (cons (list "pdfseparate" file (expand-file-name "page-%d.pdf" dir))
              dir)))))
 
 
@@ -368,46 +386,46 @@ dates. The way up is kept."
 
 ;;;###autoload (autoload '+core/convert-menu "private/core/autoload/convert" nil t)
 (transient-define-prefix +core/convert-menu ()
-			 "Convert the selected files into new ones beside them."
-			 [:description
-			  (lambda () (format "Convert %d file%s into new ones beside them"
-					     (length +core--convert-files)
-					     (if (cdr +core--convert-files) "s" "")))
-			  ["Pictures"
-			   :if (lambda () (+core--convert-of 'image))
-			   ("p" "to PNG" +core/convert-to-png)
-			   ("j" "to JPEG" +core/convert-to-jpg)
-			   ("w" "to WebP" +core/convert-to-webp)
-			   ("a" "to AVIF" +core/convert-to-avif)
-			   ("r" "resize" +core/convert-resize)
-			   ("x" "without metadata" +core/convert-strip-metadata)]
-			  ["Video"
-			   :if (lambda () (+core--convert-of 'video))
-			   ("4" "to MP4" +core/convert-to-mp4)
-			   ("W" "to WebM" +core/convert-to-webm)
-			   ("s" "smaller, for sending" +core/convert-compress-video)
-			   ("c" "a clip" +core/convert-clip)
-			   ("g" "a GIF" +core/convert-gif)]
-			  ["Audio"
-			   :if (lambda () (or (+core--convert-of 'audio) (+core--convert-of 'video)))
-			   ("3" "to MP3" +core/convert-to-mp3)
-			   ("f" "to FLAC" +core/convert-to-flac)
-			   ("m" "to M4A" +core/convert-to-m4a)
-			   ("o" "to Ogg" +core/convert-to-ogg)
-			   ("v" "to WAV" +core/convert-to-wav)]
-			  ["Documents"
-			   :if (lambda () (+core--convert-of 'document))
-			   ("d" "to Word" +core/convert-to-docx)
-			   ("O" "to OpenDocument" +core/convert-to-odt)
-			   ("h" "to a web page" +core/convert-to-html)
-			   ("P" "to PDF" +core/convert-to-pdf)
-			   ("M" "to Markdown" +core/convert-to-markdown)
-			   ("R" "to Org" +core/convert-to-org)]
-			  ["PDF"
-			   :if (lambda () (+core--convert-of 'pdf))
-			   ("i" "pages as pictures" +core/convert-pdf-pages)
-			   ("u" "merge into one" +core/convert-pdf-merge)
-			   ("S" "split into pages" +core/convert-pdf-split)]])
+  "Convert the selected files into new ones beside them."
+  [:description
+   (lambda () (format "Convert %d file%s into new ones beside them"
+                      (length +core--convert-files)
+                      (if (cdr +core--convert-files) "s" "")))
+   ["Pictures"
+    :if (lambda () (+core--convert-of 'image))
+    ("p" "to PNG" +core/convert-to-png)
+    ("j" "to JPEG" +core/convert-to-jpg)
+    ("w" "to WebP" +core/convert-to-webp)
+    ("a" "to AVIF" +core/convert-to-avif)
+    ("r" "resize" +core/convert-resize)
+    ("x" "without metadata" +core/convert-strip-metadata)]
+   ["Video"
+    :if (lambda () (+core--convert-of 'video))
+    ("4" "to MP4" +core/convert-to-mp4)
+    ("W" "to WebM" +core/convert-to-webm)
+    ("s" "smaller, for sending" +core/convert-compress-video)
+    ("c" "a clip" +core/convert-clip)
+    ("g" "a GIF" +core/convert-gif)]
+   ["Audio"
+    :if (lambda () (or (+core--convert-of 'audio) (+core--convert-of 'video)))
+    ("3" "to MP3" +core/convert-to-mp3)
+    ("f" "to FLAC" +core/convert-to-flac)
+    ("m" "to M4A" +core/convert-to-m4a)
+    ("o" "to Ogg" +core/convert-to-ogg)
+    ("v" "to WAV" +core/convert-to-wav)]
+   ["Documents"
+    :if (lambda () (+core--convert-of 'document))
+    ("d" "to Word" +core/convert-to-docx)
+    ("O" "to OpenDocument" +core/convert-to-odt)
+    ("h" "to a web page" +core/convert-to-html)
+    ("P" "to PDF" +core/convert-to-pdf)
+    ("M" "to Markdown" +core/convert-to-markdown)
+    ("R" "to Org" +core/convert-to-org)]
+   ["PDF"
+    :if (lambda () (+core--convert-of 'pdf))
+    ("i" "pages as pictures" +core/convert-pdf-pages)
+    ("u" "merge into one" +core/convert-pdf-merge)
+    ("S" "split into pages" +core/convert-pdf-split)]])
 
 ;;;###autoload
 (defun +core/convert ()

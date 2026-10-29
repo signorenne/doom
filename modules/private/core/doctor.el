@@ -79,6 +79,15 @@
                 "brew install librsvg"
               "zypper what-provides rsvg-convert names the package")))
 
+;; The converter and the file tools, SPC m c and SPC m x in the file
+;; manager; pictures, video and photo dates use the tools above.
+(dolist (tool '(("pandoc" . "SPC m c cannot convert documents")
+                ("pdfunite" . "SPC m c cannot merge PDFs")
+                ("pdfseparate" . "SPC m c cannot split PDFs")
+                ("openssl" . "SPC m x cannot make or check checksums")))
+  (unless (executable-find (car tool))
+    (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
+
 ;; The data formats. A language server validates as you type; the other
 ;; tools are what `SPC m v' and the prettify and compact keys shell out
 ;; to. A missing one is not fatal: the format keeps its mode and loses
