@@ -17,28 +17,36 @@
 (defun +core--tool-files ()
   "The marked files, or the one at point, in the file manager; this
 buffer's file elsewhere."
-  (seq-remove #'file-directory-p
-              (cond ((derived-mode-p 'dired-mode) (dired-get-marked-files))
-                    (buffer-file-name (list buffer-file-name))
-                    (t (user-error "No file here")))))
+  (or (seq-remove #'file-directory-p
+                  (cond ((derived-mode-p 'dired-mode) (dired-get-marked-files))
+                        (buffer-file-name (list buffer-file-name))
+                        (t (user-error "No file here"))))
+      (user-error "No file here, only folders")))
 
 (defun +core--digest (files algorithm done)
-  "Hash FILES with ALGORITHM in the background; DONE gets ((FILE . HASH) ...)."
-  (let ((buffer (generate-new-buffer " *checksum*")))
-    (make-process
-     :name "checksum" :buffer buffer :noquery t
-     :command (append (list "openssl" "dgst" (concat "-" algorithm) "-r") files)
-     :sentinel (lambda (process _event)
-                 (unless (process-live-p process)
-                   (let (sums)
-                     (with-current-buffer buffer
-                       (goto-char (point-min))
-                       (while (re-search-forward "^\\([0-9a-f]+\\) \\*\\(.+\\)$" nil t)
-                         (push (cons (match-string 2) (match-string 1)) sums)))
-                     (kill-buffer buffer)
-                     (if (and (zerop (process-exit-status process)) sums)
-                         (funcall done (nreverse sums))
-                       (message "The checksum failed"))))))))
+  "Hash FILES with ALGORITHM in the background; DONE gets ((FILE . HASH) ...)
+for the files that could be read."
+  (unless (executable-find "openssl") (user-error "No openssl"))
+  ;; A few hundred files a run, as a command line has a limit, and one
+  ;; unreadable file fails only its own line.
+  (let ((chunks (seq-split files 200)) (sums nil) next)
+    (setq next
+          (lambda ()
+            (let ((buffer (generate-new-buffer " *checksum*")))
+              (make-process
+               :name "checksum" :buffer buffer :noquery t
+               :command (append (list "openssl" "dgst" (concat "-" algorithm) "-r") (pop chunks))
+               :sentinel (lambda (process _event)
+                           (unless (process-live-p process)
+                             (with-current-buffer buffer
+                               (goto-char (point-min))
+                               (while (re-search-forward "^\\([0-9a-f]+\\) \\*\\(.+\\)$" nil t)
+                                 (push (cons (match-string 2) (match-string 1)) sums)))
+                             (kill-buffer buffer)
+                             (cond (chunks (funcall next))
+                                   (sums (funcall done (nreverse sums)))
+                                   (t (message "The checksum failed")))))))))
+    (funcall next)))
 
 (defun +core--show-lines (name lines)
   "Show LINES in a buffer called NAME."
@@ -149,7 +157,8 @@ text files that differ can be compared side by side."
    (let ((files (+core--tool-files)))
      (if (= (length files) 2)
          files
-       (list (car files) (read-file-name "Compare with: ")))))
+       (list (car files) (read-file-name "Compare with: " nil nil t)))))
+  (setq a (expand-file-name a) b (expand-file-name b))
   (let ((said (with-temp-buffer
                 (cons (call-process "cmp" nil t nil a b)
                       ;; cmp names both files first; where they differ is the news.
@@ -180,7 +189,7 @@ text files that differ can be compared side by side."
 (define-derived-mode +core-duplicates-mode special-mode "Duplicates"
   "Files the same as another, a group each.
 RET visits the file on the line; m marks it, u unmarks it, x sends the
-marked ones to the trash."
+marked ones to the trash, as long as each group keeps a copy."
   (setq-local truncate-lines t))
 
 (with-eval-after-load 'evil
@@ -241,7 +250,7 @@ size are hashed, in the background."
                                          'face 'bold))
                      (dolist (file (sort group #'string<))
                        (insert (propertize (concat "    " (file-relative-name file dir) "\n")
-                                           '+core-file file)))
+                                           '+core-file file '+core-group count)))
                      (insert "\n")))
                  groups)
         (goto-char (point-min))
@@ -268,6 +277,7 @@ size are hashed, in the background."
       (beginning-of-line)
       (delete-char 1)
       (insert (propertize (if marked "*" " ") '+core-file file
+                          '+core-group (get-text-property (point) '+core-group)
                           'face (if marked 'error 'default))))
     (put-text-property (line-beginning-position) (line-end-position) '+core-marked marked)
     (forward-line 1)))
@@ -281,14 +291,19 @@ size are hashed, in the background."
 (defun +core/duplicates-trash ()
   "Send the marked files to the trash."
   (interactive)
-  (let (files)
+  (let (files (kept (make-hash-table)))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
-        (when (get-text-property (point) '+core-marked)
-          (push (get-text-property (point) '+core-file) files))
+        (when-let* ((group (get-text-property (point) '+core-group)))
+          (if (get-text-property (point) '+core-marked)
+              (push (get-text-property (point) '+core-file) files)
+            (puthash group t kept))
+          (unless (gethash group kept) (puthash group nil kept)))
         (forward-line 1)))
     (unless files (user-error "Nothing marked"))
+    (when (let (bare) (maphash (lambda (_group some) (unless some (setq bare t))) kept) bare)
+      (user-error "Every copy of a group is marked: leave one"))
     (when (y-or-n-p (format "Send %d file%s to the trash? " (length files) (if (cdr files) "s" "")))
       (let ((delete-by-moving-to-trash t))
         (dolist (file files) (delete-file file t)))
@@ -309,31 +324,59 @@ or q leaves them as they are.")
 (define-key +core-rename-mode-map (kbd "C-c C-c") #'+core/rename-apply)
 (define-key +core-rename-mode-map (kbd "C-c C-k") #'quit-window)
 
-(defun +core--photo-date (file)
-  "When FILE, a photo, was taken, as YYYY-MM-DD HH.MM.SS, or nil."
-  (when (executable-find "exiftool")
-    (let ((date (string-trim (with-output-to-string
-                               (call-process "exiftool" nil standard-output nil
-                                             "-s3" "-d" "%Y-%m-%d %H.%M.%S"
-                                             "-DateTimeOriginal" file)))))
-      (and (not (string-empty-p date)) date))))
+(defun +core--photo-dates (files)
+  "When each of FILES, photos, was taken, as YYYY-MM-DD HH.MM.SS, in a
+table by file; one run of exiftool for them all."
+  (let ((dates (make-hash-table :test #'equal))
+        (args (make-temp-file "exiftool-args")))
+    (when (executable-find "exiftool")
+      (unwind-protect
+          (progn
+            (with-temp-file args (insert (string-join files "\n") "\n"))
+            (with-temp-buffer
+              (call-process "exiftool" nil (list t nil) nil "-q" "-m" "-T"
+                            "-d" "%Y-%m-%d %H.%M.%S" "-Directory" "-FileName" "-DateTimeOriginal"
+                            "-@" args)
+              (dolist (line (split-string (buffer-string) "\n" t))
+                (pcase (split-string line "\t")
+                  (`(,dir ,name ,date)
+                   (unless (equal date "-")
+                     (puthash (expand-file-name name dir) date dates)))))))
+        (delete-file args)))
+    dates))
+
+(defun +core--same-name-p (a b)
+  "Non-nil when names A and B are one on this system's disks: macOS's
+ignore case."
+  (if (eq system-type 'darwin) (string-equal-ignore-case a b) (equal a b)))
+
+(defun +core--bad-name-p (name)
+  "Non-nil when NAME, without its folder, cannot be a file's name."
+  (or (member name '("" "." ".."))
+      (string-search "/" name)
+      (> (string-bytes (encode-coding-string name 'utf-8)) 255)))
+
+(defun +core--rename-clashes (plan)
+  "The entries of PLAN whose new name is not a name, is taken by a file
+the plan does not move, or is given to two files."
+  (seq-filter (lambda (entry)
+                (let ((new (cdr entry)))
+                  (or (+core--bad-name-p (file-name-nondirectory new))
+                      (and (file-exists-p new)
+                           (not (seq-some (lambda (other) (file-equal-p new (car other))) plan)))
+                      (> (seq-count (lambda (other) (+core--same-name-p (cdr other) new)) plan) 1))))
+              plan))
 
 (defun +core--rename-preview (plan)
   "Show PLAN, ((OLD . NEW) ...), and wait for C-c C-c."
-  (let* ((names (mapcar #'cdr plan))
-         (clashes (seq-filter (lambda (entry)
-                                (let ((new (cdr entry)))
-                                  (or (and (not (equal new (car entry))) (file-exists-p new)
-                                           (not (assoc new plan)))
-                                      (> (seq-count (lambda (n) (equal n new)) names) 1))))
-                              plan)))
+  (let* ((clashes (+core--rename-clashes plan)))
     (with-current-buffer (get-buffer-create "*Rename*")
       (let ((inhibit-read-only t))
         (erase-buffer)
         (+core-rename-mode)
         (setq +core--rename-plan plan)
         (insert (if clashes
-                    (propertize "Some names are taken twice, or by a file that is there: nothing can be renamed.\n\n" 'face 'error)
+                    (propertize "Some names are taken twice, taken by a file that is there, or not names: nothing can be renamed.\n\n" 'face 'error)
                   "C-c C-c renames, C-c C-k leaves them.\n\n"))
         (dolist (entry plan)
           (insert (format "%s  ->  %s\n" (file-name-nondirectory (car entry))
@@ -348,16 +391,34 @@ or q leaves them as they are.")
   "Rename the files as the preview shows."
   (interactive)
   (unless +core--rename-plan (user-error "Nothing to rename, or names clash"))
-  (let ((plan +core--rename-plan) (dirs nil))
-    ;; Through temporary names, so swapping two names works.
-    (let ((steps (mapcar (lambda (entry)
-                           (let ((temp (make-temp-name (concat (file-name-directory (car entry)) ".rename-"))))
-                             (rename-file (car entry) temp)
-                             (cons temp (cdr entry))))
-                         plan)))
-      (dolist (step steps)
-        (rename-file (car step) (cdr step))
-        (push (file-name-directory (cdr step)) dirs)))
+  (let ((plan (seq-remove (lambda (entry) (equal (car entry) (cdr entry))) +core--rename-plan))
+        (dirs nil) (moved nil))
+    (when (+core--rename-clashes plan)
+      (user-error "A name was taken since the preview: nothing renamed"))
+    ;; Through temporary names, so swapping two names works. Each step is
+    ;; (OLD TEMP NEW AT-NEW), so a failure puts every file back.
+    (condition-case err
+        (progn
+          (dolist (entry plan)
+            (let ((temp (make-temp-name (concat (file-name-directory (car entry)) ".rename-"))))
+              (rename-file (car entry) temp)
+              (push (list (car entry) temp (cdr entry) nil) moved)))
+          (dolist (step moved)
+            (rename-file (nth 1 step) (nth 2 step))
+            (setf (nth 3 step) t)))
+      (error
+       (dolist (step moved)
+         (when (nth 3 step)
+           (let ((temp (make-temp-name (concat (file-name-directory (nth 2 step)) ".rename-"))))
+             (ignore-errors (rename-file (nth 2 step) temp)
+                            (setf (nth 1 step) temp)))))
+       (dolist (step moved)
+         (ignore-errors (rename-file (nth 1 step) (nth 0 step))))
+       (user-error "Nothing renamed: %s" (error-message-string err))))
+    (dolist (entry plan)
+      (push (file-name-directory (cdr entry)) dirs)
+      (when-let* ((buffer (get-file-buffer (car entry))))
+        (with-current-buffer buffer (set-visited-file-name (cdr entry) nil t))))
     (quit-window t)
     (when (fboundp 'dired-buffers-for-dir)
       (dolist (dir (delete-dups dirs))
@@ -372,7 +433,9 @@ its index from 1 that returns the new name without the folder."
     (+core--rename-preview
      (mapcar (lambda (file)
                (setq i (1+ i))
-               (cons file (expand-file-name (funcall make file i) (file-name-directory file))))
+               (let ((name (funcall make file i)))
+                 (when (+core--bad-name-p name) (user-error "Not a file name: %S" name))
+                 (cons file (expand-file-name name (file-name-directory file)))))
              files))))
 
 (defun +core--name-and-ext (file)
@@ -426,10 +489,18 @@ each keeping its extension."
   "Rename the marked photos by when they were taken; one without a date
 keeps its name."
   (interactive)
-  (+core--rename (lambda (file _i)
-                   (if-let* ((date (+core--photo-date file)))
-                       (concat date (downcase (cdr (+core--name-and-ext file))))
-                     (file-name-nondirectory file)))))
+  (message "Reading when the photos were taken...")
+  (let ((dates (+core--photo-dates (+core--tool-files)))
+        (given (make-hash-table :test #'equal)))
+    ;; Photos of one burst share their second, so the later ones are numbered.
+    (+core--rename (lambda (file _i)
+                     (if-let* ((date (gethash file dates)))
+                         (let* ((ext (downcase (cdr (+core--name-and-ext file))))
+                                (n (puthash (downcase (concat date ext))
+                                            (1+ (gethash (downcase (concat date ext)) given 0))
+                                            given)))
+                           (concat date (if (> n 1) (format "-%d" n) "") ext))
+                       (file-name-nondirectory file))))))
 
 
 ;;

@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 14:40
+#+generated: 2026-10-24 15:31
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -4108,14 +4108,15 @@ bound.
 - ~+media/pause~ (~p~) :: Pause, or play on.
 - ~+media/play-at-point~ (~RET~) :: Play the queue entry on this line, or
   pause and play on elsewhere.
-- ~+media/play-file~ :: Play FILE, or every media file under it, now.
+- ~+media/play-file~ :: Play FILE, or every media file under it, now;
+  NO-SELECT as for '+media/player'.
 - ~+media/player~ (~SPC o M~) :: Show the player, starting mpv if it is not
-  running.
+  running; with NO-SELECT, show it without moving there.
 - ~+media/previous~ (~<~) :: The track before.
 - ~+media/queue-files~ (~a~) :: Add FILES, or what is under them, to the
   queue.
-- ~+media/queue-marked~ :: Add the marked files, or the one at point, to the
-  player's queue.
+- ~+media/queue-marked~ (~SPC m p~) :: Add the marked files, or the one at
+  point, to the player's queue.
 - ~+media/quieter~ (~9~) :: Lower the volume.
 - ~+media/remove-at-point~ (~d~) :: Take the queue entry on this line out.
 - ~+media/repeat~ (~r~) :: Repeat nothing, then the queue, then the track.
