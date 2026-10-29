@@ -83,6 +83,7 @@ transients is one key away on /, its dispatch."
     ("f" "Fetch"               magit-fetch)
     ("F" "Pull"                magit-pull)
     ("l" "Log"                 magit-log)
+    ("G" "Every branch in one graph" magit-log-all-branches)
     ("d" "Diff"                magit-diff)
     ("b" "Switch branch"       magit-branch-checkout)
     ("B" "Blame this file"     magit-blame-addition)
