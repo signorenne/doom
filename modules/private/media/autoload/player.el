@@ -25,6 +25,12 @@
 (defvar +media--render-timer nil
   "The redraw, at most a couple of times a second.")
 
+(defvar +media--connect-timer nil
+  "The wait for mpv's socket.")
+
+(defvar +media--socket-dir nil
+  "A folder only this user can enter, for the socket.")
+
 (defvar +media--cover-cache (make-hash-table :test #'equal)
   "File to the picture shown for it, or `none'.")
 
@@ -34,8 +40,11 @@
   "The properties the player shows.")
 
 (defun +media--socket ()
-  "The socket this Emacs and its mpv talk over."
-  (expand-file-name (format "emacs-mpv-%d.sock" (emacs-pid)) temporary-file-directory))
+  "The socket this Emacs and its mpv talk over, in a folder of its own so
+no one else can take the name first."
+  (unless (and +media--socket-dir (file-directory-p +media--socket-dir))
+    (setq +media--socket-dir (make-temp-file "emacs-mpv" t)))
+  (expand-file-name "mpv.sock" +media--socket-dir))
 
 
 ;;
@@ -100,15 +109,27 @@
                         :sentinel (lambda (_process _event)
                                     (setq +media--connection nil)
                                     (+media--render-soon))))
-    (let ((tries 0) timer)
-      (setq timer (run-at-time 0.05 0.05
-                               (lambda ()
-                                 (setq tries (1+ tries))
-                                 (when (or (file-exists-p (+media--socket)) (> tries 100))
-                                   (cancel-timer timer)
-                                   (condition-case err (+media--connect)
-                                     (error (message "mpv did not answer: %s"
-                                                     (error-message-string err)))))))))))
+    (when (timerp +media--connect-timer) (cancel-timer +media--connect-timer))
+    ;; The socket can exist a moment before mpv listens on it, so a
+    ;; refused connection is tried again until mpv gives up or time does.
+    (let ((tries 0))
+      (setq +media--connect-timer
+            (run-at-time 0.05 0.05
+                         (lambda ()
+                           (setq tries (1+ tries))
+                           (when (and (file-exists-p (+media--socket))
+                                      (ignore-errors (+media--connect) t))
+                             (+media--stop-waiting))
+                           (when (and (timerp +media--connect-timer)
+                                      (or (> tries 200) (not (process-live-p +media--process))))
+                             (+media--stop-waiting)
+                             (setq +media--pending nil)
+                             (message "mpv did not answer"))))))))
+
+(defun +media--stop-waiting ()
+  "Stop waiting for mpv's socket."
+  (when (timerp +media--connect-timer) (cancel-timer +media--connect-timer))
+  (setq +media--connect-timer nil))
 
 (defun +media--get (name)
   "What mpv last said of property NAME."
@@ -123,7 +144,7 @@
   "Files the player takes as music.")
 
 (defvar +media-video-extensions
-  '("mp4" "m4v" "mkv" "mov" "webm" "avi" "wmv" "flv" "mpg" "mpeg" "ts" "3gp")
+  '("mp4" "m4v" "mkv" "mov" "webm" "avi" "wmv" "flv" "mpg" "mpeg" "3gp")
   "Files the player plays in mpv's window.")
 
 ;;;###autoload
@@ -136,8 +157,13 @@
   "FILES with each directory replaced by the media files under it, in order."
   (mapcan (lambda (file)
             (if (file-directory-p file)
+                ;; Hidden files and folders, such as the ._ copies macOS
+                ;; leaves on other drives, are not music.
                 (sort (seq-filter #'+media-file-p
-                                  (directory-files-recursively file "." nil))
+                                  (directory-files-recursively
+                                   file "\\`[^.]" nil
+                                   (lambda (dir)
+                                     (not (string-prefix-p "." (file-name-nondirectory dir))))))
                       #'string-version-lessp)
               (and (+media-file-p file) (list file))))
           files))
@@ -158,11 +184,12 @@ with APPEND."
              (if (cdr files) "s" ""))))
 
 ;;;###autoload
-(defun +media/play-file (file)
-  "Play FILE, or every media file under it, now."
+(defun +media/play-file (file &optional no-select)
+  "Play FILE, or every media file under it, now; NO-SELECT as for
+`+media/player'."
   (interactive "fPlay: ")
   (+media-play (list file))
-  (+media/player))
+  (+media/player no-select))
 
 ;;;###autoload
 (defun +media/queue-files (files)
@@ -216,10 +243,13 @@ with APPEND."
 
 (defun +media--quit ()
   "Stop mpv with the player's buffer."
+  (+media--stop-waiting)
   (dolist (process (list +media--connection +media--process))
     (when (processp process) (delete-process process)))
-  (ignore-errors (delete-file (+media--socket)))
-  (setq +media--process nil +media--connection nil +media--state nil))
+  (when +media--socket-dir
+    (ignore-errors (delete-directory +media--socket-dir t)))
+  (setq +media--process nil +media--connection nil +media--state nil
+        +media--pending nil +media--socket-dir nil))
 
 (defun +media--time (seconds)
   "SECONDS as m:ss, or h:mm:ss."
@@ -347,15 +377,17 @@ many times a second."
                                    (+media--render)))))))
 
 ;;;###autoload
-(defun +media/player ()
-  "Show the player, starting mpv if it is not running."
+(defun +media/player (&optional no-select)
+  "Show the player, starting mpv if it is not running; with NO-SELECT,
+show it without moving there. Returns its buffer."
   (interactive)
   (+media--start)
   (let ((buffer (get-buffer-create +media-player-buffer-name)))
     (with-current-buffer buffer
       (unless (derived-mode-p '+media-player-mode) (+media-player-mode)))
-    (pop-to-buffer buffer)
-    (+media--render)))
+    (if no-select (display-buffer buffer) (pop-to-buffer buffer))
+    (+media--render)
+    buffer))
 
 
 ;;
