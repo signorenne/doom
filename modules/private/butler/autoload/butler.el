@@ -494,12 +494,18 @@ shift under it."
                     (start (prop-match-beginning match))
                     (end (prop-match-end match))
                     (width +butler--dashboard-width))
-          (let ((inhibit-read-only t))
+          ;; The dashboard centres its text with a line prefix, which a
+          ;; plain insert would not carry: he would land on the left edge.
+          (let ((inhibit-read-only t)
+                (prefix (get-text-property start 'line-prefix)))
             (with-silent-modifications
               (delete-region start end)
               (goto-char start)
               (+butler--insert-speech (+butler--dashboard-line)
-                                      width '+ui-greeting))))))))
+                                      width '+ui-greeting)
+              (when prefix
+                (add-text-properties start (point)
+                                     `(line-prefix ,prefix indent-prefix ,prefix))))))))))
 
 (defvar +butler--dashboard-ticks 0
   "Ticks since he last said something new on the dashboard.")
