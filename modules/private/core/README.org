@@ -344,7 +344,8 @@ named before anything starts (=doom doctor= lists them).
 - Pictures (vips, or ImageMagick): to PNG, JPEG, WebP or AVIF; resized
   to a long side or a percentage; a copy without metadata (place,
   camera, dates; exiftool), the way up and the colour profile kept;
-  without exiftool vips strips it and turns the picture upright. BMP and
+  without exiftool vips strips it all, the colour profile too, and turns
+  the picture upright. BMP and
   PSD, which vips cannot write, are resized to PNG.
 - Video (ffmpeg): to MP4 or WebM, a smaller copy for sending, a clip
   between two times, a GIF.
@@ -689,7 +690,10 @@ What keeps it that way:
   in ~c-ts-mode~ whole, a 900 KB header a third of a second to colour at
   each step, and plain a preview takes under a millisecond. When the
   cursor rests on it, it takes its own mode without the mode's hooks,
-  which start servers and side views, and colours what shows; a key
+  which start servers and side views, without a =-*-= line's say and
+  without building a grammar, and colours what shows; an Org file
+  without its indentation and inline pictures, which keep working on
+  timers; a remote file stays plain; a key
   pressed meanwhile stops that and leaves it plain. Measured on the
   Mac, a mode already loaded: 1 to 50 ms, 72 ms for that font's first
   64 KB; a mode's first use loads it, 100 to 650 ms, the six of the

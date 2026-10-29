@@ -52,6 +52,76 @@ the next session by savehist.")
 and what else the drawing depended on; see the redraw below.")
 (defvar +core--dirvish-in-redraw nil)
 
+(defvar treesit-auto-install-grammar)
+(defvar org-startup-indented)
+(defvar org-startup-with-inline-images)
+(defvar org-startup-with-latex-preview)
+
+(defvar +core-preview-live-delay 0.15
+  "How long the cursor rests on a file before its preview takes the
+file's own mode.")
+
+(defvar +core--preview-live-timer nil
+  "The wait before the preview takes its file's mode.")
+
+(defvar-local +core--preview-file nil
+  "The file the preview buffer shows.")
+(put '+core--preview-file 'permanent-local t)
+
+(defun +core--preview-long-lines-p ()
+  "Non-nil when a line of this buffer is too long to colour quickly."
+  (save-excursion
+    (goto-char (point-min))
+    (let (long)
+      (while (and (not long) (not (eobp)))
+        (setq long (> (- (line-end-position) (point)) 1000))
+        (forward-line 1))
+      long)))
+
+(defun +core--preview-live (buffer file)
+  "Give BUFFER, previewing FILE, FILE's own mode, if it still shows it."
+  (when-let* (((buffer-live-p buffer))
+              ((equal (buffer-local-value '+core--preview-file buffer) file))
+              ((not (file-remote-p file)))
+              (window (get-buffer-window buffer t)))
+    (require 'treesit)
+    (with-current-buffer buffer
+      (unless (+core--preview-long-lines-p)
+        (if (eq t (condition-case nil
+                      (while-no-input
+                        ;; No grammar built and no -*- cookie obeyed for a
+                        ;; file only looked at.
+                        (let ((buffer-file-name file) (inhibit-message t) (message-log-max nil)
+                              (non-essential t) (enable-local-variables nil)
+                              (treesit-auto-install-grammar 'never)
+                              ;; What an Org file starts with that keeps
+                              ;; working on idle timers.
+                              (org-startup-indented nil)
+                              (org-startup-with-inline-images nil)
+                              (org-startup-with-latex-preview nil))
+                          (delay-mode-hooks (set-auto-mode)))
+                        ;; Each code block would set its own language up.
+                        (setq-local markdown-fontify-code-blocks-natively nil)
+                        ;; What shows: font-lock-mode stays off in a hidden buffer.
+                        (font-lock-ensure (point-min)
+                                          (save-excursion
+                                            (goto-char (window-start window))
+                                            (forward-line (window-height window))
+                                            (point)))
+                        nil)
+                    (error t)))
+            (+core--preview-plain)
+          (setq buffer-read-only t truncate-lines t))))))
+
+(defun +core--preview-plain ()
+  "Make this preview buffer plain again, its grammar gone."
+  (unless (eq major-mode 'fundamental-mode)
+    ;; Its idle agent would go on working on the next file.
+    (when (bound-and-true-p org-indent-mode) (org-indent-mode -1))
+    (when (fboundp 'treesit-parser-list)
+      (mapc #'treesit-parser-delete (treesit-parser-list)))
+    (fundamental-mode)))
+
 (after! dirvish
   (setq dirvish-default-layout '(0 0 0.45)
         ;; All but vc-state read from the file attributes dired already
@@ -287,15 +357,15 @@ A GIF is drawn by Emacs, to play."
              (cache (dirvish--img-thumb-name file (concat "box" box)
                                               (if alpha ".png" ".jpg"))))
         (cond
+         ((or (equal ext "ico")
+              (and (equal ext "gif")
+                   (< (or (file-attribute-size (file-attributes file)) 0) +core-preview-gif-max)))
+          `(img . ,(+core--preview-image file w h)))
          ;; A thumbnail older than its picture is made again: the name
          ;; comes from the path, so an edited picture would keep showing
          ;; as it was.
          ((and (file-exists-p cache) (not (file-newer-than-file-p file cache)))
           `(img . ,(+core--preview-image cache w h)))
-         ((or (equal ext "ico")
-              (and (equal ext "gif")
-                   (< (or (file-attribute-size (file-attributes file)) 0) +core-preview-gif-max)))
-          `(img . ,(+core--preview-image file w h)))
          ;; vips draws an SVG in its own process, once, so a large one
          ;; never holds the cursor up; and to fill the thumbnail's square
          ;; whatever its own size, a drawing not being made of pixels to
@@ -390,59 +460,6 @@ A GIF is drawn by Emacs, to play."
         (when (and (file-exists-p made) (file-newer-than-file-p file made))
           (delete-file made)))
       cache)))
-
-(defvar +core-preview-live-delay 0.15
-  "How long the cursor rests on a file before its preview takes the
-file's own mode.")
-
-(defvar +core--preview-live-timer nil
-  "The wait before the preview takes its file's mode.")
-
-(defvar-local +core--preview-file nil
-  "The file the preview buffer shows.")
-(put '+core--preview-file 'permanent-local t)
-
-(defun +core--preview-long-lines-p ()
-  "Non-nil when a line of this buffer is too long to colour quickly."
-  (save-excursion
-    (goto-char (point-min))
-    (let (long)
-      (while (and (not long) (not (eobp)))
-        (setq long (> (- (line-end-position) (point)) 1000))
-        (forward-line 1))
-      long)))
-
-(defun +core--preview-live (buffer file)
-  "Give BUFFER, previewing FILE, FILE's own mode, if it still shows it."
-  (when-let* (((buffer-live-p buffer))
-              ((equal (buffer-local-value '+core--preview-file buffer) file))
-              (window (get-buffer-window buffer t)))
-    (with-current-buffer buffer
-      (unless (+core--preview-long-lines-p)
-        (if (eq t (condition-case nil
-                      (while-no-input
-                        (let ((buffer-file-name file) (inhibit-message t) (message-log-max nil)
-                              (non-essential t))
-                          (delay-mode-hooks (set-auto-mode)))
-                        ;; Each code block would set its own language up.
-                        (setq-local markdown-fontify-code-blocks-natively nil)
-                        ;; What shows: font-lock-mode stays off in a hidden buffer.
-                        (font-lock-ensure (point-min)
-                                          (save-excursion
-                                            (goto-char (window-start window))
-                                            (forward-line (window-height window))
-                                            (point)))
-                        nil)
-                    (error t)))
-            (+core--preview-plain)
-          (setq buffer-read-only t truncate-lines t))))))
-
-(defun +core--preview-plain ()
-  "Make this preview buffer plain again, its grammar gone."
-  (unless (eq major-mode 'fundamental-mode)
-    (when (fboundp 'treesit-parser-list)
-      (mapc #'treesit-parser-delete (treesit-parser-list)))
-    (fundamental-mode)))
 
 ;; The keys that make it a file manager. M-n narrows the listing as you
 ;; type, which is Doom's; the rest of the file manager's own work is on
@@ -549,16 +566,28 @@ else was left holding the picture drawn for the pane it no longer has."
                         (index (cdr (assq :index dirvish--props))))
               (ignore-errors (dirvish--preview-update dv index)))))))))
 
+(defvar +core--dirvish-window-sizes (make-hash-table :test #'eq :weakness 'key)
+  "Frame to its windows' outer sizes when last seen.")
+
 (add-hook 'window-size-change-functions
           (defun +core--dirvish-resize-h (frame)
-            ;; A drag sends a great many of these; only the last matters,
-            ;; and a thumbnail is a process each time.
-            (when-let* ((timer (gethash frame +core--dirvish-resize-timers)))
-              (cancel-timer timer))
-            (puthash frame
-                     (run-with-idle-timer 0.3 nil
-                                          #'+core--dirvish-redraw-preview frame)
-                     +core--dirvish-resize-timers)))
+            ;; Called as well when only a window's text area changes, a
+            ;; header line coming or going, which a preview taking its
+            ;; file's mode can do: redrawing then would make it plain
+            ;; again, and so on. Only a change of outer size counts.
+            (let ((sizes (mapcar (lambda (window)
+                                   (cons (window-pixel-width window) (window-pixel-height window)))
+                                 (window-list frame 'no-minibuffer))))
+              (unless (equal sizes (gethash frame +core--dirvish-window-sizes))
+                (puthash frame sizes +core--dirvish-window-sizes)
+                ;; A drag sends a great many of these; only the last
+                ;; matters, and a thumbnail is a process each time.
+                (when-let* ((timer (gethash frame +core--dirvish-resize-timers)))
+                  (cancel-timer timer))
+                (puthash frame
+                         (run-with-idle-timer 0.3 nil
+                                              #'+core--dirvish-redraw-preview frame)
+                         +core--dirvish-resize-timers)))))
 
 (map! :leader
       :desc "Dired, this file's directory" "o -" #'+core/dirvish-here
