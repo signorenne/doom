@@ -334,37 +334,46 @@ menu of all of it.
 * Converting files
 ~SPC m c~ on the marked files in the file manager, or in a picture's
 buffer, opens a menu of what fits them, and each conversion makes a new
-file beside the original, numbered when the name is taken; nothing is
-overwritten. It runs in the background, and a failure's command and
-output go to =*Conversions*=.
+file beside the original, numbered when the name is taken or already
+given to another file of the batch; nothing is overwritten, and ffmpeg
+is told so too (=-n=). It runs in the background, each job from its
+file's folder, where pandoc finds a document's pictures; a failure's
+command and output go to =*Conversions*=, and a missing program is
+named before anything starts (=doom doctor= lists them).
 
 - Pictures (vips, or ImageMagick): to PNG, JPEG, WebP or AVIF; resized
   to a long side or a percentage; a copy without metadata (place,
-  camera, dates; exiftool), the way up kept.
+  camera, dates; exiftool), the way up and the colour profile kept;
+  without exiftool vips strips it and turns the picture upright. BMP and
+  PSD, which vips cannot write, are resized to PNG.
 - Video (ffmpeg): to MP4 or WebM, a smaller copy for sending, a clip
   between two times, a GIF.
 - Audio, or a video's sound: to MP3, FLAC, M4A, Ogg or WAV.
 - Documents (pandoc): Markdown, Org, HTML, Word, OpenDocument, and PDF
   where a LaTeX is installed.
 - PDF (poppler): each page as a picture, the marked ones merged, each
-  page as a PDF of its own.
+  page as a PDF of its own (=page-1.pdf= and on, in a new folder).
 
 * File tools
 ~SPC m x~ in the file manager, on the marked files or the one at point:
 
 - Checksums: SHA-256 copied, or MD5, SHA-1, SHA-512 (openssl, in the
-  background). A checksum pasted is checked against the file, its kind
+  background, a few hundred files a run; a file that cannot be read is
+  left out, the others still counted). A checksum pasted is checked against the file, its kind
   told by its length; a =SHA256SUMS= or =.sha256= file has every file it
   lists checked, OK, FAILED or MISSING.
 - Compare two files: the same, or where they first differ; two text
   files side by side in ediff.
 - Duplicates under the folder: files of one size hashed, the same ones
   grouped in a buffer where =m= marks, =u= unmarks and =x= sends the
-  marked to the trash.
+  marked to the trash, refusing while every copy of a group is marked.
 - Rename with a preview: replace text, a prefix, a suffix, numbered,
-  lower or upper case, or the date a photo was taken. The preview shows
-  every new name and refuses when two clash; =C-c C-c= renames, swapping
-  names included.
+  lower or upper case, or the date a photo was taken (one exiftool run
+  for them all, a burst numbered). The preview shows every new name and
+  refuses when two clash, one is taken by another file or is not a name;
+  on macOS a change of case alone is allowed. =C-c C-c= checks again and
+  renames, through temporary names so swaps work; if one rename fails,
+  every file is put back. Buffers visiting a renamed file follow it.
 - Hex: the file in hexl.
 
 * Data files

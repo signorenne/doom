@@ -8,8 +8,11 @@ cover, artist and album, where it is and how long it lasts, the volume,
 and the queue; its keys are mpv's own where Emacs leaves them free.
 
 Opening music or a video plays it: =RET= on it in the file manager, or
-=SPC f f=. =SPC m p= in the file manager adds the marked files, or a
-folder with everything under it, to the queue. Killing the player's
+=SPC f f=; from the file manager the player shows beside the listing,
+which keeps its layout. A remote file, or one that does not exist yet,
+opens as a file. =SPC m p= in the file manager adds the marked files, or
+a folder with everything under it (hidden files and folders left out),
+to the queue. Killing the player's
 buffer stops mpv; hiding it (=q=) leaves the music playing.
 
 The cover is a =cover.jpg=, =folder.jpg= or =front.jpg= beside the file,
@@ -40,7 +43,8 @@ In the player:
 | =q=       | hide the player; the music plays on            |
 
 * Configuration
-- ~+media-audio-extensions~, ~+media-video-extensions~: what plays.
+- ~+media-audio-extensions~, ~+media-video-extensions~: what plays. =.ts=
+  is not among them: it is TypeScript far more often than video.
 - ~+media-mpv-args~: more arguments for mpv.
 
 * Setup

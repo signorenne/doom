@@ -789,7 +789,10 @@ Inside vterm: =C-c C-t= copy mode, =C-q= sends the next key through raw,
 ~SPC o -~ opens it on the file you are in: the listing on the left with
 icons, sizes and git state, and on the right a preview of whatever the
 cursor is on, text, image, PDF, video frame, archive contents, audio
-details. Move, and the preview follows. Every dired buffer is dirvish
+details. Move, and the preview follows. A text file shows as plain text
+at once and, when the cursor rests on it a moment, in its own mode with
+its colours, as it would open; a key pressed meanwhile keeps it plain,
+so running down a listing never waits. A GIF plays. Every dired buffer is dirvish
 underneath, so these are the keys you actually have; ~SPC m SPC~ opens a
 menu of all of it when one slips your mind.
 
@@ -947,8 +950,11 @@ file renamed here is a git mv, so its history follows it.
 of what fits them; in a picture you are looking at, ~SPC m c~ too. Each
 conversion makes a new file beside the original, =photo.jpg= from
 =photo.heic=, numbered when the name is taken: nothing is overwritten.
-It runs in the background and says when it is done; a failure's output
-is in =*Conversions*=.
+Two files of one batch never get the same name either, =photo.heic=
+and =photo.jpg= making =photo.png= and =photo-2.png=. It runs in the
+background and says when it is done; a failure's output is in
+=*Conversions*=, and a tool that is missing is named before anything
+starts.
 
 | Kind      | What it can become                                              |
 |-----------+-----------------------------------------------------------------|
@@ -959,7 +965,7 @@ is in =*Conversions*=.
 | PDF       | each page as a picture, the marked merged, each page on its own |
 
 Without metadata means without the place, the camera and the dates, the
-way up kept: what to send instead of the photo itself. Resizing takes a
+way up and the colours kept: what to send instead of the photo itself. Resizing takes a
 long side in pixels, =1600=, or a percentage, =50%=. A clip asks for
 two times, =1:20= and =1:45=; a GIF for a start and a length.
 
@@ -983,8 +989,13 @@ two times, =1:20= and =1:45=; a GIF for a start and a length.
 
 A rename always shows a preview first, every old name beside its new
 one; ~C-c C-c~ renames, ~C-c C-k~ leaves them. It refuses while two names
-clash, and swapping two names works. In the duplicates list ~RET~ opens a
-file, ~m~ marks it, ~u~ unmarks it and ~x~ sends the marked to the trash.
+clash or a name is not one (a =/= in it, too long), swapping two names
+works, and so does changing only the case. If one rename fails, every
+file goes back to its old name. A file open in a buffer follows its new
+name. Photos of one burst, taken in the same second, are numbered. In
+the duplicates list ~RET~ opens a file, ~m~ marks it, ~u~ unmarks it and
+~x~ sends the marked to the trash; it refuses while every copy of one
+file is marked, so one always stays.
 A pasted checksum's kind is told by its length, so MD5, SHA-1, SHA-256
 and SHA-512 all just work.
 
@@ -1053,8 +1064,10 @@ and SHA-512 all just work.
 opening one with ~SPC f f~ or ~SPC .~: mpv plays, music in the
 background and a video in its own window, and the player shows in a
 buffer of its own with the cover, the artist and album, where it is,
-and the queue. ~SPC o M~ brings the player back; ~q~ in it hides it and
-the music plays on; killing it stops mpv.
+and the queue. From the file manager the player shows beside the
+listing, which stays as it was. ~SPC o M~ brings the player back; ~q~ in
+it hides it and the music plays on; killing it stops mpv. Queuing a
+folder takes everything under it, hidden files and folders left out.
 
 | Key       | What it does                                    |
 |-----------+-------------------------------------------------|
