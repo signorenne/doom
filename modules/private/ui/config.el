@@ -161,8 +161,10 @@ draws on the dashboard moves on from here, inside
           ("AI hub"
            :icon (nerd-icons-mdicon "nf-md-robot" :face '+dashboard-menu-title)
            :action +ai/menu)
+          ;; SPC k is made per project, so the key is not found by lookup.
           ("Build kit"
            :icon (nerd-icons-octicon "nf-oct-tools" :face '+dashboard-menu-title)
+           :key "SPC k SPC"
            :action +cpp/menu)
           ("Cheat sheet"
            :icon (nerd-icons-octicon "nf-oct-question" :face '+dashboard-menu-title)
