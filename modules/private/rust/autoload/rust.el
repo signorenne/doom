@@ -83,12 +83,18 @@ name of a profile the project defines.  Kept in .dir-locals.el.")
   "Project root to (STAMP . METADATA), what cargo said and when.")
 
 (defun +rust--metadata-stamp (root manifests)
-  "The modification times of ROOT's Cargo.toml and Cargo.lock and of
-MANIFESTS, the packages' own."
+  "The modification times of ROOT's Cargo.toml and Cargo.lock, of
+MANIFESTS, the packages' own, and of the folders holding the packages,
+where a new member of a glob appears."
   (mapcar (lambda (file) (file-attribute-modification-time (file-attributes file)))
           (append (list (expand-file-name "Cargo.toml" root)
                         (expand-file-name "Cargo.lock" root))
-                  manifests)))
+                  manifests
+                  (delete-dups
+                   (mapcar (lambda (manifest)
+                             (file-name-directory
+                              (directory-file-name (file-name-directory manifest))))
+                           manifests)))))
 
 (defun +rust--metadata ()
   "What `cargo metadata' says about the project, as an alist, or nil.
