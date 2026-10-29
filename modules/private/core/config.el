@@ -330,6 +330,9 @@ are left alone, and so are `+core-plain-file-keep-modes'."
 ;; one stays Option, so a U.S. layout still types its accents: right
 ;; Option and ` then e is è. Command is Super, on which Doom puts the
 ;; Mac's own keys, s-c, s-v, s-s, s-z.
+(defvar ns-command-modifier)            ; only in a macOS build
+(defvar ns-option-modifier)
+(defvar ns-right-option-modifier)
 (when (featurep :system 'macos)
   (setq ns-command-modifier 'super
         ns-option-modifier 'meta
