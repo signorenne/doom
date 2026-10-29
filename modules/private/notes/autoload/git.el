@@ -101,6 +101,10 @@ down in the first place."
 Returns t when nothing is left to commit afterwards, nil when something
 is: a stopped rebase, or a commit that failed (no git identity, a stale
 index.lock), which is reported rather than swallowed."
+  ;; An idle commit still running finishes first: two gits on one index clash.
+  (when-let* ((process (get-process "notes-autocommit")))
+    (with-timeout (10)
+      (while (process-live-p process) (accept-process-output process 0.1))))
   (pcase (+notes--state)
     ((or 'no-repo 'clean) t)
     ('stopped nil)
