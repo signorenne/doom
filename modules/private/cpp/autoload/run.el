@@ -186,9 +186,15 @@ kit, which a run asks for itself, nor during a build."
            (dir (+cpp-kit-abs-dir kit)))
       (when (and (not (file-remote-p dir))
                  (not (+cpp-kit-container kit))
+                 ;; A build, not a program's run, which is named run-something.
                  (not (seq-some (lambda (process)
                                   (and (process-live-p process)
-                                       (string-prefix-p "compilation" (process-name process))))
+                                       (string-prefix-p "compilation" (process-name process))
+                                       (buffer-live-p (process-buffer process))
+                                       (not (string-prefix-p
+                                             "run" (or (buffer-local-value '+core-compile-name
+                                                                           (process-buffer process))
+                                                       "")))))
                                 (process-list)))
                  (file-exists-p (expand-file-name "CMakeCache.txt" dir))
                  (not (file-directory-p (expand-file-name ".cmake/api/v1/reply" dir)))
