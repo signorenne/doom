@@ -11,7 +11,8 @@ The small global things:
   on Linux) whose windows Emacs Client.app opens; Emacs.app opened by
   itself, from the Dock or Finder, hands its files to that daemon and
   quits before showing a window of its own (=EMACS_SERVER_NAME= set to
-  an unused name keeps one of its own),
+  an unused name keeps one of its own); warnings of a missing
+  =lexical-binding= cookie in the distribution's site files are dropped,
 - at rest on a name in a file with a language server, the echo area
   shows its declaration as code, return type, name and parameters,
   =void debug_push_event(event_type const type, ...)=, and in gray what

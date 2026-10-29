@@ -434,6 +434,38 @@ re-run starts it at the editor's priority again.")
 ;; was, so ESC closes it.
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
 
+;; Emacs 31 warns of site files without a lexical-binding cookie. Those
+;; are the distribution's, load before this config and are not ours to
+;; fix, so their warnings are dropped.
+(defun +core--foreign-lexbind-warning-p (type)
+  "Non-nil if TYPE is a missing-cookie warning for a file you cannot write."
+  (pcase type
+    (`(files missing-lexbind-cookie ,(and (pred stringp) file))
+     (not (file-writable-p file)))))
+
+;; A GUI Emacs shows them after init.
+(setq delayed-warnings-list
+      (seq-remove (lambda (w) (+core--foreign-lexbind-warning-p (car w)))
+                  delayed-warnings-list))
+
+;; A daemon has logged them already, for its first frame: that buffer
+;; goes when they are all it holds.
+(when-let* (((daemonp))
+            (buffer (get-buffer "*Warnings*"))
+            (types (with-current-buffer buffer
+                     (let ((pos (point-min)) types)
+                       (while (setq pos (next-single-property-change pos 'button-data))
+                         (when-let* ((type (get-text-property pos 'button-data)))
+                           (push type types)))
+                       types)))
+            ((seq-every-p #'+core--foreign-lexbind-warning-p types)))
+  (kill-buffer buffer)
+  (defadvice! +core--warnings-live-a (fn buffer)
+    "Show the warnings BUFFER only if it still exists."
+    :around #'warning--display-buffer
+    (when (buffer-live-p buffer)
+      (funcall fn buffer))))
+
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
 ;; org-protocol, $EDITOR). Daemons already run one. The usual Emacs is
 ;; the daemon that `+core/install-daemon' starts at login. A GUI Emacs
