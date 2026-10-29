@@ -84,17 +84,26 @@ name of a profile the project defines.  Kept in .dir-locals.el.")
 
 (defun +rust--metadata-stamp (root manifests)
   "The modification times of ROOT's Cargo.toml and Cargo.lock, of
-MANIFESTS, the packages' own, and of the folders holding the packages,
-where a new member of a glob appears."
-  (mapcar (lambda (file) (file-attribute-modification-time (file-attributes file)))
-          (append (list (expand-file-name "Cargo.toml" root)
-                        (expand-file-name "Cargo.lock" root))
-                  manifests
-                  (delete-dups
+MANIFESTS, the packages' own, and of the folders inside ROOT holding
+packages or named by a glob of the manifest, where a new member appears."
+  (let* ((toml (expand-file-name "Cargo.toml" root))
+         (globs (with-temp-buffer
+                  (ignore-errors (insert-file-contents toml))
+                  (let (dirs)
+                    (while (re-search-forward "\"\\([^\"*]+\\)/\\*\"" nil t)
+                      (push (expand-file-name (match-string 1) root) dirs))
+                    dirs)))
+         (parents (seq-filter
+                   (lambda (dir) (and (file-in-directory-p dir root)
+                                      (not (file-equal-p dir root))))
                    (mapcar (lambda (manifest)
                              (file-name-directory
                               (directory-file-name (file-name-directory manifest))))
-                           manifests)))))
+                           manifests))))
+    (mapcar (lambda (file) (file-attribute-modification-time (file-attributes file)))
+            (append (list toml (expand-file-name "Cargo.lock" root))
+                    manifests
+                    (delete-dups (mapcar #'directory-file-name (append globs parents)))))))
 
 (defun +rust--metadata ()
   "What `cargo metadata' says about the project, as an alist, or nil.
