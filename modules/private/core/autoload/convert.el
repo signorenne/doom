@@ -37,20 +37,23 @@ when such a file exists already."
   (let* ((base (concat (file-name-sans-extension file) (if suffix (concat "-" suffix) "")))
          (target (concat base "." ext))
          (n 1))
-    (while (or (file-exists-p target) (member target +core--convert-taken))
+    (while (or (file-exists-p target)
+               (if (eq system-type 'darwin)
+                   (member-ignore-case target +core--convert-taken)
+                 (member target +core--convert-taken)))
       (setq n (1+ n) target (format "%s-%d.%s" base n ext)))
     (push target +core--convert-taken)
     target))
 
 (defun +core--convert-dir (file suffix)
   "A new folder beside FILE named after it with SUFFIX, numbered when
-such a folder exists, made."
+such a folder exists, as a directory name: the job makes it as it starts."
   (let* ((base (concat (file-name-sans-extension file) "-" suffix))
          (dir base) (n 1))
-    (while (file-exists-p dir)
+    (while (or (file-exists-p dir) (member dir +core--convert-taken))
       (setq n (1+ n) dir (format "%s-%d" base n)))
-    (make-directory dir t)
-    dir))
+    (push dir +core--convert-taken)
+    (file-name-as-directory dir)))
 
 
 ;;
@@ -66,16 +69,20 @@ deleted, when it made it."
   (when-let* ((missing (seq-find (lambda (job) (not (executable-find (caar job)))) jobs)))
     (user-error "No %s: see doom doctor" (caar missing)))
   (let ((queue jobs) (running 0) (done 0) (failed nil) (total (length jobs))
-        (dirs (delete-dups (mapcar (lambda (job) (file-name-directory (cdr job))) jobs)))
+        (dirs (delete-dups (mapcar (lambda (job) (file-name-directory (directory-file-name (cdr job))))
+                                   jobs)))
         next)
     (setq next
           (lambda ()
             (while (and queue (< running (or parallel 1)))
               (pcase-let* ((`(,command . ,output) (pop queue))
                            (buffer (generate-new-buffer " *convert*"))
-                           (existed (file-exists-p output))
-                           ;; Beside the file, where pandoc finds its pictures.
-                           (default-directory (file-name-directory (directory-file-name output)))
+                           (existed (and (not (directory-name-p output)) (file-exists-p output)))
+                           ;; Beside the file, where pandoc finds its pictures;
+                           ;; in a job's own folder, made now.
+                           (default-directory (if (directory-name-p output)
+                                                  (progn (make-directory output t) output)
+                                                (file-name-directory output)))
                            ;; ffmpeg colours its errors, which the log would show raw.
                            (process-environment (cons "AV_LOG_FORCE_NOCOLOR=1" process-environment)))
                 (setq running (1+ running))
@@ -86,8 +93,8 @@ deleted, when it made it."
                    (unless (process-live-p process)
                      (setq running (1- running) done (1+ done))
                      (unless (zerop (process-exit-status process))
-                       (push (file-name-nondirectory output) failed)
-                       (unless (and existed (not (file-directory-p output)))
+                       (push (file-name-nondirectory (directory-file-name output)) failed)
+                       (unless existed
                          (ignore-errors
                            (if (file-directory-p output)
                                (delete-directory output t)
@@ -105,7 +112,7 @@ deleted, when it made it."
                          (dolist (dir dirs)
                            (dolist (dired (dired-buffers-for-dir dir))
                              (with-current-buffer dired (revert-buffer)))))
-                       (message (if failed
+                       (message "%s" (if failed
                                     (format "Converted %d of %d; %s failed, see %s"
                                             (- total (length failed)) total
                                             (string-join (nreverse failed) ", ")
@@ -172,7 +179,8 @@ percentage such as 50%."
 ;;;###autoload
 (defun +core/convert-strip-metadata ()
   "Copies of the selected pictures without their metadata: place, camera,
-dates. The way up and the colour profile are kept."
+dates. The way up and the colour profile are kept; without exiftool,
+vips takes the profile too and turns the picture upright."
   (interactive)
   (+core--convert-each
    'image
@@ -376,8 +384,9 @@ dates. The way up and the colour profile are kept."
    'pdf
    (lambda (file)
      (let ((dir (+core--convert-dir file "split")))
-       ;; Not the file's own name: pdfseparate reads a % in it as its own.
-       (cons (list "pdfseparate" file (expand-file-name "page-%d.pdf" dir))
+       ;; Relative, in the job's folder: pdfseparate reads a % anywhere in
+       ;; the path as its own.
+       (cons (list "pdfseparate" file "page-%d.pdf")
              dir)))))
 
 
