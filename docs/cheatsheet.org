@@ -708,6 +708,7 @@ its drawing.
 | ~SPC m P b~ | draw it over the checkerboard, light or dark   |
 | ~SPC m P i~ | its facts in the view instead of the drawing   |
 | ~SPC m P O~ | open it with every file, or wait to be asked   |
+| ~SPC m c~   | convert the picture into a new file, see Dired |
 
 A drawing in the view is fitted to it and sits in its middle, both ways,
 and is fitted and centred again when the window changes size. The view
@@ -941,6 +942,52 @@ Ten files renamed with one =:%s/old/new/=, undo included. The permission
 bits are text too: change =rw-r--r--= to =rwxr-xr-x= and ~ZZ~. A tracked
 file renamed here is a git mv, so its history follows it.
 
+** Converting into new files
+~SPC m c~ on the marked files, or the one under the cursor, opens a menu
+of what fits them; in a picture you are looking at, ~SPC m c~ too. Each
+conversion makes a new file beside the original, =photo.jpg= from
+=photo.heic=, numbered when the name is taken: nothing is overwritten.
+It runs in the background and says when it is done; a failure's output
+is in =*Conversions*=.
+
+| Kind      | What it can become                                              |
+|-----------+-----------------------------------------------------------------|
+| Pictures  | PNG, JPEG, WebP, AVIF; resized; a copy without metadata          |
+| Video     | MP4, WebM, a smaller copy for sending, a clip, a GIF            |
+| Audio     | MP3, FLAC, M4A, Ogg, WAV; also a video's sound                  |
+| Documents | Word, OpenDocument, a web page, PDF, Markdown, Org (pandoc)     |
+| PDF       | each page as a picture, the marked merged, each page on its own |
+
+Without metadata means without the place, the camera and the dates, the
+way up kept: what to send instead of the photo itself. Resizing takes a
+long side in pixels, =1600=, or a percentage, =50%=. A clip asks for
+two times, =1:20= and =1:45=; a GIF for a start and a length.
+
+** File tools
+~SPC m x~ on the marked files, or the one under the cursor.
+
+| Key | What it does                                                         |
+|-----+----------------------------------------------------------------------|
+| ~c~   | SHA-256 of the file, copied; of several, listed                      |
+| ~C~   | MD5, SHA-1 or SHA-512 instead                                        |
+| ~v~   | check the file against a checksum you paste                          |
+| ~V~   | on a =SHA256SUMS= or =.sha256= file: check every file it lists         |
+| ~=~   | compare two marked files: the same, or where they first differ       |
+| ~d~   | duplicates under this directory, grouped                             |
+| ~r~   | rename the marked: replace text in the names                         |
+| ~p s~ | add a prefix, a suffix before the extension                          |
+| ~n~   | number them in order: =trip-01.jpg=, =trip-02.jpg=                  |
+| ~l u~ | lower case, upper case                                               |
+| ~t~   | photos by when they were taken: =2024-06-01 12.30.45.jpg=            |
+| ~h~   | the file in hex                                                      |
+
+A rename always shows a preview first, every old name beside its new
+one; ~C-c C-c~ renames, ~C-c C-k~ leaves them. It refuses while two names
+clash, and swapping two names works. In the duplicates list ~RET~ opens a
+file, ~m~ marks it, ~u~ unmarks it and ~x~ sends the marked to the trash.
+A pasted checksum's kind is told by its length, so MD5, SHA-1, SHA-256
+and SHA-512 all just work.
+
 ** Order and depth
 | Key     | What it does                                                             |
 |---------+--------------------------------------------------------------------------|
@@ -989,6 +1036,44 @@ file renamed here is a git mv, so its history follows it.
 - Open a terminal here: ~SPC o T~.
 - Two directories side by side: ~SPC w v~, ~SPC f d~ in the new window,
   navigate; ~C~ and ~R~ now offer the other side as the destination.
+- Send a photo without where it was taken: ~SPC m c~ on it, ~x~; the copy
+  ending in =-clean= is the one to send.
+- Make a phone's HEIC photos JPEGs: mark them, ~SPC m c~, ~j~.
+- Shrink a video for a chat: ~SPC m c~ on it, ~s~.
+- Check a download: copy the checksum from its page, cursor on the file,
+  ~SPC m x v~; the paste is offered. Or ~SPC m x V~ on the =SHA256SUMS=
+  that came with it.
+- Free space taken by copies: ~SPC m x d~, ~m~ on the copies to drop, ~x~.
+- Rename a folder of photos by date: mark them, ~SPC m x t~, look, ~C-c C-c~.
+- Play music or a video: ~RET~ on it; ~SPC m p~ queues the marked or a
+  whole folder. See Music and video.
+
+* Music and video
+~RET~ on a song or a video in the file manager plays it, and so does
+opening one with ~SPC f f~ or ~SPC .~: mpv plays, music in the
+background and a video in its own window, and the player shows in a
+buffer of its own with the cover, the artist and album, where it is,
+and the queue. ~SPC o M~ brings the player back; ~q~ in it hides it and
+the music plays on; killing it stops mpv.
+
+| Key       | What it does                                    |
+|-----------+-------------------------------------------------|
+| ~SPC o M~   | the player                                      |
+| ~SPC m p~   | in the file manager: queue the marked, or a folder |
+| ~p~         | pause, play on                                  |
+| ~RET~       | play the track on this line; elsewhere pause    |
+| ~< >~       | previous, next track                            |
+| ~h l~       | five seconds back, on; ~H L~ a minute             |
+| ~9 0~       | quieter, louder; ~m~ mute                         |
+| ~r~         | repeat: the queue, then the track, then nothing |
+| ~z~         | shuffle the queue                               |
+| ~d~         | take the track on this line out of the queue    |
+| ~a~         | add a file or a folder                          |
+| ~s~         | stop                                            |
+
+The keys are mpv's own, so the window of a video answers to the same
+ones. The cover is a =cover.jpg= or =folder.jpg= beside the file, else the
+picture inside it.
 
 * Git
 ~SPC g g~ is the status buffer, and everything starts there: a key is a
@@ -1026,6 +1111,8 @@ grouped by directory, from the same scan ~SPC p t~ uses.
 | ~SPC g p~   | what the line under the cursor was, in a popup           |
 | ~SPC g B~   | blame this file                                          |
 | ~SPC g L~   | this file's history                                      |
+| ~SPC g SPC a~ | the history of the function the cursor is in          |
+| ~SPC g SPC v~ | this file as it was before the last change to it      |
 | ~SPC g t~   | the time machine: this file at every revision            |
 | ~SPC g b~   | switch branch, ~SPC g C~ clone, ~SPC g F~ fetch              |
 | ~SPC g f f~ | open a file as it was at a revision                      |
@@ -1044,6 +1131,8 @@ From there, in the file itself:
 | ~SPC g s~   | stage this one change                                     |
 | ~SPC g r~   | revert this one change, ~SPC g R~ the whole file            |
 | ~SPC g .~   | this file in magit: diff, log, blame, stage               |
+
+The marks follow your typing, a moment after you pause.
 
 The popup is the quickest answer to "what did I just change here": it
 shows the old lines in place, and ~c~ puts them in the kill ring if you
@@ -1200,6 +1289,7 @@ In the sequence buffer ~r i~ opens, one line per commit, oldest first:
 | ~-G~       | commits whose diff matches a regexp                          |
 | ~--author~ | by author; ~--since~ ~--until~ by date                           |
 | ~--follow~ | one file's history across renames (~SPC g L~ sets it)          |
+| ~SPC g L~ | with a region: the history of those lines only               |
 
 The pickaxe: ~l l~, then ~-S~, type =functionName=, ~RET~, and the log
 holds only the commits that introduced or removed it. ~-G~ takes a
@@ -1225,10 +1315,13 @@ where every commit is yours, ~L d~ takes the same name off every row.
 | ~q~       | leave blame                                                                |
 | ~SPC g t~ | the time machine: ~C-k~ an older revision, ~C-j~ a newer, ~gtb~ blame it, ~q~ back |
 
-Word diffs are on in every hunk: what changed inside a line is
-highlighted, not the whole line. Where delta is drawing, delta draws
-them too, so magit's own refinement stands down rather than painting
-over it twice.
+Code in a diff keeps its colours, nexenne's, drawn by delta, and what
+changed inside a line is highlighted, not the whole line. A diff too
+large for delta, past 400 KB, is painted by magit in green and red;
+there and without delta the changed words are marked in every hunk of a
+small diff and in the hunk under the cursor of a large one. Each hunk's
+=@@= line names the function it is in, C, C++, Pascal, Rust, Python,
+elisp and Org included.
 
 ** Conflicts
 A merge, rebase or pull that stops on a conflict shows the files under
@@ -1384,7 +1477,8 @@ changes you commit as one commit, ~m e~ opens the merge message to edit.
 *** When a merge, rebase or cherry-pick stops on a conflict
 1. The files are under "Unmerged" in status; ~RET~ opens one.
 2. ~]n~ to the next conflict, ~SPC g x~ for the menu: ~u~ keep upper, ~l~
-   keep lower, ~a~ both, or edit by hand. Save.
+   keep lower, ~b~ the base, ~a~ both, or edit by hand; the menu moves on
+   and saves the file once it is clean.
 3. In status, ~s~ on the file: it is resolved.
 4. Go on: ~m m~ for a merge, ~r r~ for a rebase, ~A A~ for a
    cherry-pick. Or give up and put everything back: ~m a~, ~r a~, ~A a~.
@@ -1468,7 +1562,7 @@ forge, which would bring issues and pull requests into magit, waits for
 a GitHub token in =~/.authinfo.gpg=. Everything else the git module
 mentions is live: magit-todos lists the TODO markers at the bottom of
 status (~SPC p t~ does the same outside magit), and magit-delta colours
-the hunks now that =git-delta= is installed.
+the hunks in nexenne's colours, with =git-delta= and =bat= installed.
 
 ** When a merge or rebase conflicts
 The file opens with the markers in it and smerge is already on, so the
@@ -1478,14 +1572,22 @@ conflicts are marked up rather than raw text.
 |---------+------------------------------------------------|
 | ~]n [n~   | the next conflict, and the one before          |
 | ~SPC g x~ | the menu: which side to keep, and what differs |
-| ~u~       | in that menu, keep mine, the upper one         |
-| ~l~       | keep theirs, the lower one                     |
+| ~u~       | keep the upper side; the menu says whose it is |
+| ~l~       | keep the lower side                            |
 | ~b~       | keep the base, as it was before either         |
 | ~a~       | keep both, one after the other                 |
 | ~c~       | keep the one the cursor is in                  |
 | ~e~       | ediff this one, when the two are close         |
 | ~R~       | refine: what differs inside the conflict       |
 | ~r~       | resolve it, when it is obvious                 |
+
+The menu names the sides for what is going on: in a merge the upper is
+yours and the lower what comes in; in a rebase the upper is the branch
+rebased onto and the lower your commit. Keeping a side moves to the
+next conflict with the menu still open, and once a file has none left
+it is saved and the next file with one opens. The base shows in every
+conflict magit's git makes; ~b~ is greyed out where there is none. A
+conflict you resolved once is resolved the same way when it comes back.
 
 ~]n~ goes on to the next file that conflicts once this one is clean, so a
 whole rebase is walked with ~]n~ and one letter at each stop. When every
@@ -1938,6 +2040,12 @@ The [[file:../modules/private/web/README.org][web README]] has the whole of it. 
 and Rust use: in a tree with a =package.json= they mean the project's own
 package manager, read from its lock file.
 
+A project pinning TypeScript 6 or older is served by
+typescript-language-server; a file under TypeScript 7, the project's or
+only the global one, by TypeScript's own =tsc --lsp=, since 7 has no
+=tsserver.js= for the other. Opening a file of a project fetches only
+the docsets of the libraries its =package.json= uses.
+
 ** Running a project
 | Key       | What it does                                    |
 |-----------+-------------------------------------------------|
@@ -2056,7 +2164,9 @@ so nothing here depends on it.
 Opening a diagram opens its preview beside it; you do not ask for it.
 The window appears at once saying it is drawing, and the diagram
 replaces that when it arrives, because the first drawing of a session
-has a JVM to start. Move to another diagram and the preview follows.
+has a JVM to start. When diagrams are among your recent files, the
+server starts and draws once while Emacs waits after starting, so the
+first diagram shows at once. Move to another diagram and the preview follows.
 
 The redraw waits for a pause in the typing, so a burst of keys costs one
 drawing rather than one per key, and the typing never waits for it: the
