@@ -76,6 +76,12 @@
                   (typescript-ts-mode :language-id "typescript")
                   (typescript-mode :language-id "typescript"))
                  . +web-typescript-server))
+  ;; json-mode descends from js-mode, so the entry above would take JSON
+  ;; too; eglot's own JSON entry goes back in front of it.
+  (when-let* ((json (seq-find (lambda (entry)
+                                (and (listp (car entry)) (memq 'json-mode (car entry))))
+                              eglot-server-programs)))
+    (setq eglot-server-programs (cons json (delq json eglot-server-programs))))
 
   (add-to-list 'eglot-server-programs
                `((css-mode css-ts-mode scss-mode less-css-mode)
