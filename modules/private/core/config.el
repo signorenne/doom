@@ -463,21 +463,15 @@ re-run starts it at the editor's priority again.")
 ;; itself where there is none.
 (run-with-idle-timer 5 nil #'+core--ensure-daemon-agent)
 
+(declare-function +core--open-in-server "+hand-off")
 (defun +core--hand-off-to-server ()
   "Open this Emacs's files in a new window of the running server, then quit.
 Not when a file's buffer is modified, or when the server cannot be reached."
-  (let ((files (delq nil (mapcar #'buffer-file-name (buffer-list))))
-        ;; Emacs.app keeps its own in Contents/MacOS/bin.
-        (client (or (executable-find "emacsclient")
-                    (expand-file-name "bin/emacsclient" invocation-directory))))
+  (let ((files (delq nil (mapcar #'buffer-file-name (buffer-list)))))
     (cond ((seq-some (lambda (b) (and (buffer-file-name b) (buffer-modified-p b)))
                      (buffer-list))
            (message "Server %s runs elsewhere; this Emacs has edits, so it stays" server-name))
-          ((zerop (call-process client nil nil nil
-                                "-s" server-name "-c" "-n" "-e"
-                                (prin1-to-string
-                                 `(progn (mapc #'find-file ',files)
-                                         (select-frame-set-input-focus (selected-frame))))))
+          ((+core--open-in-server files)
            ;; Without its exit hook: this Emacs saving its history,
            ;; recent files and places would write over the server's.
            (let ((kill-emacs-hook nil))

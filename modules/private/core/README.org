@@ -10,7 +10,8 @@ The small global things:
   +core/install-daemon=, a launchd agent on macOS, Emacs's systemd unit
   on Linux) whose windows Emacs Client.app opens; Emacs.app opened by
   itself, from the Dock or Finder, hands its files to that daemon and
-  quits (=EMACS_SERVER_NAME= set to an unused name keeps one of its own),
+  quits before showing a window of its own (=EMACS_SERVER_NAME= set to
+  an unused name keeps one of its own),
 - at rest on a name in a file with a language server, the echo area
   shows its declaration as code, return type, name and parameters,
   =void debug_push_event(event_type const type, ...)=, and in gray what

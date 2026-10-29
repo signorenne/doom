@@ -13,6 +13,9 @@
 (setq +core-notes-dir "~/projects/personal/knowledge_base/"
       +notes-knowledge-dir "~/projects/personal/knowledge/")
 
+;; With the login daemon running, a GUI Emacs opens its files there.
+(load (file-name-concat doom-user-dir "modules/private/core/+hand-off") nil 'nomessage)
+
 (doom!
  ;; Input methods and keyboard layouts
  :input
