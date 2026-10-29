@@ -105,7 +105,7 @@ made once is replayed when the same conflict comes back (=rerere=).
   diff-mode does. Refining is what magit's painting costs: a 249 KB diff
   refreshed in 2.5 s refining every hunk, 0.8 s now.
 - What the git magit runs is told, by =-c= on its command line, so
-  =~/.gitconfig= stays yours:
+  =~/.gitconfig= stays yours, and a setting of your own there wins:
   =merge.conflictStyle=zdiff3= (=diff3= before git 2.35), =rerere.enabled=
   (which git then keeps on in that repository, outside Emacs too),
   =diff.algorithm=histogram=
@@ -119,7 +119,8 @@ made once is replayed when the same conflict comes back (=rerere=).
   =~/.config/git/attributes=).
 - ~+git-gutter-as-you-type~, on: Doom updates the gutter only on save on
   macOS, for trouble seen with another build of Emacs; here the update
-  runs in the background as on Linux. Nil puts it back.
+  runs in the background as on Linux. Nil puts it back from the next
+  start; =M-x diff-hl-flydiff-mode= turns it off for this session.
 - magit-todos scans the tree once a minute at most, not at every
   refresh of the status buffer.
 - ~+git-blame-max-size~, 1M: the blame turns itself on below it. It is

@@ -1087,9 +1087,10 @@ buffer opens this chapter with ~F12~.
 
 The log prints a commit's refs after its summary, so every summary starts at
 the same column and the eye runs down them; the graph's lines carry the
-theme's colours, one per branch, which takes both =log.graphColors= in
-=~/.gitconfig= and =--color= among the log's arguments: magit leaves that
-switch off, so the config turns it on. ~l~ then ~-c~ toggles it for one log.
+theme's colours, one per branch, which takes both =log.graphColors=,
+given to the git magit runs unless =~/.gitconfig= sets its own, and
+=--color= among the log's arguments: magit leaves that switch off, so
+the config turns it on. ~l~ then ~-c~ toggles it for one log.
 A diff takes its tab width from the file's own mode, flags a line indented
 with the wrong character, hides the =^M= of a CRLF file, and runs the hunks
 through =delta=, which colours the code inside them as the language it is

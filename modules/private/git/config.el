@@ -152,17 +152,22 @@ reads as removed.")
 (declare-function magit-git-version< "magit-git")
 
 (defun +git--global-arguments ()
-  "The settings above, as arguments to every git magit runs."
+  "The settings above, as arguments to every git magit runs; one the
+user's own git config sets is left to it."
   (append
-   (list "-c" (if (magit-git-version< "2.35")
-                  "merge.conflictStyle=diff3"
-                "merge.conflictStyle=zdiff3")
-         "-c" "rerere.enabled=true"
-         "-c" "diff.algorithm=histogram"
-         "-c" "fetch.writeCommitGraph=true"
-         "-c" (concat "log.graphColors=" +git-graph-colors)
-         ;; Bracket classes, not backslashes, which git reads as escapes.
-         "-c" (concat "diff.elisp.xfuncname=^[[:space:]]*[(]((cl-|transient-)?def[^ ]*"
+   (let ((mine (let ((default-directory "~/"))
+                 (ignore-errors (process-lines "git" "config" "--global" "--includes"
+                                               "--name-only" "--list")))))
+     (mapcan (lambda (setting)
+               (unless (member (downcase (car setting)) mine)
+                 (list "-c" (concat (car setting) "=" (cdr setting)))))
+             `(("merge.conflictStyle" . ,(if (magit-git-version< "2.35") "diff3" "zdiff3"))
+               ("rerere.enabled" . "true")
+               ("diff.algorithm" . "histogram")
+               ("fetch.writeCommitGraph" . "true")
+               ("log.graphColors" . ,+git-graph-colors))))
+   ;; Bracket classes, not backslashes, which git reads as escapes.
+   (list "-c" (concat "diff.elisp.xfuncname=^[[:space:]]*[(]((cl-|transient-)?def[^ ]*"
                       "|define-[^ ]+|use-package!?)[ ]+[^ ]+")
          "-c" "diff.org.xfuncname=^([*]+[ ]+.*)$")
    (unless (or (let ((default-directory "~/"))
@@ -172,7 +177,7 @@ reads as removed.")
      (list "-c" (concat "core.attributesFile=" +git-attributes-file)))))
 
 (after! magit
-  (unless (member "diff.algorithm=histogram" magit-git-global-arguments)
+  (unless (member "diff.org.xfuncname=^([*]+[ ]+.*)$" magit-git-global-arguments)
     (setq magit-git-global-arguments
           (append magit-git-global-arguments (+git--global-arguments)))))
 
