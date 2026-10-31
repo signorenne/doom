@@ -177,6 +177,14 @@ links name no picture skips that work; =#+startup: nolinkpreviews= keeps
 them off. A diagram or picture of no one note lives in =assets/=. Both
 folders are committed with the notes.
 
+A callout is a block of one of five kinds, ~+notes-callout-types~: note,
+tip, important, warning, caution, with a title after the kind if wanted,
+=#+begin_warning Careful= ... =#+end_warning=. Its first and last lines
+are drawn in the kind's face, ~+notes-callout-warning~ and the others,
+each a face of the theme in bold; the text inside is the note's. ~C-c C-,~
+then ~N~ ~T~ ~I~ ~W~ ~X~ inserts one; the lower case ~n~ stays
+org-re-reveal's speaker notes. HTML export gives =<div class="warning">=.
+
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal
 (=capture/journal/=) are scanned for open keywords (the ones in

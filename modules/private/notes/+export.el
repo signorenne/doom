@@ -69,6 +69,69 @@ visibly but does not hold up the window.")
         org-modern-table nil            ; keep tables plain and editable
         org-modern-block-fringe nil))   ; org-modern-indent draws the blocks
 
+;; Callouts: a #+begin_warning block, or note, tip, important, caution,
+;; with a title after the kind if wanted. Org gives a special block no
+;; face of its kind and sets its delimiter lines' face outright, so the
+;; kind's face is laid over the begin and end lines; the body is text as
+;; any other. Export is Org's own: <div class="warning"> in HTML.
+(defvar +notes-callout-types '("note" "tip" "important" "warning" "caution")
+  "The kinds of callout block, each a #+begin_KIND block drawn in the face
++notes-callout-KIND.")
+
+(defface +notes-callout-note '((t :inherit font-lock-function-name-face :weight bold))
+  "The begin and end lines of a note callout."
+  :group 'org-faces)
+(defface +notes-callout-tip '((t :inherit success :weight bold))
+  "The begin and end lines of a tip callout."
+  :group 'org-faces)
+(defface +notes-callout-important '((t :inherit font-lock-keyword-face :weight bold))
+  "The begin and end lines of an important callout."
+  :group 'org-faces)
+(defface +notes-callout-warning '((t :inherit warning :weight bold))
+  "The begin and end lines of a warning callout."
+  :group 'org-faces)
+(defface +notes-callout-caution '((t :inherit error :weight bold))
+  "The begin and end lines of a caution callout."
+  :group 'org-faces)
+
+(defvar org-structure-template-alist)
+
+(defvar +notes--callout-re nil
+  "(KINDS . REGEXP): the begin and end lines of a callout of KINDS, the
+kind in group 1, made again when `+notes-callout-types' changes.")
+
+(defun +notes--callout-match (limit)
+  "Find the next begin or end line of a callout before LIMIT, in any case:
+Org's font lock tells case apart, and #+BEGIN_WARNING is a callout too."
+  (unless (eq (car +notes--callout-re) +notes-callout-types)
+    (setq +notes--callout-re
+          (cons +notes-callout-types
+                (concat "^[ \t]*#\\+\\(?:begin\\|end\\)_\\("
+                        (regexp-opt +notes-callout-types) "\\)\\(?:[ \t].*\\)?$"))))
+  (let ((case-fold-search t))
+    (re-search-forward (cdr +notes--callout-re) limit t)))
+
+(defun +notes--callout-face ()
+  "The face of the callout just matched, nil for a kind with none."
+  (let ((face (intern-soft (concat "+notes-callout-" (downcase (match-string 1))))))
+    (and (facep face) face)))
+
+;; After Org's keywords, not among them: org-modern moves Org's block
+;; fontifier behind its own, and that fontifier sets a delimiter line's
+;; face outright, so a keyword among Org's would be undone. Added once:
+;; font-lock adds a mode's keywords again every time it is asked.
+(let ((keywords '((+notes--callout-match (0 (+notes--callout-face) prepend)))))
+  (unless (assoc keywords (cdr (assq 'org-mode font-lock-keywords-alist)))
+    (font-lock-add-keywords 'org-mode keywords 'append)))
+
+;; C-c C-, then the kind's letter, in capitals: the lower n is
+;; org-re-reveal's speaker notes. A key already taken is left alone.
+(after! org
+  (pcase-dolist (`(,key . ,kind) '(("N" . "note") ("T" . "tip") ("I" . "important")
+                                   ("W" . "warning") ("X" . "caution")))
+    (unless (assoc key org-structure-template-alist)
+      (add-to-list 'org-structure-template-alist (cons key kind) t))))
+
 (after! org-appear
   (setq org-appear-autolinks t
         org-appear-autoentities t
