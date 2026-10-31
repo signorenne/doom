@@ -131,6 +131,10 @@ day is written under.")
                                  org-roam-reflinks-section
                                  org-roam-unlinked-references-section)))
 
+;; In a note, the cursor on a link says what it points to: the title line
+;; in the echo area, the first lines too on SPC c H (autoload/preview.el).
+(add-hook 'org-roam-find-file-hook #'+notes--link-eldoc-setup-h)
+
 ;; What org-protocol://roam-ref captures with: one note per page, found
 ;; again by URL.
 (after! org-roam-protocol

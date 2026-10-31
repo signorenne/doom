@@ -109,6 +109,7 @@ meeting straight away.
 | ~SPC n r n~   | new note, one of the nine kinds                |
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
 | ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions |
+| ~SPC c H~     | on a link, the linked note's first lines in a popup |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
 | ~SPC n r m~   | build the map of a tag                         |
@@ -120,6 +121,12 @@ The roam buffer shows, under the backlinks and the references, the
 unlinked mentions: the lines elsewhere in the vault that name the note's
 title or an alias without linking to it, the links still to be made.
 They are a ripgrep search with PCRE2, which ~doom doctor~ checks for.
+
+With the cursor on an =id:= or =roam:= link, the echo area says what it
+points to: the note's title, its tags as =#tag= and its path in the vault.
+~SPC c H~ then shows the note itself in a popup, its first 20 lines without
+the property drawer and the =#+= keywords; a heading's note shows its
+subtree. Read once per change of the file.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal
