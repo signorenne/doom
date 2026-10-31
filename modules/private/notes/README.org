@@ -53,13 +53,13 @@ and =resources/= never are.
 | ~T~   | todo with a date    | inbox             |
 | ~i~   | idea                | inbox             |
 | ~l~   | link from clipboard | inbox             |
-| ~r~   | book or article     | inbox             |
-| ~c~   | the region, as code | inbox             |
+| ~r~   | book or article     | reading's Queue   |
+| ~c~   | the region, as code | snippets' Snippets |
 | ~b~   | bug, with a link    | inbox             |
 | ~P~   | project outcome     | that project's Goal |
 | ~pt~  | task for a project  | its Next actions, else inbox |
 | ~ot~  | the same as ~pt~      | its Next actions, else inbox |
-| ~h~   | habit               | inbox             |
+| ~h~   | habit               | habits' Habits    |
 | ~w~   | page from the browser | inbox           |
 | ~a~   | AI session          | its project's Progress, else inbox |
 

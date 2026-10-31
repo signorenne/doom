@@ -22,6 +22,7 @@
       (make-directory (expand-file-name dir graph) t))
     root))
 
+;;;###autoload
 (defun +notes--document-path (name)
   "Absolute path of the predefined document NAME."
   (let ((file (cdr (assoc name +notes-documents))))

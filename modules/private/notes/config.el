@@ -69,8 +69,7 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
   ;; added for the plain timestamps a day's note carries. Of the
   ;; documents, the inbox and the habits; someday is not for now.
   (setq +notes-agenda-base-files
-        (list (+notes--inbox-file)
-              (expand-file-name (cdr (assoc "habits" +notes-documents)) org-directory))
+        (list (+notes--inbox-file) (+notes--document-path "habits"))
         org-agenda-files +notes-agenda-base-files
         ;; Doom's keywords plus NEXT, the next action of a project.
         org-todo-keywords

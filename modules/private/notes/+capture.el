@@ -6,7 +6,8 @@
 ;; make them.
 
 (defun +notes--capture-templates ()
-  "Capture into the knowledge inbox or the owning PARA project."
+  "Capture into the inbox, the owning PARA project, or the document a
+habit, a reading or a snippet belongs in."
   ;; %a is a link back to where the capture was made, the file and line
   ;; or the mail; empty when there is nothing to point at.
   `(("t" "Todo to inbox" entry
@@ -22,10 +23,10 @@
      (file+headline ,(+notes--inbox-file) "Inbox")
      "* %(org-cliplink-capture)\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?" :prepend t)
     ("r" "Reading: book or article" entry
-     (file+headline ,(+notes--inbox-file) "Inbox")
+     (file+headline ,(+notes--document-path "reading") "Queue")
      "* TODO %^{Title}\n:PROPERTIES:\n:CREATED: %U\n:AUTHOR: %^{Author}\n:URL: %^{URL}\n:END:\n%?" :prepend t)
     ("c" "Code snippet" entry
-     (file+headline ,(+notes--inbox-file) "Inbox")
+     (file+headline ,(+notes--document-path "snippets") "Snippets")
      "* %^{Description}  :snippet:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:END:\n%a\n#+begin_src %(+notes--capture-src-lang)\n%i\n#+end_src\n%?" :prepend t)
     ("b" "Bug from the code" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
@@ -39,7 +40,7 @@
      (function +notes--capture-project-task)
      "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n%a\n%i")
     ("h" "Habit" entry
-     (file+headline ,(+notes--inbox-file) "Inbox")
+     (file+headline ,(+notes--document-path "habits") "Habits")
      "* TODO %^{Habit}\nSCHEDULED: <%<%Y-%m-%d %a> .+1d/3d>\n:PROPERTIES:\n:STYLE: habit\n:CREATED: %U\n:END:\n%?")
     ("w" "Web page, from the browser" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
