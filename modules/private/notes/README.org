@@ -163,6 +163,20 @@ away and leaves the note. The other workspaces keep their own windows;
 switching to one with no outline in sight pauses the outline's updates,
 and switching back resumes them.
 
+A picture belongs to the note it is in: ~SPC m a p~ pastes the one on the
+clipboard (=pngpaste= on a Mac, which ~doom doctor~ asks for), ~SPC m a c~
+takes a screenshot, and a picture file dropped on the note is copied in,
+with no question. Each goes into the note's folder under =.attach/=, named
+by the note's ID, and an =attachment:= link to it is put where the cursor
+is; under a heading with no ID it is the note's folder, and the heading
+stays as it was, not a note of its own. A note opens with the pictures
+its links name shown, as Org shows them: a link with no description, of
+any kind Org draws, an =attachment:=, a =file:= or a plain =./img/a.png=, 500
+pixels wide unless an =#+attr_org: :width= says otherwise. A note whose
+links name no picture skips that work; =#+startup: nolinkpreviews= keeps
+them off. A diagram or picture of no one note lives in =assets/=. Both
+folders are committed with the notes.
+
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal
 (=capture/journal/=) are scanned for open keywords (the ones in

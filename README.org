@@ -28,8 +28,8 @@ not need it. macOS:
 brew install git ripgrep fd jq git-delta bat
 # C and C++: clangd, clang-format and clang-tidy come with llvm
 brew install llvm cmake ninja python
-# Notes, diagrams, export, spelling
-brew install graphviz plantuml pandoc aspell languagetool
+# Notes, diagrams, export, spelling, pictures pasted into a note
+brew install graphviz plantuml pandoc aspell languagetool pngpaste
 # Previews in the file manager, pictures and drawings, music and video,
 # the terminal, per-project environments
 brew install ffmpeg exiftool vips imagemagick librsvg poppler p7zip mpv libvterm direnv

@@ -26,6 +26,11 @@
       (warn! "ripgrep has no PCRE2, so the roam buffer shows no unlinked mentions")
       (explain! "Install a ripgrep built with PCRE2, as Homebrew's and most distributions' are"))))
 
+;; SPC m a p pastes a picture through pngpaste on a Mac.
+(when (and (featurep :system 'macos) (not (executable-find "pngpaste")))
+  (warn! "Couldn't find pngpaste, so SPC m a p cannot paste a picture into a note")
+  (explain! "brew install pngpaste"))
+
 (unless (modulep! :tools pdf)
   (warn! "Without (:tools pdf) papers open in DocView, which cannot annotate")
   (explain! (if (featurep :system 'macos)

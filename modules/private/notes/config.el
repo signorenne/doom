@@ -108,6 +108,12 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
         org-outline-path-complete-in-steps nil
         org-refile-allow-creating-parent-nodes 'confirm
         org-image-actual-width '(500)
+        ;; A file dropped on a note is copied into its attachment folder,
+        ;; with no question: Org's own drop handler comes before Doom's
+        ;; in an org buffer, and macOS drops with the action private,
+        ;; which takes the default method.
+        org-yank-dnd-method 'attach
+        org-yank-dnd-default-attach-method 'cp
         org-ellipsis " [...]")
   (add-to-list 'org-modules 'org-habit)
 
@@ -117,6 +123,63 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
 
   ;; Any capture first makes sure the documents exist (created from templates).
   (advice-add #'org-capture :before #'+notes-ensure-documents))
+
+;; A note opens with its pictures shown, when it links one. Not through
+;; `org-startup-with-link-previews', which reads the context of every link
+;; in the file to find the pictures among them, so a long note full of
+;; links and with no picture paid for it each time it opened. Org's own
+;; link regexp finds the links first, and only a link that names a
+;; picture lets Org look; a #+startup keyword still decides, and a buffer
+;; Org starts without its startup work, an export's or a source block's,
+;; gets none.
+(defvar org-link-any-re)
+(defvar org-inhibit-startup)
+(defvar org-startup-with-link-previews)
+(declare-function org-link-preview-region "ol")
+(declare-function org-in-regexp "org-macs")
+
+(defun +notes--picture-link-p ()
+  "Non-nil when a link in this buffer names a picture.
+The names first, which few notes hold, then whether one sits in a link:
+going through every link of a long note is the slow part."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((case-fold-search t)
+          (picture (concat "\\.\\(?:" (regexp-opt image-file-name-extensions) "\\)\\b"
+                           "\\|data:image/"))
+          found)
+      (while (and (not found) (re-search-forward picture nil t))
+        (setq found (save-excursion
+                      (goto-char (match-beginning 0))
+                      (org-in-regexp org-link-any-re 1))))
+      found)))
+
+(add-hook! 'org-mode-hook
+  (defun +notes--show-pictures-h ()
+    "Show the note's pictures as it opens, when it has any."
+    (unless (or org-inhibit-startup
+                org-startup-with-link-previews
+                (local-variable-p 'org-startup-with-link-previews))
+      (when (+notes--picture-link-p)
+        ;; As Org's startup does: the previews of a buffer that runs
+        ;; org-mode again are made anew, not added to.
+        (org-link-preview-region nil t)))))
+
+;; A picture pasted under a heading with no ID goes into the note's
+;; folder, as a dropped one does: org-download-clipboard gives the heading
+;; an ID first, which would make it a note of its own. A heading with an
+;; ID keeps its own folder.
+(declare-function org-entry-get "org")
+
+(defadvice! +notes--paste-into-note-a (fn &rest args)
+  "Paste the picture into the note's attachment folder, not a new one."
+  :around #'org-download-clipboard
+  (if (and (derived-mode-p 'org-mode)
+           (not (org-entry-get nil "ID"))
+           (org-entry-get nil "ID" t))
+      (cl-letf (((symbol-function 'org-id-get-create) #'ignore))
+        (apply fn args))
+    (apply fn args)))
 
 (defvar +notes-commit-idle 600
   "Seconds of idle time after which the notes are committed, nil to never.")
