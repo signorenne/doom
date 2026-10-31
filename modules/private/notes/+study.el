@@ -5,8 +5,13 @@
 
 ;; Citations: one .bib file, the PDFs beside it, and a reference note per
 ;; entry, so a citation in a note and the note about the paper are the same
-;; thing.
-(defvar +notes-bibliography (file-name-concat org-directory "research/academic/references.bib")
+;; thing. The .bib and the PDFs are the library's, apart from the vault;
+;; the notes about them are in the vault.
+(defvar +notes-library-dir "~/projects/personal/knowledge_base/"
+  "The library of books and papers; init.el sets it.  Only citar reads it,
+and nothing here creates anything in it.")
+
+(defvar +notes-bibliography (file-name-concat +notes-library-dir "research/academic/references.bib")
   "The BibTeX library citar reads.")
 
 ;; Set before anything loads: Doom copies it into
@@ -18,7 +23,7 @@
   (setq org-cite-global-bibliography (list +notes-bibliography)))
 
 (after! citar
-  (setq citar-library-paths (list (file-name-concat org-directory "research/academic/papers"))
+  (setq citar-library-paths (list (file-name-concat +notes-library-dir "research/academic/papers"))
         citar-notes-paths (list (file-name-concat org-roam-directory "resources/sources/papers"))
         ;; Show what an entry has: a PDF, a note, a link.
         citar-symbol-separator "  "))

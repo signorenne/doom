@@ -1,7 +1,8 @@
 ;;; private/notes/config.el -*- lexical-binding: t; -*-
 ;;
 ;; One vault of notes and one Org-roam graph: Zettelkasten knowledge and
-;; PARA work, the documents among them.
+;; PARA work, the documents among them. Books and papers are a library
+;; of their own, which citar reads (+study.el).
 
 ;;
 ;;; Documents

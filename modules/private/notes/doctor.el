@@ -68,3 +68,12 @@
               (file-directory-p graph))
     (warn! "The graph %s doesn't exist yet" (abbreviate-file-name graph))
     (explain! "Run M-x +notes/bootstrap, or press SPC n d b")))
+
+;; The library is the user's own and nothing makes it: the default is
+;; the one +study.el gives.
+(let ((bib (expand-file-name "research/academic/references.bib"
+                             (or (bound-and-true-p +notes-library-dir)
+                                 "~/projects/personal/knowledge_base/"))))
+  (unless (file-exists-p bib)
+    (warn! "No bibliography at %s, so citar has nothing to list" (abbreviate-file-name bib))
+    (explain! "Put the library's .bib there, or set +notes-library-dir in init.el")))

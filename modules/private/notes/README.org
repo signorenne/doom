@@ -6,7 +6,8 @@ Everything written lives in one vault, ~+core-notes-dir~, =~/notes= on
 this machine (set in =init.el=): org notes, PlantUML diagrams and
 pictures. The vault is ~org-directory~ and ~org-roam-directory~ at once,
 one Org-roam graph where Zettelkasten knowledge and PARA work meet, and
-one git repository that commits itself.
+one git repository that commits itself. Books and papers are a library
+apart, ~+notes-library-dir~, which only citar reads.
 
 - the inbox =inbox.org= and one =projects/<slug>/index.org= per
   bounded outcome, with Goal, Completion criteria, Next actions, Decisions,
@@ -137,10 +138,12 @@ never become nodes.
 
 Cards are headings tagged =:fc:= in the notes themselves, scheduled through
 their own properties; the review reads the cards of the whole vault. The
-bibliography is =research/academic/references.bib= under ~org-directory~,
-with the PDFs in =research/academic/papers/=; citar writes its notes into
-the vault as =resources/sources/papers/<citekey>.org=, so a cited paper and
-the note about it are the same thing. The vault is a git repository, made
+bibliography is =research/academic/references.bib= under the library,
+~+notes-library-dir~, with the PDFs in =research/academic/papers/= there;
+nothing here creates either, and ~doom doctor~ says when the =.bib= is
+missing. citar writes its notes into the vault as
+=resources/sources/papers/<citekey>.org=, so a cited paper and the note
+about it are the same thing. The vault is a git repository, made
 by ~SPC n d b~, and commits everything in it after ~+notes-commit-idle~
 seconds of idle time and when Emacs exits, never while a rebase or merge
 is waiting, and says so when a commit fails. ~SPC n G~ pulls and pushes in
@@ -251,8 +254,11 @@ and its colours are the same.
 - ~+notes-roam-head~, the header every roam note starts with;
   ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
   and first lines.
-- ~+notes-bibliography~ (=research/academic/references.bib= under
-  ~org-directory~), ~+notes-commit-idle~ (600).
+- ~+notes-library-dir~, the library of books and papers, set in
+  =init.el= (=~/projects/personal/knowledge_base/= here and by default);
+  ~+notes-bibliography~ (=research/academic/references.bib= under it),
+  with ~citar-library-paths~ its =research/academic/papers=.
+- ~+notes-commit-idle~ (600).
 - ~+notes-latex-reach~ (4096), how far past the text being coloured org
   looks for LaTeX.
 - The files: =config.el= (documents, the workflow block, the commit

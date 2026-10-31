@@ -8,8 +8,10 @@
 
 ;; Where the notes live: one vault, both `org-directory' and the roam
 ;; graph. Set before any module or the doctor reads it; a missing folder
-;; is made on first use. Unset, it is ~/org.
-(setq +core-notes-dir "~/notes/")
+;; is made on first use. Unset, it is ~/org. Books and papers are a
+;; library apart, which only citar reads and nothing creates.
+(setq +core-notes-dir "~/notes/"
+      +notes-library-dir "~/projects/personal/knowledge_base/")
 
 ;; With the login daemon running, a GUI Emacs opens its files there.
 (load (file-name-concat doom-user-dir "modules/private/core/+hand-off") nil 'nomessage)
