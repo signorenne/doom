@@ -479,6 +479,66 @@ keeps the hook it was given, and a copy carries the note's ID."
   (add-hook 'after-revert-hook #'+notes--remember-title-h nil t))
 
 ;;
+;;; Starred notes
+
+(declare-function org-roam-tag-remove "org-roam-node")
+(declare-function org-roam-node-read "org-roam-node")
+(declare-function org-roam-node-visit "org-roam-node")
+(declare-function org-collect-keywords "org")
+(declare-function org-toggle-tag "org")
+
+(defun +notes--file-tags ()
+  "The tags in this buffer's #+filetags."
+  (split-string (or (cadr (assoc "FILETAGS" (org-collect-keywords '("FILETAGS")))) "")
+                ":" t))
+
+;;;###autoload
+(defun +notes/roam-star ()
+  "Star the note at point, or unstar it: the tag starred, in #+filetags
+for a file node, on the heading itself for a heading node."
+  (interactive)
+  (let ((node (or (org-roam-node-at-point) (user-error "Not in a note"))))
+    (save-excursion
+      (if (zerop (org-roam-node-level node))
+          (if (member "starred" (+notes--file-tags))
+              (progn (org-roam-tag-remove '("starred")) (message "Unstarred"))
+            (org-roam-tag-add '("starred"))
+            (message "Starred"))
+        ;; Not org-roam-tag-add: it reads a heading's tags with the
+        ;; inherited ones and would write the file's onto the heading.
+        (goto-char (org-roam-node-point node))
+        (let ((on (not (member "starred" (org-get-tags nil t)))))
+          (org-toggle-tag "starred" (if on 'on 'off))
+          (message (if on "Starred" "Unstarred")))))))
+
+(defun +notes--roam-starred-ids ()
+  "The ids of the starred notes: the files tagged starred, and the starred
+headings of files that are not, which would otherwise be listed twice."
+  (let* ((rows (org-roam-db-query
+                [:select [nodes:id nodes:level nodes:file] :from tags
+                 :inner-join nodes :on (= tags:node-id nodes:id)
+                 :where (= tags:tag $s1)]
+                "starred"))
+         (files (delq nil (mapcar (lambda (row) (and (= 0 (nth 1 row)) (nth 2 row))) rows))))
+    (delete-dups
+     (delq nil (mapcar (lambda (row)
+                         (when (or (= 0 (nth 1 row)) (not (member (nth 2 row) files)))
+                           (nth 0 row)))
+                       rows)))))
+
+;;;###autoload
+(defun +notes/roam-starred ()
+  "Open one of the starred notes."
+  (interactive)
+  (require 'org-roam)
+  (let ((ids (+notes--roam-starred-ids)))
+    (if (null ids)
+        (message "No note is starred yet; SPC m m o s stars the one at point")
+      (org-roam-node-visit
+       (org-roam-node-read nil (lambda (node) (member (org-roam-node-id node) ids))
+                           nil t "Starred: ")))))
+
+;;
 ;;; Maps of content
 
 (defun +notes--roam-tags ()

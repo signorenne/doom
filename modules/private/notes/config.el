@@ -382,6 +382,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Forward links"          "L" #'consult-org-roam-forward-links
         :desc "Map of a tag"           "m" #'+notes/roam-map-of-content
         :desc "Rename this note"       "N" #'+notes/roam-rename
+        :desc "Starred notes"          "S" #'+notes/roam-starred
         :desc "Review the graph"       "v" #'+notes/roam-review
         :desc "Tasks hidden in notes"  "h" #'+notes/roam-todo-files
         :desc "How to work with roam"  "?" #'+notes/roam-guide
@@ -442,7 +443,9 @@ from the spans of its block found once; the match data set the same."
       :map org-mode-map
       :localleader
       (:prefix "m"
-       :desc "Extract subtree to a note" "e" #'+notes/roam-extract))
+       :desc "Extract subtree to a note" "e" #'+notes/roam-extract
+       (:prefix "o"
+        :desc "Star or unstar this note" "s" #'+notes/roam-star)))
 
 (map! :after org
       :map org-mode-map

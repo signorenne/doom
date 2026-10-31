@@ -111,6 +111,8 @@ meeting straight away.
 | ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions |
 | ~SPC c H~     | on a link, the linked note's first lines in a popup |
 | ~SPC n r N~   | rename this note, its file and the links to it   |
+| ~SPC m m o s~ | star this note, or unstar it                     |
+| ~SPC n r S~   | the starred notes                                |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
 | ~SPC n r m~   | build the map of a tag                         |
@@ -139,6 +141,12 @@ link described by exactly the old title then reads the new one, in open
 buffers and closed files alike; a description of your own, =SI=, is left
 alone, and a buffer with unsaved changes is edited but not saved. Editing
 the =#+title= and saving does the same.
+
+A starred note carries the tag =starred=: ~SPC m m o s~ puts it in the
+=#+filetags= of a file, or on the heading of a heading node, and takes it
+off again; the star counts once the note is saved. ~SPC n r S~ lists the
+starred files and the starred headings of files that are not, a starred
+file's headings being starred through it already.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal
