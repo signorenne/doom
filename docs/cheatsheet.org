@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-24 15:31
+#+generated: 2026-10-31 21:17
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2262,18 +2262,20 @@ the notes menu, which gathers all of it in one place under the same
 keys: ~d~ the documents, ~c~ the captures, ~a~ the agenda views, ~r~ roam.
 
 ** Capture
-| Key       | What it captures                                                                                       |
-|-----------+--------------------------------------------------------------------------------------------------------|
-| ~SPC X~     | the quickest note                                                                                      |
-| ~SPC n n t~ | a todo, ~T~ a dated one, with a link back                                                                |
-| ~SPC n n i~ | an idea                                                                                                |
-| ~SPC n n l~ | a link                                                                                                 |
-| ~SPC n n r~ | something to read                                                                                      |
-| ~SPC n n c~ | the selected code                                                                                      |
-| ~SPC n n b~ | a bug, with a link back to the line                                                                    |
-| ~SPC n n P~ | a project skeleton                                                                                     |
-| ~SPC n n a~ | an AI session log                                                                                      |
-| ~SPC n r n~ | a note in the graph: concept, solution, howto, hardware, reference, question, project, person, meeting |
+| Key         | What it captures                               |
+|-------------+------------------------------------------------|
+| ~SPC X~       | the quickest note                              |
+| ~SPC n n t~   | a todo, ~T~ a dated one, with a link back        |
+| ~SPC n n i~   | an idea                                        |
+| ~SPC n n l~   | a link                                         |
+| ~SPC n n r~   | something to read                              |
+| ~SPC n n c~   | the selected code                              |
+| ~SPC n n b~   | a bug, with a link back to the line            |
+| ~SPC n n p t~ | a task for this code's project, else the inbox |
+| ~SPC n n h~   | a habit                                        |
+| ~SPC n n P~   | a project skeleton                             |
+| ~SPC n n a~   | an AI session log                              |
+| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][nine kinds]]         |
 
 A note and a meeting are roam notes, not documents: ~SPC n r n~ then
 the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
@@ -2367,24 +2369,53 @@ how to work with it day to day.
 | ~SPC n r v~   | weekly, review what went nowhere    |
 
 ** Find and link
-| Key       | What it does              |
-|-----------+---------------------------|
-| ~SPC n r f~ | find a note, or create it |
-| ~SPC n r i~ | insert a link to one      |
-| ~SPC n r n~ | capture a new one         |
-| ~SPC n r r~ | the backlinks buffer      |
-| ~SPC n r B~ | backlinks with a preview  |
-| ~SPC n r L~ | forward links             |
-| ~SPC n r u~ | the graph in the browser  |
-| ~SPC n r s~ | rebuild the database      |
+| Key       | What it does                                   |
+|-----------+------------------------------------------------|
+| ~SPC n r f~ | find a note, or create it                      |
+| ~SPC n r i~ | insert a link to one                           |
+| ~SPC n r n~ | capture a new one                              |
+| ~SPC n r r~ | the backlinks buffer                           |
+| ~SPC n r B~ | backlinks with a preview                       |
+| ~SPC n r L~ | forward links                                  |
+| ~SPC n r N~ | rename this note, its file and the links to it |
+| ~SPC c H~   | on a link, the note it points to, in a popup   |
+| ~SPC n r u~ | the graph in the browser                       |
+| ~SPC n r s~ | rebuild the database                           |
+
+** The kinds of note
+~SPC n r n~ then a letter. Each kind is a set of headings to fill in and
+a folder of its own; the first five ask for their subject folder under
+=resources/wiki/=. A note that fits no kind is a concept.
+
+| Key         | Kind      | Lands in                   |
+|-------------+-----------+----------------------------|
+| ~SPC n r n c~ | concept   | =resources/wiki/<subject>/=  |
+| ~SPC n r n s~ | solution  | =resources/wiki/<subject>/=  |
+| ~SPC n r n h~ | howto     | =resources/wiki/<subject>/=  |
+| ~SPC n r n b~ | hardware  | =resources/wiki/<subject>/=  |
+| ~SPC n r n q~ | question  | =resources/wiki/<subject>/=  |
+| ~SPC n r n r~ | reference | =resources/sources/manuals/= |
+| ~SPC n r n p~ | project   | =projects/<project>/=        |
+| ~SPC n r n P~ | person    | =resources/wiki/people/=     |
+| ~SPC n r n m~ | meeting   | =capture/meetings/=          |
+
+** Around a note
+| Key         | What it does                                                   |
+|-------------+----------------------------------------------------------------|
+| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline; again, off |
+| ~SPC m m o s~ | star this note, or unstar it                                   |
+| ~SPC n r S~   | the starred notes                                              |
+| ~SPC n r t~   | every tag with its count, then its notes                       |
+| ~SPC n r a~   | a note at random, for rereading                                |
 
 ** Dailies
-| Key         | What it opens      |
-|-------------+--------------------|
-| ~SPC n r d n~ | capture into today |
-| ~SPC n r d t~ | today              |
-| ~SPC n r d y~ | yesterday          |
-| ~SPC n r d d~ | a date you pick    |
+| Key         | What it opens                              |
+|-------------+--------------------------------------------|
+| ~SPC n r d n~ | capture into today                         |
+| ~SPC n r d t~ | today                                      |
+| ~SPC n r d y~ | yesterday                                  |
+| ~SPC n r d b~ | the daily note before this one, ~f~ the next |
+| ~SPC n r d d~ | a date you pick                            |
 
 ** Search the notes
 | Key       | What it searches              |
@@ -2405,7 +2436,20 @@ how to work with it day to day.
 
 A map is a note in =resources/collections/tags/=; only the list between
 =# BEGIN MAP= and =# END MAP= is rewritten, so your own text around it
-stays. Mind maps are rendered with graphviz into =~/org/maps=.
+stays. Mind maps are rendered with graphviz into the vault's =.cache/maps/=,
+which git ignores.
+
+** Pictures and callouts
+| Key       | What it does                                                             |
+|-----------+--------------------------------------------------------------------------|
+| ~SPC m a p~ | paste the picture on the clipboard into the note                         |
+| ~SPC m a c~ | take a screenshot into the note                                          |
+| ~C-c C-,~   | a block; then ~W~ a warning callout, ~N~ ~T~ ~I~ ~X~ note, tip, important, caution |
+
+A picture file dropped on a note is copied in too. Each goes into the
+note's folder under =.attach/=, with a link where the cursor is, and the
+note shows it as it opens. A diagram or picture of no one note goes in
+=assets/=.
 
 ** Cards and sources
 | Key       | What it does                          |
@@ -3067,23 +3111,20 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n a~     | Org agenda                     |
 | ~SPC n b~     | Bibliographic notes            |
 | ~SPC n c~     | Toggle last org-clock          |
-| ~SPC n d I~   | Legacy ideas                   |
-| ~SPC n d M~   | Legacy maps (dired)            |
 | ~SPC n d P~   | Browser capture setup          |
-| ~SPC n d a~   | Legacy AI sessions             |
-| ~SPC n d b~   | Create missing documents       |
+| ~SPC n d b~   | Set up the vault               |
 | ~SPC n d d~   | Choose document                |
-| ~SPC n d h~   | Legacy habits                  |
+| ~SPC n d h~   | Habits                         |
 | ~SPC n d i~   | Inbox                          |
-| ~SPC n d n~   | Legacy snippets                |
+| ~SPC n d n~   | Snippets                       |
 | ~SPC n d p~   | Projects                       |
-| ~SPC n d r~   | Legacy reading                 |
-| ~SPC n d s~   | Legacy someday                 |
-| ~SPC n d t~   | Legacy todo                    |
+| ~SPC n d r~   | Reading                        |
+| ~SPC n d s~   | Someday                        |
 | ~SPC n d w~   | Writing mode                   |
 | ~SPC n e~     | Org noter                      |
 | ~SPC n f~     | Find file in notes             |
 | ~SPC n g~     | Commit the notes               |
+| ~SPC n h~     | Notes layout                   |
 | ~SPC n l~     | Org store link                 |
 | ~SPC n m~     | Tags search                    |
 | ~SPC n n~     | Org capture                    |
@@ -3095,7 +3136,9 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n r B~   | Backlinks                      |
 | ~SPC n r F~   | Find ref                       |
 | ~SPC n r L~   | Forward links                  |
+| ~SPC n r N~   | Rename this note               |
 | ~SPC n r R~   | Launch roam buffer             |
+| ~SPC n r S~   | Starred notes                  |
 | ~SPC n r U~   | Graph UI mode                  |
 | ~SPC n r a~   | Open random node               |
 | ~SPC n r d -~ | Find directory                 |
@@ -3118,6 +3161,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n r n~   | Capture to node                |
 | ~SPC n r r~   | Toggle roam buffer             |
 | ~SPC n r s~   | Sync database                  |
+| ~SPC n r t~   | Notes by tag                   |
 | ~SPC n r u~   | Graph UI (browser)             |
 | ~SPC n r v~   | Review the graph               |
 | ~SPC n s~     | Search notes                   |
@@ -3141,7 +3185,6 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o P~   | Find file in project sidebar |
 | ~SPC o R~   | REPL (same window)           |
 | ~SPC o T~   | Open vterm here              |
-| ~SPC o a L~ | Legacy tasks                 |
 | ~SPC o a a~ | Agenda                       |
 | ~SPC o a i~ | Inbox                        |
 | ~SPC o a m~ | Tags search                  |
@@ -4136,8 +4179,8 @@ bound.
 ** Notes
 - ~+notes/align-tables~ (~SPC m b A~) :: Widen every table in this buffer
   until each column holds its text.
-- ~+notes/bootstrap~ (~SPC n d b~) :: Create 'org-directory', its
-  subdirectories, any missing document and the bibliography.
+- ~+notes/bootstrap~ (~SPC n d b~) :: Set up the vault: its folders, any
+  missing document, and a git repository when it is not one yet.
 - ~+notes/commit~ (~SPC n g~) :: Commit the notes with MESSAGE, or a
   timestamp when none is given.
 - ~+notes/dashboard~ (~SPC o a x~) :: Today, habits and every open task
@@ -4147,6 +4190,9 @@ bound.
   is there.
 - ~+notes/install-protocol-handler~ (~SPC n d P~) :: Register
   org-protocol:// with the desktop, so the browser can capture.
+- ~+notes/layout~ (~SPC n h~) :: Lay the notes out in the workspace "notes":
+  the vault's file tree at the left, the note, and at the right the roam
+  buffer, which follows the note, above its outline.
 - ~+notes/log~ :: Show what changed in the notes lately.
 - ~+notes/menu~ (~SPC n SPC~) :: Notes and tasks: documents, capture,
   agenda, roam, the same keys as SPC n.
@@ -4165,8 +4211,16 @@ bound.
   note graph on purpose.
 - ~+notes/roam-map-of-content~ (~SPC n r m~) :: Write a map of the notes
   tagged TAG, then open it.
+- ~+notes/roam-rename~ (~SPC n r N~) :: Retitle the note at point TITLE, its
+  file name and links following.
 - ~+notes/roam-review~ (~SPC n r v~) :: Show the notes that need attention:
   no links, no tags, barely written.
+- ~+notes/roam-star~ (~SPC m m o s~) :: Star the note at point, or unstar
+  it: the tag starred, in #+filetags for a file node, on the heading itself
+  for a heading node.
+- ~+notes/roam-starred~ (~SPC n r S~) :: Open one of the starred notes.
+- ~+notes/roam-tags~ (~SPC n r t~) :: Pick a TAG, each shown with how many
+  notes carry it, then open one of those notes.
 - ~+notes/roam-todo-files~ (~SPC n r h~) :: List the roam notes that hold a
   task.
 - ~+notes/sync~ (~SPC n G~) :: Commit the notes, then pull and push them, in

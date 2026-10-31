@@ -8,11 +8,12 @@ fill up with notes nobody ever reads again. The cheat sheet, =F12=, links
 it. Start with the tutorial if this is the first time; the keys are
 collected at the end.
 
-The graph is the knowledge and work repository,
-=~/projects/personal/knowledge=, and paths such as =capture/journal/=
-below are relative to it; =~/org= keeps the legacy GTD documents and the
-bibliography. The repository's =meta/WORKFLOWS.org= holds the procedures
-and the checks to run; =SPC n r ?= opens this guide.
+Everything you write lives in one vault, =~/notes=: the notes, the
+documents, the pictures and the diagrams. It is the graph, and paths such
+as =capture/journal/= below are relative to it; it is also one git
+repository that commits itself. Books and papers are a library apart,
+=~/projects/personal/knowledge_base=, which only the bibliography reads.
+=SPC n r ?= opens this guide.
 
 * Tutorial
 Do this once with Emacs open, in order. Twenty minutes, and the rest of
@@ -142,9 +143,9 @@ same line in a concept or a reference note stays out of it: tasks belong
 in the inbox or a project.
 
 ** Step 10, keep it
-Press =SPC g g= in a note and commit with magit: the knowledge repository
-is never committed automatically. =SPC n g= commits =~/org= instead, which
-also commits itself after ten minutes of not typing, and when Emacs exits.
+Nothing to do: the vault commits itself after ten minutes of not typing,
+and when Emacs exits. =SPC n g= commits it now, =SPC g g= in a note opens
+magit on it.
 
 * Tutorial, finding it again
 The other half. Every one of these works from anywhere in Emacs.
@@ -155,24 +156,30 @@ The other half. Every one of these works from anywhere in Emacs.
 | a word inside a note     | =SPC n r /=   | type it, matches preview |
 | the subject              | =SPC n r m=   | the tag; the map opens   |
 | a page you captured      | =SPC n r F=   | pick it by URL           |
+| that you starred it      | =SPC n r S=   | pick it                  |
+| a tag it carries         | =SPC n r t=   | the tag, then the note   |
 | a paper                  | =SPC n b=     | pick it; its note opens  |
-| the day you wrote it     | =SPC n r d d= | pick the date            |
+| the day you wrote it     | =SPC n r d d= | a marked day in the calendar |
 | only a related note      | =SPC n r r=   | what links here          |
 | a task                   | =SPC o a x=   | the agenda               |
 | a question you left open | =SPC n r m=   | the tag =question=         |
 | what Claude drafted      | =SPC n r m=   | the tag =draft=            |
 
-Inside any note: =SPC n r r= for what links here, =SPC n r u= for the whole
-graph in the browser with this note in the middle, =SPC n r B= for
-backlinks with a preview, =SPC n r L= for what this note links to.
+Inside any note: =SPC n r r= for what links here and the lines that name
+it without a link, =SPC n r u= for the whole graph in the browser with
+this note in the middle, =SPC n r B= for backlinks with a preview, =SPC n
+r L= for what this note links to. On a link, the echo area says what it
+points to and =SPC c H= shows the note itself. =SPC n h= lays it all out at
+once: the vault's tree, the note, what links here and the note's outline.
+=SPC n r a= opens a note at random, for rereading.
 
 For a question you cannot phrase as a search, =SPC a c= and ask Claude:
 "search my notes for BLE and tell me what I have", "read the GATT note and
 quiz me". It uses the same graph.
 
 And when none of this comes to mind: =SPC n SPC= is the menu with all of it
-on one screen, =F12= the cheat sheet, which links this guide, =SPC n r ?=
-this guide, and the repository's =meta/WORKFLOWS.org= its procedures.
+on one screen, =F12= the cheat sheet, which links this guide, and =SPC n r
+?= this guide.
 
 * What a note is here
 One note, one idea, with a title you could use inside a sentence: "Ring
@@ -237,7 +244,7 @@ finder shows the kind beside the title, so a note is never "some note".
 | =q=   | question  | =resources/wiki/<subject>/=  | answer in one line, what I do not get, tried, answer                          |
 | =p=   | project   | =projects/<slug>/=           | repository, kit, goal, completion criteria, next actions, decisions, progress |
 | =P=   | person    | =resources/wiki/people/=     | context, notes                                                                |
-| =m=   | meeting   | =capture/journal/=           | attendees, agenda, notes, actions                                             |
+| =m=   | meeting   | =capture/meetings/=          | attendees, agenda, notes, actions                                             |
 
 Every note is stamped with a =CREATED= date, so the graph can be read in
 the order you learned things. There is no plain kind on purpose: a note
@@ -277,18 +284,27 @@ Tags are the map's raw material. Two kinds are enough:
 - the topic: =cpp=, =qt=, =embedded=, =emacs=, =ai=.
 
 Reuse them; five good tags beat fifty precise ones. A URL a note came from
-goes in a ref, =SPC m m o r=, not in the body.
+goes in a ref, =SPC m m o r=, not in the body. =SPC m m o s= stars a note,
+the tag =starred=, for the few you keep coming back to.
+
+A title can change. =SPC n r N=, or editing =#+title= and saving, renames
+the note: its file follows when it was named for the old title, and every
+link that said the old title says the new one; a link you described in
+your own words is left as it is.
 
 * Linking
-Link while you write, not afterwards. =SPC n r i= in the middle of a
-sentence: pick an existing note, or type a new title and it is created.
-The sentence keeps its flow and the graph grows for free.
+Link while you write, not afterwards. Typing the words of a title offers
+the note as you go, and =SPC n r i= in the middle of a sentence picks an
+existing note or creates one from a new title. The sentence keeps its flow
+and the graph grows for free.
 
 When you find yourself explaining the same thing twice in two notes, that
 explanation is a third note. Extract it, =SPC m m e=, and link both.
 
-=SPC n r r= shows what points here. Read it when you open a note: it is
-the part you did not remember writing, and it is where the value hides.
+=SPC n r r= shows what points here, and below it the unlinked mentions:
+lines that name this note without linking to it, each a link still to be
+made. Read it when you open a note: it is the part you did not remember
+writing, and it is where the value hides.
 
 * Maps
 A map is a note that collects other notes. =SPC n r m= asks for a tag and
@@ -331,9 +347,10 @@ bookmarklets: one captures the page into the inbox, the other makes a
 reference note whose =ROAM_REFS= is the URL, so opening the same page later
 finds the note you already wrote about it.
 
-Papers go through the bibliography,
-=~/org/research/academic/references.bib=, with the PDFs in
-=~/org/research/academic/papers/=. =SPC n B= opens an entry, =SPC n b= its
+Papers go through the bibliography in the library,
+=~/projects/personal/knowledge_base/research/academic/references.bib=,
+with the PDFs in its =research/academic/papers/=; =doom doctor= says when
+the =.bib= is not there. =SPC n B= opens an entry, =SPC n b= its
 note, and =SPC m @= inserts a citation while writing. The note citar
 makes for an entry is a reference note in the graph, so a cited paper and
 your notes on it are the same object.
@@ -363,7 +380,7 @@ A heading becomes a flashcard with =SPC m F n=, and the card is the heading
 you already wrote: no second pile of material to keep in step. =SPC m F c=
 blanks out part of the text instead, for a definition or a signature.
 
-=SPC n p= reviews everything due, wherever it lives in =~/org=; =SPC n P=
+=SPC n p= reviews everything due, wherever it lives in the vault; =SPC n P=
 shows what is coming. The schedule is stored in the heading's own
 properties, so it travels with the note and is versioned with it.
 
@@ -412,7 +429,7 @@ linked, moved out of =drafts/=, is the part that stays yours.
 
 * On more than one machine
 The files are the notes. The org-roam database is a cache built from them,
-it lives outside both repositories in Emacs' own cache directory, and it
+it lives outside the vault in Emacs' own cache directory, and it
 is rebuilt whenever a file changes. Nothing in it is worth carrying
 between machines, and it cannot be the thing that breaks when two of them
 write notes.
@@ -420,16 +437,13 @@ write notes.
 So syncing is syncing text:
 
 1. =SPC n G= before you leave a machine and after you arrive at one. It
-   commits what is open in =~/org=, pulls with a rebase, rebuilds the
-   database from the files that arrived, and pushes. It leaves the
-   knowledge repository alone: commit, pull and push that one with magit,
-   =SPC g g=, then =SPC n r s= so the database knows what arrived.
-2. On the second machine, clone =~/org=, the knowledge repository into
-   =~/projects/personal/knowledge= and this Doom config, run =doom sync=,
-   then open Emacs. The first =SPC n r f= builds that machine's database
+   commits the vault, pulls with a rebase, rebuilds the database from the
+   files that arrived, and pushes.
+2. On the second machine, clone the vault into =~/notes= and this Doom
+   config, run =doom sync=, then open Emacs. The first =SPC n r f= builds that machine's database
    from the files, which takes a moment once.
-3. Never sync the database file itself, and never put it inside either
-   repository. Two machines writing one sqlite file through a file sync
+3. Never sync the database file itself, and never put it inside the
+   vault. Two machines writing one sqlite file through a file sync
    service is the one way to lose notes here.
 
 Machine local things stay machine local by design: the database sits in
@@ -450,16 +464,15 @@ and departure avoids.
 - *started and left empty*: finish the sentence, or drop the note.
 
 Deleting notes is allowed and healthy. A graph is not an archive, and
-nothing committed is really lost: the knowledge repository is a git
-repository you commit by hand, =SPC g g=, which also shows what changed.
-=~/org= commits itself after ten minutes of idle time and when Emacs
-exits; =SPC n g= commits it on demand, =SPC n SPC H= shows what changed
-there.
+nothing committed is really lost: the vault commits itself after ten
+minutes of idle time and when Emacs exits, =SPC n g= commits it on
+demand, =SPC n SPC H= shows what changed, and =SPC g t= in a note steps
+through its history.
 
 If a note seems missing from searches, =SPC n r s= resyncs the database.
 
 * Working with Claude on top of this
-The notes are plain files in the knowledge repository, so an agent can
+The notes are plain files in the vault, so an agent can
 read them the same way you do. What makes them useful to Claude is
 exactly what makes them useful to you six months later, which is
 convenient:
@@ -510,6 +523,18 @@ Two rules keep this from turning into a mess:
 the inbox, and the notes are in git, so anything Claude wrote can be read
 as a diff and undone.
 
+* Pictures, diagrams, callouts
+A screenshot or a figure belongs to the note it explains. =SPC m a p=
+pastes the picture on the clipboard, =SPC m a c= takes a screenshot, and a
+picture file dropped on the note is copied in; each goes into the note's
+own folder under =.attach/=, and the note shows it as it opens. A diagram
+or picture of no one note, a PlantUML file, lives in =assets/=.
+
+A callout says how to read a passage: =#+begin_warning Careful= ...
+=#+end_warning=, or note, tip, important, caution. =C-c C-,= then =W=, or
+=N= =T= =I= =X=, inserts one; its first and last lines take the colour of
+its kind.
+
 * The keys
 ** Every day
 | Key         | What it does                       |
@@ -519,14 +544,19 @@ as a diff and undone.
 | ~SPC n r f~   | find a note, or create it          |
 | ~SPC n r i~   | insert a link, creating on the fly |
 | ~SPC m m e~   | extract this heading into a note   |
-| ~SPC n r r~   | what links here                    |
-| ~SPC n G~     | sync =~/org=, the graph updated      |
+| ~SPC n r r~   | what links here, and the mentions  |
+| ~SPC c H~     | on a link, the note it points to   |
+| ~SPC n h~     | the notes layout, on or off        |
+| ~SPC n G~     | sync the vault, the graph updated  |
 
 ** Shaping a note
 | Key         | What it does                 |
 |-------------+------------------------------|
 | ~SPC m m o t~ | add a tag, ~o T~ remove one    |
 | ~SPC m m o a~ | add an alias                 |
+| ~SPC m m o s~ | star it, or unstar it        |
+| ~SPC n r N~   | rename it, file and links    |
+| ~SPC m a p~   | paste a picture into it      |
 | ~SPC m m o r~ | add a source ref             |
 | ~SPC m m r~   | refile it elsewhere          |
 | ~SPC m l c~   | paste a URL as a titled link |
@@ -535,6 +565,9 @@ as a diff and undone.
 | Key       | What it does                 |
 |-----------+------------------------------|
 | ~SPC n r m~ | build or rebuild a map       |
+| ~SPC n r t~ | the tags, then their notes   |
+| ~SPC n r S~ | the starred notes            |
+| ~SPC n r a~ | a note at random             |
 | ~SPC n r v~ | review what went nowhere     |
 | ~SPC n r h~ | which notes carry tasks      |
 | ~SPC n r u~ | the graph in the browser     |
@@ -552,6 +585,6 @@ as a diff and undone.
 | ~SPC n p~   | review the cards due, ~P~ the dashboard     |
 | ~SPC m F n~ | make this heading a card                  |
 | ~SPC n B~   | the bibliography, ~b~ a paper's note        |
-| ~SPC n g~   | commit =~/org=                              |
+| ~SPC n g~   | commit the vault                          |
 | ~SPC n d P~ | set up capture from the browser           |
 | ~SPC a c~   | start Claude here                         |

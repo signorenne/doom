@@ -242,6 +242,27 @@ the note's file, =signal_integrity.pdf=, and for the tree after it,
 =signal_integrity-How_it_works.pdf=. git ignores =.cache/= and the graph
 leaves it out: a map is drawn again whenever it is wanted.
 
+* Obsidian's features here
+The desktop features of Obsidian, on the vault, and where they are. Canvas
+has no counterpart, and there is no phone app.
+
+| Obsidian                    | Here                                                      |
+|-----------------------------+-----------------------------------------------------------|
+| links completed as you type | the words of a title offer the note, ~SPC n r i~ inserts one |
+| backlinks, unlinked mentions | ~SPC n r r~, the roam buffer                              |
+| page preview                | the echo area on a link, ~SPC c H~ the note itself         |
+| rename with links           | ~SPC n r N~, or edit =#+title= and save                     |
+| pasted and dropped pictures | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline        |
+| callouts                    | =#+begin_warning= and the other kinds, ~C-c C-,~ ~W~          |
+| the workspace layout        | ~SPC n h~: tree, note, roam buffer, outline               |
+| tag pane with counts        | ~SPC n r t~                                                 |
+| bookmarks, starred          | ~SPC m m o s~ stars, ~SPC n r S~ lists                        |
+| daily notes, calendar       | ~SPC n r d t~ today, ~SPC n r d b~ and ~f~ the day before and after, ~SPC n r d d~ the calendar with the days that have one marked |
+| random note                 | ~SPC n r a~                                                 |
+| file recovery, history      | git, after ten idle minutes and on exit; ~SPC g t~ steps through a note's past |
+| search                      | ~SPC n r /~                                                 |
+| graph view                  | ~SPC n r u~, in the browser                                 |
+
 * Workflow
 1. Capture into the inbox, from anywhere, or straight into the project
    that owns the task.
