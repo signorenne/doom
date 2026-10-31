@@ -97,9 +97,11 @@ decisions, progress, with the repository and the kit in its head),
 person, meeting. Concept, solution, howto, hardware and question ask for
 their subject directory under =resources/wiki/=; a reference goes to
 =resources/sources/manuals/= with its URL in =ROAM_REFS=, a project to
-=projects/=, a person to =resources/wiki/people/=, a meeting and the
-dailies to =capture/journal/=. ~SPC n r n~ picks one; ~c n~ and ~c m~ in
-the menu make a concept and a meeting straight away.
+=projects/=, a person to =resources/wiki/people/=, a meeting to
+=capture/meetings/=, apart from the dailies in =capture/journal/= so that
+the next and previous daily (~SPC n r d f~, ~SPC n r d b~) are days only.
+~SPC n r n~ picks one; ~c n~ and ~c m~ in the menu make a concept and a
+meeting straight away.
 
 | Key         | What it does                                   |
 |-------------+------------------------------------------------|

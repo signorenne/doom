@@ -105,9 +105,12 @@ day is written under.")
            :target (file+head "%(+notes--roam-path \"resources/wiki/people/${slug}.org\")"
                               ,(concat +notes-roam-head ":person:\n\n"))
            :unnarrowed t :empty-lines-before 1)
+          ;; Not among the dailies: org-roam takes every file of their
+          ;; folder for a day, and a meeting there was the next day of
+          ;; the last one.
           ("m" "meeting" plain
            "* Attendees\n%?\n\n* Agenda\n\n* Notes\n\n* Actions\n"
-           :target (file+head "%(+notes--roam-path \"capture/journal/%<%Y%m%d>-${slug}.org\")"
+           :target (file+head "%(+notes--roam-path \"capture/meetings/%<%Y%m%d>-${slug}.org\")"
                               ,(concat +notes-roam-head ":meeting:\n\n"))
            :unnarrowed t :empty-lines-before 1))
         ;; A journal entry is a heading under * Journal, named for what it

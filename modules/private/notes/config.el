@@ -30,7 +30,8 @@ each from templates/org/NAME.org and each a node of the graph.")
 
 (defvar +notes-knowledge-directories
   '("projects" "areas" "archives/projects" "archives/areas"
-    "capture/journal" "capture/drafts" "resources/wiki" "resources/wiki/people"
+    "capture/journal" "capture/meetings" "capture/drafts"
+    "resources/wiki" "resources/wiki/people"
     "resources/sources/papers" "resources/sources/manuals"
     "resources/sources/websites" "resources/collections/tags" "assets")
   "Folders of the vault, the PARA layout the captures write into, made
