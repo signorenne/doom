@@ -381,6 +381,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Backlinks"              "B" #'consult-org-roam-backlinks
         :desc "Forward links"          "L" #'consult-org-roam-forward-links
         :desc "Map of a tag"           "m" #'+notes/roam-map-of-content
+        :desc "Rename this note"       "N" #'+notes/roam-rename
         :desc "Review the graph"       "v" #'+notes/roam-review
         :desc "Tasks hidden in notes"  "h" #'+notes/roam-todo-files
         :desc "How to work with roam"  "?" #'+notes/roam-guide

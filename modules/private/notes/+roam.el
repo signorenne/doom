@@ -135,6 +135,10 @@ day is written under.")
 ;; in the echo area, the first lines too on SPC c H (autoload/preview.el).
 (add-hook 'org-roam-find-file-hook #'+notes--link-eldoc-setup-h)
 
+;; Saving a note whose #+title changed renames it as SPC n r N does: the
+;; file, when it is named for the old title, and the links that say it.
+(add-hook 'org-roam-find-file-hook #'+notes--rename-on-save-setup-h)
+
 ;; What org-protocol://roam-ref captures with: one note per page, found
 ;; again by URL.
 (after! org-roam-protocol

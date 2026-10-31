@@ -257,6 +257,228 @@ in the place the heading came from, so the day still reads as a story."
         (message "%s is a note now, linked from where it was" title)))))
 
 ;;
+;;; Renaming a note
+
+(declare-function org-roam-node-at-point "org-roam-node")
+(declare-function org-roam-node-point "org-roam-node")
+(declare-function org-roam-node-slug "org-roam-node")
+(declare-function org-roam-node-create "org-roam-node")
+(declare-function org-edit-headline "org")
+(declare-function org-link-make-string "ol")
+(declare-function org-roam-file-p "org-roam")
+(declare-function org-find-entry-with-id "org")
+(declare-function org-roam-node-from-id "org-roam-node")
+
+(defvar +notes--renaming nil
+  "Non-nil while a rename saves files, so that their saves rename nothing.")
+
+(defvar-local +notes--saved-title nil
+  "This note's #+title when it was visited or last saved.")
+
+(defun +notes--file-title ()
+  "This buffer's #+title, or nil."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((case-fold-search t))
+        (when (re-search-forward "^#\\+title:[ \t]*\\(.*?\\)[ \t]*$" nil t)
+          (match-string-no-properties 1))))))
+
+(defun +notes--set-file-title (title)
+  "Make TITLE this buffer's #+title, adding the line after the drawer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((case-fold-search t))
+        (if (re-search-forward "^\\(#\\+title:\\)[ \t]*.*$" nil t)
+            (replace-match (concat (match-string 1) " " title) t t)
+          (when (looking-at-p ":PROPERTIES:")
+            (re-search-forward "^:END:\n" nil t))
+          (insert "#+title: " title "\n"))))))
+
+(defun +notes--slug (title)
+  "The file name org-roam makes of TITLE."
+  (org-roam-node-slug (org-roam-node-create :title title)))
+
+(defun +notes--renamed-file (file old new)
+  "FILE's name for the title NEW, when FILE is named for the title OLD,
+plain or after a YYYYMMDD- date; nil when it is named some other way."
+  (let ((base (file-name-base file)))
+    (when (string-match (concat "\\`\\([0-9]\\{8\\}-\\)?" (regexp-quote (+notes--slug old)) "\\'")
+                        base)
+      (expand-file-name (concat (or (match-string 1 base) "") (+notes--slug new)
+                                "." (file-name-extension file))
+                        (file-name-directory file)))))
+
+(defun +notes--save-quietly ()
+  "Save this buffer without starting a rename."
+  (let ((+notes--renaming t))
+    (save-buffer)))
+
+(defun +notes--relink (id old new)
+  "Give the id: links to ID described as exactly OLD the description NEW,
+in the files the database says link to ID.  A buffer with unsaved
+changes is edited and left unsaved; any other open one is saved; a file
+not open is written without visiting it.  Returns (LINKS FILES UNSAVED)."
+  ;; Org's own link puts a zero-width space into a "]]" of the description
+  ;; and after a "]" that ends it; the link completion inserts as you type
+  ;; is as typed, so both are looked for.
+  (let ((from (delete-dups (list (org-link-make-string (concat "id:" id) old)
+                                 (format "[[id:%s][%s]]" id old))))
+        (to (org-link-make-string (concat "id:" id) new))
+        (case-fold-search nil)
+        (links 0) (files 0) unsaved)
+    (dolist (file (mapcar #'car (org-roam-db-query
+                                 [:select :distinct [nodes:file] :from links
+                                  :inner-join nodes :on (= links:source nodes:id)
+                                  :where (and (= links:dest $s1) (= links:type "id"))]
+                                 id)))
+      (let ((count 0)
+            (buffer (find-buffer-visiting file)))
+        (cl-flet ((relink ()
+                    (dolist (link from)
+                      (goto-char (point-min))
+                      (while (search-forward link nil t)
+                        (replace-match to t t)
+                        (cl-incf count)))))
+          (if buffer
+              (with-current-buffer buffer
+                (let ((dirty (buffer-modified-p)))
+                  (save-excursion (save-restriction (widen) (relink)))
+                  (when (> count 0)
+                    (if dirty (push file unsaved) (+notes--save-quietly)))))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (let ((coding last-coding-system-used))
+                (relink)
+                (when (> count 0)
+                  (let ((coding-system-for-write coding))
+                    (write-region nil nil file nil 'silent)))))))
+        (when (> count 0)
+          (cl-incf links count)
+          (cl-incf files)
+          (org-roam-db-update-file file))))
+    (list links files (nreverse unsaved))))
+
+(defun +notes--rename-report (old new renamed kept relinked)
+  "Say what a rename did: RENAMED the new file or nil, KEPT why the name
+stayed or nil, RELINKED what `+notes--relink' returned."
+  (pcase-let ((`(,links ,files ,unsaved) relinked))
+    (message "Renamed %S to %S%s%s; %d link%s in %d file%s updated%s"
+             old new
+             (if renamed (format ", now %s" (file-name-nondirectory renamed)) "")
+             (if kept (format ", file name kept: %s" kept) "")
+             links (if (= links 1) "" "s") files (if (= files 1) "" "s")
+             (if unsaved
+                 (format ", left unsaved in %s, which had changes"
+                         (mapconcat #'file-name-nondirectory unsaved ", "))
+               ""))))
+
+(defun +notes--rename-file-node (id old new)
+  "This buffer's file node ID, saved with the title NEW, was OLD: rename
+its file when it is named for OLD, and its links, then say so."
+  (let* ((file (buffer-file-name))
+         (target (+notes--renamed-file file old new))
+         kept)
+    (cond ((or (null target) (equal target file)) (setq target nil))
+          ((string-empty-p (+notes--slug new))
+           (setq kept "the new title makes no file name"
+                 target nil))
+          ((file-exists-p target)
+           (setq kept (format "%s exists" (file-name-nondirectory target))
+                 target nil))
+          (t
+           ;; org-roam's advice on rename-file moves the file in the
+           ;; database; the buffer has to be moved by hand.
+           (rename-file file target)
+           (set-visited-file-name target t t)))
+    (+notes--rename-report old new target kept (+notes--relink id old new))))
+
+(defun +notes--rename-node ()
+  "The note at point to rename, or a user-error that says why there is none.
+Only in the note's own file in the vault: a copy elsewhere carries the
+same ID, and renaming it would rename the links to the real one."
+  (let* ((base (or (buffer-base-buffer) (current-buffer)))
+         (file (buffer-file-name base)))
+    (unless (and (derived-mode-p 'org-mode) file
+                 (with-current-buffer base (org-roam-file-p)))
+      (user-error "Rename a note of the vault from its own buffer"))
+    (when (buffer-local-value 'buffer-read-only base)
+      (user-error "This buffer is read only"))
+    (let ((node (org-roam-node-at-point)))
+      (unless (and node (org-roam-node-title node) (org-roam-node-level node))
+        (user-error "Not in a note the graph knows yet; save it first"))
+      (unless (file-equal-p (org-roam-node-file node) file)
+        (user-error "%S is in %s, not this file" (org-roam-node-title node)
+                    (abbreviate-file-name (org-roam-node-file node))))
+      node)))
+
+;;;###autoload
+(defun +notes/roam-rename (title)
+  "Retitle the note at point TITLE, its file name and links following.
+A file node's #+title changes, a heading node's heading, its keyword,
+priority and tags kept, and the file is saved.  A file named for the old
+title, plain or after a YYYYMMDD- date, is renamed for the new one; any
+other name, a daily note's or a project's index.org, stays.  Every id:
+link described by exactly the old title then reads the new one."
+  (interactive (list (read-string "New title: " (org-roam-node-title (+notes--rename-node)))))
+  (let* ((node (+notes--rename-node))
+         (old (org-roam-node-title node))
+         (new (string-trim title)))
+    ;; From an indirect buffer, a subtree of the note, the file and its
+    ;; title are the base buffer's.
+    (with-current-buffer (or (buffer-base-buffer) (current-buffer))
+      (cond
+       ((string-empty-p new) (user-error "A note needs a title"))
+       ((equal old new) (message "The title is %S already" old))
+       ((zerop (org-roam-node-level node))
+        (+notes--set-file-title new)
+        (+notes--save-quietly)
+        (setq +notes--saved-title new)
+        (+notes--rename-file-node (org-roam-node-id node) old new))
+       (t
+        ;; By its ID: the database's position is the last save's, and an
+        ;; edit above the heading since would retitle another one.
+        (save-excursion
+          (save-restriction
+            (widen)
+            (goto-char (or (org-find-entry-with-id (org-roam-node-id node))
+                           (user-error "The heading of %S is not in this buffer" old)))
+            (org-edit-headline new)))
+        (+notes--save-quietly)
+        (+notes--rename-report old new nil nil
+                               (+notes--relink (org-roam-node-id node) old new)))))))
+
+(defun +notes--rename-on-save-h ()
+  "Rename the note's file and links when this save changed its #+title.
+Only the note's own file, in the vault: a buffer written out elsewhere
+keeps the hook it was given, and a copy carries the note's ID."
+  (unless +notes--renaming
+    (let ((title (+notes--file-title))
+          (old +notes--saved-title))
+      (setq +notes--saved-title title)
+      (when-let* (((and old title (not (equal old title))))
+                  ((org-roam-file-p))
+                  (id (save-restriction (widen) (org-entry-get (point-min) "ID")))
+                  (node (org-roam-node-from-id id))
+                  ((file-equal-p (org-roam-node-file node) buffer-file-name)))
+        (let ((+notes--renaming t))
+          (+notes--rename-file-node id old title))))))
+
+(defun +notes--remember-title-h ()
+  "Keep the #+title the file has now: a revert brought it, not an edit."
+  (setq +notes--saved-title (+notes--file-title)))
+
+;;;###autoload
+(defun +notes--rename-on-save-setup-h ()
+  "Keep this note's title, so that a save that changes it renames it."
+  (setq +notes--saved-title (+notes--file-title))
+  (add-hook 'after-save-hook #'+notes--rename-on-save-h nil t)
+  (add-hook 'after-revert-hook #'+notes--remember-title-h nil t))
+
+;;
 ;;; Maps of content
 
 (defun +notes--roam-tags ()

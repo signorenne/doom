@@ -110,6 +110,7 @@ meeting straight away.
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
 | ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions |
 | ~SPC c H~     | on a link, the linked note's first lines in a popup |
+| ~SPC n r N~   | rename this note, its file and the links to it   |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
 | ~SPC n r m~   | build the map of a tag                         |
@@ -127,6 +128,17 @@ points to: the note's title, its tags as =#tag= and its path in the vault.
 ~SPC c H~ then shows the note itself in a popup, its first 20 lines without
 the property drawer and the =#+= keywords; a heading's note shows its
 subtree. Read once per change of the file.
+
+~SPC n r N~ renames the note at point: the =#+title= of a file, the text
+of a heading that is a node, its keyword, priority and tags kept. A file
+named for the old title, =signal_integrity.org= or a meeting's
+=20261031-signal_integrity.org=, takes the new one; any other name, a
+daily note's, a project's =index.org=, a paper's citekey, stays, and so
+does one whose new name is taken, which the message says. Every =id:=
+link described by exactly the old title then reads the new one, in open
+buffers and closed files alike; a description of your own, =SI=, is left
+alone, and a buffer with unsaved changes is edited but not saved. Editing
+the =#+title= and saving does the same.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal

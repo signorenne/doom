@@ -110,6 +110,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("r /" "Search notes"        consult-org-roam-search)
     ("r B" "Backlinks"           consult-org-roam-backlinks)
     ("r m" "Map of a tag"        +notes/roam-map-of-content)
+    ("r N" "Rename this note"    +notes/roam-rename)
     ("r v" "Review the graph"    +notes/roam-review)
     ("r h" "Tasks hidden in notes" +notes/roam-todo-files)
     ("r u" "Graph in browser"    org-roam-ui-open)
