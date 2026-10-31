@@ -78,7 +78,7 @@ org-protocol fills it; the bookmarklets entry covers it."
 
 ;; The SPC n keys, laid out: d the documents, c the captures, r roam, as
 ;; on the leader; the agenda views under a, SPC o a there; and the
-;; single keys the leader has, g G p P B. q closes the menu and ? then
+;; single keys the leader has, h g G p P B. q closes the menu and ? then
 ;; a key explains it, so nothing sits on those.
 ;;;###autoload (autoload '+notes/menu "private/notes/autoload/menu" nil t)
 (transient-define-prefix +notes/menu ()
@@ -120,6 +120,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("r s" "Sync database"       org-roam-db-sync)
     ("r ?" "How to work with roam" +notes/roam-guide)]
    ["Keep"
+    ("h" "Notes layout"        +notes/layout)
     ("g" "Commit the notes"    +notes/commit)
     ("G" "Sync with the remote" +notes/sync)
     ("H" "What changed"        +notes/log)

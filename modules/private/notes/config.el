@@ -352,6 +352,7 @@ from the spans of its block found once; the match data set the same."
 (map! :leader
       (:prefix "n"
        :desc "Notes menu"             "SPC" #'+notes/menu
+       :desc "Notes layout"           "h" #'+notes/layout
        :desc "Commit the notes"       "g" #'+notes/commit
        :desc "Sync with the remote"   "G" #'+notes/sync
        :desc "Review the cards due"   "p" #'org-fc-review-all

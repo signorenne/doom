@@ -29,7 +29,7 @@ apart, ~+notes-library-dir~, which only citar reads.
 Everything is in ~SPC n SPC~ (~+notes/menu~), which shows how many items are
 waiting in the inbox. Its keys are the leader's: ~d~ the documents as
 under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
-agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
+agenda views of ~SPC o a~, and ~h~ ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
 
 ** Documents
 The inbox and someday are at the vault's root, the project index is
@@ -113,6 +113,7 @@ meeting straight away.
 | ~SPC n r N~   | rename this note, its file and the links to it   |
 | ~SPC m m o s~ | star this note, or unstar it                     |
 | ~SPC n r S~   | the starred notes                                |
+| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
 | ~SPC n r t~   | the tags, how many notes each, then their notes  |
@@ -153,6 +154,14 @@ file's headings being starred through it already.
 then the notes of the one picked. A heading that is a note counts, and so
 do the tags it inherits from its file, as org-roam keeps them; ~SPC n r m~
 writes the same set as a map.
+
+~SPC n h~ lays the notes out in a workspace of their own, =notes=: the
+vault's file tree at the left, the note, and at the right the roam buffer,
+which follows the note, above its outline. It shows the vault file used
+last, or today's daily note; ~SPC n h~ there again puts the three panels
+away and leaves the note. The other workspaces keep their own windows;
+switching to one with no outline in sight pauses the outline's updates,
+and switching back resumes them.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal
