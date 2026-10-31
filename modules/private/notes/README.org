@@ -237,6 +237,11 @@ and are never regenerated.
 | ~SPC m M t~ | of this tree, ~b~ of this branch |
 | ~SPC m W~   | writing mode                   |
 
+A mind map of a note is drawn into the vault's =.cache/maps/=, named for
+the note's file, =signal_integrity.pdf=, and for the tree after it,
+=signal_integrity-How_it_works.pdf=. git ignores =.cache/= and the graph
+leaves it out: a map is drawn again whenever it is wanted.
+
 * Workflow
 1. Capture into the inbox, from anywhere, or straight into the project
    that owns the task.

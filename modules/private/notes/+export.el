@@ -182,7 +182,25 @@ Org's font lock tells case apart, and #+BEGIN_WARNING is a callout too."
         org-mind-map-default-graph-attribs
         '(("autosize" . "false") ("size" . "9,12") ("resolution" . "100")
           ("nodesep" . "0.75") ("overlap" . "false") ("spline" . "true")
-          ("rankdir" . "LR"))))
+          ("rankdir" . "LR")))
+  (advice-add 'org-mind-map-default-filename :around #'+notes--mind-map-file-a))
+
+;; A note's mind map is drawn again whenever it is wanted, so it goes into
+;; the vault's .cache/maps/, which git ignores, named for the note's file,
+;; and the tree's heading after it; not beside the note, where it was
+;; committed with it.
+(defun +notes--mind-map-file-a (fn treenamep)
+  "The vault's .cache/maps/ for the map org-mind-map names with FN."
+  (let ((name (funcall fn treenamep))
+        (file (buffer-file-name (buffer-base-buffer))))
+    (if (not (and file (file-in-directory-p file org-directory)))
+        name
+      (let ((dir (expand-file-name ".cache/maps/" org-directory)))
+        (make-directory dir t)
+        (expand-file-name (concat (file-name-base file)
+                                  (and (string-match "_diagram\\(-.*\\)?\\'" name)
+                                       (match-string 1 name)))
+                          dir)))))
 
 (after! ox
   (require 'ox-gfm nil t)
