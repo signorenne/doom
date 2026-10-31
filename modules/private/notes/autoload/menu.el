@@ -109,6 +109,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("r n" "Capture node"        org-roam-capture)
     ("r /" "Search notes"        consult-org-roam-search)
     ("r B" "Backlinks"           consult-org-roam-backlinks)
+    ("r t" "Notes by tag"        +notes/roam-tags)
     ("r m" "Map of a tag"        +notes/roam-map-of-content)
     ("r N" "Rename this note"    +notes/roam-rename)
     ("r S" "Starred notes"       +notes/roam-starred)

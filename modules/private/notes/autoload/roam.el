@@ -539,6 +539,46 @@ headings of files that are not, which would otherwise be listed twice."
                            nil t "Starred: ")))))
 
 ;;
+;;; Tags
+
+(defun +notes--roam-tag-counts ()
+  "(TAG . COUNT) for every tag in the graph, most used first, then by
+name.  A heading note counts, and so does a tag it inherits: the tags
+table holds them so."
+  (let ((counts (make-hash-table :test #'equal))
+        out)
+    (dolist (row (org-roam-db-query [:select :distinct [tag node-id] :from tags]))
+      (puthash (car row) (1+ (gethash (car row) counts 0)) counts))
+    (maphash (lambda (tag n) (push (cons tag n) out)) counts)
+    (sort out (lambda (a b) (or (> (cdr a) (cdr b))
+                                (and (= (cdr a) (cdr b)) (string< (car a) (car b))))))))
+
+(defun +notes--read-tag ()
+  "Read a tag of the graph, each shown with how many notes carry it."
+  (let* ((counts (or (+notes--roam-tag-counts) (user-error "No note has a tag yet")))
+         (annotate (lambda (tag)
+                     (let ((n (cdr (assoc tag counts))))
+                       (format "  %d note%s" n (if (= n 1) "" "s"))))))
+    (completing-read
+     "Tag: "
+     (lambda (string pred action)
+       (if (eq action 'metadata)
+           `(metadata (display-sort-function . identity)
+                      (cycle-sort-function . identity)
+                      (annotation-function . ,annotate))
+         (complete-with-action action counts string pred)))
+     nil t)))
+
+;;;###autoload
+(defun +notes/roam-tags (tag)
+  "Pick a TAG, each shown with how many notes carry it, then open one of
+those notes."
+  (interactive (progn (require 'org-roam) (list (+notes--read-tag))))
+  (org-roam-node-visit
+   (org-roam-node-read nil (lambda (node) (member tag (org-roam-node-tags node)))
+                       nil t (format "#%s: " tag))))
+
+;;
 ;;; Maps of content
 
 (defun +notes--roam-tags ()

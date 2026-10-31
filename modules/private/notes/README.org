@@ -115,6 +115,7 @@ meeting straight away.
 | ~SPC n r S~   | the starred notes                                |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
+| ~SPC n r t~   | the tags, how many notes each, then their notes  |
 | ~SPC n r m~   | build the map of a tag                         |
 | ~SPC n r v~   | review the notes that went nowhere             |
 | ~SPC n r h~   | which notes carry tasks                        |
@@ -147,6 +148,11 @@ A starred note carries the tag =starred=: ~SPC m m o s~ puts it in the
 off again; the star counts once the note is saved. ~SPC n r S~ lists the
 starred files and the starred headings of files that are not, a starred
 file's headings being starred through it already.
+
+~SPC n r t~ lists every tag with how many notes carry it, most used first,
+then the notes of the one picked. A heading that is a note counts, and so
+do the tags it inherits from its file, as org-roam keeps them; ~SPC n r m~
+writes the same set as a map.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal

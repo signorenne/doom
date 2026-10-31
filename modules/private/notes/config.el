@@ -383,6 +383,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Map of a tag"           "m" #'+notes/roam-map-of-content
         :desc "Rename this note"       "N" #'+notes/roam-rename
         :desc "Starred notes"          "S" #'+notes/roam-starred
+        :desc "Notes by tag"           "t" #'+notes/roam-tags
         :desc "Review the graph"       "v" #'+notes/roam-review
         :desc "Tasks hidden in notes"  "h" #'+notes/roam-todo-files
         :desc "How to work with roam"  "?" #'+notes/roam-guide
