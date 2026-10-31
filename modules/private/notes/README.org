@@ -108,12 +108,18 @@ meeting straight away.
 | ~SPC n r f~   | find or create a node, ~i~ links to one          |
 | ~SPC n r n~   | new note, one of the nine kinds                |
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
+| ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions |
 | ~SPC n r d n~ | write today's daily note                       |
 | ~SPC m m e~   | extract this heading into its own note         |
 | ~SPC n r m~   | build the map of a tag                         |
 | ~SPC n r v~   | review the notes that went nowhere             |
 | ~SPC n r h~   | which notes carry tasks                        |
 | ~SPC n r u~   | the graph in a browser                         |
+
+The roam buffer shows, under the backlinks and the references, the
+unlinked mentions: the lines elsewhere in the vault that name the note's
+title or an alias without linking to it, the links still to be made.
+They are a ripgrep search with PCRE2, which ~doom doctor~ checks for.
 
 A task written inside a note reaches the agenda: before an agenda or a
 refile the inbox, =projects/=, =areas/= and the journal

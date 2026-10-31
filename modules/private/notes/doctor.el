@@ -18,6 +18,14 @@
   (unless (executable-find (car tool))
     (warn! "Couldn't find %s: %s" (car tool) (cdr tool))))
 
+;; The roam buffer's unlinked mentions are a ripgrep search with PCRE2.
+(when (executable-find "rg")
+  (with-temp-buffer
+    (unless (and (zerop (call-process "rg" nil t nil "--pcre2-version"))
+                 (not (string-match-p "PCRE2 is not available" (buffer-string))))
+      (warn! "ripgrep has no PCRE2, so the roam buffer shows no unlinked mentions")
+      (explain! "Install a ripgrep built with PCRE2, as Homebrew's and most distributions' are"))))
+
 (unless (modulep! :tools pdf)
   (warn! "Without (:tools pdf) papers open in DocView, which cannot annotate")
   (explain! (if (featurep :system 'macos)

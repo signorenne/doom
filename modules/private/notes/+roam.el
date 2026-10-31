@@ -124,7 +124,12 @@ day is written under.")
         ;; Headings tagged :noroam: stay out of the graph, and so do the
         ;; flashcards: org-fc gives every card an ID, which would make
         ;; each one a node.
-        org-roam-db-node-include-function #'+notes--roam-include-node-p))
+        org-roam-db-node-include-function #'+notes--roam-include-node-p
+        ;; Under the backlinks, the lines that name the note without
+        ;; linking to it: the links still to be made.
+        org-roam-mode-sections '(org-roam-backlinks-section
+                                 org-roam-reflinks-section
+                                 org-roam-unlinked-references-section)))
 
 ;; What org-protocol://roam-ref captures with: one note per page, found
 ;; again by URL.
