@@ -1,8 +1,12 @@
+:PROPERTIES:
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
+:END:
 #+title: Someday, maybe
 #+filetags: :someday:
 #+startup: overview
-#+created: {{DATE}}
 
-Parked tasks and wishes. Refile here from the inbox when it is not for now.
+Parked tasks and wishes. Refile here from the inbox when it is not for
+now; the agenda does not read this file.
 
 * Someday

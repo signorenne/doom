@@ -67,7 +67,8 @@ caller can ask again precisely."
 ;;; Reading
 
 (defun +ai--notes-search (query)
-  "Lines matching QUERY in the knowledge graph and the legacy `org-directory'.
+  "Lines matching QUERY in the vault, `org-directory', and in the graph
+when a machine keeps it elsewhere.
 ripgrep skips hidden and ignored paths, so private progress and caches
 stay out of the answer."
   (require 'org)
@@ -193,9 +194,8 @@ Drafts live apart from the graph until they are read and promoted."
    :function #'+ai--notes-search
    :name "emacs_notes_search"
    :description
-   (concat "Search the user's Org notes, the knowledge repository that is "
-           "the org-roam graph and the legacy Org directory, and return "
-           "matching lines as file:line:text. Use it "
+   (concat "Search the user's Org notes, the vault that is the org-roam "
+           "graph, and return matching lines as file:line:text. Use it "
            "before answering anything about what they already know, wrote "
            "or decided.")
    :args '((:name "query" :type string

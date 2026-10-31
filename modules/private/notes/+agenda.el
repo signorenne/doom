@@ -88,9 +88,6 @@
           ("p" "Active project context"
            ((alltodo "" ((org-agenda-files (+notes--project-files))
                          (org-agenda-overriding-header "Active project actions")))))
-          ("L" "Legacy tasks (existing Org/GTD files)"
-           ((alltodo "" ((org-agenda-files +notes-legacy-agenda-files)
-                         (org-agenda-overriding-header "Legacy tasks")))))
           ("i" "Inbox"
            ((alltodo ""
                      ((org-agenda-files

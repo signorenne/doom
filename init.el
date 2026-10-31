@@ -6,12 +6,10 @@
 ;; Two notes: a language module needs its own +tree-sitter flag, and the
 ;; :private block at the end holds this config's own modules.
 
-;; Where the notes live. Set before any module or the doctor reads them;
-;; a missing folder is made on first use. Unset, both are ~/org: the
-;; documents and library (`org-directory') and the knowledge graph
-;; (`org-roam-directory') share one root.
-(setq +core-notes-dir "~/projects/personal/knowledge_base/"
-      +notes-knowledge-dir "~/projects/personal/knowledge/")
+;; Where the notes live: one vault, both `org-directory' and the roam
+;; graph. Set before any module or the doctor reads it; a missing folder
+;; is made on first use. Unset, it is ~/org.
+(setq +core-notes-dir "~/notes/")
 
 ;; With the login daemon running, a GUI Emacs opens its files there.
 (load (file-name-concat doom-user-dir "modules/private/core/+hand-off") nil 'nomessage)

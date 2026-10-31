@@ -2,25 +2,25 @@
 #+subtitle: documents, capture, agenda and roam
 
 * Description
-Zettelkasten knowledge and PARA work share one Org-roam graph, the
-repository in ~+notes-knowledge-dir~, set for this machine in =init.el=.
-Its inbox and project files own new tasks; the legacy ~org-directory~, its
-GTD documents and the reference library keep their own root.
+Everything written lives in one vault, ~+core-notes-dir~, =~/notes= on
+this machine (set in =init.el=): org notes, PlantUML diagrams and
+pictures. The vault is ~org-directory~ and ~org-roam-directory~ at once,
+one Org-roam graph where Zettelkasten knowledge and PARA work meet, and
+one git repository that commits itself.
 
-- the knowledge inbox =inbox.org= and one =projects/<slug>/index.org= per
+- the inbox =inbox.org= and one =projects/<slug>/index.org= per
   bounded outcome, with Goal, Completion criteria, Next actions, Decisions,
   Progress and Knowledge and sources,
-- the fixed legacy documents under ~org-directory~, created from
-  =templates/org=: todo, snippets, ideas, reading, someday, habits, ai and
-  a mind map. See ~+notes-documents~. They stay readable and receive no
-  new captures,
+- six documents, each a node of the graph, created from =templates/org=:
+  the inbox, the project index, someday, reading, snippets and habits.
+  See ~+notes-documents~,
 - captures that write into the inbox or the owning project, including the
   region as a code snippet and a bug report with a link back to the line,
 - an [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] dashboard and a weekly review, plus [[https://github.com/alphapapa/org-ql][org-ql]] queries,
 - org-roam for lasting notes, with dailies as the journal, [[https://github.com/jgru/consult-org-roam][consult-org-roam]]
   for search and backlinks, and [[https://github.com/org-roam/org-roam-ui][org-roam-ui]] for the graph,
 - maps of content, a graph review and note tasks in the agenda, see
-  [[file:../../../docs/org-roam-guide.org][the roam guide]] and the repository's =meta/WORKFLOWS.org=,
+  [[file:../../../docs/org-roam-guide.org][the roam guide]],
 - mind maps through graphviz, exports to GFM, Pandoc and LaTeX, and a
   writing mode.
 
@@ -31,18 +31,19 @@ under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
 agenda views of ~SPC o a~, and ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
 
 ** Documents
-~i~ and ~p~ open the knowledge repository; the others are the legacy
-documents under ~org-directory~.
+The inbox and someday are at the vault's root, the project index is
+=projects/index.org=, reading and snippets are in =resources/=, the
+habits in =areas/=. The inbox and the habits are in the agenda; someday
+and =resources/= never are.
 
-| Key       | What it opens                         |
-|-----------+---------------------------------------|
-| ~SPC n d b~ | create the documents that are missing   |
-| ~SPC n d d~ | pick a document                       |
-| ~SPC n d i~ | inbox, ~t~ todo, ~p~ projects index, ~n~ snippets |
-| ~SPC n d I~ | ideas, ~r~ reading, ~s~ someday, ~h~ habits |
-| ~SPC n d a~ | AI sessions, ~M~ maps                     |
-| ~SPC n r d t~ | today's daily note, Doom's key          |
-| ~SPC n d w~ | writing mode                          |
+| Key         | What it opens                                    |
+|-------------+--------------------------------------------------|
+| ~SPC n d b~   | set up the vault: folders, documents, repository |
+| ~SPC n d d~   | pick a document                                  |
+| ~SPC n d i~   | inbox, ~p~ projects index, ~s~ someday               |
+| ~SPC n d r~   | reading, ~n~ snippets, ~h~ habits                    |
+| ~SPC n r d t~ | today's daily note, Doom's key                   |
+| ~SPC n d w~   | writing mode                                     |
 
 ** Capture, with ~SPC X~ or ~SPC n n~
 | Key | Template            | Goes to           |
@@ -75,7 +76,6 @@ no capture invents one.
 | ~SPC o a x~ | dashboard: today, habits, then everything open |
 | ~SPC o a w~ | weekly review                                  |
 | ~SPC o a n~ | next actions, ~p~ active projects, ~i~ inbox       |
-| ~SPC o a L~ | the legacy task files, labelled as such         |
 | ~SPC n q~   | org-ql find: in this note, else in the agenda  |
 | ~SPC n Q~   | org-ql search, into a buffer of what it found  |
 | ~C-o~       | the agenda's own menu                          |
@@ -86,8 +86,7 @@ the dashboard, project capture and refile; a paused task keeps its state.
 
 ** Roam
 [[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
-it. The repository's =meta/WORKFLOWS.org= holds its procedures and the
-checks to run. A note is one of nine kinds, each a set of
+it. A note is one of nine kinds, each a set of
 headings that say what to write: concept (in one sentence, how it works,
 example, where it bites), solution (symptom, cause, fix, how to verify,
 applies to), howto (when, steps, gotchas), hardware (a board or part:
@@ -137,22 +136,19 @@ never become nodes.
 | ~SPC n SPC H~ | what changed in the notes, ~V~ makes them a repository |
 
 Cards are headings tagged =:fc:= in the notes themselves, scheduled through
-their own properties; the review reads the cards under ~org-directory~ only,
-so cards in the knowledge repository wait until ~org-fc-directories~ includes
-it. The bibliography is =research/academic/references.bib=
-under ~org-directory~, with the PDFs in =research/academic/papers/=; citar
-writes its notes into the knowledge repository as
-=resources/sources/papers/<citekey>.org=, so a cited paper and the note
-about it are the same thing. ~org-directory~ is a git repository and
-commits itself after ~+notes-commit-idle~ seconds of idle time and when
-Emacs exits, never while a rebase or merge is waiting, and says so when a
-commit fails. ~SPC n G~ pulls and pushes in the background; a conflict
-stops it with a message and magit finishes it. The knowledge repository is
-never committed automatically. The org-roam database
-(=org-roam-knowledge.db= under Doom's cache) and the card review log are
-caches outside the repositories, so only the files travel between
-machines; the database is rebuilt after the pull, so the finder knows the
-notes the other machine wrote.
+their own properties; the review reads the cards of the whole vault. The
+bibliography is =research/academic/references.bib= under ~org-directory~,
+with the PDFs in =research/academic/papers/=; citar writes its notes into
+the vault as =resources/sources/papers/<citekey>.org=, so a cited paper and
+the note about it are the same thing. The vault is a git repository, made
+by ~SPC n d b~, and commits everything in it after ~+notes-commit-idle~
+seconds of idle time and when Emacs exits, never while a rebase or merge
+is waiting, and says so when a commit fails. ~SPC n G~ pulls and pushes in
+the background; a conflict stops it with a message and magit finishes it.
+The org-roam database (=org-roam-knowledge.db= under Doom's cache) and the
+card review log are caches outside the vault, so only the files travel
+between machines; the database is rebuilt after the pull, so the finder
+knows the notes the other machine wrote.
 
 Maps live in =resources/collections/tags/=. A map is a note of its own, so
 it shows in the graph; only the list between =# BEGIN MAP= and =# END MAP=
@@ -179,9 +175,9 @@ and are never regenerated.
    with its ID, review its open tasks rather than marking them done, and
    leave its reusable notes where they are.
 
-The repository's =meta/WORKFLOWS.org= holds the checks to run after a
-change here, beside ~bin/check-config~. Importing a source is not
-hardware verification, and indexing never runs an Org source block.
+After a change here, ~bin/check-config~ is the check to run. Importing a
+source is not hardware verification, and indexing never runs an Org
+source block.
 
 * Spelling and style
 Words are checked as you type against British English, which is how
@@ -243,16 +239,15 @@ sheet opens in 0.3 s instead of 1.4 and takes 5 ms a key instead of 19,
 and its colours are the same.
 
 * Configuration
-- ~+notes-knowledge-dir~, the knowledge and work repository, which is
-  ~org-roam-directory~, and ~+core-notes-dir~, which is ~org-directory~.
-  Both are set in =init.el=, before any module or ~doom doctor~ reads
-  them; unset, both are =~/org=, one root for the documents and the
-  graph. A folder that is missing is made on first use, with
-  ~+notes-directories~ and ~+notes-knowledge-directories~ inside.
-- ~+notes-documents~, ~+notes-directories~, ~+notes-templates-dir~; the
-  inbox and projects entries point into the repository, and
-  ~+notes-legacy-documents~ keeps the original destinations for the
-  legacy view.
+- ~+core-notes-dir~, the vault, which is ~org-directory~ and, through
+  ~+notes-knowledge-dir~ (its default), ~org-roam-directory~. The
+  documents, the inbox and the agenda take the two for one folder. Set in
+  =init.el=, before any module or ~doom doctor~ reads it; unset, it is
+  =~/org=. A folder that is missing is made when org loads, with
+  ~+notes-knowledge-directories~ inside; ~doom doctor~ says when the vault
+  is missing or not a git repository.
+- ~+notes-documents~, the six documents, and ~+notes-templates-dir~, where
+  their templates are.
 - ~+notes-roam-head~, the header every roam note starts with;
   ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
   and first lines.
@@ -260,8 +255,6 @@ and its colours are the same.
   ~org-directory~), ~+notes-commit-idle~ (600).
 - ~+notes-latex-reach~ (4096), how far past the text being coloured org
   looks for LaTeX.
-- ~org-directory~ (from core's ~+core-notes-dir~), the legacy documents,
-  library and Git helpers.
 - The files: =config.el= (documents, the workflow block, the commit
   timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
   (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=

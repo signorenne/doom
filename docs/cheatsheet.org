@@ -2280,19 +2280,16 @@ the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
 projects and each other, which a heading in a file cannot.
 
 ** Documents
-| Key       | What it opens           |
-|-----------+-------------------------|
-| ~SPC n d i~ | inbox                   |
-| ~SPC n d t~ | todo                    |
-| ~SPC n d p~ | projects                |
-| ~SPC n d n~ | snippets                |
-| ~SPC n d I~ | ideas                   |
-| ~SPC n d r~ | reading                 |
-| ~SPC n d s~ | someday                 |
-| ~SPC n d h~ | habits                  |
-| ~SPC n d a~ | AI sessions             |
-| ~SPC n d d~ | pick one                |
-| ~SPC n d b~ | create the missing ones |
+| Key       | What it opens                                    |
+|-----------+--------------------------------------------------|
+| ~SPC n d i~ | inbox                                            |
+| ~SPC n d p~ | projects                                         |
+| ~SPC n d s~ | someday                                          |
+| ~SPC n d r~ | reading                                          |
+| ~SPC n d n~ | snippets                                         |
+| ~SPC n d h~ | habits                                           |
+| ~SPC n d d~ | pick one                                         |
+| ~SPC n d b~ | set up the vault: folders, documents, repository |
 
 ** Agenda
 | Key       | What it shows         |
@@ -2356,10 +2353,9 @@ Images dropped on a buffer are downloaded and attached.
 | ~SPC t p~   | present the file as slides                   |
 
 * Notes and roam
-Roam is the note graph in the knowledge repository,
-~+notes-knowledge-dir~ (set in =init.el=); the dailies are the journal.
-[[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says how to work with it day to day; the
-repository's =meta/WORKFLOWS.org= holds its procedures and checks.
+Roam is the note graph of the vault, =~/notes= (~+core-notes-dir~, set in
+=init.el=); the dailies are the journal. [[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says
+how to work with it day to day.
 
 ** The loop
 | Key         | What it does                        |
@@ -2437,10 +2433,10 @@ hand still asks, because there is nothing to ask instead.
 | ~SPC n r s~ | resync the database                   |
 
 A task in the inbox, a project or an area reaches the agenda by itself;
-one written inside a knowledge or source note does not. =~/org= is a git
-repository: it commits itself after ten minutes idle and on exit, ~SPC n g~
-commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows what
-changed. The knowledge repository is never committed automatically.
+one written inside a knowledge or source note does not. The vault is a
+git repository: it commits itself after ten minutes idle and on exit,
+~SPC n g~ commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows
+what changed.
 
 * AI
 The [[file:../modules/private/ai/README.org][ai README]] explains the three tools and when each one fits. ~SPC l SPC~

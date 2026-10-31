@@ -1,24 +1,23 @@
 ;;; private/notes/autoload/documents.el -*- lexical-binding: t; -*-
 
 (defvar +notes-documents)
-(defvar +notes-directories)
 (defvar +notes-knowledge-directories)
 (declare-function org-id-new "org-id")
+(declare-function org-roam-db-sync "org-roam-db")
+(declare-function +notes-repo-p "git")
+(declare-function +notes/init-repo "git")
 (defvar +notes-templates-dir)
-(defvar +notes-bibliography)
 (defvar-local +notes--writing-mode nil
   "Non-nil while `+notes/writing-mode' is on in this buffer.")
 
 ;;;###autoload
 (defun +notes--ensure-directories ()
-  "Create `org-directory' with `+notes-directories', and
-`org-roam-directory' with `+notes-knowledge-directories'."
+  "Create the vault, `org-directory', and the folders of
+`+notes-knowledge-directories' in `org-roam-directory', the same folder."
   (let ((root (expand-file-name org-directory))
         (graph (expand-file-name org-roam-directory)))
     (make-directory root t)
     (make-directory graph t)
-    (dolist (dir +notes-directories)
-      (make-directory (expand-file-name dir root) t))
     (dolist (dir +notes-knowledge-directories)
       (make-directory (expand-file-name dir graph) t))
     root))
@@ -36,6 +35,8 @@ Return its path when it was created, nil when it was already there."
          (template (expand-file-name (concat name ".org") +notes-templates-dir)))
     (unless (file-exists-p path)
       (make-directory (file-name-directory path) t)
+      ;; A document in the graph is a node, so it gets an ID.
+      (require 'org-id)
       (with-temp-file path
         (if (file-exists-p template)
             (progn
@@ -43,16 +44,14 @@ Return its path when it was created, nil when it was already there."
               (goto-char (point-min))
               (while (search-forward "{{DATE}}" nil t)
                 (replace-match (format-time-string "%Y-%m-%d") t t))
-              ;; A document in the graph is a node, so it gets an ID.
-              (require 'org-id)
               (goto-char (point-min))
               ;; org-id-new matches strings itself, so it runs before
               ;; the replacement, not inside it.
               (while (search-forward "{{ID}}" nil t)
                 (let ((id (save-match-data (org-id-new))))
                   (replace-match id t t))))
-          (insert (format "#+title: %s\n#+filetags: :%s:\n#+startup: overview\n\n"
-                          (capitalize name) name))))
+          (insert (format ":PROPERTIES:\n:ID: %s\n:END:\n#+title: %s\n#+filetags: :%s:\n#+startup: overview\n\n"
+                          (org-id-new) (capitalize name) name))))
       path)))
 
 ;;;###autoload
@@ -64,31 +63,27 @@ before writing into the notes."
   (dolist (doc +notes-documents)
     (+notes--create-document (car doc))))
 
-(defun +notes--create-bibliography ()
-  "Create the empty BibTeX library citar reads, unless it exists.
-Returns its path when it was created."
-  (unless (file-exists-p +notes-bibliography)
-    (make-directory (file-name-directory +notes-bibliography) t)
-    (with-temp-file +notes-bibliography
-      (insert "@Comment{The library citar reads. Paste BibTeX entries here;\n"
-              "  SPC n B lists them, SPC m @ cites one.}\n"))
-    +notes-bibliography))
-
 ;;;###autoload
 (defun +notes/bootstrap ()
-  "Create `org-directory', its subdirectories, any missing document and
-the bibliography."
+  "Set up the vault: its folders, any missing document, and a git
+repository when it is not one yet.  Run again, it changes nothing."
   (interactive)
   (+notes--ensure-directories)
-  (let ((created (delq nil (append (mapcar (lambda (doc) (+notes--create-document (car doc)))
-                                           +notes-documents)
-                                   (list (+notes--create-bibliography))))))
-    (message "%s ready%s. SPC n SPC opens the notes menu"
+  (let ((created (delq nil (mapcar (lambda (doc) (+notes--create-document (car doc)))
+                                   +notes-documents)))
+        (new-repo (not (+notes-repo-p))))
+    (when new-repo
+      (+notes/init-repo))
+    ;; The documents are nodes; the finder knows them at once.
+    (require 'org-roam)
+    (org-roam-db-sync)
+    (message "%s ready%s%s. SPC n SPC opens the notes menu"
              (abbreviate-file-name org-directory)
              (if created
                  (format ", created %s"
                          (mapconcat #'file-name-nondirectory created ", "))
-               ""))))
+               "")
+             (if new-repo ", now a git repository" ""))))
 
 ;;;###autoload
 (defun +notes/open-document (name)

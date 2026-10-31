@@ -165,10 +165,17 @@ it is."
                    (seq-remove #'+notes--under-base-p (+notes--roam-todo-files))))
           org-agenda-files +notes--agenda-files-last)))
 
+(defvar +notes-documents)
+
 ;;;###autoload
 (defun +notes--refile-files ()
-  "The inbox and active projects, including projects with no TODOs."
-  (delete-dups (cons (+notes--inbox-file) (+notes--project-files))))
+  "The documents there are and the active projects, including projects
+with no TODOs."
+  (delete-dups
+   (append (seq-filter #'file-exists-p
+                       (mapcar (lambda (doc) (expand-file-name (cdr doc) org-directory))
+                               +notes-documents))
+           (+notes--project-files))))
 
 ;;;###autoload
 (defun +notes/roam-todo-files ()

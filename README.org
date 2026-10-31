@@ -77,9 +77,10 @@ Nothing here needs doing by hand; each happens once per machine.
   need, so they open quickly.
 
 ** 5. What is this machine's
-=init.el= says where the notes are, =+core-notes-dir= and
-=+notes-knowledge-dir=; change them there for a machine with its notes
-elsewhere. A missing folder is made on first use.
+=init.el= says where the notes are, =+core-notes-dir=, the one vault
+(=~/notes/=); change it there for a machine with its notes elsewhere. A
+missing folder is made on first use, and =SPC n d b= makes the vault's
+documents and its git repository.
 
 ** 6. Optional, when wanted
 | Command                               | What it sets up                                            |

@@ -53,13 +53,18 @@
                     "brew install languagetool"
                   "openSUSE: zypper in languagetool")))))
 
-;; The CLI loads init.el, where the two are set, but no module config:
-;; unset, both default to ~/org, as core and this module do.
-(dolist (dir (delete-dups
-              (list (bound-and-true-p +core-notes-dir)
-                    (or (bound-and-true-p +notes-knowledge-dir)
-                        (bound-and-true-p +core-notes-dir)))))
-  (let ((dir (expand-file-name (or dir "~/org/"))))
-    (unless (file-directory-p dir)
-      (warn! "%s doesn't exist yet" (abbreviate-file-name dir))
-      (explain! "Run M-x +notes/bootstrap, or press SPC n d b"))))
+;; The CLI loads init.el, where the vault is set, but no module config:
+;; unset, it is ~/org, as core says, and the graph is the vault.
+(let* ((vault (expand-file-name (or (bound-and-true-p +core-notes-dir) "~/org/")))
+       (graph (expand-file-name (or (bound-and-true-p +notes-knowledge-dir) vault))))
+  (cond ((not (file-directory-p vault))
+         (warn! "The vault %s doesn't exist yet" (abbreviate-file-name vault))
+         (explain! "Run M-x +notes/bootstrap, or press SPC n d b"))
+        ((not (file-exists-p (expand-file-name ".git" vault)))
+         (warn! "The vault %s is not a git repository, so nothing commits it"
+                (abbreviate-file-name vault))
+         (explain! "Run M-x +notes/bootstrap, or press SPC n d b")))
+  (unless (or (equal (file-name-as-directory graph) (file-name-as-directory vault))
+              (file-directory-p graph))
+    (warn! "The graph %s doesn't exist yet" (abbreviate-file-name graph))
+    (explain! "Run M-x +notes/bootstrap, or press SPC n d b")))

@@ -1,17 +1,16 @@
 ;;; private/notes/config.el -*- lexical-binding: t; -*-
 ;;
-;; Zettelkasten knowledge and PARA work in one Org-roam graph.
-;; Legacy Org documents and the reference library keep their own root.
+;; One vault of notes and one Org-roam graph: Zettelkasten knowledge and
+;; PARA work, the documents among them.
 
 ;;
 ;;; Documents
 
-;; Read by Doom when org and org-roam load. org-directory, the legacy
-;; documents and library, comes from core; the graph is the knowledge
-;; and work repository.
+;; Read by Doom when org and org-roam load. Both are the vault, core's
+;; `+core-notes-dir'.
 (defvar +notes-knowledge-dir +core-notes-dir
-  "Root of the personal knowledge and work repository; init.el sets it.
-Unset, it is `+core-notes-dir', so the documents and the graph share a root.")
+  "Root of the org-roam graph: the vault, `+core-notes-dir'.
+The documents, the inbox and the agenda take the two for one folder.")
 (setq org-directory (directory-file-name +core-notes-dir)
       org-roam-directory (directory-file-name +notes-knowledge-dir)
       org-roam-db-location (expand-file-name "org-roam-knowledge.db" doom-cache-dir))
@@ -19,47 +18,22 @@ Unset, it is `+core-notes-dir', so the documents and the graph share a root.")
 (load! "autoload/capture")
 
 (defvar +notes-documents
-  '(("inbox"    . "notes/gtd/inbox.org")     ; everything captured lands here first
-    ("todo"     . "notes/gtd/todo.org")      ; processed next actions and waiting items
-    ("projects" . "notes/gtd/projects.org")  ; PROJ trees with next actions and logs
-    ("notes"    . "notes/gtd/notes.org")     ; code snippets
-    ("ideas"    . "notes/gtd/ideas.org")     ; IDEA entries
-    ("reading"  . "notes/gtd/reading.org")   ; links, articles, books
-    ("someday"  . "notes/gtd/someday.org")   ; parked tasks
-    ("habits"   . "notes/gtd/habits.org")    ; org-habit entries
-    ("ai"       . "notes/gtd/ai.org")        ; AI agent session log
-    ("mindmap"  . "notes/maps/mindmap.org")) ; example mind map (org-mind-map)
-  "Documents `+notes/bootstrap' creates: (NAME . FILE) under `org-directory'.
-Inbox and projects are repointed below into the knowledge repository.")
-
-(defvar +notes-legacy-documents (copy-tree +notes-documents)
-  "Original document destinations, retained for the labelled legacy view.")
-(defvar +notes-legacy-agenda-files nil
-  "Existing task files under the legacy Org root.")
-(setq +notes-documents (copy-tree +notes-legacy-documents))
-(setcdr (assoc "inbox" +notes-documents) (+notes--inbox-file))
-(setcdr (assoc "projects" +notes-documents)
-        (expand-file-name "projects/index.org" org-roam-directory))
-
-(defvar +notes-directories '("notes/gtd" "notes/roam" "notes/roam/daily"
-                           "notes/roam/concepts" "notes/roam/solutions"
-                           "notes/roam/howtos" "notes/roam/hardware" "notes/roam/refs"
-                           "notes/roam/questions" "notes/roam/projects" "notes/roam/people"
-                           "notes/roam/meetings" "notes/roam/maps" "notes/roam/drafts"
-                           "notes/maps" "notes/study/certifications"
-                           "library/books/digital" "library/books/scanned/image_only"
-                           "library/books/scanned/partial" "library/books/review"
-                           "library/books/inbox" "library/datasheets"
-                           "research/academic/papers" "research/resources" ".attach")
-  "Subdirectories of `org-directory' created by `+notes/bootstrap'.")
+  '(("inbox"    . "inbox.org")              ; everything captured lands here first
+    ("projects" . "projects/index.org")     ; links to each project's own file
+    ("someday"  . "someday.org")            ; parked tasks, kept out of the agenda
+    ("reading"  . "resources/reading.org")  ; books and articles to read
+    ("snippets" . "resources/snippets.org") ; code snippets
+    ("habits"   . "areas/habits.org"))      ; org-habit entries
+  "Documents `+notes/bootstrap' creates: (NAME . FILE) under `org-directory',
+each from templates/org/NAME.org and each a node of the graph.")
 
 (defvar +notes-knowledge-directories
   '("projects" "areas" "archives/projects" "archives/areas"
     "capture/journal" "capture/drafts" "resources/wiki" "resources/wiki/people"
     "resources/sources/papers" "resources/sources/manuals"
     "resources/sources/websites" "resources/collections/tags" "assets")
-  "Subdirectories of `org-roam-directory', the PARA layout the captures
-write into, created with the others.")
+  "Folders of the vault, the PARA layout the captures write into, made
+when org loads.  assets/ holds the diagrams and pictures of no one note.")
 
 (defvar +notes-templates-dir (file-name-concat doom-user-dir "templates/org/")
   "Where the starter documents are copied from.")
@@ -71,10 +45,11 @@ write into, created with the others.")
                (org-roam-mode . "Notes and roam")))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
-;; Doom's project captures write to these.
+;; Doom's own captures and `org-default-notes-file' write to these: the
+;; vault's inbox and project index.
 (setq +org-capture-todo-file (+notes--inbox-file)
-      +org-capture-notes-file "notes/gtd/notes.org"
-      +org-capture-projects-file "notes/gtd/projects.org")
+      +org-capture-notes-file "inbox.org"
+      +org-capture-projects-file "projects/index.org")
 
 
 ;;
@@ -85,18 +60,16 @@ write into, created with the others.")
 notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
 
 (after! org
-  ;; A missing legacy org-directory would break the agenda, so create the
-  ;; tree early.
+  ;; A missing vault would break the agenda, so create its tree early.
   (+notes--ensure-directories)
   ;; Not the whole of capture/journal: that is one agenda file per day ever
   ;; written, opened on every agenda build. The dailies that hold a task
   ;; are found by the scan whatever their date, and the recent ones are
-  ;; added for the plain timestamps a day's note carries.
-  (setq +notes-legacy-agenda-files
-        (mapcar (lambda (doc) (expand-file-name (cdr doc) org-directory))
-                (seq-remove (lambda (doc) (equal (car doc) "mindmap"))
-                            +notes-legacy-documents))
-        +notes-agenda-base-files (list (+notes--inbox-file))
+  ;; added for the plain timestamps a day's note carries. Of the
+  ;; documents, the inbox and the habits; someday is not for now.
+  (setq +notes-agenda-base-files
+        (list (+notes--inbox-file)
+              (expand-file-name (cdr (assoc "habits" +notes-documents)) org-directory))
         org-agenda-files +notes-agenda-base-files
         ;; Doom's keywords plus NEXT, the next action of a project.
         org-todo-keywords
@@ -392,19 +365,14 @@ from the spans of its block found once; the match data set the same."
         :desc "What is wrong here"    "w" #'langtool-show-message-at-point
         :desc "Done checking"         "d" #'langtool-check-done)
        (:prefix ("d" . "documents")
-        :desc "Create missing documents" "b" #'+notes/bootstrap
+        :desc "Set up the vault"      "b" #'+notes/bootstrap
         :desc "Choose document"       "d" #'+notes/open-document
         :desc "Inbox"                 "i" (cmd! (+notes/open-document "inbox"))
-        :desc "Legacy todo"           "t" (cmd! (+notes/open-document "todo"))
         :desc "Projects"              "p" (cmd! (+notes/open-document "projects"))
-        :desc "Legacy snippets"       "n" (cmd! (+notes/open-document "notes"))
-        :desc "Legacy ideas"          "I" (cmd! (+notes/open-document "ideas"))
-        :desc "Legacy reading"        "r" (cmd! (+notes/open-document "reading"))
-        :desc "Legacy someday"        "s" (cmd! (+notes/open-document "someday"))
-        :desc "Legacy habits"         "h" (cmd! (+notes/open-document "habits"))
-        :desc "Legacy AI sessions"    "a" (cmd! (+notes/open-document "ai"))
-        :desc "Legacy maps (dired)"   "M"
-        (cmd! (dired (file-name-concat org-directory "notes/maps")))
+        :desc "Someday"               "s" (cmd! (+notes/open-document "someday"))
+        :desc "Reading"               "r" (cmd! (+notes/open-document "reading"))
+        :desc "Snippets"              "n" (cmd! (+notes/open-document "snippets"))
+        :desc "Habits"                "h" (cmd! (+notes/open-document "habits"))
         :desc "Writing mode"          "w" #'+notes/writing-mode
         :desc "Browser capture setup" "P" #'+notes/install-protocol-handler)
        (:prefix "r"
@@ -426,10 +394,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Weekly review"         "w" #'+notes/weekly-review
         :desc "Next actions"          "n" #'+notes/next-actions
         :desc "Projects"              "p" #'+notes/projects
-        :desc "Inbox"                 "i" #'+notes/inbox
-        ;; The legacy Org/GTD task files, read only by habit: no capture
-        ;; writes there.
-        :desc "Legacy tasks"          "L" (cmd! (org-agenda nil "L")))))
+        :desc "Inbox"                 "i" #'+notes/inbox)))
 
 ;; Org lines up the table you are in when you leave a cell, and leaves
 ;; the rest of the file as it found it. This lines up all of them.

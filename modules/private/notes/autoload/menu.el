@@ -86,14 +86,15 @@ org-protocol fills it; the bookmarklets entry covers it."
   [:description +notes--menu-description
    ["Documents (d)"
     ("d i" "Inbox"        (lambda () (interactive) (+notes/open-document "inbox")))
-    ("d t" "Legacy todo"  (lambda () (interactive) (+notes/open-document "todo")))
     ("d p" "Projects"     (lambda () (interactive) (+notes/open-document "projects")))
-    ("d n" "Legacy snippets" (lambda () (interactive) (+notes/open-document "notes")))
-    ("d r" "Legacy reading" (lambda () (interactive) (+notes/open-document "reading")))
+    ("d s" "Someday"      (lambda () (interactive) (+notes/open-document "someday")))
+    ("d r" "Reading"      (lambda () (interactive) (+notes/open-document "reading")))
+    ("d n" "Snippets"     (lambda () (interactive) (+notes/open-document "snippets")))
+    ("d h" "Habits"       (lambda () (interactive) (+notes/open-document "habits")))
     ("d d" "Any document" +notes/open-document)
     ("d j" "Today's daily note" org-roam-dailies-goto-today)
     ("d w" "Writing mode" +notes/writing-mode)
-    ("d b" "Create missing documents" +notes/bootstrap)]
+    ("d b" "Set up the vault" +notes/bootstrap)]
    ["Capture (c)" :class transient-column :setup-children +notes--capture-suffixes]
    ["Agenda (a)"
     ("a x" "Dashboard"      +notes/dashboard)
@@ -101,7 +102,6 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a n" "Next actions"   +notes/next-actions)
     ("a p" "Projects"       +notes/projects)
     ("a i" "Inbox"          +notes/inbox)
-    ("a L" "Legacy tasks"   (lambda () (interactive) (org-agenda nil "L")))
     ("a t" "Todo list"      org-todo-list)
     ("a q" "Query (org-ql)" +notes/query)]]
   [["Roam (r)"

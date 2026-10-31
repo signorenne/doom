@@ -1,7 +1,10 @@
+:PROPERTIES:
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
+:END:
 #+title: Snippets
-#+filetags: :notes:
+#+filetags: :snippets:
 #+startup: overview
-#+created: {{DATE}}
 
 Code snippets, captured from a buffer with SPC n n c: the region as a
 source block, with a link back to the file. A note, anything worth

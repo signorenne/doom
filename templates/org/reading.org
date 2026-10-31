@@ -1,7 +1,10 @@
+:PROPERTIES:
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
+:END:
 #+title: Reading
 #+filetags: :reading:
 #+startup: overview
-#+created: {{DATE}}
 
 * Queue
 * Links
