@@ -689,6 +689,43 @@ again."
     (message "Refreshed %d block%s" count (if (= count 1) "" "s"))))
 
 ;;
+;;; Out of the graph
+
+;;;###autoload
+(defun +notes--block-bodies ()
+  "Where this buffer's blocks of the module hold what they wrote: a list
+of (BEG . END), from the line below each #+BEGIN: line to the start of
+its #+END: line, the blocks found as the refresh finds them."
+  (when (+notes--has-blocks-p)
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (let (bodies)
+          (while (+notes--next-block)
+            (when-let* ((end (+notes--block-end)))
+              (push (cons (line-beginning-position 2) end) bodies)
+              (goto-char end))
+            (forward-line 1))
+          (nreverse bodies))))))
+
+;;;###autoload
+(defun +notes--roam-written-links-a (fn fns)
+  "Map org-roam's FNS over this note's links outside its live tables.
+What a table writes is not a link the note makes, as Obsidian leaves
+Dataview's out: org-roam reads every link of a note through here."
+  (if-let* ((bodies (+notes--block-bodies)))
+      (funcall fn (mapcar (lambda (f)
+                            (lambda (link)
+                              (let ((begin (org-element-property :begin link)))
+                                (unless (seq-some (lambda (body)
+                                                    (and (>= begin (car body)) (< begin (cdr body))))
+                                                  bodies)
+                                  (funcall f link)))))
+                          fns))
+    (funcall fn fns)))
+
+;;
 ;;; Moving a card
 
 (declare-function org-table-get-field "org-table")

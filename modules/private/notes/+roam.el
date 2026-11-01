@@ -61,6 +61,11 @@ day is written under.")
                      org-ql-view--complete-buffers-files))
     (advice-add command :before #'+notes--agenda-files-refresh-h))
 
+  ;; A live table's links are not the note's: the database, and the
+  ;; backlinks, the graph and its review with it, read only the links
+  ;; written outside the tables (autoload/query.el).
+  (advice-add 'org-roam-db-map-links :around #'+notes--roam-written-links-a)
+
   ;; Journal and knowledge capture share the repository graph root.
   ;; org-roam matches these against the path relative to that root, so a
   ;; top-level .private/ must match at the start as well as after a slash.
