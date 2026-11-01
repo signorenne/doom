@@ -139,6 +139,13 @@ day is written under.")
            "Course: %(+notes--capture-course-link)\n\n* Summary\n%?\n\n* Notes\n\n* Questions\n\n* Cards\n"
            :target (file+head "${+notes--roam-lecture-path}"
                               ,(concat +notes-roam-head ":lecture:\n\n"))
+           :unnarrowed t :empty-lines-before 1)
+          ;; One folder for every case study; the link on its For: line
+          ;; is how its course or project lists it.
+          ("k" "case study: a real case, worked through" plain
+           "For: %(+notes--capture-owner-link)\n\n* Context\n%?\n\n* Problem\n\n* Analysis\n\n* Options\n\n* Decision\n\n* Outcome\n\n* Lessons\n\n* Sources\n"
+           :target (file+head "${+notes--roam-case-study-path}"
+                              ,(concat +notes-roam-head ":case_study:\n\n"))
            :unnarrowed t :empty-lines-before 1))
         ;; A journal entry is a heading under * Journal, named for what it
         ;; is about, with the time in a property. That way SPC m m e turns

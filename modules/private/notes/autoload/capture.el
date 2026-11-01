@@ -208,6 +208,12 @@ already would get the template written into it."
                   (file-relative-name file org-roam-directory)))
     file))
 
+;;;###autoload
+(defun +notes--roam-case-study-path (node)
+  "A new case study NODE in resources/case-studies/.  Called as ${...}:
+an error in a %(...) of a template is written into the path instead."
+  (+notes--roam-new-path (concat "resources/case-studies/" (org-roam-node-slug node) ".org")))
+
 (defvar org-roam-capture--node)
 (declare-function org-roam-node-file "org-roam-node")
 
@@ -295,6 +301,20 @@ named for the day."
 (defun +notes--capture-course-deadline ()
   "Target an assignment or an exam to its course's Assignments and exams."
   (+notes--capture-at (+notes--capture-course) "Assignments and exams"))
+
+;;;###autoload
+(defun +notes--capture-owner-link ()
+  "An id: link to the course or project a case study is for, picked by
+title; \"\" for none."
+  (let* ((choices (append (mapcar (lambda (file) (cons (+notes--project-title file) file))
+                                  (append (+notes--course-files) (+notes--project-files)))
+                          (list (cons "None" nil))))
+         (file (cdr (assoc (completing-read "For: " choices nil t) choices))))
+    (if file
+        (org-link-make-string (concat "id:" (or (+notes--file-id file)
+                                                (user-error "%s has no ID" (abbreviate-file-name file))))
+                              (+notes--project-title file))
+      "")))
 
 (declare-function org-agenda-files "org")
 (declare-function org-fc-review "org-fc-review")
