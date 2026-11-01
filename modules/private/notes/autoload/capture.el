@@ -295,3 +295,41 @@ named for the day."
 (defun +notes--capture-course-deadline ()
   "Target an assignment or an exam to its course's Assignments and exams."
   (+notes--capture-at (+notes--capture-course) "Assignments and exams"))
+
+(declare-function org-agenda-files "org")
+(declare-function org-fc-review "org-fc-review")
+(declare-function +notes--agenda-files-refresh-h "roam")
+
+(defvar +notes--university-courses nil
+  "(FOLDER . TITLE) of each active course, read once for each block of
+the University view rather than for each of its items.")
+
+;;;###autoload
+(defun +notes--university-files ()
+  "The agenda files under areas/university/: the courses, the lectures
+with a task, the University document when it holds one."
+  (setq +notes--university-courses
+        (mapcar (lambda (course) (cons (file-name-directory course) (+notes--project-title course)))
+                (+notes--course-files)))
+  (+notes--agenda-files-refresh-h)
+  (let ((dir (expand-file-name "areas/university/" org-roam-directory)))
+    (seq-filter (lambda (file) (file-in-directory-p file dir))
+                (mapcar #'expand-file-name (org-agenda-files t)))))
+
+;;;###autoload
+(defun +notes--university-group (item)
+  "The University agenda's group of ITEM: the title of the active course
+whose folder holds its file, else University."
+  (let* ((marker (or (get-text-property 0 'org-hd-marker item)
+                     (get-text-property 0 'org-marker item)))
+         (file (and marker (buffer-file-name (marker-buffer marker))))
+         (course (and file (seq-find (lambda (course) (file-in-directory-p file (car course)))
+                                     +notes--university-courses))))
+    (if course (cdr course) "University")))
+
+;;;###autoload
+(defun +notes/course-review ()
+  "Review the cards of a course: the one this note belongs to, else one
+picked among the active courses."
+  (interactive)
+  (org-fc-review (list :paths (list (file-name-directory (+notes--read-course (current-buffer)))))))

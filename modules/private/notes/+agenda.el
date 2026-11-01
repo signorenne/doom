@@ -88,6 +88,18 @@
           ("p" "Active project context"
            ((alltodo "" ((org-agenda-files (+notes--project-files))
                          (org-agenda-overriding-header "Active project actions")))))
+          ;; The courses: two weeks of classes and deadlines, then what
+          ;; is open, by course. Every course file is called index.org,
+          ;; so the group is the course's title.
+          ("u" "University"
+           ((agenda "" ((org-agenda-span 14)
+                        (org-agenda-start-day nil)
+                        (org-agenda-files (+notes--university-files))
+                        (org-agenda-overriding-header "University, the next two weeks")))
+            (alltodo "" ((org-agenda-files (+notes--university-files))
+                         (org-agenda-overriding-header "")
+                         (org-super-agenda-groups
+                          '((:auto-map +notes--university-group)))))))
           ("i" "Inbox"
            ((alltodo ""
                      ((org-agenda-files

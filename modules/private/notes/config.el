@@ -446,6 +446,7 @@ from the spans of its block found once; the match data set the same."
        :desc "Commit the notes"       "g" #'+notes/commit
        :desc "Sync with the remote"   "G" #'+notes/sync
        :desc "Review the cards due"   "p" #'org-fc-review-all
+       :desc "Review a course's cards" "u" #'+notes/course-review
        :desc "The bibliography"       "B" #'citar-open
        ;; SPC n b is Doom's citar-open-notes already.
        :desc "Card dashboard"         "P" #'org-fc-dashboard
@@ -490,7 +491,8 @@ from the spans of its block found once; the match data set the same."
         :desc "Weekly review"         "w" #'+notes/weekly-review
         :desc "Next actions"          "n" #'+notes/next-actions
         :desc "Projects"              "p" #'+notes/projects
-        :desc "Inbox"                 "i" #'+notes/inbox)))
+        :desc "Inbox"                 "i" #'+notes/inbox
+        :desc "University"            "u" #'+notes/university-agenda)))
 
 ;; Org lines up the table you are in when you leave a cell, and leaves
 ;; the rest of the file as it found it. This lines up all of them.

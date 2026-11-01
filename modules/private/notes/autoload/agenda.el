@@ -41,6 +41,13 @@
   (+notes--agenda "i"))
 
 ;;;###autoload
+(defun +notes/university-agenda ()
+  "Two weeks of the courses' classes and deadlines, then their open tasks
+by course."
+  (interactive)
+  (+notes--agenda "u"))
+
+;;;###autoload
 (defun +notes/query ()
   "Find a heading by an org-ql query: in this note, or from any other
 buffer in the agenda files, the roam notes that hold a task among them.
