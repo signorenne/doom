@@ -15,6 +15,19 @@
 The date makes a note sortable and reviewable; everything after the tags
 belongs to the template that uses this.")
 
+(defvar +notes-course-body
+  (concat "* Overview\n- Teacher:\n- Term:\n- Exam:\n\n"
+          "* Timetable\nEach class is a repeating date in angle brackets, as this one in square ones: [2026-11-03 Tue 10:00-12:00 +1w]\n\n"
+          "* Assignments and exams\n\n"
+          "* Lectures\n#+BEGIN: notes-list :from folder :tags (\"lecture\") :columns (title created) :sort created\n#+END:\n\n"
+          "* Board\n#+BEGIN: notes-board :from folder\n#+END:\n\n"
+          "* Deadlines\n#+BEGIN: notes-query :from folder :query \"todo: deadline:to=14\" :columns (deadline todo heading file) :sort deadline\n#+END:\n\n"
+          "* Case studies\n#+BEGIN: notes-list :from vault :tags (\"case_study\") :links-to this\n#+END:\n\n"
+          "* Sources\n")
+  "How a new course index is laid out, below its head: the timetable, what
+is due, and live tables of its lectures, tasks and case studies.  No
+capture escape: the template adds its own.")
+
 ;; The daily note, in capture template syntax: %<...> is the date. The
 ;; dailies template below and `+notes-daily-file', which other modules
 ;; write today's note through, read the same two strings.
@@ -112,6 +125,20 @@ day is written under.")
            "* Attendees\n%?\n\n* Agenda\n\n* Notes\n\n* Actions\n"
            :target (file+head "%(+notes--roam-path \"capture/meetings/%<%Y%m%d>-${slug}.org\")"
                               ,(concat +notes-roam-head ":meeting:\n\n"))
+           :unnarrowed t :empty-lines-before 1)
+          ;; A course is a folder of its own under areas/university/,
+          ;; its index the hub, its lectures beside it; it has a status,
+          ;; as a project has, so a finished one leaves the agenda.
+          ("C" "course: a university course's hub" plain
+           ,(replace-regexp-in-string "^- Teacher:$" "- Teacher: %?" +notes-course-body t t)
+           :target (file+head "${+notes--roam-course-path}"
+                              ,(concat (replace-regexp-in-string ":END:" ":STATUS: active\n:END:" +notes-roam-head t t)
+                                       ":course:\n\n"))
+           :unnarrowed t :empty-lines-before 1)
+          ("l" "lecture: a class of a course" plain
+           "Course: %(+notes--capture-course-link)\n\n* Summary\n%?\n\n* Notes\n\n* Questions\n\n* Cards\n"
+           :target (file+head "${+notes--roam-lecture-path}"
+                              ,(concat +notes-roam-head ":lecture:\n\n"))
            :unnarrowed t :empty-lines-before 1))
         ;; A journal entry is a heading under * Journal, named for what it
         ;; is about, with the time in a property. That way SPC m m e turns
@@ -130,6 +157,11 @@ day is written under.")
         org-roam-mode-sections '(org-roam-backlinks-section
                                  org-roam-reflinks-section
                                  org-roam-unlinked-references-section)))
+
+;; A course, a lecture, a case study or a design doc is always a new note:
+;; picked from the finder, an existing node would get the template added
+;; to its own file.
+(add-hook 'org-roam-capture-preface-hook #'+notes--roam-new-only-h)
 
 ;; In a note, the cursor on a link says what it points to: the title line
 ;; in the echo area, the first lines too on SPC c H (autoload/preview.el).

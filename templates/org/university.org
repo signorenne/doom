@@ -1,0 +1,16 @@
+:PROPERTIES:
+:ID: {{ID}}
+:CREATED: [{{DATE}}]
+:END:
+#+title: University
+#+filetags: :university:
+
+Each course is areas/university/<course>/index.org, made with SPC n r n C.
+
+* Courses
+#+BEGIN: notes-list :from folder :tags ("course") :columns (title (property "STATUS") modified)
+#+END:
+
+* Next two weeks
+#+BEGIN: notes-query :from folder :query "todo: deadline:to=14" :columns (deadline todo heading file) :sort deadline
+#+END:

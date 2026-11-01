@@ -161,6 +161,9 @@ it is."
           (delete-dups
            (append (seq-filter #'+notes--active-task-file-p +notes-agenda-base-files)
                    (+notes--project-files)
+                   ;; A course's timetable is plain dates, which no scan
+                   ;; for tasks would find.
+                   (+notes--course-files)
                    (+notes--recent-dailies)
                    (seq-remove #'+notes--under-base-p (+notes--roam-todo-files))))
           org-agenda-files +notes--agenda-files-last)))
@@ -169,13 +172,14 @@ it is."
 
 ;;;###autoload
 (defun +notes--refile-files ()
-  "The documents there are and the active projects, including projects
-with no TODOs."
+  "The documents there are, the active projects and the active courses,
+including those with no TODOs."
   (delete-dups
    (append (seq-filter #'file-exists-p
                        (mapcar (lambda (doc) (expand-file-name (cdr doc) org-directory))
                                +notes-documents))
-           (+notes--project-files))))
+           (+notes--project-files)
+           (+notes--course-files))))
 
 ;;;###autoload
 (defun +notes/roam-todo-files ()

@@ -24,14 +24,15 @@ The documents, the inbox and the agenda take the two for one folder.")
     ("someday"  . "someday.org")            ; parked tasks, kept out of the agenda
     ("reading"  . "resources/reading.org")  ; books and articles to read
     ("snippets" . "resources/snippets.org") ; code snippets
-    ("habits"   . "areas/habits.org"))      ; org-habit entries
+    ("habits"   . "areas/habits.org")       ; org-habit entries
+    ("university" . "areas/university/index.org")) ; the courses and what is due
   "Documents `+notes/bootstrap' creates: (NAME . FILE) under `org-directory',
 each from templates/org/NAME.org and each a node of the graph.")
 
 (defvar +notes-knowledge-directories
-  '("projects" "areas" "archives/projects" "archives/areas"
+  '("projects" "areas" "areas/university" "archives/projects" "archives/areas"
     "capture/journal" "capture/meetings" "capture/drafts"
-    "resources/wiki" "resources/wiki/people"
+    "resources/wiki" "resources/wiki/people" "resources/case-studies"
     "resources/sources/papers" "resources/sources/manuals"
     "resources/sources/websites" "resources/collections/tags" "assets")
   "Folders of the vault, the PARA layout the captures write into, made
@@ -464,6 +465,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Reading"               "r" (cmd! (+notes/open-document "reading"))
         :desc "Snippets"              "n" (cmd! (+notes/open-document "snippets"))
         :desc "Habits"                "h" (cmd! (+notes/open-document "habits"))
+        :desc "University"            "u" (cmd! (+notes/open-document "university"))
         :desc "Writing mode"          "w" #'+notes/writing-mode
         :desc "Browser capture setup" "P" #'+notes/install-protocol-handler)
        (:prefix "r"

@@ -47,7 +47,10 @@ habit, a reading or a snippet belongs in."
      "* TODO %:description  :web:\n:PROPERTIES:\n:CREATED: %U\n:URL: %:link\n:END:\n%i\n%?" :prepend t)
     ("a" "AI session log" entry
      (function +notes--capture-project-progress)
-     "* %^{Topic}  :ai:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:AGENT: %^{Agent|claude-code|agent-shell|gptel}\n:END:\n%?")))
+     "* %^{Topic}  :ai:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:AGENT: %^{Agent|claude-code|agent-shell|gptel}\n:END:\n%?")
+    ("e" "Assignment or exam for a course" entry
+     (function +notes--capture-course-deadline)
+     "* TODO %^{What}  :%^{Kind|assignment|exam}:\nDEADLINE: %^{Due}t\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?")))
 
 ;; An aborted P capture must not leave an empty active project behind:
 ;; +notes--capture-project-goal records a project it created, and this

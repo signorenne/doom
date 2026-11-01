@@ -9,6 +9,7 @@
 (declare-function org-roam-node-title "org-roam-node")
 (declare-function org-id-new "org-id")
 (declare-function outline-next-heading "outline")
+(declare-function org-link-make-string "ol")
 
 (defun +notes--capture-buffer ()
   "The buffer `org-capture' was called from."
@@ -197,3 +198,100 @@ removes it again instead of leaving an empty active project."
       (user-error "Capture destination must remain inside the graph"))
     (make-directory (file-name-directory file) t)
     file))
+
+(defun +notes--roam-new-path (path)
+  "Like `+notes--roam-path', for a note that must be new: a file there
+already would get the template written into it."
+  (let ((file (+notes--roam-path path)))
+    (when (file-exists-p file)
+      (user-error "%s exists already; give the new note another title"
+                  (file-relative-name file org-roam-directory)))
+    file))
+
+(defvar org-roam-capture--node)
+(declare-function org-roam-node-file "org-roam-node")
+
+;;;###autoload
+(defun +notes--roam-new-only-h ()
+  "Refuse a course, lecture, case study or design doc for a node that has
+a file already: org-roam would write the template into that file."
+  (when (and (member (org-capture-get :key) '("C" "l" "k" "D"))
+             (org-roam-node-file org-roam-capture--node))
+    (user-error "%S is a note already, %s; to make a new one of that title, type it and press M-RET"
+                (org-roam-node-title org-roam-capture--node)
+                (file-relative-name (org-roam-node-file org-roam-capture--node) org-roam-directory))))
+
+;;
+;;; Courses
+
+;;;###autoload
+(defun +notes--course-files ()
+  "The active courses: each areas/university/<course>/index.org tagged
+:course:, not paused, archived or completed."
+  (let ((dir (expand-file-name "areas/university/" org-roam-directory))
+        (case-fold-search t))
+    (when (file-directory-p dir)
+      (seq-filter
+       (lambda (file)
+         (and (file-exists-p file)
+              (let ((head (+notes--project-header file)))
+                (and (string-match-p "^#\\+filetags:.*:course:" head)
+                     (not (string-match-p "^:STATUS: *\\(paused\\|archived\\|completed\\) *$" head))))))
+       (mapcar (lambda (sub) (expand-file-name "index.org" sub))
+               (seq-filter #'file-directory-p (directory-files dir t "\\`[^.]")))))))
+
+(defun +notes--file-id (file)
+  "The ID in FILE's top drawer, or nil."
+  (let ((case-fold-search t) (head (+notes--project-header file)))
+    (and (string-match "^:ID: *\\(\\S-+\\)" head) (match-string 1 head))))
+
+(defun +notes--read-course (buffer)
+  "The index of the course BUFFER's file belongs to: the active course
+whose folder holds it, else one picked among the active courses.  A
+capture passes the buffer it was started from; a command, its own."
+  (let* ((courses (+notes--course-files))
+         (file (buffer-file-name (or (buffer-base-buffer buffer) buffer))))
+    (cond ((and file (seq-find (lambda (course) (file-in-directory-p file (file-name-directory course)))
+                               courses)))
+          ((null courses) (user-error "No active course yet; SPC n r n C makes one"))
+          (t (let ((choices (mapcar (lambda (course) (cons (+notes--project-title course) course))
+                                    courses)))
+               (cdr (assoc (completing-read "Course: " choices nil t) choices)))))))
+
+(defun +notes--capture-course ()
+  "The course of this capture, read once and kept with the capture."
+  (or (org-capture-get :+notes-course)
+      (let ((course (+notes--read-course (+notes--capture-buffer))))
+        (org-capture-put :+notes-course course)
+        course)))
+
+;;;###autoload
+(defun +notes--roam-course-path (node)
+  "The index of a new course NODE: areas/university/<slug>/index.org.
+An existing course is never written into."
+  (let* ((slug (org-roam-node-slug node))
+         (file (expand-file-name (concat "areas/university/" slug "/index.org") org-roam-directory)))
+    (when (string-empty-p slug) (user-error "A course needs a title"))
+    (when (file-exists-p file) (user-error "Course already exists: %s" (abbreviate-file-name file)))
+    (+notes--roam-path file)))
+
+;;;###autoload
+(defun +notes--roam-lecture-path (node)
+  "A new lecture NODE of the capture's course, in its lectures/ folder,
+named for the day."
+  (+notes--roam-new-path
+   (expand-file-name (format "lectures/%s-%s.org" (format-time-string "%Y%m%d") (org-roam-node-slug node))
+                     (file-name-directory (+notes--capture-course)))))
+
+;;;###autoload
+(defun +notes--capture-course-link ()
+  "An id: link to the course of this capture, titled as it is."
+  (let ((course (+notes--capture-course)))
+    (org-link-make-string (concat "id:" (or (+notes--file-id course)
+                                            (user-error "%s has no ID" (abbreviate-file-name course))))
+                          (+notes--project-title course))))
+
+;;;###autoload
+(defun +notes--capture-course-deadline ()
+  "Target an assignment or an exam to its course's Assignments and exams."
+  (+notes--capture-at (+notes--capture-course) "Assignments and exams"))
