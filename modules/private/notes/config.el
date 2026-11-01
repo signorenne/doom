@@ -61,6 +61,16 @@ when org loads.  assets/ holds the diagrams and pictures of no one note.")
   "The agenda files as configured.  Before an agenda or a refile the roam
 notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
 
+(defvar +notes-board-states '("TODO" "NEXT" "STRT" "WAIT" "DONE")
+  "A board's columns when it names none, in order.")
+
+(defvar +notes-board-done-days 14
+  "How many days a task closed in a done state stays on a board.")
+
+(defvar +notes-block-names '("notes-query" "notes-list" "notes-board")
+  "The dynamic blocks a note writes again as it is shown and saved;
+autoload/query.el writes them.")
+
 (after! org
   ;; A missing vault would break the agenda, so create its tree early.
   (+notes--ensure-directories)
@@ -122,7 +132,20 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
   ;; an org-protocol:// link arrives, and org-roam-protocol with it.
 
   ;; Any capture first makes sure the documents exist (created from templates).
-  (advice-add #'org-capture :before #'+notes-ensure-documents))
+  (advice-add #'org-capture :before #'+notes-ensure-documents)
+
+  ;; The live tables (autoload/query.el): C-c C-x x offers them, and a
+  ;; note's are written again when it is shown and when it is saved. A
+  ;; note a capture wrote into is set up again, since a new index had no
+  ;; blocks when its mode started.
+  (org-dynamic-block-define "notes-query" #'+notes/insert-query)
+  (org-dynamic-block-define "notes-list" #'+notes/insert-list)
+  (org-dynamic-block-define "notes-board" #'+notes/insert-board)
+  (add-hook 'org-mode-hook #'+notes--blocks-setup)
+  (add-hook 'doom-switch-buffer-hook #'+notes--blocks-shown-h)
+  ;; A note put in a window that is not selected is shown once selected.
+  (add-hook 'doom-switch-window-hook #'+notes--blocks-shown-h)
+  (add-hook 'org-capture-after-finalize-hook #'+notes--blocks-capture-h))
 
 ;; A note opens with its pictures shown, when it links one. Not through
 ;; `org-startup-with-link-previews', which reads the context of every link
@@ -471,6 +494,16 @@ from the spans of its block found once; the match data set the same."
       :localleader
       (:prefix "b"
        :desc "Align every table in the file" "A" #'+notes/align-tables))
+
+;; The live tables, which act on the note at point.
+(map! :after org
+      :map org-mode-map
+      :localleader
+      (:prefix ("Q" . "live tables")
+       :desc "Insert a query table"   "q" #'+notes/insert-query
+       :desc "Insert a list of notes" "l" #'+notes/insert-list
+       :desc "Insert a board"         "b" #'+notes/insert-board
+       :desc "Refresh this note's tables" "u" #'+notes/blocks-refresh))
 
 ;; Making a card out of a heading you already wrote, on the localleader
 ;; because it acts on the heading at point.
