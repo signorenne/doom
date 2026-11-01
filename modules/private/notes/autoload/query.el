@@ -761,21 +761,26 @@ lines are dropped, each file with a match read once."
         (tables (make-hash-table :test #'equal)))
     (cl-letf (((symbol-function 'shell-command-to-string)
                (lambda (command)
-                 (mapconcat
-                  #'identity
-                  (seq-remove
-                   (lambda (line)
-                     (when (string-match org-roam-unlinked-references-result-re line)
-                       (let ((file (match-string 1 line))
-                             (row (string-to-number (match-string 2 line))))
-                         (when (file-readable-p file)
-                           (let ((lines (gethash file tables 'unread)))
-                             (when (eq lines 'unread)
-                               (setq lines (puthash file (+notes--table-lines file) tables)))
-                             (seq-some (lambda (span) (and (>= row (car span)) (< row (cdr span))))
-                                       lines))))))
-                   (split-string (funcall shell command) "\n"))
-                  "\n"))))
+                 (let ((output (funcall shell command)))
+                   ;; Only the search for the titles: any other command
+                   ;; run while the section draws keeps its output.
+                   (if (not (string-match-p "\\`rg .*--vimgrep" command))
+                       output
+                     (mapconcat
+                      #'identity
+                      (seq-remove
+                       (lambda (line)
+                         (when (string-match org-roam-unlinked-references-result-re line)
+                           (let ((file (match-string 1 line))
+                                 (row (string-to-number (match-string 2 line))))
+                             (when (file-readable-p file)
+                               (let ((lines (gethash file tables 'unread)))
+                                 (when (eq lines 'unread)
+                                   (setq lines (puthash file (+notes--table-lines file) tables)))
+                                 (seq-some (lambda (span) (and (>= row (car span)) (< row (cdr span))))
+                                           lines))))))
+                       (split-string output "\n"))
+                      "\n"))))))
       (funcall fn node))))
 
 ;;
