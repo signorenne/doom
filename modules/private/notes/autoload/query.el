@@ -709,21 +709,32 @@ its #+END: line, the blocks found as the refresh finds them."
             (forward-line 1))
           (nreverse bodies))))))
 
+(defun +notes--outside-tables (fns)
+  "FNS, each called only for an element that starts outside this note's
+live tables."
+  (if-let* ((bodies (+notes--block-bodies)))
+      (mapcar (lambda (f)
+                (lambda (element)
+                  (let ((begin (org-element-property :begin element)))
+                    (unless (seq-some (lambda (body)
+                                        (and (>= begin (car body)) (< begin (cdr body))))
+                                      bodies)
+                      (funcall f element)))))
+              fns)
+    fns))
+
 ;;;###autoload
 (defun +notes--roam-written-links-a (fn fns)
   "Map org-roam's FNS over this note's links outside its live tables.
 What a table writes is not a link the note makes, as Obsidian leaves
 Dataview's out: org-roam reads every link of a note through here."
-  (if-let* ((bodies (+notes--block-bodies)))
-      (funcall fn (mapcar (lambda (f)
-                            (lambda (link)
-                              (let ((begin (org-element-property :begin link)))
-                                (unless (seq-some (lambda (body)
-                                                    (and (>= begin (car body)) (< begin (cdr body))))
-                                                  bodies)
-                                  (funcall f link)))))
-                          fns))
-    (funcall fn fns)))
+  (funcall fn (+notes--outside-tables fns)))
+
+;;;###autoload
+(defun +notes--roam-written-citations-a (fn info fns)
+  "Map org-roam's FNS over this note's citations outside its live tables,
+where a property's column can show one; INFO is the note's parse."
+  (funcall fn info (+notes--outside-tables fns)))
 
 (defvar org-roam-unlinked-references-result-re)
 

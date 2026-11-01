@@ -385,12 +385,12 @@ the next heading or =#+BEGIN:= line, which never takes another's;
 =#+END:= first.
 
 What a table writes is the module's, not the note's, as Obsidian leaves
-Dataview's out: org-roam's database keeps only the links written outside
-the three blocks, so the backlinks, the forward links, the graph,
-~SPC n r v~ and a list's =:links-to= see none of a table's, and the
-unlinked mentions skip its lines. A note only tables list counts in
-~SPC n r v~ as linked from nowhere, and a note whose only links are its
-tables as linking nowhere. A block's =#+BEGIN:= line is the note's, and
+Dataview's out: org-roam's database keeps only the links and citations
+written outside the three blocks, so the backlinks and reflinks, the
+forward links, the graph, ~SPC n r v~ and a list's =:links-to= see none
+of a table's, and the unlinked mentions skip its lines. A note only
+tables list counts in ~SPC n r v~ as linked from nowhere, and a note
+whose only links are its tables as linking nowhere. A block's =#+BEGIN:= line is the note's, and
 other dynamic blocks and a block with no =#+END:= of its own are read as
 before. A database indexed before this keeps a table's links until its
 note is next changed and saved; ~SPC u SPC n r s~ rebuilds it whole.

@@ -63,9 +63,11 @@ day is written under.")
 
   ;; A live table's links are not the note's: the database, and the
   ;; backlinks, the graph and its review with it, read only the links
-  ;; written outside the tables (autoload/query.el). Nor are its cells
-  ;; mentions: the roam buffer's unlinked mentions leave them out.
+  ;; and citations written outside the tables (autoload/query.el). Nor
+  ;; are its cells mentions: the roam buffer's unlinked mentions leave
+  ;; them out.
   (advice-add 'org-roam-db-map-links :around #'+notes--roam-written-links-a)
+  (advice-add 'org-roam-db-map-citations :around #'+notes--roam-written-citations-a)
   (advice-add 'org-roam-unlinked-references-section :around #'+notes--roam-unlinked-a)
 
   ;; Journal and knowledge capture share the repository graph root.
