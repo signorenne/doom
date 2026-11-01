@@ -84,6 +84,8 @@ core's one table of languages."
       (user-error "Project is inactive; review it before resuming"))
     file))
 
+(defvar +notes-project-body)
+
 (defun +notes--create-project (title)
   "Create the canonical active project TITLE if it does not exist."
   (let ((file (+notes--project-path title)))
@@ -92,7 +94,7 @@ core's one table of languages."
       (with-temp-file file
         (insert (format ":PROPERTIES:\n:ID: %s\n:CREATED: %s\n:STATUS: active\n:END:\n#+title: %s\n#+filetags: :project:\n\n"
                         (org-id-new) (format-time-string "[%Y-%m-%d %a %H:%M]") title)
-                "* Goal\n\n* Completion criteria\n\n* Next actions\n\n* Decisions\n\n* Progress\n\n* Knowledge and sources\n")))
+                +notes-project-body)))
     (setq +notes--roam-todo-files nil)
     file))
 
@@ -183,6 +185,21 @@ removes it again instead of leaving an empty active project."
          (file (expand-file-name (concat (org-roam-node-slug node) ".org") dir)))
     (unless (file-in-directory-p file root) (user-error "Choose a directory under resources/wiki"))
     file))
+
+;;;###autoload
+(defun +notes--capture-project-decision ()
+  "Target a decision to its owning project's Decisions, or the inbox."
+  (let ((file (+notes--resolve-project-file)))
+    (+notes--capture-at file (if (equal file (+notes--inbox-file)) "Inbox" "Decisions"))))
+
+;;;###autoload
+(defun +notes--roam-design-path (node)
+  "A new design doc NODE of the owning project, in its design/ folder."
+  (let ((project (+notes--resolve-project-file)))
+    (when (equal project (+notes--inbox-file))
+      (user-error "No active project for a design doc; SPC X P makes one"))
+    (+notes--roam-new-path (expand-file-name (concat "design/" (org-roam-node-slug node) ".org")
+                                             (file-name-directory project)))))
 
 ;;;###autoload
 (defun +notes--capture-project-progress ()

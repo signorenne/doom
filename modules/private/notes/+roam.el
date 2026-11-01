@@ -15,6 +15,17 @@
 The date makes a note sortable and reviewable; everything after the tags
 belongs to the template that uses this.")
 
+(defvar +notes-project-body
+  (concat "* Dashboard\n"
+          "Tasks by state:\n#+BEGIN: notes-board :from folder\n#+END:\n\n"
+          "Design documents:\n#+BEGIN: notes-list :from folder :tags (\"design\") :columns (title (property \"STATUS\") modified)\n#+END:\n\n"
+          "Decisions:\n#+BEGIN: notes-query :from folder :query \"ltags:decision\" :columns (heading (property \"STATUS\") (property \"DATE\"))\n#+END:\n\n"
+          "Case studies:\n#+BEGIN: notes-list :from vault :tags (\"case_study\") :links-to this\n#+END:\n\n"
+          "* Goal\n\n* Completion criteria\n\n* Next actions\n\n* Decisions\n\n* Progress\n\n* Knowledge and sources\n")
+  "How a new project index is laid out, below its head: a dashboard of
+live tables, then the headings a project is worked under.  Both ways of
+making a project write it, so it has no capture escape.")
+
 (defvar +notes-course-body
   (concat "* Overview\n- Teacher:\n- Term:\n- Exam:\n\n"
           "* Timetable\nEach class is a repeating date in angle brackets, as this one in square ones: [2026-11-03 Tue 10:00-12:00 +1w]\n\n"
@@ -107,11 +118,13 @@ day is written under.")
            :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":question:\n\n"))
            :unnarrowed t :empty-lines-before 1)
+          ;; Active, as one made with SPC X P is: a project with no
+          ;; status counted as active, and now says so.
           ("p" "project" plain
-           "* Goal\n%?\n\n* Completion criteria\n\n* Next actions\n\n* Decisions\n\n* Progress\n\n* Knowledge and sources\n"
+           ,(replace-regexp-in-string "^\\* Goal\n" "* Goal\n%?\n" +notes-project-body t t)
            :target (file+head "${+notes--roam-project-path}"
-                              ,(concat +notes-roam-head ":project:\n"
-                                       "#+repository: \n#+kit: \n\n"))
+                              ,(concat (replace-regexp-in-string ":END:" ":STATUS: active\n:END:" +notes-roam-head t t)
+                                       ":project:\n#+repository: \n#+kit: \n\n"))
            :unnarrowed t :empty-lines-before 1)
           ("P" "person" plain
            "* Context\n%?\n\n* Notes\n"
@@ -139,6 +152,14 @@ day is written under.")
            "Course: %(+notes--capture-course-link)\n\n* Summary\n%?\n\n* Notes\n\n* Questions\n\n* Cards\n"
            :target (file+head "${+notes--roam-lecture-path}"
                               ,(concat +notes-roam-head ":lecture:\n\n"))
+           :unnarrowed t :empty-lines-before 1)
+          ;; A design document is a note in its project's design/; its
+          ;; status goes draft, review, accepted, by hand.
+          ("D" "design doc: how a project's part will be built" plain
+           "* Context\n%?\n\n* Goals\n\n* Non-goals\n\n* Requirements\n\n* Design\n\n* Alternatives\n\n* Risks\n\n* Open questions\n"
+           :target (file+head "${+notes--roam-design-path}"
+                              ,(concat (replace-regexp-in-string ":END:" ":STATUS: draft\n:END:" +notes-roam-head t t)
+                                       ":design:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ;; One folder for every case study; the link on its For: line
           ;; is how its course or project lists it.

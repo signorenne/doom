@@ -8,3 +8,7 @@
 Each project is a projects/<slug>/index.org of its own, made with SPC n n
 P, and owns its actions, progress and decisions. This index links to them;
 no task is copied here.
+
+* Active projects
+#+BEGIN: notes-list :from folder :tags ("project") :property ("STATUS" "active") :columns (title modified)
+#+END:

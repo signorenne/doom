@@ -48,6 +48,9 @@ habit, a reading or a snippet belongs in."
     ("a" "AI session log" entry
      (function +notes--capture-project-progress)
      "* %^{Topic}  :ai:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:AGENT: %^{Agent|claude-code|agent-shell|gptel}\n:END:\n%?")
+    ("d" "Decision for the active project" entry
+     (function +notes--capture-project-decision)
+     "* %^{Decision}  :decision:\n:PROPERTIES:\n:ID: %(org-id-new)\n:STATUS: %^{Status|accepted|proposed}\n:DATE: %<%Y-%m-%d>\n:CREATED: %U\n:END:\nContext: %?\nDecision:\nConsequences:\nAlternatives:\n")
     ("e" "Assignment or exam for a course" entry
      (function +notes--capture-course-deadline)
      "* TODO %^{What}  :%^{Kind|assignment|exam}:\nDEADLINE: %^{Due}t\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?")))
