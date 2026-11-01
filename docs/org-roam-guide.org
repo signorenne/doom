@@ -441,9 +441,9 @@ the dashboard too.
 The tables are Org dynamic blocks, and =SPC m Q q= puts a query of your
 own in any note: every open task of the folder due within a month,
 overdue ones too, is =todo: deadline:to=30=. What a table lists is not a
-link you made: the backlinks, the graph, its review and the unlinked
-mentions leave the tables out, so a note only a table lists still wants
-one link in your own words.
+link you made: the backlinks and reflinks, the graph, its review and the
+unlinked mentions leave the tables out, so a note only a table lists
+still wants one link in your own words.
 
 * A subject from scratch, say BLE
 The rules above as one worked example; replace BLE with anything.

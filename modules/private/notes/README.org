@@ -390,10 +390,11 @@ written outside the three blocks, so the backlinks and reflinks, the
 forward links, the graph, ~SPC n r v~ and a list's =:links-to= see none
 of a table's, and the unlinked mentions skip its lines. A note only
 tables list counts in ~SPC n r v~ as linked from nowhere, and a note
-whose only links are its tables as linking nowhere. A block's =#+BEGIN:= line is the note's, and
-other dynamic blocks and a block with no =#+END:= of its own are read as
-before. A database indexed before this keeps a table's links until its
-note is next changed and saved; ~SPC u SPC n r s~ rebuilds it whole.
+whose only links are its tables as linking nowhere. A block's
+=#+BEGIN:= line is the note's, and other dynamic blocks and a block
+with no =#+END:= of its own are read as before. A database indexed
+before this keeps a table's links and citations until its note is next
+changed and saved; ~SPC u SPC n r s~ rebuilds it whole.
 
 ** Boards
 A board has a column per state, ~+notes-board-states~ (TODO NEXT STRT WAIT
