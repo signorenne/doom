@@ -691,7 +691,6 @@ again."
 ;;
 ;;; Out of the graph
 
-;;;###autoload
 (defun +notes--block-bodies ()
   "Where this buffer's blocks of the module hold what they wrote: a list
 of (BEG . END), from the line below each #+BEGIN: line to the start of
