@@ -2540,7 +2540,9 @@ A card moves through Org's own state change: WAIT still asks for its
 note, a repeating task comes back, and the file is saved. Two tasks of
 one file with the same heading are refused; give one an ID with
 =M-x org-id-get-create=. Typing a block by hand, type its =#+END:=
-before ~C-c C-c~.
+before ~C-c C-c~. A table's links are not the note's: the backlinks, the
+graph, ~SPC n r v~ and the unlinked mentions leave them out, so a note
+only a table lists still wants a link you write.
 
 ** Keeping the graph healthy
 | Key       | What it shows                         |

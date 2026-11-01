@@ -440,7 +440,10 @@ the dashboard too.
 
 The tables are Org dynamic blocks, and =SPC m Q q= puts a query of your
 own in any note: every open task of the folder due within a month,
-overdue ones too, is =todo: deadline:to=30=.
+overdue ones too, is =todo: deadline:to=30=. What a table lists is not a
+link you made: the backlinks, the graph, its review and the unlinked
+mentions leave the tables out, so a note only a table lists still wants
+one link in your own words.
 
 * A subject from scratch, say BLE
 The rules above as one worked example; replace BLE with anything.
@@ -513,7 +516,7 @@ and departure avoids.
 =SPC n r v=, weekly, tells you three things:
 
 - *nothing links here*: either link it into a map, or accept that it was a
-  passing thought and delete it;
+  passing thought and delete it; a live table that lists it is no link;
 - *no tags*: it will never appear in a map, one keystroke fixes it;
 - *started and left empty*: finish the sentence, or drop the note.
 
