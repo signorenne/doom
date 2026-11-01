@@ -234,17 +234,21 @@ solution, howto, hardware and question ask for their subject directory
 under =resources/wiki/=, the others have a directory of their own. The
 finder shows the kind beside the title, so a note is never "some note".
 
-| Key | Kind      | Lands in                   | The questions it asks                                                         |
-|-----+-----------+----------------------------+-------------------------------------------------------------------------------|
-| =c=   | concept   | =resources/wiki/<subject>/=  | in one sentence, how it works, example, where it bites                        |
-| =s=   | solution  | =resources/wiki/<subject>/=  | symptom, cause, fix, how to verify, applies to                                |
-| =h=   | howto     | =resources/wiki/<subject>/=  | when, steps, gotchas, sources                                                 |
-| =b=   | hardware  | =resources/wiki/<subject>/=  | what it is, pinout and links, toolchain, gotchas                              |
-| =r=   | reference | =resources/sources/manuals/= | the source, key points, quotes, my take                                       |
-| =q=   | question  | =resources/wiki/<subject>/=  | answer in one line, what I do not get, tried, answer                          |
-| =p=   | project   | =projects/<slug>/=           | repository, kit, goal, completion criteria, next actions, decisions, progress |
-| =P=   | person    | =resources/wiki/people/=     | context, notes                                                                |
-| =m=   | meeting   | =capture/meetings/=          | attendees, agenda, notes, actions                                             |
+| Key | Kind       | Lands in                   | The questions it asks                                                                         |
+|-----+------------+----------------------------+-----------------------------------------------------------------------------------------------|
+| =c=   | concept    | =resources/wiki/<subject>/=  | in one sentence, how it works, example, where it bites                                        |
+| =s=   | solution   | =resources/wiki/<subject>/=  | symptom, cause, fix, how to verify, applies to                                                |
+| =h=   | howto      | =resources/wiki/<subject>/=  | when, steps, gotchas, sources                                                                 |
+| =b=   | hardware   | =resources/wiki/<subject>/=  | what it is, pinout and links, toolchain, gotchas                                              |
+| =r=   | reference  | =resources/sources/manuals/= | the source, key points, quotes, my take                                                       |
+| =q=   | question   | =resources/wiki/<subject>/=  | answer in one line, what I do not get, tried, answer                                          |
+| =p=   | project    | =projects/<slug>/=           | repository, kit, dashboard, goal, completion criteria, next actions, decisions, progress      |
+| =P=   | person     | =resources/wiki/people/=     | context, notes                                                                                |
+| =m=   | meeting    | =capture/meetings/=          | attendees, agenda, notes, actions                                                             |
+| =C=   | course     | =areas/university/<slug>/=   | overview, timetable, assignments and exams, lectures, board, deadlines, case studies, sources |
+| =l=   | lecture    | its course's =lectures/=     | the course, summary, notes, questions, cards                                                  |
+| =k=   | case study | =resources/case-studies/=    | for whom, context, problem, analysis, options, decision, outcome, lessons, sources            |
+| =D=   | design doc | its project's =design/=      | context, goals, non-goals, requirements, design, alternatives, risks, open questions          |
 
 Every note is stamped with a =CREATED= date, so the graph can be read in
 the order you learned things. There is no plain kind on purpose: a note
@@ -387,6 +391,56 @@ properties, so it travels with the note and is versioned with it.
 Make a card only for what you want to recall without thinking: a signature,
 a complexity, a register name. Understanding belongs in a concept note, and
 rereading the note is the better review for that.
+
+* Work and study
+** A course from scratch
+Say the term starts with Signals and Systems. =SPC n r n= then =C=,
+titled "Signals and Systems", makes the course's folder,
+=areas/university/signals_and_systems/=, and its index: fill in its
+Overview now, the teacher, the term, the exam. Under Timetable write each
+class as a repeating date, =<2026-11-03 Tue 10:00-12:00 +1w>=; from then
+on it is in every agenda.
+
+Each class gets a lecture note: from the index or any note of the course,
+=SPC n r n l=, titled for what it covered, "Fourier series". It lands in
+the course's =lectures/=, linked to the course, with Summary, Notes,
+Questions and Cards. Write under Notes during the class and the summary
+after it, in your own words; what you did not follow goes under
+Questions, and a =TODO= for it reaches the agenda. What has to come back
+cold becomes a card under Cards, =SPC m F n=.
+
+An assignment or an exam is =SPC X e= from a note of the course: its
+name, its kind, its date, and it lands under the course's Assignments and
+exams with that deadline.
+
+The index keeps itself current. Its Lectures table lists the lectures,
+newest first; its Board shows the course's tasks by state, and
+=S-<right>= on a card moves the task on; Deadlines is what is due in the
+next two weeks. Before the exam, =SPC n u= in any note of the course
+reviews that course's cards and no others. For the week, =SPC o a u= shows
+two weeks of classes and deadlines, then what is open, by course;
+University, =SPC n d u=, lists the courses and the deadlines of all of
+them. When the course is over, set its =STATUS= to completed and finish
+or drop its open tasks: it then leaves the agenda, and its notes stay in
+the graph.
+
+** A project's design and decisions
+A project, made with =SPC X P= or =SPC n r n p=, opens on its Dashboard:
+the board of its tasks, its design documents, its decisions and its case
+studies. Before building a part, write down how: =SPC n r n D= from the
+project's index makes a design document in its =design/= folder, Context
+to Open questions, a draft until someone reads it; set its =STATUS= to
+review, then accepted. Each choice made on the way is a decision, =SPC X
+d=: its title, accepted or proposed, then the context, the decision, its
+consequences and the alternatives left out. It sits under the project's
+Decisions, dated, and is a note of the graph you can link to from the
+design document; when a later one replaces it, mark it superseded and
+link the new one. A case study for the project, =SPC n r n k=, shows on
+the dashboard too.
+
+The tables are Org dynamic blocks, and =SPC m Q q= puts a query of your
+own in any note: every open task of the folder due within a month,
+overdue ones too, is =todo: deadline:to=30=.
 
 * A subject from scratch, say BLE
 The rules above as one worked example; replace BLE with anything.
@@ -537,17 +591,17 @@ its kind.
 
 * The keys
 ** Every day
-| Key         | What it does                       |
-|-------------+------------------------------------|
-| ~SPC n r d n~ | capture into today's note          |
-| ~SPC n r n~   | a new note, one of the nine kinds  |
-| ~SPC n r f~   | find a note, or create it          |
-| ~SPC n r i~   | insert a link, creating on the fly |
-| ~SPC m m e~   | extract this heading into a note   |
-| ~SPC n r r~   | what links here, and the mentions  |
-| ~SPC c H~     | on a link, the note it points to   |
-| ~SPC n h~     | the notes layout, on or off        |
-| ~SPC n G~     | sync the vault, the graph updated  |
+| Key         | What it does                          |
+|-------------+---------------------------------------|
+| ~SPC n r d n~ | capture into today's note             |
+| ~SPC n r n~   | a new note, one of the thirteen kinds |
+| ~SPC n r f~   | find a note, or create it             |
+| ~SPC n r i~   | insert a link, creating on the fly    |
+| ~SPC m m e~   | extract this heading into a note      |
+| ~SPC n r r~   | what links here, and the mentions     |
+| ~SPC c H~     | on a link, the note it points to      |
+| ~SPC n h~     | the notes layout, on or off           |
+| ~SPC n G~     | sync the vault, the graph updated     |
 
 ** Shaping a note
 | Key         | What it does                 |
@@ -576,15 +630,17 @@ its kind.
 | ~SPC m N n~ | transclude the link at point |
 
 ** Around it
-| Key       | What it does                              |
-|-----------+-------------------------------------------|
-| ~SPC n SPC~ | the notes menu, everything at once        |
-| ~SPC o a x~ | the agenda dashboard                      |
-| ~SPC n q~   | query the notes (org-ql)                  |
-| ~SPC m M M~ | mind map of this file                     |
-| ~SPC n p~   | review the cards due, ~P~ the dashboard     |
-| ~SPC m F n~ | make this heading a card                  |
-| ~SPC n B~   | the bibliography, ~b~ a paper's note        |
-| ~SPC n g~   | commit the vault                          |
-| ~SPC n d P~ | set up capture from the browser           |
-| ~SPC a c~   | start Claude here                         |
+| Key       | What it does                          |
+|-----------+---------------------------------------|
+| ~SPC n SPC~ | the notes menu, everything at once    |
+| ~SPC o a x~ | the agenda dashboard                  |
+| ~SPC o a u~ | the University agenda                 |
+| ~SPC m Q q~ | a live table in this note             |
+| ~SPC n q~   | query the notes (org-ql)              |
+| ~SPC m M M~ | mind map of this file                 |
+| ~SPC n p~   | review the cards due, ~P~ the dashboard |
+| ~SPC m F n~ | make this heading a card              |
+| ~SPC n B~   | the bibliography, ~b~ a paper's note    |
+| ~SPC n g~   | commit the vault                      |
+| ~SPC n d P~ | set up capture from the browser       |
+| ~SPC a c~   | start Claude here                     |

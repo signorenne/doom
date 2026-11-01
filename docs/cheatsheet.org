@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-10-31 21:17
+#+generated: 2026-11-01 14:54
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2274,8 +2274,10 @@ keys: ~d~ the documents, ~c~ the captures, ~a~ the agenda views, ~r~ roam.
 | ~SPC n n p t~ | a task for this code's project, else the inbox |
 | ~SPC n n h~   | a habit                                        |
 | ~SPC n n P~   | a project skeleton                             |
+| ~SPC n n d~   | a decision, into its project's Decisions       |
+| ~SPC n n e~   | an assignment or exam, into its course         |
 | ~SPC n n a~   | an AI session log                              |
-| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][nine kinds]]         |
+| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][thirteen kinds]]     |
 
 A note and a meeting are roam notes, not documents: ~SPC n r n~ then
 the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
@@ -2290,18 +2292,20 @@ projects and each other, which a heading in a file cannot.
 | ~SPC n d r~ | reading                                          |
 | ~SPC n d n~ | snippets                                         |
 | ~SPC n d h~ | habits                                           |
+| ~SPC n d u~ | University: the courses, what is due             |
 | ~SPC n d d~ | pick one                                         |
 | ~SPC n d b~ | set up the vault: folders, documents, repository |
 
 ** Agenda
-| Key       | What it shows         |
-|-----------+-----------------------|
-| ~SPC o a x~ | the dashboard         |
-| ~SPC o a w~ | the weekly review     |
-| ~SPC o a n~ | next actions          |
-| ~SPC o a p~ | projects, ~i~ the inbox |
-| ~SPC o a a~ | the plain agenda      |
-| ~SPC n t~   | the todo list         |
+| Key       | What it shows                                    |
+|-----------+--------------------------------------------------|
+| ~SPC o a x~ | the dashboard                                    |
+| ~SPC o a w~ | the weekly review                                |
+| ~SPC o a n~ | next actions                                     |
+| ~SPC o a p~ | projects, ~i~ the inbox                            |
+| ~SPC o a u~ | University: two weeks, then open tasks by course |
+| ~SPC o a a~ | the plain agenda                                 |
+| ~SPC n t~   | the todo list                                    |
 
 Inside the agenda: =t= change the state, =s= schedule, =d= deadline, =r=
 refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= quit.
@@ -2387,17 +2391,25 @@ how to work with it day to day.
 a folder of its own; the first five ask for their subject folder under
 =resources/wiki/=. A note that fits no kind is a concept.
 
-| Key         | Kind      | Lands in                   |
-|-------------+-----------+----------------------------|
-| ~SPC n r n c~ | concept   | =resources/wiki/<subject>/=  |
-| ~SPC n r n s~ | solution  | =resources/wiki/<subject>/=  |
-| ~SPC n r n h~ | howto     | =resources/wiki/<subject>/=  |
-| ~SPC n r n b~ | hardware  | =resources/wiki/<subject>/=  |
-| ~SPC n r n q~ | question  | =resources/wiki/<subject>/=  |
-| ~SPC n r n r~ | reference | =resources/sources/manuals/= |
-| ~SPC n r n p~ | project   | =projects/<project>/=        |
-| ~SPC n r n P~ | person    | =resources/wiki/people/=     |
-| ~SPC n r n m~ | meeting   | =capture/meetings/=          |
+| Key         | Kind       | Lands in                   |
+|-------------+------------+----------------------------|
+| ~SPC n r n c~ | concept    | =resources/wiki/<subject>/=  |
+| ~SPC n r n s~ | solution   | =resources/wiki/<subject>/=  |
+| ~SPC n r n h~ | howto      | =resources/wiki/<subject>/=  |
+| ~SPC n r n b~ | hardware   | =resources/wiki/<subject>/=  |
+| ~SPC n r n q~ | question   | =resources/wiki/<subject>/=  |
+| ~SPC n r n r~ | reference  | =resources/sources/manuals/= |
+| ~SPC n r n p~ | project    | =projects/<project>/=        |
+| ~SPC n r n P~ | person     | =resources/wiki/people/=     |
+| ~SPC n r n m~ | meeting    | =capture/meetings/=          |
+| ~SPC n r n C~ | course     | =areas/university/<course>/= |
+| ~SPC n r n l~ | lecture    | its course's =lectures/=     |
+| ~SPC n r n k~ | case study | =resources/case-studies/=    |
+| ~SPC n r n D~ | design doc | its project's =design/=      |
+
+A course, a lecture, a case study and a design doc are always new notes.
+When an existing note already has the title you want, type it and press
+~M-RET~, which takes it as typed.
 
 ** Around a note
 | Key         | What it does                                                   |
@@ -2455,6 +2467,7 @@ note shows it as it opens. A diagram or picture of no one note goes in
 | Key       | What it does                          |
 |-----------+---------------------------------------|
 | ~SPC n p~   | review the cards due, ~P~ the dashboard |
+| ~SPC n u~   | review the cards of one course only   |
 | ~SPC m F n~ | make this heading a card, ~c~ a cloze   |
 | ~SPC n B~   | the bibliography, ~b~ a paper's note    |
 | ~SPC m @~   | insert a citation                     |
@@ -2468,6 +2481,66 @@ lands in =resources/sources/papers/= named for the key, with
 =#+source: [cite:@key]= in its head, which is how citar finds it again
 later. The "reference" kind you pick by
 hand still asks, because there is nothing to ask instead.
+
+** Courses and lectures
+| Key         | What it does                                                  |
+|-------------+---------------------------------------------------------------|
+| ~SPC n r n C~ | a new course: its folder and its index                        |
+| ~SPC n r n l~ | a lecture of this note's course, else it asks which           |
+| ~SPC n n e~   | an assignment or exam, with its deadline, into the course     |
+| ~SPC n u~     | review this course's cards, and no others                     |
+| ~SPC n d u~   | University: every course, what is due in two weeks            |
+| ~SPC o a u~   | two weeks of classes and deadlines, then open tasks by course |
+
+Fill in the course's Overview, then write each class under Timetable as
+a repeating date, =<2026-11-03 Tue 10:00-12:00 +1w>=: from then on it is
+in every agenda. In a lecture, write under Notes during the class and
+the Summary after it; what you did not follow goes under Questions, what
+must come back cold becomes a card, ~SPC m F n~. The course's index keeps
+its tables current: its lectures, its board, what is due in two weeks,
+its case studies. When the course is over, set its =STATUS= to
+=completed= and finish or drop its open tasks: it leaves the agenda and
+the captures, and its notes stay.
+
+** Projects: design and decisions
+| Key         | What it does                                            |
+|-------------+---------------------------------------------------------|
+| ~SPC n n P~   | a new project; ~SPC n r n p~ the same from the graph      |
+| ~SPC n r n D~ | a design document, in the project's =design/=             |
+| ~SPC n n d~   | a decision, under the project's Decisions               |
+| ~SPC n r n k~ | a case study, listed by the course or project it is for |
+| ~SPC n d p~   | the projects index, the active ones listed              |
+
+A project's index opens on its Dashboard: its board, its design
+documents, its decisions and its case studies, kept current. A design
+document and a decision belong to the project whose index you are in,
+or whose repository holds the code you are in; anywhere else they ask,
+and a decision may go to the inbox. A design document's =STATUS= goes
+from draft to review to accepted by hand. A decision is accepted or
+proposed; one replaced is marked superseded, with a link to the new one.
+
+** Live tables and boards
+| Key       | What it does                                                      |
+|-----------+-------------------------------------------------------------------|
+| ~SPC m Q q~ | insert a query table: the headings an Org QL query finds          |
+| ~SPC m Q l~ | insert a list of notes, by their tags                             |
+| ~SPC m Q b~ | insert a board: this folder's tasks in columns by state           |
+| ~SPC m Q u~ | write this note's tables again now                                |
+| ~C-c C-c~   | on one table, write it again                                      |
+| ~S-<right>~ | on a board's card, the task's next state; ~S-<left>~ the one before |
+
+A table reads this note's folder and the ones below it, and is written
+again when the note is shown and when it is saved; a note only looked at
+keeps its old tables on disk until the next save. A query is an Org QL
+string: =todo: deadline:to=30= is every open task due within a month,
+overdue ones too, =todo:WAIT= what is waiting, =tags:decision= the
+decisions. Every parameter is in [[file:../modules/private/notes/README.org::*Live tables][the notes README]]. A board's columns
+are TODO, NEXT, STRT, WAIT and DONE, and a finished task stays 14 days.
+A card moves through Org's own state change: WAIT still asks for its
+note, a repeating task comes back, and the file is saved. Two tasks of
+one file with the same heading are refused; give one an ID with
+=M-x org-id-get-create=. Typing a block by hand, type its =#+END:=
+before ~C-c C-c~.
 
 ** Keeping the graph healthy
 | Key       | What it shows                         |
@@ -3120,6 +3193,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n d p~   | Projects                       |
 | ~SPC n d r~   | Reading                        |
 | ~SPC n d s~   | Someday                        |
+| ~SPC n d u~   | University                     |
 | ~SPC n d w~   | Writing mode                   |
 | ~SPC n e~     | Org noter                      |
 | ~SPC n f~     | Find file in notes             |
@@ -3166,6 +3240,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n r v~   | Review the graph               |
 | ~SPC n s~     | Search notes                   |
 | ~SPC n t~     | Todo list                      |
+| ~SPC n u~     | Review a course's cards        |
 | ~SPC n v~     | View search                    |
 | ~SPC n w c~   | Check the grammar              |
 | ~SPC n w d~   | Done checking                  |
@@ -3191,6 +3266,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o a n~ | Next actions                 |
 | ~SPC o a p~ | Projects                     |
 | ~SPC o a t~ | Todo list                    |
+| ~SPC o a u~ | University                   |
 | ~SPC o a v~ | View search                  |
 | ~SPC o a w~ | Weekly review                |
 | ~SPC o a x~ | Dashboard                    |
@@ -4179,15 +4255,26 @@ bound.
 ** Notes
 - ~+notes/align-tables~ (~SPC m b A~) :: Widen every table in this buffer
   until each column holds its text.
+- ~+notes/blocks-refresh~ (~SPC m Q u~) :: Write every notes-query,
+  notes-list and notes-board block of this note again.
 - ~+notes/bootstrap~ (~SPC n d b~) :: Set up the vault: its folders, any
   missing document, and a git repository when it is not one yet.
 - ~+notes/commit~ (~SPC n g~) :: Commit the notes with MESSAGE, or a
   timestamp when none is given.
+- ~+notes/course-review~ (~SPC n u~) :: Review the cards of a course: the
+  one this note belongs to, else one picked among the active courses.
 - ~+notes/dashboard~ (~SPC o a x~) :: Today, habits and every open task
   grouped by state.
 - ~+notes/inbox~ (~SPC o a i~) :: Tasks still sitting in the inbox.
 - ~+notes/init-repo~ :: Turn the notes into a git repository and commit what
   is there.
+- ~+notes/insert-board~ (~SPC m Q b~) :: Insert a notes-board block of the
+  tasks in this note's folder.
+- ~+notes/insert-list~ (~SPC m Q l~) :: Insert a notes-list block of the
+  notes in this note's folder that carry every one of TAGS, a
+  comma-separated string.
+- ~+notes/insert-query~ (~SPC m Q q~) :: Insert a notes-query block of the
+  headings QUERY, an Org QL string, finds in this note's folder.
 - ~+notes/install-protocol-handler~ (~SPC n d P~) :: Register
   org-protocol:// with the desktop, so the browser can capture.
 - ~+notes/layout~ (~SPC n h~) :: Lay the notes out in the workspace "notes":
@@ -4225,6 +4312,8 @@ bound.
   task.
 - ~+notes/sync~ (~SPC n G~) :: Commit the notes, then pull and push them, in
   the background.
+- ~+notes/university-agenda~ (~SPC o a u~) :: Two weeks of the courses'
+  classes and deadlines, then their open tasks by course.
 - ~+notes/weekly-review~ (~SPC o a w~) :: The week, plus waiting, projects
   and unscheduled tasks.
 - ~+notes/writing-mode~ (~SPC n d w~) :: Toggle prose editing: zen mode and

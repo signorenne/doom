@@ -10,11 +10,13 @@ one git repository that commits itself. Books and papers are a library
 apart, ~+notes-library-dir~, which only citar reads.
 
 - the inbox =inbox.org= and one =projects/<slug>/index.org= per
-  bounded outcome, with Goal, Completion criteria, Next actions, Decisions,
-  Progress and Knowledge and sources,
-- six documents, each a node of the graph, created from =templates/org=:
-  the inbox, the project index, someday, reading, snippets and habits.
-  See ~+notes-documents~,
+  bounded outcome, with Dashboard, Goal, Completion criteria, Next
+  actions, Decisions, Progress and Knowledge and sources,
+- seven documents, each a node of the graph, created from =templates/org=:
+  the inbox, the project index, someday, reading, snippets, habits and
+  University. See ~+notes-documents~,
+- courses, lectures, case studies, design documents and decisions, with
+  live tables and boards in the notes, see [[*Work and study][Work and study]],
 - captures that write into the inbox or the owning project, including the
   region as a code snippet and a bug report with a link back to the line,
 - an [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] dashboard and a weekly review, plus [[https://github.com/alphapapa/org-ql][org-ql]] queries,
@@ -29,13 +31,13 @@ apart, ~+notes-library-dir~, which only citar reads.
 Everything is in ~SPC n SPC~ (~+notes/menu~), which shows how many items are
 waiting in the inbox. Its keys are the leader's: ~d~ the documents as
 under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
-agenda views of ~SPC o a~, and ~h~ ~g~ ~G~ ~p~ ~P~ ~B~ as on ~SPC n~ itself.
+agenda views of ~SPC o a~, and ~h~ ~g~ ~G~ ~p~ ~u~ ~P~ ~B~ as on ~SPC n~ itself.
 
 ** Documents
 The inbox and someday are at the vault's root, the project index is
 =projects/index.org=, reading and snippets are in =resources/=, the
-habits in =areas/=. The inbox and the habits are in the agenda; someday
-and =resources/= never are.
+habits in =areas/= and University in =areas/university/=. The inbox and
+the habits are in the agenda; someday and =resources/= never are.
 
 | Key         | What it opens                                    |
 |-------------+--------------------------------------------------|
@@ -43,25 +45,28 @@ and =resources/= never are.
 | ~SPC n d d~   | pick a document                                  |
 | ~SPC n d i~   | inbox, ~p~ projects index, ~s~ someday               |
 | ~SPC n d r~   | reading, ~n~ snippets, ~h~ habits                    |
+| ~SPC n d u~   | University: the courses, what is due             |
 | ~SPC n r d t~ | today's daily note, Doom's key                   |
 | ~SPC n d w~   | writing mode                                     |
 
 ** Capture, with ~SPC X~ or ~SPC n n~
-| Key | Template            | Goes to           |
-|-----+---------------------+-------------------|
-| ~t~   | todo, with a link back | inbox          |
-| ~T~   | todo with a date    | inbox             |
-| ~i~   | idea                | inbox             |
-| ~l~   | link from clipboard | inbox             |
-| ~r~   | book or article     | reading's Queue   |
-| ~c~   | the region, as code | snippets' Snippets |
-| ~b~   | bug, with a link    | inbox             |
-| ~P~   | project outcome     | that project's Goal |
-| ~pt~  | task for a project  | its Next actions, else inbox |
-| ~ot~  | the same as ~pt~      | its Next actions, else inbox |
-| ~h~   | habit               | habits' Habits    |
-| ~w~   | page from the browser | inbox           |
-| ~a~   | AI session          | its project's Progress, else inbox |
+| Key | Template               | Goes to                             |
+|-----+------------------------+-------------------------------------|
+| ~t~   | todo, with a link back | inbox                               |
+| ~T~   | todo with a date       | inbox                               |
+| ~i~   | idea                   | inbox                               |
+| ~l~   | link from clipboard    | inbox                               |
+| ~r~   | book or article        | reading's Queue                     |
+| ~c~   | the region, as code    | snippets' Snippets                  |
+| ~b~   | bug, with a link       | inbox                               |
+| ~P~   | project outcome        | that project's Goal                 |
+| ~pt~  | task for a project     | its Next actions, else inbox        |
+| ~ot~  | the same as ~pt~         | its Next actions, else inbox        |
+| ~h~   | habit                  | habits' Habits                      |
+| ~w~   | page from the browser  | inbox                               |
+| ~a~   | AI session             | its project's Progress, else inbox  |
+| ~d~   | decision               | its project's Decisions, else inbox |
+| ~e~   | assignment or exam     | its course's Assignments and exams  |
 
 Refile each inbox entry once, into the project that owns it. ~P~ creates or
 reuses the project by its outcome title; roam's ~p~ uses the same
@@ -72,14 +77,15 @@ a project or the inbox. A code repository is not a project by itself, and
 no capture invents one.
 
 ** Agenda
-| Key       | View                                           |
-|-----------+------------------------------------------------|
-| ~SPC o a x~ | dashboard: today, habits, then everything open |
-| ~SPC o a w~ | weekly review                                  |
-| ~SPC o a n~ | next actions, ~p~ active projects, ~i~ inbox       |
-| ~SPC n q~   | org-ql find: in this note, else in the agenda  |
-| ~SPC n Q~   | org-ql search, into a buffer of what it found  |
-| ~C-o~       | the agenda's own menu                          |
+| Key       | View                                             |
+|-----------+--------------------------------------------------|
+| ~SPC o a x~ | dashboard: today, habits, then everything open   |
+| ~SPC o a w~ | weekly review                                    |
+| ~SPC o a n~ | next actions, ~p~ active projects, ~i~ inbox         |
+| ~SPC o a u~ | University: two weeks, then open tasks by course |
+| ~SPC n q~   | org-ql find: in this note, else in the agenda    |
+| ~SPC n Q~   | org-ql search, into a buffer of what it found    |
+| ~C-o~       | the agenda's own menu                            |
 
 A project file with no tasks yet is still a refile target. Archives under
 =archives/= stay in the graph, so they can be found and linked, but leave
@@ -87,40 +93,43 @@ the dashboard, project capture and refile; a paused task keeps its state.
 
 ** Roam
 [[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
-it. A note is one of nine kinds, each a set of
+it. A note is one of thirteen kinds, each a set of
 headings that say what to write: concept (in one sentence, how it works,
 example, where it bites), solution (symptom, cause, fix, how to verify,
 applies to), howto (when, steps, gotchas), hardware (a board or part:
 pinout, toolchain, gotchas), reference (a source: key points, quotes, my
-take), question, project (goal, completion criteria, next actions,
-decisions, progress, with the repository and the kit in its head),
-person, meeting. Concept, solution, howto, hardware and question ask for
-their subject directory under =resources/wiki/=; a reference goes to
-=resources/sources/manuals/= with its URL in =ROAM_REFS=, a project to
-=projects/=, a person to =resources/wiki/people/=, a meeting to
-=capture/meetings/=, apart from the dailies in =capture/journal/= so that
-the next and previous daily (~SPC n r d f~, ~SPC n r d b~) are days only.
+take), question, project (a dashboard, goal, completion criteria, next
+actions, decisions, progress, with the repository and the kit in its
+head), person, meeting, and for work and study, course (~C~), lecture
+(~l~), case study (~k~) and design doc (~D~). Concept, solution, howto,
+hardware and question ask for their subject directory under
+=resources/wiki/=; a reference goes to =resources/sources/manuals/= with
+its URL in =ROAM_REFS=, a project to =projects/=, a person to
+=resources/wiki/people/=, a meeting to =capture/meetings/=, apart from the
+dailies in =capture/journal/= so that the next and previous daily
+(~SPC n r d f~, ~SPC n r d b~) are days only. Where the four others go is
+in [[*Work and study][Work and study]].
 ~SPC n r n~ picks one; ~c n~ and ~c m~ in the menu make a concept and a
 meeting straight away.
 
-| Key         | What it does                                   |
-|-------------+------------------------------------------------|
-| ~SPC n r f~   | find or create a node, ~i~ links to one          |
-| ~SPC n r n~   | new note, one of the nine kinds                |
-| ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links |
-| ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions |
+| Key         | What it does                                        |
+|-------------+-----------------------------------------------------|
+| ~SPC n r f~   | find or create a node, ~i~ links to one               |
+| ~SPC n r n~   | new note, one of the thirteen kinds                 |
+| ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links      |
+| ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions    |
 | ~SPC c H~     | on a link, the linked note's first lines in a popup |
-| ~SPC n r N~   | rename this note, its file and the links to it   |
-| ~SPC m m o s~ | star this note, or unstar it                     |
-| ~SPC n r S~   | the starred notes                                |
-| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline |
-| ~SPC n r d n~ | write today's daily note                       |
-| ~SPC m m e~   | extract this heading into its own note         |
-| ~SPC n r t~   | the tags, how many notes each, then their notes  |
-| ~SPC n r m~   | build the map of a tag                         |
-| ~SPC n r v~   | review the notes that went nowhere             |
-| ~SPC n r h~   | which notes carry tasks                        |
-| ~SPC n r u~   | the graph in a browser                         |
+| ~SPC n r N~   | rename this note, its file and the links to it      |
+| ~SPC m m o s~ | star this note, or unstar it                        |
+| ~SPC n r S~   | the starred notes                                   |
+| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline  |
+| ~SPC n r d n~ | write today's daily note                            |
+| ~SPC m m e~   | extract this heading into its own note              |
+| ~SPC n r t~   | the tags, how many notes each, then their notes     |
+| ~SPC n r m~   | build the map of a tag                              |
+| ~SPC n r v~   | review the notes that went nowhere                  |
+| ~SPC n r h~   | which notes carry tasks                             |
+| ~SPC n r u~   | the graph in a browser                              |
 
 The roam buffer shows, under the backlinks and the references, the
 unlinked mentions: the lines elsewhere in the vault that name the note's
@@ -198,14 +207,15 @@ for their dates but not refile targets. =.private/=, =.cache/= and =.git/=
 never become nodes.
 
 ** Studying, sources and keeping it
-| Key         | What it does                                       |
-|-------------+----------------------------------------------------|
-| ~SPC n p~     | review the flashcards due, ~P~ the dashboard         |
-| ~SPC m F n~   | turn this heading into a card, ~c~ blanks out a part |
-| ~SPC n B~     | the bibliography, ~b~ the note on an entry           |
-| ~SPC n d P~   | register org-protocol, then use the bookmarklets   |
-| ~SPC m N n~   | transclude the link at point, ~A~ show them all      |
-| ~SPC n g~     | commit the notes, ~G~ syncs with the remote          |
+| Key         | What it does                                         |
+|-------------+------------------------------------------------------|
+| ~SPC n p~     | review the flashcards due, ~P~ the dashboard           |
+| ~SPC n u~     | review the cards of a course                         |
+| ~SPC m F n~   | turn this heading into a card, ~c~ blanks out a part   |
+| ~SPC n B~     | the bibliography, ~b~ the note on an entry             |
+| ~SPC n d P~   | register org-protocol, then use the bookmarklets     |
+| ~SPC m N n~   | transclude the link at point, ~A~ show them all        |
+| ~SPC n g~     | commit the notes, ~G~ syncs with the remote            |
 | ~SPC n SPC H~ | what changed in the notes, ~V~ makes them a repository |
 
 Cards are headings tagged =:fc:= in the notes themselves, scheduled through
@@ -231,37 +241,185 @@ is regenerated. Authored subject indexes and collections are other files
 and are never regenerated.
 
 ** In an org buffer
-| Key       | What it does                   |
-|-----------+--------------------------------|
-| ~SPC m M M~ | mind map of the file           |
-| ~SPC m M t~ | of this tree, ~b~ of this branch |
-| ~SPC m W~   | writing mode                   |
+| Key       | What it does                                               |
+|-----------+------------------------------------------------------------|
+| ~SPC m M M~ | mind map of the file                                       |
+| ~SPC m M t~ | of this tree, ~b~ of this branch                             |
+| ~SPC m W~   | writing mode                                               |
+| ~SPC m Q q~ | insert a query table, ~l~ a list of notes, ~b~ a board         |
+| ~SPC m Q u~ | write this note's tables again                             |
+| ~S-<right>~ | on a board's card, its next state; ~S-<left>~ the one before |
 
 A mind map of a note is drawn into the vault's =.cache/maps/=, named for
 the note's file, =signal_integrity.pdf=, and for the tree after it,
 =signal_integrity-How_it_works.pdf=. git ignores =.cache/= and the graph
 leaves it out: a map is drawn again whenever it is wanted.
 
+* Work and study
+Courses, case studies and a project's design work are notes of the graph
+like any other, with live tables in them that say what is open.
+
+** Courses and lectures
+~SPC n r n C~ makes a course, =areas/university/<course>/index.org=,
+active and tagged =course=: an overview (teacher, term, exam), its
+timetable, its assignments and exams, and live tables of its lectures,
+its board, what is due in the next two weeks and its case studies. A
+class is a repeating date in angle brackets under Timetable,
+=<2026-11-03 Tue 10:00-12:00 +1w>=; a course's index is an agenda file
+and a refile target, so its classes show in every agenda. A course whose
+=STATUS= is paused, archived or completed is no longer added to them nor
+offered for a capture; as with a project, a task still open in it keeps
+it in the agenda.
+
+~SPC n r n l~ makes a lecture in its course's =lectures/=,
+=YYYYMMDD-<title>.org=, tagged =lecture=: a first line linking to the
+course, then Summary, Notes, Questions and Cards. From a note of a course
+it takes that course; from anywhere else it asks which. ~SPC X e~ puts an
+assignment or an exam under the course's Assignments and exams, tagged
+with its kind and with a deadline. ~SPC n u~ reviews the cards of the
+course the note belongs to, and only those; from any other note it asks
+which course.
+
+University, =areas/university/index.org= (~SPC n d u~), lists the
+courses and what is due in the next two weeks. ~SPC o a u~ is the
+University agenda: fourteen days of classes and deadlines, then the open
+tasks, a group per course, named for it; a task of University itself,
+or of a course no longer active, is under University.
+
+** Case studies
+~SPC n r n k~ makes a case study in =resources/case-studies/=, tagged
+=case_study=, with Context, Problem, Analysis, Options, Decision,
+Outcome, Lessons and Sources. Its first line, =For:=, links to the course
+or project it is for, picked when it is made, or to nothing; that course
+or project lists it in its Case studies table. Its tasks stay out of the
+agenda, as everything in =resources/= does.
+
+** Projects: the dashboard, design and decisions
+A project's index opens with its Dashboard: its board, its design
+documents, its decisions and its case studies, all live. Both ways of
+making a project, ~SPC X P~ and ~SPC n r n p~, write it and mark the
+project active. The project index, =projects/index.org=, lists the active
+projects.
+
+~SPC n r n D~ makes a design document in the project's =design/=, a note
+of its own, with Context, Goals, Non-goals, Requirements, Design,
+Alternatives, Risks and Open questions; its =STATUS= starts at draft and
+goes to review and accepted by hand. ~SPC X d~ puts a decision under the
+project's Decisions: a heading tagged =decision=, with an ID, so it is a
+note of the graph, a =STATUS= (accepted or proposed), the =DATE= and the
+lines Context, Decision, Consequences and Alternatives. A decision
+replaced by another is marked superseded by hand, with a link to the
+one that replaces it. Both find the project as ~pt~ does; with none, the
+decision goes to the inbox and the design document is refused.
+
+A course, a lecture, a case study and a design document are always new
+notes: picking an existing note in the finder is refused, since its file
+would get the template. To make a note whose title an existing note has
+already, type the title and press ~M-RET~, which takes it as typed; when
+its file would be one that exists, the same course, case study or design
+document, or a lecture of that title the same day, it is refused too.
+
+** Live tables
+Three Org dynamic blocks of this module's own: =notes-query=, the
+headings an Org QL query finds, =notes-list=, notes of the graph, and
+=notes-board=, tasks in columns by state.
+
+#+begin_example
+#+BEGIN: notes-query :from folder :query "todo: deadline:to=14" :columns (deadline todo heading file) :sort deadline
+#+END:
+#+end_example
+
+| Parameter  | Block        | What                                          |
+|------------+--------------+-----------------------------------------------|
+| =:from=      | all          | =file=, =folder= (default), =agenda=, ="DIR/"=, =vault= |
+| =:query=     | query, board | an Org QL string query, never Lisp            |
+| =:columns=   | query, list  | the columns                                   |
+| =:sort=      | all          | the order                                     |
+| =:take=      | query, list  | at most this many rows                        |
+| =:tags=      | list         | =("a" "b")=: notes that carry every one         |
+| =:links-to=  | list         | =this=: notes with an =id:= link to this one      |
+| =:property=  | list         | =("STATUS" "active")=                           |
+| =:level=     | list         | =file= (default), =heading= or =any=                |
+| =:states=    | board        | the columns, ~+notes-board-states~              |
+| =:done-days= | board        | days a finished task stays, or =all=            |
+
+=:from folder= is this note's folder and those below it, =agenda= the
+agenda files, a ="DIR/"= a folder of the vault with those below it, and
+=vault= the whole vault, for a list only. =notes-query= needs a =:query=;
+a board's is joined with its states by "and". A query's columns are
+=todo= =priority= =heading= =tags= =deadline= =scheduled= =closed= =file=,
+=todo heading deadline file= by default; a list's are =title= =tags=
+=file= =modified= =created=, =title= by default; either takes
+=(property "NAME")=, and any column as =(COLUMN "Header")=. A query and a
+board sort by Org QL's =deadline= =scheduled= =closed= =priority= =todo=
+=date= and =reverse=, else in the files' order; a list by =title=, the
+default, or =modified= or =created=, newest first. A list's =:tags= count
+the tags a note inherits too.
+
+~SPC m Q q~, ~l~ and ~b~ insert one on the line below, or below a
+heading's dates and drawers when point is on it, reading this note's
+folder (at the vault's root a query or a board reads the agenda files
+and a list the vault), and ~C-c C-x x~ offers them with Org's others. A
+note's tables are written again when it is shown and when it is saved,
+~SPC m Q u~ or ~C-c C-c~ on one at any time. Showing a note does not mark
+it changed, so one only looked at keeps its old tables on disk until the
+next edit and save; ~u~ after opening may bring the old ones back. A
+note opened in the background, by the agenda or a query, is not written.
+Other dynamic blocks, a clock table or an =org-ql= block, are left as
+they are.
+
+A heading with an ID is linked by its ID, one without by its file and
+heading text, or by its file alone when the text holds =|= or an active
+date. A =|= in a cell is written =\vert{}=, and an active date inactive,
+so a table never puts anything in the agenda. =notes-list= reads the
+database, so a note is listed once saved. A query or a board over the
+whole vault would open every note, so =:from folder= at the vault's root
+and =:from vault= give a line saying so instead, as does any block that
+cannot be written, which keeps the note's other tables and its save
+going. Showing, saving and ~SPC m Q u~ leave alone a block quoted in a
+source, example, export, comment or verse block or a LaTeX environment,
+each closed by its own end line before the next heading (one not closed
+there quotes nothing), and a block with no =#+END:= of its own before
+the next heading or =#+BEGIN:= line, which never takes another's;
+~C-c C-c~ is Org's own and takes the next =#+END:= it finds, so type the
+=#+END:= first.
+
+** Boards
+A board has a column per state, ~+notes-board-states~ (TODO NEXT STRT WAIT
+DONE), and a card per task; a finished one stays
+~+notes-board-done-days~ (14) after it was closed. ~S-<right>~ or ~C-S-l~
+on a card sets its task to the next column's state, ~S-<left>~ or
+~C-S-h~ to the one before, through ~org-todo~, so the log lines, the notes
+WAIT asks for and the dependencies work as ever, and a repeating task
+comes back with its dates moved on. The task's file is
+saved when it had no other change, once its log note is in when it asks
+for one; one with unsaved changes is left so, and the message says it.
+A card is found by its ID, else by the one heading of its file that reads
+the same; two that read the same are refused, and ~org-id-get-create~ on
+one of them gives it an ID. Anywhere else the keys do what Org does.
+
 * Obsidian's features here
 The desktop features of Obsidian, on the vault, and where they are. Canvas
 has no counterpart, and there is no phone app.
 
-| Obsidian                    | Here                                                      |
-|-----------------------------+-----------------------------------------------------------|
-| links completed as you type | the words of a title offer the note, ~SPC n r i~ inserts one |
-| backlinks, unlinked mentions | ~SPC n r r~, the roam buffer                              |
-| page preview                | the echo area on a link, ~SPC c H~ the note itself         |
-| rename with links           | ~SPC n r N~, or edit =#+title= and save                     |
-| pasted and dropped pictures | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline        |
-| callouts                    | =#+begin_warning= and the other kinds, ~C-c C-,~ ~W~          |
-| the workspace layout        | ~SPC n h~: tree, note, roam buffer, outline               |
-| tag pane with counts        | ~SPC n r t~                                                 |
-| bookmarks, starred          | ~SPC m m o s~ stars, ~SPC n r S~ lists                        |
-| daily notes, calendar       | ~SPC n r d t~ today, ~SPC n r d b~ and ~f~ the day before and after, ~SPC n r d d~ the calendar with the days that have one marked |
-| random note                 | ~SPC n r a~                                                 |
-| file recovery, history      | git, after ten idle minutes and on exit; ~SPC g t~ steps through a note's past |
-| search                      | ~SPC n r /~                                                 |
-| graph view                  | ~SPC n r u~, in the browser                                 |
+| Obsidian                     | Here                                                                                                                       |
+|------------------------------+----------------------------------------------------------------------------------------------------------------------------|
+| links completed as you type  | the words of a title offer the note, ~SPC n r i~ inserts one                                                                 |
+| backlinks, unlinked mentions | ~SPC n r r~, the roam buffer                                                                                                 |
+| page preview                 | the echo area on a link, ~SPC c H~ the note itself                                                                           |
+| rename with links            | ~SPC n r N~, or edit =#+title= and save                                                                                        |
+| pasted and dropped pictures  | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline                                                                         |
+| callouts                     | =#+begin_warning= and the other kinds, ~C-c C-,~ ~W~                                                                             |
+| the workspace layout         | ~SPC n h~: tree, note, roam buffer, outline                                                                                  |
+| tag pane with counts         | ~SPC n r t~                                                                                                                  |
+| bookmarks, starred           | ~SPC m m o s~ stars, ~SPC n r S~ lists                                                                                         |
+| daily notes, calendar        | ~SPC n r d t~ today, ~SPC n r d b~ and ~f~ the day before and after, ~SPC n r d d~ the calendar with the days that have one marked |
+| random note                  | ~SPC n r a~                                                                                                                  |
+| file recovery, history       | git, after ten idle minutes and on exit; ~SPC g t~ steps through a note's past                                               |
+| search                       | ~SPC n r /~                                                                                                                  |
+| graph view                   | ~SPC n r u~, in the browser                                                                                                  |
+| Dataview                     | live tables of headings and notes, ~SPC m Q q~ and ~l~                                                                         |
+| Kanban                       | a board block, ~SPC m Q b~; ~S-<left>~ and ~S-<right>~ move a card                                                               |
 
 * Workflow
 1. Capture into the inbox, from anywhere, or straight into the project
@@ -275,6 +433,10 @@ has no counterpart, and there is no phone app.
 6. When a project is done or paused, move it under =archives/projects/=
    with its ID, review its open tasks rather than marking them done, and
    leave its reusable notes where they are.
+
+Work notes need nothing of their own: a project per outcome, worked from
+its dashboard, a meeting note per meeting (~SPC n r n m~), a person note
+per colleague (~SPC n r n P~), and the day in the daily note.
 
 After a change here, ~bin/check-config~ is the check to run. Importing a
 source is not hardware verification, and indexing never runs an Org
@@ -347,8 +509,8 @@ and its colours are the same.
   =~/org=. A folder that is missing is made when org loads, with
   ~+notes-knowledge-directories~ inside; ~doom doctor~ says when the vault
   is missing or not a git repository.
-- ~+notes-documents~, the six documents, and ~+notes-templates-dir~, where
-  their templates are.
+- ~+notes-documents~, the seven documents, and ~+notes-templates-dir~,
+  where their templates are.
 - ~+notes-roam-head~, the header every roam note starts with;
   ~+notes-daily-name~ and ~+notes-daily-head~, a daily note's file name
   and first lines.
@@ -357,12 +519,16 @@ and its colours are the same.
   ~+notes-bibliography~ (=research/academic/references.bib= under it),
   with ~citar-library-paths~ its =research/academic/papers=.
 - ~+notes-commit-idle~ (600).
+- ~+notes-board-states~ (TODO NEXT STRT WAIT DONE), a board's columns
+  when it names none, and ~+notes-board-done-days~ (14), how many days a
+  finished task stays on a board.
 - ~+notes-latex-reach~ (4096), how far past the text being coloured org
   looks for LaTeX.
 - The files: =config.el= (documents, the workflow block, the commit
   timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
   (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=
-  resolves the inbox and the owning project for every capture.
+  resolves the inbox, the owning project and the course for every
+  capture; =autoload/query.el= writes the live tables and moves cards.
 - TODO keywords: Doom's, plus NEXT. Tags: ~org-tag-alist~.
 
 * For other modules
