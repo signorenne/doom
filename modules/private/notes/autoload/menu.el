@@ -78,7 +78,7 @@ org-protocol fills it; the bookmarklets entry covers it."
 
 ;; The SPC n keys, laid out: d the documents, c the captures, r roam, as
 ;; on the leader; the agenda views under a, SPC o a there; and the
-;; single keys the leader has, h g G p P B. q closes the menu and ? then
+;; single keys the leader has, h g G p u P B. q closes the menu and ? then
 ;; a key explains it, so nothing sits on those.
 ;;;###autoload (autoload '+notes/menu "private/notes/autoload/menu" nil t)
 (transient-define-prefix +notes/menu ()
@@ -91,6 +91,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("d r" "Reading"      (lambda () (interactive) (+notes/open-document "reading")))
     ("d n" "Snippets"     (lambda () (interactive) (+notes/open-document "snippets")))
     ("d h" "Habits"       (lambda () (interactive) (+notes/open-document "habits")))
+    ("d u" "University"   (lambda () (interactive) (+notes/open-document "university")))
     ("d d" "Any document" +notes/open-document)
     ("d j" "Today's daily note" org-roam-dailies-goto-today)
     ("d w" "Writing mode" +notes/writing-mode)
@@ -102,6 +103,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a n" "Next actions"   +notes/next-actions)
     ("a p" "Projects"       +notes/projects)
     ("a i" "Inbox"          +notes/inbox)
+    ("a u" "University agenda" +notes/university-agenda)
     ("a t" "Todo list"      org-todo-list)
     ("a q" "Query (org-ql)" +notes/query)]]
   [["Roam (r)"
@@ -127,6 +129,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("V" "Version the notes (git init)" +notes/init-repo
      :if (lambda () (not (+notes-repo-p))))
     ("p" "Review the cards due" org-fc-review-all)
+    ("u" "Review a course's cards" +notes/course-review)
     ("P" "Card dashboard"      org-fc-dashboard)
     ("B" "The bibliography"    citar-open)]
    ["Write"
