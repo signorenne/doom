@@ -137,7 +137,8 @@ autoload/query.el writes them.")
   ;; The live tables (autoload/query.el): C-c C-x x offers them, and a
   ;; note's are written again when it is shown and when it is saved. A
   ;; note a capture wrote into is set up again, since a new index had no
-  ;; blocks when its mode started.
+  ;; blocks when its mode started. S-left and S-right, C-S-h and C-S-l,
+  ;; move a board's card; anywhere else they do what Org does.
   (org-dynamic-block-define "notes-query" #'+notes/insert-query)
   (org-dynamic-block-define "notes-list" #'+notes/insert-list)
   (org-dynamic-block-define "notes-board" #'+notes/insert-board)
@@ -145,7 +146,9 @@ autoload/query.el writes them.")
   (add-hook 'doom-switch-buffer-hook #'+notes--blocks-shown-h)
   ;; A note put in a window that is not selected is shown once selected.
   (add-hook 'doom-switch-window-hook #'+notes--blocks-shown-h)
-  (add-hook 'org-capture-after-finalize-hook #'+notes--blocks-capture-h))
+  (add-hook 'org-capture-after-finalize-hook #'+notes--blocks-capture-h)
+  (add-hook 'org-shiftright-hook #'+notes--board-shift-right-h)
+  (add-hook 'org-shiftleft-hook #'+notes--board-shift-left-h))
 
 ;; A note opens with its pictures shown, when it links one. Not through
 ;; `org-startup-with-link-previews', which reads the context of every link

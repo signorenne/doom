@@ -689,6 +689,183 @@ again."
     (message "Refreshed %d block%s" count (if (= count 1) "" "s"))))
 
 ;;
+;;; Moving a card
+
+(declare-function org-table-get-field "org-table")
+
+(defun +notes--block-at (pos)
+  "The start of the #+BEGIN: line of the module's block whose lines hold
+POS, or nil: the nearest such line above POS, when its block reaches
+past POS and the refresh's scan of its section finds it unquoted.  A
+quote ends within its section, so the section is all there is to scan."
+  (save-excursion
+    (goto-char pos)
+    (let ((case-fold-search nil))
+      (when-let* (((re-search-backward (+notes--block-start-re) nil t))
+                  (candidate (point))
+                  (end (+notes--block-end))
+                  ((> end pos)))
+        (unless (re-search-backward (org-get-limited-outline-regexp t) nil t)
+          (goto-char (point-min)))
+        (while (+notes--next-block candidate)
+          (forward-line 1))
+        ;; Past it: the scan passed over a quote that holds it.
+        (and (<= (point) candidate) candidate)))))
+
+(defun +notes--board-card ()
+  "When point is in a cell of a notes-board block that holds a card,
+(PARAMS BEGIN LINK TARGET TEXT): the block's parameters, where its
+#+BEGIN: line starts, the cell's link, its target and its text.  The
+board is found first, and the cell read without moving point: on any
+other table Org's own shift has to find point where it was."
+  (when-let* (((org-at-table-p))
+              ;; Most notes have no board: a plain search says so at once.
+              ((save-excursion (goto-char (point-min)) (search-forward "notes-board" nil t)))
+              (begin (+notes--block-at (point)))
+              (block (save-excursion
+                       (goto-char begin)
+                       (let ((case-fold-search nil))
+                         (and (looking-at (+notes--block-start-re))
+                              (equal (match-string 1) "notes-board")
+                              (or (match-string-no-properties 2) "")))))
+              (params (condition-case nil
+                          (read (concat "(" block ")"))
+                        (error 'unreadable)))
+              ((listp params))
+              (field (string-trim (save-excursion (org-table-get-field))))
+              ((string-match org-link-bracket-re field)))
+    (list params begin (match-string 0 field) (match-string 1 field)
+          ;; Org puts a zero-width space after a description's last "]".
+          (string-replace "\u200b" "" (or (match-string 2 field) "")))))
+
+(defun +notes--board-refresh (begin &optional link)
+  "Write the board whose #+BEGIN: line starts at BEGIN again, and put
+point on LINK in it when it is there."
+  (goto-char begin)
+  (+notes--block-refresh-here)
+  (let ((end (point)))
+    (goto-char begin)
+    (if (and link (search-forward link end t))
+        (goto-char (match-beginning 0))
+      (goto-char begin))))
+
+(defun +notes--board-task (target text begin)
+  "A marker on the task a card's link TARGET and TEXT name.  By ID when
+it has one; otherwise the one heading of the link's file that reads
+TEXT, never a guess: none or several refresh the board at BEGIN and
+signal."
+  (if (string-prefix-p "id:" target)
+      (or (org-id-find (substring target 3) 'marker)
+          (progn (+notes--board-refresh begin)
+                 (user-error "No heading has the ID %s now" (substring target 3))))
+    (let* ((path (cond ((string-prefix-p "*" target) (+notes--block-file))
+                       ((string-match "\\`file:\\(.*?\\)\\(?:::.*\\)?\\'" target)
+                        (expand-file-name (match-string 1 target)
+                                          (file-name-directory (+notes--block-file))))
+                       (t (user-error "Not a card: %s" target))))
+           (buffer (or (find-buffer-visiting path)
+                       (and (file-exists-p path) (find-file-noselect path))
+                       (progn (+notes--board-refresh begin)
+                              (user-error "No file %s now" (abbreviate-file-name path)))))
+           found)
+      (with-current-buffer buffer
+        (org-with-wide-buffer
+         (goto-char (point-min))
+         (while (re-search-forward org-heading-regexp nil t)
+           (when (equal (+notes--cell (substring-no-properties (org-get-heading t t t t))) text)
+             (push (copy-marker (line-beginning-position)) found)))))
+      (pcase (length found)
+        (1 (car found))
+        (0 (+notes--board-refresh begin)
+           (user-error "No heading of %s reads %S now" (file-name-nondirectory path) text))
+        (n (+notes--board-refresh begin)
+           (user-error "%d headings of %s read %S; give the one to move an ID with org-id-get-create"
+                       n (file-name-nondirectory path) text))))))
+
+(defvar org-log-note-effective-time)
+
+(defvar +notes--board-pending nil
+  "(BUFFER . TIME): the task file a card move saves once its log note is
+stored, the note Org set up at TIME.")
+
+(defun +notes--board-note-stored-h ()
+  "Save the file of the card just moved, now that its log note is in.
+Only for that move's own note: one given up with C-c C-k runs no hook,
+and a later note in the same file must not save it."
+  (remove-hook 'org-after-note-stored-hook #'+notes--board-note-stored-h)
+  (pcase-let ((`(,buffer . ,time) +notes--board-pending))
+    (setq +notes--board-pending nil)
+    (when (and (eq (current-buffer) buffer) (eq org-log-note-effective-time time))
+      (save-buffer))))
+
+(defun +notes--board-move (step)
+  "Move the card at point STEP columns, 1 right or -1 left: the task's
+next or previous state of the board.  Nil when point is not on a card."
+  (when-let* ((card (+notes--board-card)))
+    (pcase-let* ((`(,params ,start ,link ,target ,text) card)
+                 (states (or (plist-get params :states) +notes-board-states))
+                 (board (current-buffer))
+                 ;; A marker: the move can add or take a CLOSED line above
+                 ;; the board when the task is in the board's own note.
+                 (begin (copy-marker start t))
+                 (task (+notes--board-task target text begin)))
+      ;; The board is written again out here: the task can be in the
+      ;; board's own note, whose point the excursion below puts back.
+      (when (with-current-buffer (marker-buffer task)
+              (org-with-wide-buffer
+               (goto-char task)
+               (let* ((state (org-get-todo-state))
+                      (index (seq-position states state))
+                      (next (and index (<= 0 (+ index step)) (nth (+ index step) states)))
+                      (dirty (buffer-modified-p))
+                      (tick (buffer-chars-modified-tick))
+                      now)
+                 (cond
+                  ((null index)
+                   (with-current-buffer board (save-excursion (+notes--board-refresh begin)))
+                   (user-error "%S is %s now, not a column of this board" text (or state "no task")))
+                  ((null next)
+                   (message "%S is in the %s column already" text (if (> step 0) "last" "first"))
+                   nil)
+                  ;; By the text, not the state: a repeating task done goes
+                  ;; back to its first state, its dates moved on.
+                  ((progn (org-todo next) (= tick (buffer-chars-modified-tick)))
+                   (message "%S stays %s: Org blocked the change" text state)
+                   nil)
+                  (t
+                   (setq now (let ((after (org-get-todo-state)))
+                               (cond ((equal after next) (format "%S is %s" text next))
+                                     (after (format "%S repeats: it is %s again, its date moved on"
+                                                    text after))
+                                     (t (format "%S repeats: its date moved on" text)))))
+                   (cond
+                    (dirty
+                     (message "%s; %s had unsaved changes and is left unsaved"
+                              now (file-name-nondirectory (buffer-file-name))))
+                    ;; Org writes the state line or asks for a note after
+                    ;; this command; the file is saved once it is in.
+                    ((memq 'org-add-log-note (default-value 'post-command-hook))
+                     (setq +notes--board-pending (cons (current-buffer) org-log-note-effective-time))
+                     (add-hook 'org-after-note-stored-hook #'+notes--board-note-stored-h)
+                     (message "%s" now))
+                    (t (save-buffer)
+                       (message "%s" now)))
+                   t)))))
+        (+notes--board-refresh begin link))
+      (set-marker begin nil))
+    t))
+
+;;;###autoload
+(defun +notes--board-shift-right-h ()
+  "On a card of a board, move it to the next column."
+  (+notes--board-move 1))
+
+;;;###autoload
+(defun +notes--board-shift-left-h ()
+  "On a card of a board, move it to the previous column."
+  (+notes--board-move -1))
+
+;;
 ;;; Inserting a block
 
 (defun +notes--in-block-p ()
