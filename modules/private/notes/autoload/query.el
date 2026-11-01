@@ -725,6 +725,48 @@ Dataview's out: org-roam reads every link of a note through here."
                           fns))
     (funcall fn fns)))
 
+(defvar org-roam-unlinked-references-result-re)
+
+(defun +notes--table-lines (file)
+  "The lines FILE's live tables hold, as (FIRST . END), END the line of
+the #+END:; nil for a file with none."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (when (+notes--has-blocks-p)
+      ;; Org's own heading pattern, as the refresh reads the note.
+      (let ((org-inhibit-startup t))
+        (delay-mode-hooks (org-mode)))
+      (mapcar (lambda (body)
+                (cons (line-number-at-pos (car body)) (line-number-at-pos (cdr body))))
+              (+notes--block-bodies)))))
+
+;;;###autoload
+(defun +notes--roam-unlinked-a (fn node)
+  "Show NODE's unlinked mentions outside the live tables: a table's cells
+are the module's text, not a mention a note makes.  The section reads
+ripgrep's matches, a file:row:col:text line each; those on a table's
+lines are dropped, each file with a match read once."
+  (let ((shell (symbol-function 'shell-command-to-string))
+        (tables (make-hash-table :test #'equal)))
+    (cl-letf (((symbol-function 'shell-command-to-string)
+               (lambda (command)
+                 (mapconcat
+                  #'identity
+                  (seq-remove
+                   (lambda (line)
+                     (when (string-match org-roam-unlinked-references-result-re line)
+                       (let ((file (match-string 1 line))
+                             (row (string-to-number (match-string 2 line))))
+                         (when (file-readable-p file)
+                           (let ((lines (gethash file tables 'unread)))
+                             (when (eq lines 'unread)
+                               (setq lines (puthash file (+notes--table-lines file) tables)))
+                             (seq-some (lambda (span) (and (>= row (car span)) (< row (cdr span))))
+                                       lines))))))
+                   (split-string (funcall shell command) "\n"))
+                  "\n"))))
+      (funcall fn node))))
+
 ;;
 ;;; Moving a card
 
