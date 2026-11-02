@@ -36,6 +36,9 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
 A transcript is mostly prose, and 72 columns read best; the code keeps
 the rest.")
 
+(defvar +ai-chat-output-lines 100
+  "Lines of a terminal's or a build's output SPC l O puts into the chat.")
+
 (defvar +ai-tool-search-seconds 5
   "Seconds the project TODO search may hold Emacs before it stops with
 what it found.")
@@ -506,6 +509,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "Send region to chat"        "s" #'agent-shell-send-region
        :desc "Send file to chat"          "f" #'agent-shell-send-file
        :desc "Mention file and lines"     "@" #'+ai/chat-mention
+       :desc "Terminal output to chat"    "O" #'+ai/chat-send-output
        :desc "Compose a chat prompt"      "c" #'agent-shell-prompt-compose
        ;; Inline actions
        :desc "Rewrite region"             "e" #'+ai/inline-rewrite

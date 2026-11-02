@@ -18,8 +18,10 @@ with all of it on the same keys.
   Once an edit lands, an open buffer of that file reloads, unless you
   have changed it.
   A new chat starts with nothing in its prompt but the region, dired's
-  files or the error at point; ~SPC l @~ adds a mention of the file and
-  lines, focus staying in the code. ~C-u SPC l n~ picks another agent.
+  files or the error at point; ~SPC l @~ adds the file as a mention, or
+  with a region just those lines, and ~SPC l O~ a terminal's or a build's
+  last output (VS Code's @terminal), focus staying in the code.
+  ~C-u SPC l n~ picks another agent.
 - The Claude terminal, [[https://github.com/manzaltu/claude-code-ide.el][claude-code-ide]]: Claude Code's own TUI in vterm,
   the fallback. Keys go to Claude; ~C-z~ gives normal state to read and
   copy, where the keys that would edit the screen only say how to type, ~i~
@@ -76,7 +78,8 @@ appears; ~SPC l j~ goes there, on a chat to its button.
 | ~SPC l j~   | ~+ai/attend~                          | go to what needs you                  |
 | ~SPC l s~   | ~agent-shell-send-region~             | the region into the chat              |
 | ~SPC l f~   | ~agent-shell-send-file~               | this file into the chat               |
-| ~SPC l @~   | ~+ai/chat-mention~                    | an @-mention of the file and lines    |
+| ~SPC l @~ | ~+ai/chat-mention~ | the file, or just the selected lines |
+| ~SPC l O~ | ~+ai/chat-send-output~ | a terminal's or build's last output |
 | ~SPC l c~   | ~agent-shell-prompt-compose~          | write a long chat prompt              |
 | ~SPC l e~   | ~+ai/inline-rewrite~                  | rewrite the region, as a diff         |
 | ~SPC l x~   | ~+ai/inline-explain~                  | explain the region or the defun       |
@@ -214,6 +217,8 @@ the tools.
   columns are a readable line of prose, below 64 the terminal wraps a lot.
 - ~+ai-auto-allowed-tools~: the Emacs tools that run without asking, in
   the chat and in the terminal. Never empty.
+- ~+ai-chat-output-lines~ (100): how much of a terminal's or a build's
+  output ~SPC l O~ sends.
 - ~+ai-tool-search-seconds~ (5): how long the project TODO search, or the
   list of background agents, may hold Emacs; past it the search answers
   with what it found.

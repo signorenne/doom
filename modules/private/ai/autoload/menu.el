@@ -86,6 +86,7 @@ agents' files, on the keys they have after SPC l."
     ("s" "Send region"           agent-shell-send-region)
     ("f" "Send file"             agent-shell-send-file)
     ("@" "Mention file, lines"   +ai/chat-mention)
+    ("O" "Terminal output"       +ai/chat-send-output)
     ("c" "Compose prompt"        agent-shell-prompt-compose)]
    ["Session"
     ("v" "Transcript"            +ai/chat-transcript)]

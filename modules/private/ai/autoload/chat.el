@@ -6,6 +6,7 @@
 (defvar +ai--chat-permission-buffer)
 (defvar +ai--chat-permission-request)
 (defvar +ai-auto-allowed-tools)
+(defvar +ai-chat-output-lines)
 (defvar acp-logging-enabled)
 (defvar agent-shell-context-sources)
 (defvar agent-shell-mcp-servers)
@@ -211,29 +212,75 @@ this turns it on and says so."
 
 ;;;###autoload
 (defun +ai/chat-mention ()
-  "Put an @-mention of this file and its lines into the project's chat.
-The file goes whole: agent-shell reads no line suffix, so the lines are
-a hint for the agent.  Focus stays here."
+  "Put this file, or its selected lines, into the project's chat.
+With no region, an @-mention of the file, which goes whole.  With one,
+only those lines, under the file's name and their numbers: agent-shell
+reads no line suffix in a mention.  Focus stays here."
   (interactive)
   (unless buffer-file-name
     (user-error "Not a file buffer"))
-  (let* ((lines (if (use-region-p)
-                    (let ((beg (line-number-at-pos (region-beginning)))
-                          (end (line-number-at-pos
-                                ;; A region ending at a line's start leaves that line out.
-                                (if (and (> (region-end) (region-beginning))
-                                         (save-excursion (goto-char (region-end)) (bolp)))
-                                    (1- (region-end))
-                                  (region-end)))))
-                      (if (= beg end)
-                          (format "(line %d)" beg)
-                        (format "(lines %d-%d)" beg end)))
-                  (format "(line %d)" (line-number-at-pos))))
+  (let* ((region (use-region-p))
+         (beg (if region (region-beginning) (pos-bol)))
+         ;; A region ending at a line's start leaves that line out.
+         (end (if (and region (> (region-end) (region-beginning))
+                       (save-excursion (goto-char (region-end)) (bolp)))
+                  (1- (region-end))
+                (if region (region-end) (pos-eol))))
+         (first (line-number-at-pos beg))
+         (last (line-number-at-pos end))
+         (lines (if (= first last)
+                    (format "line %d" first)
+                  (format "lines %d-%d" first last)))
+         (text (and region (buffer-substring-no-properties beg end)))
+         (language (+core-language major-mode))
          (file buffer-file-name)
          (chat (or (+ai--chat-buffer) (+ai--chat-start-quietly)))
          (path (file-relative-name file (with-current-buffer chat (agent-shell-cwd)))))
     (deactivate-mark)
-    (agent-shell-insert :text (format "%s %s " (+ai--chat-file-mention path) lines)
+    (agent-shell-insert :text (if region
+                                  (format "%s, %s:\n%s" path lines (+ai--fenced text language))
+                                (format "%s (%s) " (+ai--chat-file-mention path) lines))
+                        :no-focus t :shell-buffer chat)))
+
+(defun +ai--fenced (text &optional language)
+  "TEXT in a code fence longer than any run of backticks in it."
+  (let ((fence "```"))
+    (while (string-match-p (regexp-quote fence) text)
+      (setq fence (concat fence "`")))
+    (format "%s%s\n%s\n%s\n" fence (or language "") (string-trim-right text "\n+") fence)))
+
+(defun +ai--output-buffer-p (buffer)
+  "Non-nil when BUFFER is a terminal or a build whose output can be sent."
+  (with-current-buffer buffer
+    (and (derived-mode-p 'vterm-mode 'eshell-mode 'shell-mode 'term-mode
+                         'compilation-mode 'comint-mode)
+         (not (derived-mode-p 'agent-shell-mode)))))
+
+;;;###autoload
+(defun +ai/chat-send-output (buffer)
+  "Put the last output of BUFFER, a terminal or a build, into the chat.
+The last `+ai-chat-output-lines' lines go, fenced, under the buffer's
+name; focus stays here.  As VS Code's @terminal."
+  (interactive
+   (let* ((buffers (seq-filter #'+ai--output-buffer-p (buffer-list)))
+          (default (cond ((+ai--output-buffer-p (current-buffer)) (current-buffer))
+                         ((when-let* ((build (+core-last-compilation-buffer)))
+                            (and (buffer-live-p build) build)))
+                         (t (car buffers)))))
+     (unless buffers
+       (user-error "No terminal or build to take output from"))
+     (list (get-buffer (completing-read "Output of: " (mapcar #'buffer-name buffers)
+                                        nil t nil nil (and default (buffer-name default)))))))
+  (let* ((text (with-current-buffer buffer
+                 (save-excursion
+                   (goto-char (point-max))
+                   (skip-chars-backward " \t\n")
+                   (let ((end (point)))
+                     (forward-line (- 1 +ai-chat-output-lines))
+                     (buffer-substring-no-properties (pos-bol) end)))))
+         (chat (or (+ai--chat-buffer) (+ai--chat-start-quietly))))
+    (agent-shell-insert :text (format "Output of %s, its last lines:\n%s"
+                                      (buffer-name buffer) (+ai--fenced text))
                         :no-focus t :shell-buffer chat)))
 
 
