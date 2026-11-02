@@ -11,7 +11,11 @@
 
 ;; Agents in a plain Emacs buffer over ACP, with permission buttons and
 ;; diffs: Claude through claude-agent-acp, others if they are installed.
-(package! agent-shell :pin "76c80976067efe5a780c342a7bd6da8a84e8641d")
+(package! agent-shell :pin "5f3a8525c979ff92de0de951c9bf41e681c6b2c5")
+
+;; agent-shell's own dependencies, pinned here so they move with it.
+(package! acp :pin "2959da5fa8657da17a78ac6ceef303a50e3e69de")
+(package! shell-maker :pin "b28ee61a2533e408ed180662f83bb84fc8f84ba6")
 
 ;; Lets gptel use MCP servers, through gptel-mcp-connect.
 (package! mcp :pin "2d172809cbdb2a40d86b28ad73bd65547cefe0e1")
