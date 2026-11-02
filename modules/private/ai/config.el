@@ -306,7 +306,10 @@ needs you or finishes.")
         ;; point, never the current line by itself.
         agent-shell-context-sources '(files region error)
         ;; A new conversation each time, as VS Code; SPC l r lists the old.
-        agent-shell-session-strategy 'new)
+        agent-shell-session-strategy 'new
+        ;; Auto, as VS Code starts its sessions: a classifier lets safe
+        ;; actions run and stops risky ones. C-<tab> or SPC l o for Manual.
+        agent-shell-anthropic-default-session-mode-id "auto")
   ;; The Emacs read tools run unasked (`+ai-auto-allowed-tools'), as VS
   ;; Code's own IDE tools do; every other tool shows its buttons.
   (setq agent-shell-permission-responder-function #'+ai--chat-permission-responder)

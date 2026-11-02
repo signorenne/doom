@@ -8,9 +8,10 @@ with all of it on the same keys.
 - The chat, [[https://github.com/xenodium/agent-shell][agent-shell]]: Claude in a side panel, as in VS Code's extension.
   It is an Emacs buffer, so evil works on the transcript and on the prompt:
   ~RET~ in normal state at the prompt sends, ~v~, ~y~ and searches only read
-  the transcript. The header shows the permission mode (Claude's own
-  default, Manual), the model and the context used; ~C-<tab>~ cycles the
-  mode. A tool that wants permission shows buttons, and point goes to them:
+  the transcript. The header shows the permission mode (a chat starts in
+  Auto, as VS Code's do: safe actions run, risky ones stop), the model and
+  the context used; ~C-<tab>~ cycles the mode. A tool that wants
+  permission shows buttons, and point goes to them:
   ~y~ allow once, ~n~ reject and stop the turn so you can say what to do
   instead, ~!~ always allow, ~v~ view the diff, which opens in the editor
   window, not beside the chat. Elsewhere in the chat those keys are evil's.
