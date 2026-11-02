@@ -114,7 +114,28 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
       "C-c SPC" #'doom/leader              ; the leader, as M-SPC would be
       "C-c C-o" #'+ai/claude-leave         ; back to the code, Claude stays
       "C-c C-q" #'claude-code-ide-toggle   ; hide the window, Claude runs on
-      "C-c C-k" #'claude-code-ide-stop)    ; end the session
+      "C-c C-k" #'claude-code-ide-stop     ; end the session
+      "S-<return>" #'claude-code-ide-insert-newline  ; a newline in the prompt
+      "C-<escape>" #'claude-code-ide-send-escape     ; ESC to Claude
+      "C-c C-x" #'claude-code-ide-clear-selection)   ; drop the shown selection
+
+;; The package binds its terminal keys with `local-set-key', and a vterm
+;; buffer's local map is the shared `vterm-mode-map', so they reached every
+;; vterm. A map of its own keeps them in the Claude buffer.
+(defadvice! +ai--claude-own-keymap-a ()
+  "Give the Claude buffer its own local map before the package binds keys."
+  :before #'claude-code-ide--setup-terminal-keybindings
+  (when (derived-mode-p 'vterm-mode)
+    ;; Take back what a session before this advice left in the shared map.
+    (dolist (key '("S-<return>" "C-<escape>" "C-c C-x"))
+      (let ((command (keymap-lookup vterm-mode-map key)))
+        (when (and (symbolp command)
+                   (string-prefix-p "claude-code-ide-" (symbol-name command)))
+          (keymap-unset vterm-mode-map key t))))
+    (when (eq (current-local-map) vterm-mode-map)
+      (let ((map (make-sparse-keymap)))
+        (set-keymap-parent map vterm-mode-map)
+        (use-local-map map)))))
 
 ;; Every step of a drag reaches Claude, and the TUI redraws the whole screen
 ;; for each one, which drags Emacs down. Tell it once the window holds still.
