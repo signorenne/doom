@@ -26,6 +26,10 @@
 (unless (executable-find "node")
   (warn! "node not found; the ACP adapter and MCP servers need it"))
 
+(when (and (getenv "WAYLAND_DISPLAY") (not (executable-find "spectacle")))
+  (warn! "spectacle not found, so agent-shell screenshots fall back to import")
+  (explain! "import captures X11 windows only; on KDE install spectacle"))
+
 ;; Never read ~/.authinfo.gpg here: decrypting it would ask for a passphrase
 ;; and hang doom doctor. Seeing the file is enough.
 (unless (or (getenv "ANTHROPIC_API_KEY")

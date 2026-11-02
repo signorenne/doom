@@ -32,14 +32,14 @@
     ("k" "Stop session"         claude-code-ide-stop)
     ("M" "IDE package menu"     claude-code-ide-menu)]
    ["Agent shell (ACP)"
-    ("a" "Claude shell (DWIM)"  agent-shell)
-    ("A" "New shell, any agent" agent-shell-new-shell)
+    ("a" "Open or focus chat"   +ai/chat)
+    ("A" "New chat, C-u agent"  +ai/chat-new)
     ("v" "Compose prompt"       agent-shell-prompt-compose)
-    ("x" "Send region"          agent-shell-send-region-to)
-    ("X" "Send file"            agent-shell-send-file-to)
+    ("x" "Send region"          agent-shell-send-region)
+    ("X" "Send file"            agent-shell-send-file)
     ("B" "Switch shell buffer"  agent-shell-switch-buffer)
-    ("R" "Resume ACP session"   agent-shell-resume-session)
-    ("i" "Interrupt"            agent-shell-interrupt)]
+    ("R" "Resume a session"     +ai/chat-resume)
+    ("i" "Interrupt"            +ai/chat-interrupt)]
    ["gptel (Claude API)"
     ("g" "Chat buffer"          gptel)
     ("G" "Menu, model, tools"   gptel-menu)

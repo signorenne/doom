@@ -5,8 +5,20 @@
 
 (defvar +ai--chat-permission-request)
 (defvar +ai-auto-allowed-tools)
+(defvar acp-logging-enabled)
+(defvar agent-shell-context-sources)
 (defvar agent-shell-mcp-servers)
+(defvar agent-shell-preferred-agent-config)
+(defvar agent-shell-session-strategy)
+(declare-function agent-shell "agent-shell")
+(declare-function agent-shell--prompt-input-start "agent-shell-prompt")
 (declare-function agent-shell-cwd "agent-shell-project")
+(declare-function agent-shell-insert "agent-shell")
+(declare-function agent-shell-interrupt "agent-shell")
+(declare-function agent-shell-open-transcript "agent-shell")
+(declare-function agent-shell-view-traffic "agent-shell")
+(declare-function agent-shell-project-buffers "agent-shell")
+(declare-function evil-insert-state "evil-states")
 (declare-function agent-shell-subscribe-to "agent-shell")
 (declare-function claude-code-ide-mcp-server-ensure-server "claude-code-ide-mcp-server")
 (declare-function claude-code-ide-mcp-server-get-config "claude-code-ide-mcp-server")
@@ -35,6 +47,184 @@ of this frame that shows code."
   (seq-find #'+ai--editor-window-p
             (sort (window-list-1 nil 'nomini)
                   (lambda (a b) (> (window-use-time a) (window-use-time b))))))
+
+;;;###autoload
+(defun +ai--editor-window-for-display (_buffer _alist)
+  "The editor window, as `display-buffer's some-window function wants it.
+With none, display-buffer takes the largest window that is not dedicated."
+  (+ai--editor-window))
+
+
+;;
+;;; Chat commands
+
+(defun +ai--chat-buffer ()
+  "This project's chat, the one agent-shell lists first, or nil.
+In a chat, that chat."
+  (require 'agent-shell)
+  (if (derived-mode-p 'agent-shell-mode)
+      (current-buffer)
+    (car (agent-shell-project-buffers))))
+
+(defun +ai--chat-buffer-or-error ()
+  "This project's chat, or a user error when there is none."
+  (or (+ai--chat-buffer) (user-error "No chat for this project")))
+
+(defun +ai--chat-at-prompt ()
+  "Put point at the end of the selected chat's prompt, in insert state."
+  (with-current-buffer (window-buffer (selected-window))
+    (when (derived-mode-p 'agent-shell-mode)
+      (goto-char (point-max))
+      (when (bound-and-true-p evil-local-mode)
+        (evil-insert-state)))))
+
+(defun +ai--chat-start-quietly ()
+  "Start this project's chat without leaving this window; return it.
+No context goes in: the caller inserts its own."
+  (require 'agent-shell)
+  (let ((agent-shell-context-sources nil))
+    (save-selected-window
+      (agent-shell '(4))))
+  (+ai--chat-buffer))
+
+;;;###autoload
+(defun +ai/chat ()
+  "Open or focus this project's chat, the region or the error at point
+in its prompt.  From the chat, go back to the editor window."
+  (interactive)
+  (if (derived-mode-p 'agent-shell-mode)
+      (select-window (or (+ai--editor-window) (user-error "No editor window")))
+    (require 'agent-shell)
+    (call-interactively #'agent-shell)
+    (+ai--chat-at-prompt)))
+
+;;;###autoload
+(defun +ai/chat-new (&optional pick)
+  "Start a new chat for this project.  With PICK (\\[universal-argument]),
+choose the agent, the usual one first."
+  (interactive "P")
+  (require 'agent-shell)
+  (let ((agent-shell-preferred-agent-config
+         (if pick
+             ;; preselect always shows the picker, so it is no default.
+             (cons 'preselect (if (consp agent-shell-preferred-agent-config)
+                                  (cdr agent-shell-preferred-agent-config)
+                                agent-shell-preferred-agent-config))
+           agent-shell-preferred-agent-config)))
+    (agent-shell '(4)))
+  (+ai--chat-at-prompt))
+
+;;;###autoload
+(defun +ai/chat-resume ()
+  "Start a chat that first lists this project's earlier sessions."
+  (interactive)
+  (require 'agent-shell)
+  (let ((agent-shell-session-strategy 'prompt))
+    (agent-shell '(4)))
+  (+ai--chat-at-prompt))
+
+;;;###autoload
+(defun +ai/chat-hide ()
+  "Hide this project's chat; it keeps running."
+  (interactive)
+  (let ((chat (+ai--chat-buffer-or-error)))
+    (dolist (window (get-buffer-window-list chat nil t))
+      (quit-window nil window))))
+
+;;;###autoload
+(defun +ai/chat-stop ()
+  "End this project's chat, after asking."
+  (interactive)
+  (let ((chat (+ai--chat-buffer-or-error)))
+    (when (y-or-n-p (format "End %s? " (buffer-name chat)))
+      (kill-buffer chat))))
+
+;;;###autoload
+(defun +ai/chat-interrupt ()
+  "Interrupt this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-interrupt)))
+
+;;;###autoload
+(defun +ai/chat-transcript ()
+  "Open the transcript of this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-open-transcript)))
+
+;;;###autoload
+(defun +ai/chat-traffic ()
+  "Show the ACP traffic of this project's chat, from any buffer.
+Logging is off by default and keeps nothing from before it is on, so
+this turns it on and says so."
+  (interactive)
+  (let ((chat (+ai--chat-buffer-or-error)))
+    (unless acp-logging-enabled
+      (setq acp-logging-enabled t)
+      (message "ACP logging is on; traffic from before now was not kept"))
+    (with-current-buffer chat
+      (call-interactively #'agent-shell-view-traffic))))
+
+(defun +ai--chat-file-mention (path)
+  "PATH as an @-mention; quoted when it holds a space, as agent-shell does."
+  (if (string-match-p "[[:space:]]" path)
+      (format "@\"%s\"" path)
+    (concat "@" path)))
+
+;;;###autoload
+(defun +ai/chat-mention ()
+  "Put an @-mention of this file and its lines into the project's chat.
+The file goes whole: agent-shell reads no line suffix, so the lines are
+a hint for the agent.  Focus stays here."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Not a file buffer"))
+  (let* ((lines (if (use-region-p)
+                    (let ((beg (line-number-at-pos (region-beginning)))
+                          (end (line-number-at-pos
+                                ;; A region ending at a line's start leaves that line out.
+                                (if (and (> (region-end) (region-beginning))
+                                         (save-excursion (goto-char (region-end)) (bolp)))
+                                    (1- (region-end))
+                                  (region-end)))))
+                      (if (= beg end)
+                          (format "(line %d)" beg)
+                        (format "(lines %d-%d)" beg end)))
+                  (format "(line %d)" (line-number-at-pos))))
+         (file buffer-file-name)
+         (chat (or (+ai--chat-buffer) (+ai--chat-start-quietly)))
+         (path (file-relative-name file (with-current-buffer chat (agent-shell-cwd)))))
+    (deactivate-mark)
+    (agent-shell-insert :text (format "%s %s " (+ai--chat-file-mention path) lines)
+                        :no-focus t :shell-buffer chat)))
+
+
+;;
+;;; Keys in the chat
+
+;;;###autoload
+(defun +ai--chat-at-prompt-filter (command)
+  "COMMAND with point in the chat's prompt, else nil."
+  (when-let* ((start (agent-shell--prompt-input-start)))
+    (and (>= (point) start) command)))
+
+;;;###autoload
+(defun +ai--chat-on-button-filter (command)
+  "COMMAND with point on a permission button, else nil."
+  (when-let* ((map (get-char-property (point) 'keymap)))
+    (and (keymapp map) (lookup-key map (kbd "C-c C-c")) command)))
+
+;;;###autoload
+(defun +ai/chat-reject ()
+  "Reject the permission whose button point is on, and stop the turn,
+so you can say what to do instead."
+  (interactive)
+  (let* ((map (get-char-property (point) 'keymap))
+         (command (and (keymapp map) (lookup-key map (kbd "C-c C-c")))))
+    (unless (commandp command)
+      (user-error "Point is not on a permission button"))
+    (call-interactively command)))
 
 
 ;;

@@ -28,6 +28,11 @@ the message only.")
 readability. Cite lines, propose fixes, and rank findings by severity."))
   "Extra system prompts added to `gptel-directives'.")
 
+(defvar +ai-panel-width 72
+  "Width of the chat and terminal side windows.
+A transcript is mostly prose, and 72 columns read best; the code keeps
+the rest.")
+
 (defvar +ai-auto-allowed-tools
   '("claude-code-ide-mcp-xref-find-references"
     "claude-code-ide-mcp-xref-find-apropos"
@@ -66,9 +71,7 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
         claude-code-ide-terminal-backend 'vterm
         claude-code-ide-use-side-window t
         claude-code-ide-window-side 'right
-        ;; A transcript is mostly prose, and 72 columns is the line length
-        ;; that reads best; the code keeps the rest. Diffs go to ediff anyway.
-        claude-code-ide-window-width 72
+        claude-code-ide-window-width +ai-panel-width
         claude-code-ide-focus-on-open t
         claude-code-ide-use-ide-diff t          ; review edits in ediff
         claude-code-ide-focus-claude-after-ediff t
@@ -227,21 +230,76 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
   :defer t
   :init
   ;; Signs in with the CLI's own account. For a key instead, set
-  ;; `agent-shell-anthropic-authentication' with :api-key.
+  ;; `agent-shell-anthropic-authentication' with :api-key. C-u SPC l n
+  ;; picks another agent.
   (setq agent-shell-preferred-agent-config 'claude-code
-        agent-shell-display-action '((display-buffer-in-side-window)
+        agent-shell-display-action `((display-buffer-in-side-window)
                                      (side . right)
-                                     (window-width . 72))) ; same as Claude
+                                     (window-width . ,+ai-panel-width))
+        ;; Context on request: the region, dired's files or the error at
+        ;; point, never the current line by itself.
+        agent-shell-context-sources '(files region error)
+        ;; A new conversation each time, as VS Code; SPC l r lists the old.
+        agent-shell-session-strategy 'new)
   ;; The Emacs read tools run unasked (`+ai-auto-allowed-tools'), as VS
   ;; Code's own IDE tools do; every other tool shows its buttons.
   (setq agent-shell-permission-responder-function #'+ai--chat-permission-responder)
+  ;; import, the default, sees X11 windows only.
+  (when (and (getenv "WAYLAND_DISPLAY") (executable-find "spectacle"))
+    (setq agent-shell-screenshot-command '("spectacle" "-b" "-n" "-r" "-o")))
   :config
   ;; Each chat reaches the Emacs tools through claude-code-ide's server.
   (add-hook 'agent-shell-mode-hook #'+ai--chat-tools-h)
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
-  (set-popup-rule! "Agent @ " :ignore t))
+  (set-popup-rule! "Agent @ " :ignore t)
+  ;; A diff opens in the editor window, not beside the chat. The popup
+  ;; module's catch-all, if it is ever turned on (+all), would take it.
+  (set-popup-rule! "^\\*agent-shell-diff" :ignore t))
+
+(defadvice! +ai--chat-diff-in-editor-a (fn &rest args)
+  "Show agent-shell's diff in the editor window, not beside the chat."
+  :around #'agent-shell-diff
+  (let ((display-buffer-overriding-action
+         '(nil (some-window . +ai--editor-window-for-display))))
+    (apply fn args)))
+
+;; evil-collection's y / n / ! / v answer the latest permission from
+;; anywhere in the chat, so a yank or a search on the transcript did. With
+;; them off, the keys answer only with point on the button, where its own
+;; keymap (y ! v) and +ai/chat-reject (n) take them.
+(setq evil-collection-agent-shell-want-permission-bindings nil)
+
+(defvar +ai--chat-submit-key
+  '(menu-item "" agent-shell-submit :filter +ai--chat-at-prompt-filter)
+  "RET in normal state: submit in the prompt, evil's RET elsewhere.")
+
+(defvar +ai--chat-reject-key
+  '(menu-item "" +ai/chat-reject :filter +ai--chat-on-button-filter)
+  "n in normal state: reject on a permission button, evil's n elsewhere.")
+
+(declare-function agent-shell-cycle-session-mode "agent-shell")
+
+;; evil-collection sets the chat's keys after any `after!' of ours runs,
+;; so these go on its hook, which runs once its setup is done.
+(add-hook! 'evil-collection-setup-hook
+  (defun +ai--chat-evil-keys-h (mode &rest _)
+    "Fix and extend evil-collection's agent-shell keys."
+    (when (eq mode 'agent-shell)
+      (evil-define-key* 'normal agent-shell-mode-map
+        (kbd "RET") +ai--chat-submit-key
+        "n" +ai--chat-reject-key
+        ;; evil-collection names agent-shell-queue-request, long gone.
+        "gq" #'agent-shell-prompt-queue)
+      ;; M-SPC is KRunner's on KDE; C-<tab> in insert state was aya-expand.
+      (evil-define-key* '(insert normal) agent-shell-mode-map
+        (kbd "C-c SPC") #'doom/leader
+        (kbd "C-<tab>") #'agent-shell-cycle-session-mode)
+      ;; Two commands evil-collection binds here never existed.
+      (evil-define-key* 'normal agent-shell-viewport-view-mode-map
+        "gF" #'agent-shell-fork
+        "ge" nil))))
 
 ;; The responder needs the tool's own name, which the model cannot write;
 ;; agent-shell keeps only the title, and for a shell command that is the
@@ -335,10 +393,10 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
        :desc "Claude: set model"        "o" #'+ai/set-claude-model
        :desc "Claude: elisp tool"       "e" #'+ai/toggle-execute-code
        ;; agent-shell
-       :desc "Agent shell (ACP)"        "a" #'agent-shell
-       :desc "Agent shell: new/choose"  "A" #'agent-shell-new-shell
+       :desc "Chat: open or focus"      "a" #'+ai/chat
+       :desc "Chat: new, C-u any agent" "A" #'+ai/chat-new
        :desc "Agent shell: compose"     "v" #'agent-shell-prompt-compose
-       :desc "Agent shell: send region" "x" #'agent-shell-send-region-to
+       :desc "Chat: send region"        "x" #'agent-shell-send-region
        ;; gptel is on Doom's SPC o l; the menu gathers it.
        ;; management
        :desc "CLAUDE.md (project)"      "f" #'+ai/open-claude-md
