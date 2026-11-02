@@ -232,11 +232,28 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
         agent-shell-display-action '((display-buffer-in-side-window)
                                      (side . right)
                                      (window-width . 72))) ; same as Claude
+  ;; The Emacs read tools run unasked (`+ai-auto-allowed-tools'), as VS
+  ;; Code's own IDE tools do; every other tool shows its buttons.
+  (setq agent-shell-permission-responder-function #'+ai--chat-permission-responder)
   :config
+  ;; Each chat reaches the Emacs tools through claude-code-ide's server.
+  (add-hook 'agent-shell-mode-hook #'+ai--chat-tools-h)
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
   (set-popup-rule! "Agent @ " :ignore t))
+
+;; The responder needs the tool's own name, which the model cannot write;
+;; agent-shell keeps only the title, and for a shell command that is the
+;; model's description.
+(defvar +ai--chat-permission-request nil
+  "The ACP request agent-shell is handling, while its responder runs.")
+
+(defadvice! +ai--chat-permission-request-a (fn &rest args)
+  "Let the permission responder read the request agent-shell handles."
+  :around #'agent-shell--on-request
+  (let ((+ai--chat-permission-request (plist-get args :acp-request)))
+    (apply fn args)))
 
 
 ;;

@@ -6,6 +6,10 @@
 (defvar +ai-compose-mode)
 (defvar +core-todo-markers)
 (defvar claude-code-ide--session)
+(defvar evil-state)
+(defvar evil-visual-beginning)
+(defvar evil-visual-end)
+(declare-function flymake--lookup-type-property "flymake")
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
@@ -106,6 +110,87 @@ whether this tool, a key or a menu started it."
           "No TODO/FIXME markers found."
         (buffer-substring-no-properties (point-min) (min (point-max) 12000))))))
 
+(defun +ai--tool-editor-root (buffer)
+  "The project an editor state is described for: the session's, else
+BUFFER's.  Home and / are refused, as the gptel tools refuse them."
+  (let ((root (or (plist-get (claude-code-ide-mcp-server-get-session-context)
+                             :project-dir)
+                  (with-current-buffer buffer (+core-project-root-or-nil)))))
+    (unless root
+      (error "Not inside a project, so there is no editor state to give"))
+    (setq root (file-name-as-directory (expand-file-name root)))
+    (when (member root (list (expand-file-name "~/") "/"))
+      (error "%s is too much to open to the tools" (abbreviate-file-name root)))
+    root))
+
+(defun +ai--tool-editor-diagnostics ()
+  "Up to 50 of this buffer's flymake diagnostics, one per line."
+  (when (bound-and-true-p flymake-mode)
+    (mapconcat
+     (lambda (diag)
+       (format "line %d: %s: %s"
+               (line-number-at-pos (flymake-diagnostic-beg diag))
+               (pcase (flymake--lookup-type-property
+                       (flymake-diagnostic-type diag) 'flymake-category)
+                 ('flymake-error "error")
+                 ('flymake-warning "warning")
+                 (_ "note"))
+               (flymake-diagnostic-text diag '(message))))
+     (seq-take (sort (flymake-diagnostics)
+                     (lambda (a b) (< (flymake-diagnostic-beg a)
+                                      (flymake-diagnostic-beg b))))
+               50)
+     "\n")))
+
+(defun +ai--tool-editor-state ()
+  "Describe the editor window: file, point, view, region, diagnostics."
+  (if-let* ((window (+ai--editor-window)))
+      (let* ((buffer (window-buffer window))
+             (file (buffer-file-name buffer))
+             (root (and file (+ai--tool-editor-root buffer))))
+        (cond
+         ((not file)
+          (format "The editor shows %s, which visits no file." (buffer-name buffer)))
+         ((not (file-in-directory-p file root))
+          (format "The editor shows a file outside the project %s."
+                  (abbreviate-file-name root)))
+         (t
+          (with-current-buffer buffer
+            (let* ((point (window-point window))
+                   (visual (and (bound-and-true-p evil-local-mode)
+                                (eq evil-state 'visual)))
+                   (region (cond (visual (cons (marker-position evil-visual-beginning)
+                                               (marker-position evil-visual-end)))
+                                 ((and mark-active (mark t))
+                                  (cons (min point (mark t)) (max point (mark t))))))
+                   (diagnostics (+ai--tool-editor-diagnostics)))
+              (concat
+               (format "file: %s\n" (file-relative-name file root))
+               (save-excursion
+                 (goto-char point)
+                 (format "point: line %d, column %d\n"
+                         (line-number-at-pos) (current-column)))
+               (format "visible: lines %d-%d\n"
+                       (line-number-at-pos (window-start window))
+                       (line-number-at-pos (window-end window t)))
+               (format "modified: %s\n" (if (buffer-modified-p) "yes" "no"))
+               (when region
+                 (let* ((beg (car region))
+                        (end (cdr region))
+                        ;; A region ending at a line's start leaves that line out.
+                        (last (if (and (> end beg)
+                                       (save-excursion (goto-char end) (bolp)))
+                                  (1- end)
+                                end))
+                        (text (buffer-substring-no-properties beg end)))
+                   (format "region: lines %d-%d%s\n%s\n"
+                           (line-number-at-pos beg) (line-number-at-pos last)
+                           (if (> (length text) 8000) " (cut to 8000 characters)" "")
+                           (substring text 0 (min (length text) 8000)))))
+               (when (and diagnostics (not (string-empty-p diagnostics)))
+                 (format "diagnostics:\n%s\n" diagnostics))))))))
+    "No editor window"))
+
 ;;;###autoload
 (defun +ai--register-claude-tools ()
   "Give Claude the build, compilation and TODO tools."
@@ -140,7 +225,18 @@ whether this tool, a key or a menu started it."
    (format "List the %s markers in the project, one per line as file:line:text."
            (string-join +core-todo-markers ", "))
    :args nil
-   :category "Project"))
+   :category "Project")
+  (claude-code-ide-make-tool
+   :function #'+ai--tool-editor-state
+   :name "emacs_editor_state"
+   :description
+   (concat "Describe what the user is looking at in Emacs: the file, relative "
+           "to the project, point's line and column, the visible lines, "
+           "whether the buffer is modified, the selected region with its "
+           "text, and the file's diagnostics. Call it when the user says "
+           "\"this\", \"here\" or \"the selection\".")
+   :args nil
+   :category "Editor"))
 
 
 ;;
