@@ -340,6 +340,67 @@ needs you or finishes.")
 
 
 ;;
+;;; Inline actions (autoload/inline.el)
+
+(defvar +ai-inline-backend 'auto
+  "Where rewrite, explain, ask and the commit message go: auto, gptel or
+claude-cli.  auto takes gptel once it has a key, or a key-less backend
+such as Ollama, else the claude CLI with its own sign-in.")
+
+(defvar +ai-inline-model "sonnet"
+  "The model the claude CLI answers inline requests with.")
+
+(defvar +ai-inline-context-lines 30
+  "Lines on each side of a region sent along to read, not to rewrite.")
+
+(defface +ai-inline-pending '((t :inherit secondary-selection))
+  "The region while a rewrite of it runs."
+  :group 'faces)
+
+;; The rewrite's diff: y or C-c C-c accepts, n or C-c C-k rejects. Its
+;; labels name no file, and RET and ga, diff-mode's ways to the source,
+;; do nothing, so the diff never touches the file itself.
+(define-minor-mode +ai-rewrite-mode
+  "Keys of the *ai-rewrite* diff: accept, reject, ediff, retry."
+  :keymap (make-sparse-keymap))
+
+(map! :map +ai-rewrite-mode-map
+      "C-c C-c" #'+ai/inline-rewrite-accept
+      "C-c C-k" #'+ai/inline-rewrite-reject
+      "RET"     #'ignore)
+
+(after! evil
+  (evil-define-minor-mode-key 'normal '+ai-rewrite-mode
+    (kbd "y")   #'+ai/inline-rewrite-accept
+    (kbd "gy")  #'+ai/inline-rewrite-accept
+    (kbd "n")   #'+ai/inline-rewrite-reject
+    (kbd "gn")  #'+ai/inline-rewrite-reject
+    (kbd "e")   #'+ai/inline-rewrite-ediff
+    (kbd "r")   #'+ai/inline-rewrite-retry
+    (kbd "RET") #'ignore
+    (kbd "ga")  #'ignore))
+
+(define-minor-mode +ai-answer-mode
+  "Keys of the *ai-answer* buffer: C-c C-c takes it to the chat."
+  :keymap (make-sparse-keymap))
+
+(map! :map +ai-answer-mode-map
+      "C-c C-c" #'+ai/inline-answer-to-chat)
+
+(set-popup-rule! "^\\*ai-\\(rewrite\\|answer\\)\\*"
+  :side 'bottom :size 0.3 :select t :quit t)
+
+;; M-g in a commit buffer writes the message. gptel-magit-install binds M-g
+;; and M-r again on every magit-mode-hook, so its commands are remapped too;
+;; a commit started from a shell never runs that hook, so M-g is bound here.
+(after! git-commit
+  (map! :map git-commit-mode-map
+        "M-g" #'+ai/inline-commit-message
+        [remap gptel-magit-generate-message] #'+ai/inline-commit-message
+        [remap gptel-magit-generate-message-with-rationale] #'+ai/inline-commit-message))
+
+
+;;
 ;;; gptel on the Claude API
 
 (after! gptel

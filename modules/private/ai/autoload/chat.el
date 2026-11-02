@@ -58,6 +58,7 @@ With none, display-buffer takes the largest window that is not dedicated."
 ;;
 ;;; Chat commands
 
+;;;###autoload
 (defun +ai--chat-buffer ()
   "This project's chat, the one agent-shell lists first, or nil.
 In a chat, that chat."
@@ -78,6 +79,7 @@ In a chat, that chat."
       (when (bound-and-true-p evil-local-mode)
         (evil-insert-state)))))
 
+;;;###autoload
 (defun +ai--chat-start-quietly ()
   "Start this project's chat without leaving this window; return it.
 No context goes in: the caller inserts its own."

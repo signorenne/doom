@@ -43,8 +43,8 @@
    ["gptel (Claude API)"
     ("g" "Chat buffer"          gptel)
     ("G" "Menu, model, tools"   gptel-menu)
-    ("E" "Explain, quickly"     gptel-quick)
-    ("w" "Rewrite region"       gptel-rewrite)
+    ("E" "Explain, quickly"     +ai/inline-explain)
+    ("w" "Rewrite region"       +ai/inline-rewrite)
     ("+" "Add to context"       gptel-add)
     ("F" "Add file to context"  gptel-add-file)]]
   [["Manage"
