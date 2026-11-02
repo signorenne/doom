@@ -211,6 +211,22 @@ needs you or finishes.")
 ;; The package binds its terminal keys with `local-set-key', and a vterm
 ;; buffer's local map is the shared `vterm-mode-map', so they reached every
 ;; vterm. A map of its own keeps them in the Claude buffer.
+;; The package's file tools open any path they are given; these keep them
+;; to the session's project, like the rest of the Emacs tools.
+(defadvice! +ai--tool-path-first-a (fn file-path &rest args)
+  "Refuse FILE-PATH when it is outside the session's project."
+  :around '(claude-code-ide-mcp-imenu-list-symbols claude-code-ide-mcp-treesit-info)
+  (when file-path
+    (+ai--tool-check-path file-path))
+  (apply fn file-path args))
+
+(defadvice! +ai--tool-path-second-a (fn first file-path)
+  "Refuse FILE-PATH when it is outside the session's project."
+  :around '(claude-code-ide-mcp-xref-find-references claude-code-ide-mcp-xref-find-apropos)
+  (when file-path
+    (+ai--tool-check-path file-path))
+  (funcall fn first file-path))
+
 (defadvice! +ai--claude-own-keymap-a ()
   "Give the Claude buffer its own local map before the package binds keys."
   :before #'claude-code-ide--setup-terminal-keybindings

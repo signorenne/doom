@@ -10,6 +10,7 @@
 (defvar agent-shell-mcp-servers)
 (defvar agent-shell-preferred-agent-config)
 (defvar agent-shell-session-strategy)
+(declare-function +ai--tool-root-allowed-p "claude")
 (declare-function agent-shell "agent-shell")
 (declare-function agent-shell--prompt-input-start "agent-shell-prompt")
 (declare-function agent-shell-cwd "agent-shell-project")
@@ -278,10 +279,11 @@ so you can say what to do instead."
   "Give this chat the Emacs tools through claude-code-ide's server.
 Runs in the chat buffer before its session request is built.  The
 session carries the chat's directory, so a tool works on this chat's
-project, whatever buffer is current when the call arrives."
+project, whatever buffer is current when the call arrives.  A chat
+outside your home gets none."
   (let ((dir (file-name-as-directory (expand-file-name (agent-shell-cwd)))))
     (if (or +ai--chat-session-id
-            (member dir (list (expand-file-name "~/") "/"))
+            (not (+ai--tool-root-allowed-p dir))
             (not (require 'claude-code-ide nil t))
             (not (claude-code-ide-mcp-server-ensure-server)))
         (unless +ai--chat-session-id

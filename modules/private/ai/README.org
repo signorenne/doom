@@ -38,9 +38,10 @@ module =emacs_notes_search=, =_list=, =_read=, =_links=. The rest ask first:
 =emacs_build_project= (through the C++ kit when that module is on),
 =emacs_org_add_todo= into the inbox, =emacs_notes_append= into today's daily
 note, =emacs_notes_draft= for a new note under =capture/drafts=; they never
-rewrite an existing note. A chat's tools work on its own project,
-whatever buffer you are in; the package's xref, imenu and tree-sitter
-tools still open any file path they are given, outside the project too.
+rewrite an existing note. A chat's or a terminal's tools work on its own
+project, whatever buffer you are in, and open no file outside it. Your
+home or any directory in it can be that project; / and the system's
+directories are refused.
 
 When a hidden chat or terminal waits for a permission or finishes, the
 modeline says =AI PROJECT: permission= or =done= and a notification

@@ -59,13 +59,35 @@ that module is on, else make."
       (format "status: %s\n\n%s" (if running "still running" "finished")
               (string-trim text)))))
 
+;;;###autoload
+(defun +ai--tool-root-allowed-p (dir)
+  "Non-nil when DIR may be opened to the agents' tools: your home or a
+directory in it.  / and the system's directories are too much."
+  (file-in-directory-p (file-truename (file-name-as-directory (expand-file-name dir)))
+                       (file-truename "~/")))
+
 (defun +ai--tool-root ()
   "The project of the Claude session a tool is called for: the package's
 own tools take it from the session, and the buffer current as the call
-arrives is whatever you happen to be looking at, another project's."
-  (or (and (fboundp 'claude-code-ide-mcp-server-get-session-context)
-           (plist-get (claude-code-ide-mcp-server-get-session-context) :project-dir))
-      (+core-project-root 'noerror)))
+arrives is whatever you happen to be looking at, another project's.
+A root outside your home is refused."
+  (let ((root (or (and (fboundp 'claude-code-ide-mcp-server-get-session-context)
+                       (plist-get (claude-code-ide-mcp-server-get-session-context)
+                                  :project-dir))
+                  (+core-project-root 'noerror))))
+    (unless (and root (+ai--tool-root-allowed-p root))
+      (error "%s is outside your home, too much to open to the tools"
+             (abbreviate-file-name (or root "/"))))
+    root))
+
+;;;###autoload
+(defun +ai--tool-check-path (path)
+  "Signal an error unless PATH, relative to the session's project, is in it.
+claude-code-ide's own file tools open any path they are given."
+  (let* ((root (file-name-as-directory (expand-file-name (+ai--tool-root))))
+         (file (expand-file-name path root)))
+    (unless (file-in-directory-p (file-truename file) (file-truename root))
+      (error "%s is outside the project %s" path (abbreviate-file-name root)))))
 
 (defun +ai--tool-build-project (&optional target wait-seconds)
   "Build the project and return what the compiler said.
@@ -112,15 +134,16 @@ whether this tool, a key or a menu started it."
 
 (defun +ai--tool-editor-root (buffer)
   "The project an editor state is described for: the session's, else
-BUFFER's.  Home and / are refused, as the gptel tools refuse them."
+BUFFER's.  A root outside your home is refused, as for every tool."
   (let ((root (or (plist-get (claude-code-ide-mcp-server-get-session-context)
                              :project-dir)
                   (with-current-buffer buffer (+core-project-root-or-nil)))))
     (unless root
       (error "Not inside a project, so there is no editor state to give"))
     (setq root (file-name-as-directory (expand-file-name root)))
-    (when (member root (list (expand-file-name "~/") "/"))
-      (error "%s is too much to open to the tools" (abbreviate-file-name root)))
+    (unless (+ai--tool-root-allowed-p root)
+      (error "%s is outside your home, too much to open to the tools"
+             (abbreviate-file-name root)))
     root))
 
 (defun +ai--tool-editor-diagnostics ()
