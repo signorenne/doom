@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-11-02 11:25
+#+generated: 2026-11-02 14:55
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2579,7 +2579,11 @@ Claude in a side panel, an Emacs buffer you read and edit with evil.
 | ~SPC l j~ | go to what needs you                        |
 | ~SPC l s~ | send the region                             |
 | ~SPC l f~ | send this file                              |
-| ~SPC l @~ | mention the file and lines, stay here       |
+| ~SPC l @~ | the file, or just the selected lines        |
+| ~SPC l O~ | a terminal's or a build's last output       |
+| ~SPC l w~ | the chat full size, in the editor window    |
+| ~SPC l W~ | the chat in a frame of its own              |
+| ~SPC l z~ | fold or show its tool calls                 |
 | ~SPC l c~ | write a long prompt                         |
 
 ** In the chat
@@ -2619,6 +2623,20 @@ Claude Code's own TUI in a side window, the fallback.
 | ~SPC l t T~ | plain claude, no Emacs bridge     |
 | ~SPC l t o~ | choose the model                  |
 | ~SPC l t e~ | let Claude evaluate elisp, or not |
+| ~SPC l t w~ | one in a new git worktree         |
+
+** Remote, cloud and background
+What VS Code's extension does with remote sessions, through the Claude
+terminal: the chat's adapter has no such commands.
+
+| Key       | What it does                                   |
+|-----------+------------------------------------------------|
+| ~SPC l d r~ | a terminal with Remote Control, for your phone |
+| ~SPC l d w~ | open one of your cloud sessions here           |
+| ~SPC l d c~ | send a task to a cloud session                 |
+| ~SPC l d b~ | give a task to a background agent              |
+| ~SPC l d a~ | the background agents                          |
+| ~SPC l d t~ | open a background agent                        |
 
 ** Inside the Claude buffer
 Keys go to Claude, because the buffer is in emacs state. The way out is
@@ -2716,16 +2734,18 @@ Doom's llm keys on ~SPC o l~ are there too. In a chat buffer =C-c RET=
 sends. Writing =@deep= or =@quick= in the prompt picks a preset.
 
 ** Files and settings
-| Key       | What it opens                       |
-|-----------+-------------------------------------|
-| ~SPC l m c~ | the project CLAUDE.md               |
-| ~SPC l m s~ | the Claude settings file            |
-| ~SPC l m n~ | a new slash command                 |
-| ~SPC l m h~ | install the hooks that notify Emacs |
-| ~SPC l m l~ | log this session into its project   |
-| ~SPC l m d~ | claude doctor                       |
-| ~SPC l m p~ | the MCP servers claude knows        |
-| ~SPC l m t~ | the chat's ACP traffic              |
+| Key       | What it opens                        |
+|-----------+--------------------------------------|
+| ~SPC l m c~ | the project CLAUDE.md                |
+| ~SPC l m s~ | the Claude settings file             |
+| ~SPC l m n~ | a new slash command                  |
+| ~SPC l m h~ | install the hooks that notify Emacs  |
+| ~SPC l m l~ | log this session into its project    |
+| ~SPC l m d~ | claude doctor                        |
+| ~SPC l m p~ | the MCP servers claude knows         |
+| ~SPC l m t~ | the chat's ACP traffic               |
+| ~SPC l m m~ | MCP servers, hooks, permission rules |
+| ~SPC l m u~ | your plan's usage and limits         |
 
 ** The claude CLI
 | Command             | What it does              |
@@ -3188,51 +3208,64 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC i y~ | From clipboard      |
 
 ** SPC l: AI: chat, terminal, inline, gptel
-| Key       | What it does               |
-|-----------+----------------------------|
-| ~SPC l @~   | Mention file and lines     |
-| ~SPC l SPC~ | AI hub                     |
-| ~SPC l a~   | Ask                        |
-| ~SPC l b~   | Chat: switch               |
-| ~SPC l c~   | Compose a chat prompt      |
-| ~SPC l e~   | Rewrite region             |
-| ~SPC l f~   | Send file to chat          |
-| ~SPC l g +~ | Add to context             |
-| ~SPC l g f~ | Add file to context        |
-| ~SPC l g g~ | Chat buffer                |
-| ~SPC l g m~ | Menu, model, tools         |
-| ~SPC l i~   | Chat: interrupt            |
-| ~SPC l j~   | Go to what needs you       |
-| ~SPC l k~   | Chat: stop                 |
-| ~SPC l l~   | Chat: open or focus        |
-| ~SPC l m c~ | CLAUDE.md (project)        |
-| ~SPC l m d~ | claude doctor              |
-| ~SPC l m h~ | Install Emacs hooks        |
-| ~SPC l m l~ | Log session to org         |
-| ~SPC l m n~ | New slash command          |
-| ~SPC l m p~ | claude mcp list            |
-| ~SPC l m s~ | Claude settings.json       |
-| ~SPC l m t~ | Chat's ACP traffic         |
-| ~SPC l n~   | Chat: new, C-u any agent   |
-| ~SPC l o~   | Chat: mode, model, thought |
-| ~SPC l q~   | Chat: hide                 |
-| ~SPC l r~   | Chat: resume a session     |
-| ~SPC l s~   | Send region to chat        |
-| ~SPC l t C~ | Continue last              |
-| ~SPC l t T~ | Plain terminal             |
-| ~SPC l t c~ | Focus or start             |
-| ~SPC l t e~ | Toggle the elisp tool      |
-| ~SPC l t k~ | Stop                       |
-| ~SPC l t l~ | List sessions              |
-| ~SPC l t m~ | IDE package menu           |
-| ~SPC l t n~ | New instance               |
-| ~SPC l t o~ | Set model                  |
-| ~SPC l t p~ | Compose prompt             |
-| ~SPC l t r~ | Resume a session           |
-| ~SPC l t s~ | Send selection (@)         |
-| ~SPC l t t~ | Toggle window              |
-| ~SPC l v~   | Chat: transcript           |
-| ~SPC l x~   | Explain                    |
+| Key       | What it does                 |
+|-----------+------------------------------|
+| ~SPC l @~   | Mention file and lines       |
+| ~SPC l O~   | Terminal output to chat      |
+| ~SPC l SPC~ | AI hub                       |
+| ~SPC l W~   | Chat: own frame              |
+| ~SPC l a~   | Ask                          |
+| ~SPC l b~   | Chat: switch                 |
+| ~SPC l c~   | Compose a chat prompt        |
+| ~SPC l d a~ | Background agents            |
+| ~SPC l d b~ | Task to a background agent   |
+| ~SPC l d c~ | Task to the cloud            |
+| ~SPC l d r~ | Terminal with Remote Control |
+| ~SPC l d t~ | Attach to an agent           |
+| ~SPC l d w~ | Open a cloud session here    |
+| ~SPC l e~   | Rewrite region               |
+| ~SPC l f~   | Send file to chat            |
+| ~SPC l g +~ | Add to context               |
+| ~SPC l g f~ | Add file to context          |
+| ~SPC l g g~ | Chat buffer                  |
+| ~SPC l g m~ | Menu, model, tools           |
+| ~SPC l i~   | Chat: interrupt              |
+| ~SPC l j~   | Go to what needs you         |
+| ~SPC l k~   | Chat: stop                   |
+| ~SPC l l~   | Chat: open or focus          |
+| ~SPC l m c~ | CLAUDE.md (project)          |
+| ~SPC l m d~ | claude doctor                |
+| ~SPC l m h~ | Install Emacs hooks          |
+| ~SPC l m l~ | Log session to org           |
+| ~SPC l m m~ | MCP, hooks, permissions      |
+| ~SPC l m n~ | New slash command            |
+| ~SPC l m p~ | claude mcp list              |
+| ~SPC l m s~ | Claude settings.json         |
+| ~SPC l m t~ | Chat's ACP traffic           |
+| ~SPC l m u~ | Usage and limits             |
+| ~SPC l n~   | Chat: new, C-u any agent     |
+| ~SPC l o~   | Chat: mode, model, thought   |
+| ~SPC l q~   | Chat: hide                   |
+| ~SPC l r~   | Chat: resume a session       |
+| ~SPC l s~   | Send region to chat          |
+| ~SPC l t C~ | Continue last                |
+| ~SPC l t T~ | Plain terminal               |
+| ~SPC l t c~ | Focus or start               |
+| ~SPC l t e~ | Toggle the elisp tool        |
+| ~SPC l t k~ | Stop                         |
+| ~SPC l t l~ | List sessions                |
+| ~SPC l t m~ | IDE package menu             |
+| ~SPC l t n~ | New instance                 |
+| ~SPC l t o~ | Set model                    |
+| ~SPC l t p~ | Compose prompt               |
+| ~SPC l t r~ | Resume a session             |
+| ~SPC l t s~ | Send selection (@)           |
+| ~SPC l t t~ | Toggle window                |
+| ~SPC l t w~ | In a new worktree            |
+| ~SPC l v~   | Chat: transcript             |
+| ~SPC l w~   | Chat: full window            |
+| ~SPC l x~   | Explain                      |
+| ~SPC l z~   | Chat: fold tool calls        |
 
 ** SPC n: notes
 | Key         | What it does                   |
@@ -4387,17 +4420,27 @@ bound.
   soft wrapping.
 
 ** AI
+- ~+ai/agent-attach~ (~SPC l d t~) :: Open a background agent in a terminal,
+  to follow or answer it.
+- ~+ai/agent-dispatch~ (~SPC l d b~) :: Give TASK to a background agent
+  working in this project.
+- ~+ai/agents~ (~SPC l d a~) :: Show the background agents, Claude's agent
+  view, in a terminal.
 - ~+ai/attend~ (~SPC l j~) :: Go to the chat or terminal that needs you, the
   one waiting longest.
 - ~+ai/chat~ (~SPC l l~) :: Open or focus this project's chat, the region or
   the error at point in its prompt.
 - ~+ai/chat-cycle-mode~ :: Go to the next permission mode of this project's
   chat, from any buffer.
+- ~+ai/chat-focus~ (~SPC l z~) :: Fold the tool calls of this project's
+  chat, or unfold them again.
+- ~+ai/chat-frame~ (~SPC l W~) :: Show this project's chat in a frame of its
+  own, as VS Code's Open in New Window.
 - ~+ai/chat-hide~ (~SPC l q~) :: Hide this project's chat; it keeps running.
 - ~+ai/chat-interrupt~ (~SPC l i~) :: Interrupt this project's chat, from
   any buffer.
-- ~+ai/chat-mention~ (~SPC l @~) :: Put an @-mention of this file and its
-  lines into the project's chat.
+- ~+ai/chat-mention~ (~SPC l @~) :: Put this file, or its selected lines,
+  into the project's chat.
 - ~+ai/chat-new~ (~SPC l n~) :: Start a new chat for this project.
 - ~+ai/chat-options~ (~SPC l o~) :: The permission mode, the model and the
   thought level of this project's chat, from any buffer.
@@ -4405,6 +4448,8 @@ bound.
   stop the turn, so you can say what to do instead.
 - ~+ai/chat-resume~ (~SPC l r~) :: Start a chat that first lists this
   project's earlier sessions.
+- ~+ai/chat-send-output~ (~SPC l O~) :: Put the last output of BUFFER, a
+  terminal or a build, into the chat.
 - ~+ai/chat-set-mode~ :: Choose the permission mode of this project's chat,
   from any buffer.
 - ~+ai/chat-set-model~ :: Choose the model of this project's chat, from any
@@ -4416,19 +4461,37 @@ bound.
   chat, from any buffer.
 - ~+ai/chat-transcript~ (~SPC l v~) :: Open the transcript of this project's
   chat, from any buffer.
+- ~+ai/chat-window~ (~SPC l w~) :: Show this project's chat full size, in
+  the editor window, as VS Code's Open in New Tab.
+- ~+ai/claude-config~ (~SPC l m m~) :: Claude Code's MCP servers, hooks,
+  permission rules and usage, as VS Code's dialogs show them.
 - ~+ai/claude-doctor~ (~SPC l m d~) :: Run 'claude doctor' in a vterm.
 - ~+ai/claude-guard~ (~x~) :: Leave Claude's screen alone and say how to
   type to Claude.
+- ~+ai/claude-hooks~ :: Open Claude's hooks; with PROJECT (C-u), the
+  project's.
 - ~+ai/claude-leave~ (~C-c C-o~) :: Go back to the window you came from;
   Claude keeps its window.
+- ~+ai/claude-mcp-add~ :: Give Claude Code the MCP server NAME.
+- ~+ai/claude-mcp-get~ :: Show what Claude knows of SERVER, (NAME SCOPE),
+  and whether it connects.
 - ~+ai/claude-mcp-list~ (~SPC l m p~) :: List the MCP servers the claude CLI
-  knows about.
+  knows about, connecting to each.
+- ~+ai/claude-mcp-remove~ :: Take SERVER, (NAME SCOPE), away from Claude
+  Code, after asking.
 - ~+ai/claude-paste~ (~P~) :: Paste the top of the kill ring into Claude,
   then type to Claude.
+- ~+ai/claude-permissions~ :: Open Claude's permission rules; with PROJECT
+  (C-u), the project's.
 - ~+ai/claude-terminal~ (~SPC l t T~) :: Run claude in a terminal, without
   the Emacs bridge.
 - ~+ai/claude-type~ (~O~) :: Type to Claude again: emacs state, point back
   on Claude's cursor.
+- ~+ai/claude-usage~ (~SPC l m u~) :: Show your plan's usage and limits, as
+  VS Code's Account & usage: /usage in this project's chat, which costs
+  nothing.
+- ~+ai/cloud-task~ (~SPC l d c~) :: Send TASK to a cloud session on
+  claude.ai and follow it in a terminal.
 - ~+ai/inline-answer-to-chat~ (~C-c C-c~) :: Put the question and this
   answer into the project's chat prompt.
 - ~+ai/inline-ask~ (~SPC l a~) :: Ask QUESTION, with the region as its
@@ -4472,6 +4535,13 @@ bound.
   prompt sent N before the one shown.
 - ~+ai/terminal-compose-send~ (~C-c C-c~) :: Send this prompt to the
   project's Claude terminal and close.
+- ~+ai/terminal-remote~ (~SPC l d r~) :: Start a Claude terminal for this
+  project with Remote Control, so the session can be driven from claude.ai
+  or the Claude app as well.
+- ~+ai/terminal-teleport~ (~SPC l d w~) :: Open one of your cloud sessions
+  here, in a Claude terminal: the CLI lists them to pick from.
+- ~+ai/terminal-worktree~ (~SPC l t w~) :: Start a Claude terminal in a new
+  git worktree NAME of this project.
 - ~+ai/toggle-execute-code~ (~SPC l t e~) :: Allow or forbid Claude to
   evaluate Emacs Lisp.
 
