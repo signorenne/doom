@@ -196,6 +196,8 @@ the tools.
   columns are a readable line of prose, below 64 the terminal wraps a lot.
 - ~+ai-auto-allowed-tools~: the Emacs tools that run without asking, in
   the chat and in the terminal. Never empty.
+- ~+ai-tool-search-seconds~ (5): how long the project TODO search may
+  hold Emacs; past it the tool answers with what it found.
 - ~+ai-notify~ (t): the desktop notification; the faces
   ~+ai-status-permission~ and ~+ai-status-done~ colour the modeline entry.
 - ~+ai-inline-backend~ (=auto=, else =gptel= or =claude-cli=),

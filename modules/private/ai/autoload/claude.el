@@ -3,6 +3,7 @@
 ;; Tools Claude can call over MCP, plus the model flag and terminal helpers.
 
 (defvar +ai-claude-model)
+(defvar +ai-tool-search-seconds)
 (defvar +ai-compose-mode)
 (defvar +core-todo-markers)
 (defvar claude-code-ide--session)
@@ -120,17 +121,33 @@ whether this tool, a key or a menu started it."
     "No build, test or run has started yet."))
 
 (defun +ai--tool-project-todos ()
-  "Return the project's markers, `+core-todo-markers', as file:line:text."
+  "Return the project's markers, `+core-todo-markers', as file:line:text.
+The search holds Emacs while it runs, so it stops after
+`+ai-tool-search-seconds' with what it has: in a tree as large as a
+home directory it would otherwise freeze Emacs for the whole walk."
   (let ((root (+ai--tool-root)))
     (unless (executable-find "rg") (error "ripgrep (rg) is not installed"))
     (with-temp-buffer
-      (let ((default-directory root))
-        (call-process "rg" nil t nil
-                      "--line-number" "--no-heading" "--color=never"
-                      "-e" (+core-todo-regexp) "."))
-      (if (= (point-min) (point-max))
-          "No TODO/FIXME markers found."
-        (buffer-substring-no-properties (point-min) (min (point-max) 12000))))))
+      (let* ((default-directory root)
+             (process (make-process
+                       :name "ai-todos" :buffer (current-buffer)
+                       :command (list "rg" "--line-number" "--no-heading"
+                                      "--color=never" "-e" (+core-todo-regexp) ".")
+                       :connection-type 'pipe :noquery t :sentinel #'ignore))
+             (deadline (+ (float-time) +ai-tool-search-seconds)))
+        (while (and (process-live-p process) (< (float-time) deadline))
+          (accept-process-output process 0.1 nil t))
+        (let ((stopped (process-live-p process)))
+          (if stopped
+              (delete-process process)
+            ;; Ended: what it wrote last may still sit in the pipe.
+            (while (accept-process-output process 0 nil t)))
+          (concat (if (= (point-min) (point-max))
+                      "No TODO/FIXME markers found."
+                    (buffer-substring-no-properties (point-min) (min (point-max) 12000)))
+                  (when stopped
+                    (format "\n(stopped after %d s: the project is too large to search whole)"
+                            +ai-tool-search-seconds))))))))
 
 (defun +ai--tool-editor-root (buffer)
   "The project an editor state is described for: the session's, else

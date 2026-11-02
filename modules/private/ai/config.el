@@ -36,6 +36,10 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
 A transcript is mostly prose, and 72 columns read best; the code keeps
 the rest.")
 
+(defvar +ai-tool-search-seconds 5
+  "Seconds the project TODO search may hold Emacs before it stops with
+what it found.")
+
 (defvar +ai-auto-allowed-tools
   '("claude-code-ide-mcp-xref-find-references"
     "claude-code-ide-mcp-xref-find-apropos"
