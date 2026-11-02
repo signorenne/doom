@@ -3,7 +3,9 @@
 ;; Tools Claude can call over MCP, plus the model flag and terminal helpers.
 
 (defvar +ai-claude-model)
+(defvar +ai-compose-mode)
 (defvar +core-todo-markers)
+(defvar claude-code-ide--session)
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
@@ -11,6 +13,13 @@
 (declare-function claude-code-ide--get-buffer-name "claude-code-ide")
 (declare-function claude-code-ide--get-working-directory "claude-code-ide")
 (declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
+(declare-function claude-code-ide-mcp-session-client "claude-code-ide-mcp")
+(declare-function evil-emacs-state "evil-states")
+(declare-function evil-insert-state "evil-states")
+(declare-function vterm-reset-cursor-point "vterm")
+(declare-function vterm-send-return "vterm")
+(declare-function vterm-send-string "vterm")
+(declare-function vterm-yank "vterm")
 (declare-function claude-code-ide-mcp-server-get-session-context "claude-code-ide-mcp-server")
 (declare-function claude-code-ide-make-tool "claude-code-ide-mcp-server")
 
@@ -178,17 +187,162 @@ model name can still be typed."
 ;;
 ;;; Terminal helpers
 
+(defun +ai--terminal-buffer (&optional dir)
+  "The Claude terminal of DIR's project, default this one, while it runs."
+  (let ((buffer (get-buffer (claude-code-ide--get-buffer-name
+                             (or dir (claude-code-ide--get-working-directory))))))
+    (and buffer (process-live-p (get-buffer-process buffer)) buffer)))
+
 ;;;###autoload
 (defun +ai/terminal ()
   "Focus this project's Claude terminal, or start one when none runs.
 `claude-code-ide' alone always starts another instance."
   (interactive)
   (require 'claude-code-ide)
-  (let ((buffer (get-buffer (claude-code-ide--get-buffer-name
-                             (claude-code-ide--get-working-directory)))))
-    (if (and buffer (process-live-p (get-buffer-process buffer)))
-        (claude-code-ide-switch-to-buffer)
-      (claude-code-ide))))
+  (if (+ai--terminal-buffer)
+      (claude-code-ide-switch-to-buffer)
+    (claude-code-ide)))
+
+;; Normal state in the terminal reads Claude's screen. evil-collection's
+;; vterm keys move Claude's cursor with arrow keys, which the TUI takes
+;; as its history, so these put point back on the cursor instead.
+
+;;;###autoload
+(defun +ai/claude-type ()
+  "Type to Claude again: emacs state, point back on Claude's cursor."
+  (interactive)
+  (vterm-reset-cursor-point)
+  (evil-emacs-state))
+
+;;;###autoload
+(defun +ai/claude-paste ()
+  "Paste the top of the kill ring into Claude, then type to Claude."
+  (interactive)
+  (vterm-reset-cursor-point)
+  (vterm-yank)
+  (evil-emacs-state))
+
+;;;###autoload
+(defun +ai/claude-guard ()
+  "Leave Claude's screen alone and say how to type to Claude."
+  (interactive)
+  (message "C-z or i to type to Claude"))
+
+
+;;
+;;; Composing a prompt for the terminal
+
+(defvar +ai--compose-history nil
+  "Prompts sent from compose buffers, newest first, at most 20.")
+
+(defvar-local +ai--compose-dir nil
+  "The project directory whose Claude terminal this buffer writes to.")
+
+(defvar-local +ai--compose-index nil
+  "The prompt of `+ai--compose-history' that M-p and M-n showed last.")
+
+;;;###autoload
+(defun +ai/terminal-compose ()
+  "Write a prompt for this project's Claude terminal in a buffer.
+C-c C-c sends it, C-c C-k drops it, M-p and M-n bring back the last
+prompts.  An active region comes along as a fenced block."
+  (interactive)
+  (require 'claude-code-ide)
+  (let* ((dir (claude-code-ide--get-working-directory))
+         (block (when (use-region-p)
+                  (format "```%s\n%s\n```\n" (+core-language major-mode)
+                          (buffer-substring-no-properties
+                           (region-beginning) (region-end)))))
+         (buffer (get-buffer-create
+                  (format "*claude-compose[%s]*"
+                          (file-name-nondirectory (directory-file-name dir))))))
+    (deactivate-mark)
+    (with-current-buffer buffer
+      (unless +ai-compose-mode
+        (if (fboundp 'gfm-mode) (gfm-mode) (markdown-mode))
+        (+ai-compose-mode +1))
+      (setq default-directory dir
+            +ai--compose-dir dir)
+      (when block
+        (goto-char (point-max))
+        (unless (bolp) (insert "\n"))
+        (insert block)))
+    (pop-to-buffer buffer)
+    (goto-char (point-max))
+    (when (bound-and-true-p evil-local-mode)
+      (evil-insert-state))))
+
+(defun +ai--terminal-send (buffer text)
+  "Paste TEXT into the Claude terminal BUFFER and submit it.
+A bracketed paste, so a newline in TEXT does not submit early."
+  (with-current-buffer buffer
+    (vterm-send-string text t)
+    ;; As claude-code-ide does, let the paste land before the return.
+    (sleep-for 0.1)
+    (vterm-send-return)))
+
+(defun +ai--terminal-connected-p (buffer)
+  "Non-nil once the Claude in BUFFER has connected to Emacs."
+  (when-let* ((session (buffer-local-value 'claude-code-ide--session buffer)))
+    (claude-code-ide-mcp-session-client session)))
+
+(defun +ai--compose-send-when-ready (compose dir text deadline)
+  "Send TEXT once DIR's new terminal runs and Claude has connected.
+Then close COMPOSE; past DEADLINE keep it and say so.  Closing COMPOSE
+meanwhile drops the prompt."
+  (let ((terminal (+ai--terminal-buffer dir)))
+    (cond ((not (buffer-live-p compose)))
+          ((and terminal (+ai--terminal-connected-p terminal))
+           (+ai--terminal-send terminal text)
+           (kill-buffer compose))
+          ((> (float-time) deadline)
+           (message "Claude did not start"))
+          (t (run-at-time 0.5 nil #'+ai--compose-send-when-ready
+                          compose dir text deadline)))))
+
+;;;###autoload
+(defun +ai/terminal-compose-send ()
+  "Send this prompt to the project's Claude terminal and close.
+With no terminal running, start one and send once Claude is up."
+  (interactive)
+  (let ((text (string-trim (buffer-string)))
+        (compose (current-buffer))
+        (dir +ai--compose-dir))
+    (when (string-empty-p text)
+      (user-error "Nothing to send"))
+    (setq +ai--compose-history
+          (seq-take (cons text (delete text +ai--compose-history)) 20))
+    (if-let* ((terminal (+ai--terminal-buffer dir)))
+        (progn (+ai--terminal-send terminal text)
+               (kill-buffer compose))
+      (let ((default-directory dir))
+        (claude-code-ide))
+      (+ai--compose-send-when-ready compose dir text (+ (float-time) 15)))))
+
+;;;###autoload
+(defun +ai/terminal-compose-cancel ()
+  "Close this compose buffer without sending."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+;;;###autoload
+(defun +ai/terminal-compose-previous (&optional n)
+  "Replace the text with the prompt sent N before the one shown."
+  (interactive "p")
+  (unless +ai--compose-history
+    (user-error "No prompt sent yet"))
+  (let ((index (+ (or +ai--compose-index -1) (or n 1))))
+    (erase-buffer)
+    (if (< index 0)
+        (setq +ai--compose-index nil)
+      (setq +ai--compose-index (min index (1- (length +ai--compose-history))))
+      (insert (nth +ai--compose-index +ai--compose-history)))))
+
+;;;###autoload
+(defun +ai/terminal-compose-next (&optional n)
+  "Replace the text with the prompt sent N after the one shown."
+  (interactive "p")
+  (+ai/terminal-compose-previous (- (or n 1))))
 
 ;;;###autoload
 (defun +ai/claude-leave ()

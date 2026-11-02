@@ -133,9 +133,44 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
       "C-c C-o" #'+ai/claude-leave         ; back to the code, Claude stays
       "C-c C-q" #'claude-code-ide-toggle   ; hide the window, Claude runs on
       "C-c C-k" #'claude-code-ide-stop     ; end the session
+      "C-c C-e" #'+ai/terminal-compose     ; write a long prompt in a buffer
       "S-<return>" #'claude-code-ide-insert-newline  ; a newline in the prompt
       "C-<escape>" #'claude-code-ide-send-escape     ; ESC to Claude
       "C-c C-x" #'claude-code-ide-clear-selection)   ; drop the shown selection
+
+;; After C-z, normal state is for reading Claude's screen. The keys that
+;; would edit it only say how to type, the ones that insert go back to
+;; Claude's prompt, and p pastes into Claude. evil's minor-mode keys rank
+;; above vterm's normal-state map and evil-snipe's s, which stays.
+(after! evil
+  (evil-define-minor-mode-key 'normal '+ai-claude-keys-mode
+    (kbd "i") #'+ai/claude-type  (kbd "a") #'+ai/claude-type
+    (kbd "I") #'+ai/claude-type  (kbd "A") #'+ai/claude-type
+    (kbd "o") #'+ai/claude-type  (kbd "O") #'+ai/claude-type
+    (kbd "p") #'+ai/claude-paste (kbd "P") #'+ai/claude-paste
+    (kbd "d") #'+ai/claude-guard (kbd "D") #'+ai/claude-guard
+    (kbd "x") #'+ai/claude-guard (kbd "X") #'+ai/claude-guard
+    (kbd "c") #'+ai/claude-guard (kbd "C") #'+ai/claude-guard
+    (kbd "r") #'+ai/claude-guard (kbd "R") #'+ai/claude-guard
+    (kbd "u") #'+ai/claude-guard)
+  (evil-define-minor-mode-key 'visual '+ai-claude-keys-mode
+    (kbd "d") #'+ai/claude-guard (kbd "x") #'+ai/claude-guard))
+
+;; A buffer to write a long prompt in, sent to the terminal in one go.
+;; Its keys sit in a minor mode, so other markdown buffers keep theirs.
+(define-minor-mode +ai-compose-mode
+  "Keys of a buffer composing a prompt for Claude's terminal."
+  :keymap (make-sparse-keymap))
+
+(map! :map +ai-compose-mode-map
+      "C-c C-c" #'+ai/terminal-compose-send
+      "C-c C-k" #'+ai/terminal-compose-cancel
+      "M-p"     #'+ai/terminal-compose-previous
+      "M-n"     #'+ai/terminal-compose-next)
+
+;; Kept when hidden, so a draft outlives an accidental close.
+(set-popup-rule! "^\\*claude-compose\\["
+  :side 'bottom :size 0.25 :select t :quit nil :ttl nil)
 
 ;; The package binds its terminal keys with `local-set-key', and a vterm
 ;; buffer's local map is the shared `vterm-mode-map', so they reached every
@@ -268,7 +303,7 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
        :desc "Claude: start or focus"   "c" #'+ai/terminal
        :desc "Claude: continue"         "C" #'claude-code-ide-continue
        :desc "Claude: resume session"   "r" #'claude-code-ide-resume
-       :desc "Claude: prompt"           "p" #'claude-code-ide-send-prompt
+       :desc "Claude: compose prompt"   "p" #'+ai/terminal-compose
        :desc "Claude: send region"      "s" #'claude-code-ide-insert-at-mentioned
        :desc "Claude: toggle window"    "t" #'claude-code-ide-toggle
        :desc "Claude: switch buffer"    "b" #'claude-code-ide-switch-to-buffer

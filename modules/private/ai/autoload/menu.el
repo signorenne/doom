@@ -24,7 +24,7 @@
     ("c" "Start or focus"       +ai/terminal)
     ("C" "Continue last"        claude-code-ide-continue)
     ("r" "Resume session..."    claude-code-ide-resume)
-    ("p" "Send prompt"          claude-code-ide-send-prompt)
+    ("p" "Compose prompt"       +ai/terminal-compose)
     ("s" "Send selection (@)"   claude-code-ide-insert-at-mentioned)
     ("t" "Toggle window"        claude-code-ide-toggle)
     ("b" "Switch to buffer"     claude-code-ide-switch-to-buffer)
