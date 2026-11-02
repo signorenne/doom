@@ -247,7 +247,7 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
       (:prefix-map ("l" . "LLM: Claude, agents, gptel")
        :desc "AI menu"                  "SPC" #'+ai/menu
        ;; Claude Code IDE
-       :desc "Claude: start or focus"   "c" #'claude-code-ide
+       :desc "Claude: start or focus"   "c" #'+ai/terminal
        :desc "Claude: continue"         "C" #'claude-code-ide-continue
        :desc "Claude: resume session"   "r" #'claude-code-ide-resume
        :desc "Claude: prompt"           "p" #'claude-code-ide-send-prompt

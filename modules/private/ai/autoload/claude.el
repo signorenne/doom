@@ -7,6 +7,10 @@
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
+(declare-function claude-code-ide "claude-code-ide")
+(declare-function claude-code-ide--get-buffer-name "claude-code-ide")
+(declare-function claude-code-ide--get-working-directory "claude-code-ide")
+(declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
 (declare-function claude-code-ide-mcp-server-get-session-context "claude-code-ide-mcp-server")
 (declare-function claude-code-ide-make-tool "claude-code-ide-mcp-server")
 
@@ -171,6 +175,18 @@ whether this tool, a key or a menu started it."
 
 ;;
 ;;; Terminal helpers
+
+;;;###autoload
+(defun +ai/terminal ()
+  "Focus this project's Claude terminal, or start one when none runs.
+`claude-code-ide' alone always starts another instance."
+  (interactive)
+  (require 'claude-code-ide)
+  (let ((buffer (get-buffer (claude-code-ide--get-buffer-name
+                             (claude-code-ide--get-working-directory)))))
+    (if (and buffer (process-live-p (get-buffer-process buffer)))
+        (claude-code-ide-switch-to-buffer)
+      (claude-code-ide))))
 
 ;;;###autoload
 (defun +ai/claude-leave ()

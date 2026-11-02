@@ -21,7 +21,7 @@
   "AI hub: Claude Code IDE, agent shells, gptel and agent management."
   [:description +ai--menu-description
    ["Claude Code IDE"
-    ("c" "Start or focus"       claude-code-ide)
+    ("c" "Start or focus"       +ai/terminal)
     ("C" "Continue last"        claude-code-ide-continue)
     ("r" "Resume session..."    claude-code-ide-resume)
     ("p" "Send prompt"          claude-code-ide-send-prompt)
