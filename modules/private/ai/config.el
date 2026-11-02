@@ -231,6 +231,19 @@ needs you or finishes.")
     (+ai--tool-check-path file-path))
   (funcall fn first file-path))
 
+(declare-function claude-code-ide--get-working-directory "claude-code-ide")
+
+;; The terminal's --allowedTools names the tools by server name; when
+;; another server shares it, they ask like any other tool.
+(defadvice! +ai--claude-allowed-tools-a (command)
+  "Drop --allowedTools from COMMAND when another server is named emacs-tools."
+  :filter-return #'claude-code-ide--build-claude-command
+  (if-let* ((taken (+ai--tools-name-taken (claude-code-ide--get-working-directory))))
+      (progn
+        (message "%s, so the Emacs tools ask first" taken)
+        (replace-regexp-in-string " --allowedTools .*\\'" "" command))
+    command))
+
 (defadvice! +ai--claude-own-keymap-a ()
   "Give the Claude buffer its own local map before the package binds keys."
   :before #'claude-code-ide--setup-terminal-keybindings
@@ -364,10 +377,14 @@ needs you or finishes.")
 (defvar +ai--chat-permission-request nil
   "The ACP request agent-shell is handling, while its responder runs.")
 
+(defvar +ai--chat-permission-buffer nil
+  "The chat whose request agent-shell is handling, while its responder runs.")
+
 (defadvice! +ai--chat-permission-request-a (fn &rest args)
   "Let the permission responder read the request agent-shell handles."
   :around #'agent-shell--on-request
-  (let ((+ai--chat-permission-request (plist-get args :acp-request)))
+  (let ((+ai--chat-permission-request (plist-get args :acp-request))
+        (+ai--chat-permission-buffer (map-elt (plist-get args :state) :buffer)))
     (apply fn args)))
 
 

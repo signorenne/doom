@@ -43,7 +43,11 @@ note, =emacs_notes_draft= for a new note under =capture/drafts=; they never
 rewrite an existing note. A chat's or a terminal's tools work on its own
 project, whatever buffer you are in, and open no file outside it. Your
 home or any directory in it can be that project; / and the system's
-directories are refused.
+directories are refused. If Claude's own MCP settings (~/.claude.json,
+a .mcp.json in the project or any directory above it, the managed
+files) name another server emacs-tools, or one of them cannot be read,
+the read tools ask like the rest, and Emacs says so when the chat or
+terminal starts.
 
 When a hidden chat or terminal waits for a permission or finishes, the
 modeline says =AI PROJECT: permission= or =done= and a notification

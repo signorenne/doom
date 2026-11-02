@@ -81,6 +81,62 @@ A root outside your home is refused."
              (abbreviate-file-name (or root "/"))))
     root))
 
+(defun +ai--read-json (file)
+  "FILE's JSON as an alist, or nil when it is missing or unreadable."
+  (when (file-readable-p file)
+    (ignore-errors
+      (with-temp-buffer
+        (insert-file-contents file)
+        (json-parse-buffer :object-type 'alist :null-object nil :false-object nil)))))
+
+;;;###autoload
+(defun +ai--tools-name-taken (dir)
+  "Why the read tools may not run unasked for DIR, or nil: a file that
+gives another MCP server the name emacs-tools, or one that cannot be
+read.  Ours is passed per session and never written to these files, so
+a server found there is someone else's, and the auto-allowed tool names
+would reach it too.  Claude reads .mcp.json in DIR and in every
+directory above it."
+  (let* ((dir (directory-file-name (expand-file-name dir)))
+         (managed (if (featurep :system 'macos)
+                      "/Library/Application Support/ClaudeCode/"
+                    "/etc/claude-code/"))
+         (user (expand-file-name "~/.claude.json"))
+         (sources `((,user mcpServers)
+                    (,user projects ,(intern dir) mcpServers)
+                    (,user projects ,(intern (directory-file-name (file-truename dir)))
+                           mcpServers)
+                    (,(concat managed "managed-mcp.json") mcpServers)
+                    (,(concat managed "managed-settings.json") managedMcpServers))))
+    (let ((up dir))
+      (while up
+        (push (list (expand-file-name ".mcp.json" up) 'mcpServers) sources)
+        (setq up (unless (equal up (directory-file-name (file-name-directory up)))
+                   (directory-file-name (file-name-directory up))))))
+    (let (parsed)
+      (seq-some
+       (lambda (source)
+         (let ((file (car source)))
+           (when (file-exists-p file)
+             (unless (assoc file parsed)
+               (push (cons file (condition-case nil
+                                    (with-temp-buffer
+                                      (insert-file-contents file)
+                                      (json-parse-buffer :object-type 'alist
+                                                         :null-object nil
+                                                         :false-object nil))
+                                  (error :unreadable)))
+                     parsed))
+             (let* ((json (cdr (assoc file parsed)))
+                    (servers (and (listp json) (map-nested-elt json (cdr source)))))
+               (cond ((or (eq json :unreadable)
+                          (and servers (not (listp servers))))
+                      (format "%s cannot be read" (abbreviate-file-name file)))
+                     ((assq 'emacs-tools servers)
+                      (format "%s names another server emacs-tools"
+                              (abbreviate-file-name file))))))))
+       sources))))
+
 ;;;###autoload
 (defun +ai--tool-check-path (path)
   "Signal an error unless PATH, relative to the session's project, is in it.

@@ -3,6 +3,7 @@
 ;; agent-shell chats: the Emacs tools they reach, the permissions they ask
 ;; for, and the window the editor works in.
 
+(defvar +ai--chat-permission-buffer)
 (defvar +ai--chat-permission-request)
 (defvar +ai-auto-allowed-tools)
 (defvar acp-logging-enabled)
@@ -11,6 +12,7 @@
 (defvar agent-shell-preferred-agent-config)
 (defvar agent-shell-session-strategy)
 (declare-function +ai--tool-root-allowed-p "claude")
+(declare-function +ai--tools-name-taken "claude")
 (declare-function agent-shell "agent-shell")
 (declare-function agent-shell--prompt-input-start "agent-shell-prompt")
 (declare-function agent-shell-cwd "agent-shell-project")
@@ -268,6 +270,10 @@ so you can say what to do instead."
 (defvar-local +ai--chat-session-id nil
   "This chat's session in claude-code-ide's tool server, or nil.")
 
+(defvar-local +ai--chat-tools-trusted nil
+  "Non-nil when this chat's emacs-tools server is ours alone, so its read
+tools may run unasked.")
+
 (defun +ai--chat-tools-end-h ()
   "Take this chat's session out of the tool server."
   (when +ai--chat-session-id
@@ -303,6 +309,9 @@ outside your home gets none."
           (setq id (format "%s-%d" base (cl-incf n))))
         (claude-code-ide-mcp-server-session-started id dir (current-buffer))
         (setq +ai--chat-session-id id)
+        (if-let* ((taken (+ai--tools-name-taken dir)))
+            (message "%s, so the Emacs tools ask first" taken)
+          (setq +ai--chat-tools-trusted t))
         (setq-local agent-shell-mcp-servers
                     (append (default-value 'agent-shell-mcp-servers)
                             `(((name . "emacs-tools")
@@ -346,8 +355,11 @@ left alone."
 REQUEST is agent-shell's permission alist.  The tool is judged by the
 name in the ACP request, mcp__SERVER__TOOL for an MCP tool, never by the
 title: the model writes a shell command's title itself.  A request with
-no name, from an agent that sends none, shows its buttons."
-  (when-let* ((name (map-nested-elt +ai--chat-permission-request
+no name, from an agent that sends none, or from a chat whose server
+name another server shares, shows its buttons."
+  (when-let* (((buffer-live-p +ai--chat-permission-buffer))
+              ((buffer-local-value '+ai--chat-tools-trusted +ai--chat-permission-buffer))
+              (name (map-nested-elt +ai--chat-permission-request
                                     '(params toolCall name)))
               ((member name (mapcar (lambda (tool) (concat "mcp__emacs-tools__" tool))
                                     +ai-auto-allowed-tools)))
