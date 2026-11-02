@@ -404,38 +404,15 @@ such as Ollama, else the claude CLI with its own sign-in.")
 ;;; gptel on the Claude API
 
 (after! gptel
-  (setq gptel-backend
-        (gptel-make-anthropic "Claude"
-          :stream t
-          :key #'+ai-anthropic-api-key
-          :models '((claude-opus-5-5
-                     :description "Most capable, the default"
-                     :capabilities (media tool-use cache json)
-                     :mime-types ("image/jpeg" "image/png" "image/gif"
-                                  "image/webp" "application/pdf")
-                     :context-window 1000 :input-cost 4 :output-cost 20)
-                    (claude-sonnet-5
-                     :description "Fast, still very capable"
-                     :capabilities (media tool-use cache json)
-                     :mime-types ("image/jpeg" "image/png" "image/gif"
-                                  "image/webp" "application/pdf")
-                     :context-window 1000 :input-cost 2 :output-cost 10)
-                    (claude-haiku-4-5
-                     :description "Cheap and quick"
-                     :capabilities (media tool-use cache)
-                     :mime-types ("image/jpeg" "image/png" "image/gif"
-                                  "image/webp" "application/pdf")
-                     :context-window 200 :input-cost 1 :output-cost 5)))
+  ;; gptel's own list of Claude models, which moves with gptel.
+  (setq gptel-backend (gptel-make-anthropic "Claude"
+                        :stream t
+                        :key #'+ai-anthropic-api-key)
         gptel-model 'claude-opus-5-5
-        gptel-temperature nil           ; these models reject sampling args
         gptel-max-tokens 16000
         gptel-cache t                   ; cache the prompt prefix
-        gptel-include-reasoning 'ignore ; show thinking, don't resend it
         gptel-track-media t
-        gptel-default-mode 'org-mode
-        gptel-org-branching-context t
-        gptel-use-tools t
-        gptel-confirm-tool-calls 'auto)
+        gptel-org-branching-context t)
   ;; System prompts, pick one in gptel's menu (SPC o l m).
   (dolist (directive +ai-gptel-directives)
     (setf (alist-get (car directive) gptel-directives) (cdr directive)))
@@ -447,7 +424,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
              "emacs_list_project_files" "emacs_grep_project"))
   (gptel-make-preset 'quick
     :description "Haiku 4.5, no tools, fast answers"
-    :backend "Claude" :model 'claude-haiku-4-5 :tools nil :temperature nil))
+    :backend "Claude" :model 'claude-haiku-4-5-20251001 :tools nil :temperature nil))
 
 ;; gptel can use MCP servers (mcp.el): configure `mcp-hub-servers' then
 ;; M-x gptel-mcp-connect.
