@@ -173,7 +173,7 @@ points to and =SPC c H= shows the note itself. =SPC n h= lays it all out at
 once: the vault's tree, the note, what links here and the note's outline.
 =SPC n r a= opens a note at random, for rereading.
 
-For a question you cannot phrase as a search, =SPC a c= and ask Claude:
+For a question you cannot phrase as a search, =SPC l l= and ask Claude:
 "search my notes for BLE and tell me what I have", "read the GATT note and
 quiz me". It uses the same graph.
 
@@ -479,7 +479,7 @@ note shows in =SPC o a x= like any other.
 After a week: a reference, four concepts, a question, a hardware note, a
 howto, a solution, one map, the dailies. Every one tagged and linked,
 the map explaining the order. That is a subject you can come back to in
-a year. Claude helps from =SPC a c=: search what you have, read a note
+a year. Claude helps from =SPC l l=: search what you have, read a note
 and quiz you, draft a note on a topic; what it writes lands in the day
 or in =capture/drafts/= tagged =:draft:=, and promoting a draft, read, fixed,
 linked, moved out of =drafts/=, is the part that stays yours.
@@ -576,7 +576,7 @@ Two rules keep this from turning into a mess:
 - a draft you have not read is not knowledge. Delete the ones you will not
   get to.
 
-=SPC a L= logs what a session produced into its project's Progress, or
+=SPC l m l= logs what a session produced into its project's Progress, or
 the inbox, and the notes are in git, so anything Claude wrote can be read
 as a diff and undone.
 
@@ -646,4 +646,4 @@ its kind.
 | ~SPC n B~   | the bibliography, ~b~ a paper's note    |
 | ~SPC n g~   | commit the vault                      |
 | ~SPC n d P~ | set up capture from the browser       |
-| ~SPC a c~   | start Claude here                     |
+| ~SPC l l~   | open the chat with Claude             |

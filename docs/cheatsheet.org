@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-11-01 14:54
+#+generated: 2026-11-02 11:25
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -2559,38 +2559,86 @@ git repository: it commits itself after ten minutes idle and on exit,
 what changed.
 
 * AI
-The [[file:../modules/private/ai/README.org][ai README]] explains the three tools and when each one fits. ~SPC l SPC~
-opens the hub with all of it.
+The [[file:../modules/private/ai/README.org][ai README]] explains the four tools and when each one fits. ~SPC l SPC~
+opens the hub with all of it, on the same keys without the =SPC l=.
 
-** Claude Code in Emacs
-Claude runs in a side window and sees this Emacs as its IDE.
+** The chat
+Claude in a side panel, an Emacs buffer you read and edit with evil.
 
-| Key     | What it does                      |
-|---------+-----------------------------------|
-| ~SPC l c~ | start it, or focus it             |
-| ~SPC l C~ | continue the last session         |
-| ~SPC l r~ | resume a session you pick         |
-| ~SPC l p~ | send a prompt from the minibuffer |
-| ~SPC l s~ | send the selection                |
-| ~SPC l t~ | show, hide the window             |
-| ~SPC l b~ | switch to its buffer              |
-| ~SPC l l~ | list the sessions                 |
-| ~SPC l k~ | stop it                           |
+| Key     | What it does                                |
+|---------+---------------------------------------------|
+| ~SPC l l~ | open or focus it; from it, back to the code |
+| ~SPC l n~ | a new chat, ~C-u~ another agent               |
+| ~SPC l r~ | a chat that lists the earlier ones          |
+| ~SPC l b~ | another chat                                |
+| ~SPC l q~ | hide it, it runs on                         |
+| ~SPC l k~ | end it                                      |
+| ~SPC l i~ | interrupt it, from any buffer               |
+| ~SPC l o~ | its mode, model and thought level           |
+| ~SPC l v~ | its transcript                              |
+| ~SPC l j~ | go to what needs you                        |
+| ~SPC l s~ | send the region                             |
+| ~SPC l f~ | send this file                              |
+| ~SPC l @~ | mention the file and lines, stay here       |
+| ~SPC l c~ | write a long prompt                         |
+
+** In the chat
+| Key        | What it does                        |
+|------------+-------------------------------------|
+| ~RET~        | send, at the prompt in normal state |
+| ~S-<return>~ | a newline in the prompt             |
+| ~M-RET~      | steer the running turn              |
+| ~gq~         | queue a prompt for after this turn  |
+| ~C-<tab>~    | the next permission mode            |
+| ~C-c C-c~    | interrupt                           |
+| ~C-c SPC~    | the leader, insert state too        |
+
+A tool that wants permission shows buttons and point goes to them: ~y~
+allow, ~n~ reject and stop the turn, ~!~ always allow, ~v~ the diff, which
+opens in the editor window. Away from the buttons these keys are evil's.
+In the diff ~gy~ accepts, ~gn~ rejects.
+
+The modeline says =AI PROJECT: permission= or =done= when a hidden chat or
+terminal needs you; ~SPC l j~ goes there.
+
+** Claude's terminal
+Claude Code's own TUI in a side window, the fallback.
+
+| Key       | What it does                      |
+|-----------+-----------------------------------|
+| ~SPC l t c~ | focus it, or start it             |
+| ~SPC l t n~ | start another                     |
+| ~SPC l t C~ | continue the last session         |
+| ~SPC l t r~ | resume a session you pick         |
+| ~SPC l t p~ | write a prompt in a buffer        |
+| ~SPC l t s~ | send the selection                |
+| ~SPC l t t~ | show, hide the window             |
+| ~SPC l t l~ | list the sessions                 |
+| ~SPC l t k~ | stop it                           |
+| ~SPC l t m~ | the package's menu                |
+| ~SPC l t T~ | plain claude, no Emacs bridge     |
+| ~SPC l t o~ | choose the model                  |
+| ~SPC l t e~ | let Claude evaluate elisp, or not |
 
 ** Inside the Claude buffer
 Keys go to Claude, because the buffer is in emacs state. The way out is
 ~C-c~, which vterm leaves to Emacs. ~M-SPC~ would be the leader here, but KDE
 takes it for KRunner.
 
-| Key     | What it does                                  |
-|---------+-----------------------------------------------|
-| ~C-c C-o~ | back to the code, Claude stays open           |
-| ~C-c C-q~ | hide the window, Claude keeps running         |
-| ~C-c C-k~ | stop the session                              |
-| ~C-c SPC~ | the leader, so ~C-c SPC l t~ toggles            |
-| ~C-z~     | Doom's keys here, to scroll or copy; again to |
-|         | type to Claude                                |
-| ~C-c C-t~ | vterm copy mode                               |
+| Key        | What it does                          |
+|------------+---------------------------------------|
+| ~C-c C-o~    | back to the code, Claude stays open   |
+| ~C-c C-q~    | hide the window, Claude keeps running |
+| ~C-c C-k~    | stop the session                      |
+| ~C-c C-e~    | write a prompt in a buffer            |
+| ~C-c SPC~    | the leader, so ~C-c SPC l t t~ toggles  |
+| ~S-<return>~ | a newline in Claude's prompt          |
+| ~C-z~        | normal state, to read and copy        |
+| ~C-c C-t~    | vterm copy mode                       |
+
+In normal state ~d~, ~x~, ~c~, ~r~ and ~u~ only say how to type, ~i~ or ~C-z~
+goes back to Claude's prompt and ~p~ pastes into it. In the prompt buffer
+~C-c C-c~ sends, ~C-c C-k~ drops it, ~M-p~ ~M-n~ bring back the last ones.
 
 Typing =/exit=, or ~C-c C-c~ twice, quits Claude and closes the buffer.
 
@@ -2621,67 +2669,63 @@ Typing =/exit=, or ~C-c C-c~ twice, quits Claude and closes the buffer.
 
 ** Emacs tools Claude can call
 These are the ones this config adds, on top of Doom's xref, treesit, imenu
-and project tools. =/mcp= lists them all.
+and project tools, for the chat and the terminal alike. =/mcp= lists them
+all. The ones that write or build ask first.
 
-| Tool                   | What Claude gets                   |
-|------------------------+------------------------------------|
-| =emacs_build_project=    | runs the build, returns the errors |
-| =emacs_last_compilation= | the output of the last build       |
-| =emacs_project_todos=    | the TODO comments                  |
-| =emacs_org_add_todo=     | writes a todo into the inbox       |
-| =emacs_notes_search=     | greps the notes                    |
-| =emacs_notes_list=       | the notes, by tag or by date       |
-| =emacs_notes_read=       | one note, by title or id           |
-| =emacs_notes_links=      | what points at a note              |
-| =emacs_notes_append=     | adds to today's note               |
-| =emacs_notes_draft=      | leaves a draft in capture/drafts   |
+| Tool                   | What Claude gets                             |
+|------------------------+----------------------------------------------|
+| =emacs_editor_state=     | the window you work in: file, region, errors |
+| =emacs_build_project=    | runs the build, returns the errors; asks     |
+| =emacs_last_compilation= | the output of the last build                 |
+| =emacs_project_todos=    | the TODO comments                            |
+| =emacs_org_add_todo=     | writes a todo into the inbox; asks           |
+| =emacs_notes_search=     | greps the notes                              |
+| =emacs_notes_list=       | the notes, by tag or by date                 |
+| =emacs_notes_read=       | one note, by title or id                     |
+| =emacs_notes_links=      | what points at a note                        |
+| =emacs_notes_append=     | adds to today's note; asks                   |
+| =emacs_notes_draft=      | leaves a draft in capture/drafts; asks       |
 
 It reads the graph freely and writes only into the day or into
 =capture/drafts/=; promoting a draft is yours. See [[file:org-roam-guide.org][the roam guide]].
 
-** Agent shell
-A plain Emacs buffer that talks to an agent over ACP, with native diffs and
-permission buttons.
+** Inline actions
+Quick work on the code, through gptel with a key, else the claude CLI.
 
-| Key     | What it does             |
-|---------+--------------------------|
-| ~SPC l a~ | Claude in an agent shell |
-| ~SPC l A~ | pick another agent       |
-| ~SPC l v~ | compose a long message   |
-| ~SPC l x~ | send the selection       |
+| Key     | What it does                      |
+|---------+-----------------------------------|
+| ~SPC l e~ | rewrite the region, as a diff     |
+| ~SPC l x~ | explain the region or the defun   |
+| ~SPC l a~ | a question, the region as context |
 
-In the shell: =RET= send, =C-c C-c= interrupt, =C-c C-m= mode, =C-c C-v=
-model, =C-c C-t= how much thinking to show.
+In the rewrite's diff ~y~ accepts, ~n~ rejects, ~e~ opens ediff, ~r~ asks
+again with more. In an answer ~C-c C-c~ takes it to the chat. In a commit
+buffer ~M-g~ writes the message from the staged diff.
 
 ** gptel
-For small edits in place, without leaving the buffer.
+For a chat with the API and its context.
 
 | Key       | What it does                   |
 |-----------+--------------------------------|
-| ~SPC o l l~ | a chat buffer                  |
-| ~SPC o l m~ | the menu: model, preset, tools |
-| ~SPC o l e~ | explain the selection quickly  |
-| ~SPC o l r~ | rewrite the selection          |
-| ~SPC o l a~ | add the region to the context  |
-| ~SPC o l f~ | add a file to the context      |
+| ~SPC l g g~ | a chat buffer                  |
+| ~SPC l g m~ | the menu: model, preset, tools |
+| ~SPC l g +~ | add the region to the context  |
+| ~SPC l g f~ | add a file to the context      |
 
-These are Doom's llm keys; the AI menu, ~SPC l SPC~, gathers them with
-the agents: ~g~ chat, ~G~ menu, ~E~ explain, ~w~ rewrite, ~+~ and ~F~ context.
-
-In a chat buffer =C-c RET= sends. Writing =@deep= or =@quick= in the prompt
-picks a preset.
+Doom's llm keys on ~SPC o l~ are there too. In a chat buffer =C-c RET=
+sends. Writing =@deep= or =@quick= in the prompt picks a preset.
 
 ** Files and settings
-| Key     | What it opens                       |
-|---------+-------------------------------------|
-| ~SPC l f~ | the project CLAUDE.md               |
-| ~SPC l S~ | the Claude settings file            |
-| ~SPC l n~ | a new slash command                 |
-| ~SPC l h~ | install the hooks that notify Emacs |
-| ~SPC l o~ | choose the model                    |
-| ~SPC l e~ | let Claude evaluate elisp, or not   |
-| ~SPC l d~ | claude doctor                       |
-| ~SPC l L~ | log this session into ai.org        |
+| Key       | What it opens                       |
+|-----------+-------------------------------------|
+| ~SPC l m c~ | the project CLAUDE.md               |
+| ~SPC l m s~ | the Claude settings file            |
+| ~SPC l m n~ | a new slash command                 |
+| ~SPC l m h~ | install the hooks that notify Emacs |
+| ~SPC l m l~ | log this session into its project   |
+| ~SPC l m d~ | claude doctor                       |
+| ~SPC l m p~ | the MCP servers claude knows        |
+| ~SPC l m t~ | the chat's ACP traffic              |
 
 ** The claude CLI
 | Command             | What it does              |
@@ -2793,11 +2837,12 @@ back.
 | the agenda is empty              | ~SPC n d b~ creates the documents |
 
 ** AI
-| Symptom                        | What to try                            |
-|--------------------------------+----------------------------------------|
-| =/ide= shows no connection       | ~SPC a d~, then ~SPC a k~ and ~SPC a c~      |
-| the agent shell will not start | is =claude-agent-acp= on PATH?           |
-| gptel returns an error         | the API key belongs in =~/.authinfo.gpg= |
+| Symptom                                | What to try                             |
+|----------------------------------------+-----------------------------------------|
+| =/ide= shows no connection               | ~SPC l m d~, then ~SPC l t k~ and ~SPC l t c~ |
+| a terminal never shows in the modeline | install the hooks, ~SPC l m h~            |
+| the agent shell will not start         | is =claude-agent-acp= on PATH?            |
+| gptel returns an error                 | the API key belongs in =~/.authinfo.gpg=  |
 
 * Reference: leader keys
 Generated from the running config. Rebuild it with ~gr~ in this buffer.
@@ -3142,33 +3187,52 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC i u~ | Unicode             |
 | ~SPC i y~ | From clipboard      |
 
-** SPC l: LLM: Claude, agents, gptel
-| Key       | What it does             |
-|-----------+--------------------------|
-| ~SPC l A~   | Agent shell: new/choose  |
-| ~SPC l C~   | Claude: continue         |
-| ~SPC l L~   | Log session to org       |
-| ~SPC l M~   | Claude: IDE menu         |
-| ~SPC l S~   | Claude settings.json     |
-| ~SPC l SPC~ | AI menu                  |
-| ~SPC l T~   | Claude: plain terminal   |
-| ~SPC l a~   | Agent shell (ACP)        |
-| ~SPC l b~   | Claude: switch buffer    |
-| ~SPC l c~   | Claude: start or focus   |
-| ~SPC l d~   | Claude: doctor           |
-| ~SPC l e~   | Claude: elisp tool       |
-| ~SPC l f~   | CLAUDE.md (project)      |
-| ~SPC l h~   | Install Emacs hooks      |
-| ~SPC l k~   | Claude: stop             |
-| ~SPC l l~   | Claude: sessions         |
-| ~SPC l n~   | New slash command        |
-| ~SPC l o~   | Claude: set model        |
-| ~SPC l p~   | Claude: prompt           |
-| ~SPC l r~   | Claude: resume session   |
-| ~SPC l s~   | Claude: send region      |
-| ~SPC l t~   | Claude: toggle window    |
-| ~SPC l v~   | Agent shell: compose     |
-| ~SPC l x~   | Agent shell: send region |
+** SPC l: AI: chat, terminal, inline, gptel
+| Key       | What it does               |
+|-----------+----------------------------|
+| ~SPC l @~   | Mention file and lines     |
+| ~SPC l SPC~ | AI hub                     |
+| ~SPC l a~   | Ask                        |
+| ~SPC l b~   | Chat: switch               |
+| ~SPC l c~   | Compose a chat prompt      |
+| ~SPC l e~   | Rewrite region             |
+| ~SPC l f~   | Send file to chat          |
+| ~SPC l g +~ | Add to context             |
+| ~SPC l g f~ | Add file to context        |
+| ~SPC l g g~ | Chat buffer                |
+| ~SPC l g m~ | Menu, model, tools         |
+| ~SPC l i~   | Chat: interrupt            |
+| ~SPC l j~   | Go to what needs you       |
+| ~SPC l k~   | Chat: stop                 |
+| ~SPC l l~   | Chat: open or focus        |
+| ~SPC l m c~ | CLAUDE.md (project)        |
+| ~SPC l m d~ | claude doctor              |
+| ~SPC l m h~ | Install Emacs hooks        |
+| ~SPC l m l~ | Log session to org         |
+| ~SPC l m n~ | New slash command          |
+| ~SPC l m p~ | claude mcp list            |
+| ~SPC l m s~ | Claude settings.json       |
+| ~SPC l m t~ | Chat's ACP traffic         |
+| ~SPC l n~   | Chat: new, C-u any agent   |
+| ~SPC l o~   | Chat: mode, model, thought |
+| ~SPC l q~   | Chat: hide                 |
+| ~SPC l r~   | Chat: resume a session     |
+| ~SPC l s~   | Send region to chat        |
+| ~SPC l t C~ | Continue last              |
+| ~SPC l t T~ | Plain terminal             |
+| ~SPC l t c~ | Focus or start             |
+| ~SPC l t e~ | Toggle the elisp tool      |
+| ~SPC l t k~ | Stop                       |
+| ~SPC l t l~ | List sessions              |
+| ~SPC l t m~ | IDE package menu           |
+| ~SPC l t n~ | New instance               |
+| ~SPC l t o~ | Set model                  |
+| ~SPC l t p~ | Compose prompt             |
+| ~SPC l t r~ | Resume a session           |
+| ~SPC l t s~ | Send selection (@)         |
+| ~SPC l t t~ | Toggle window              |
+| ~SPC l v~   | Chat: transcript           |
+| ~SPC l x~   | Explain                    |
 
 ** SPC n: notes
 | Key         | What it does                   |
@@ -4323,26 +4387,92 @@ bound.
   soft wrapping.
 
 ** AI
-- ~+ai/claude-doctor~ (~SPC l d~) :: Run 'claude doctor' in a vterm.
+- ~+ai/attend~ (~SPC l j~) :: Go to the chat or terminal that needs you, the
+  one waiting longest.
+- ~+ai/chat~ (~SPC l l~) :: Open or focus this project's chat, the region or
+  the error at point in its prompt.
+- ~+ai/chat-cycle-mode~ :: Go to the next permission mode of this project's
+  chat, from any buffer.
+- ~+ai/chat-hide~ (~SPC l q~) :: Hide this project's chat; it keeps running.
+- ~+ai/chat-interrupt~ (~SPC l i~) :: Interrupt this project's chat, from
+  any buffer.
+- ~+ai/chat-mention~ (~SPC l @~) :: Put an @-mention of this file and its
+  lines into the project's chat.
+- ~+ai/chat-new~ (~SPC l n~) :: Start a new chat for this project.
+- ~+ai/chat-options~ (~SPC l o~) :: The permission mode, the model and the
+  thought level of this project's chat, from any buffer.
+- ~+ai/chat-reject~ :: Reject the permission whose button point is on, and
+  stop the turn, so you can say what to do instead.
+- ~+ai/chat-resume~ (~SPC l r~) :: Start a chat that first lists this
+  project's earlier sessions.
+- ~+ai/chat-set-mode~ :: Choose the permission mode of this project's chat,
+  from any buffer.
+- ~+ai/chat-set-model~ :: Choose the model of this project's chat, from any
+  buffer.
+- ~+ai/chat-set-thought-level~ :: Choose the thought level of this project's
+  chat, from any buffer.
+- ~+ai/chat-stop~ (~SPC l k~) :: End this project's chat, after asking.
+- ~+ai/chat-traffic~ (~SPC l m t~) :: Show the ACP traffic of this project's
+  chat, from any buffer.
+- ~+ai/chat-transcript~ (~SPC l v~) :: Open the transcript of this project's
+  chat, from any buffer.
+- ~+ai/claude-doctor~ (~SPC l m d~) :: Run 'claude doctor' in a vterm.
+- ~+ai/claude-guard~ (~x~) :: Leave Claude's screen alone and say how to
+  type to Claude.
 - ~+ai/claude-leave~ (~C-c C-o~) :: Go back to the window you came from;
   Claude keeps its window.
-- ~+ai/claude-mcp-list~ :: List the MCP servers the claude CLI knows about.
-- ~+ai/claude-terminal~ (~SPC l T~) :: Run claude in a terminal, without the
-  Emacs bridge.
-- ~+ai/install-claude-hooks~ (~SPC l h~) :: Tell Claude Code to notify Emacs
-  when it stops or needs input.
-- ~+ai/log-session~ (~SPC l L~) :: Write a session note into the owning
+- ~+ai/claude-mcp-list~ (~SPC l m p~) :: List the MCP servers the claude CLI
+  knows about.
+- ~+ai/claude-paste~ (~P~) :: Paste the top of the kill ring into Claude,
+  then type to Claude.
+- ~+ai/claude-terminal~ (~SPC l t T~) :: Run claude in a terminal, without
+  the Emacs bridge.
+- ~+ai/claude-type~ (~O~) :: Type to Claude again: emacs state, point back
+  on Claude's cursor.
+- ~+ai/inline-answer-to-chat~ (~C-c C-c~) :: Put the question and this
+  answer into the project's chat prompt.
+- ~+ai/inline-ask~ (~SPC l a~) :: Ask QUESTION, with the region as its
+  context when one is active.
+- ~+ai/inline-cancel~ :: Stop the inline request running for this buffer.
+- ~+ai/inline-commit-message~ (~M-g~) :: Write a commit message for the
+  staged changes, in this commit buffer.
+- ~+ai/inline-explain~ (~SPC l x~) :: Explain the region, else the defun at
+  point, else the symbol at point.
+- ~+ai/inline-rewrite~ (~SPC l e~) :: Rewrite the region, or the defun at
+  point, by an instruction.
+- ~+ai/inline-rewrite-accept~ (~y~) :: Put the rewrite in place of the
+  region, in one undo step.
+- ~+ai/inline-rewrite-ediff~ (~e~) :: Compare the region and the rewrite in
+  ediff.
+- ~+ai/inline-rewrite-reject~ (~n~) :: Leave the region as it is.
+- ~+ai/inline-rewrite-retry~ (~r~) :: Ask again, with more added to the
+  instruction.
+- ~+ai/install-claude-hooks~ (~SPC l m h~) :: Tell Claude Code to notify
+  Emacs when it stops or needs input.
+- ~+ai/log-session~ (~SPC l m l~) :: Write a session note into the owning
   project's Progress, or the inbox.
-- ~+ai/menu~ (~SPC l SPC~) :: AI hub: Claude Code IDE, agent shells, gptel
-  and agent management.
-- ~+ai/new-slash-command~ (~SPC l n~) :: Create the slash command NAME
+- ~+ai/menu~ (~SPC l SPC~) :: AI hub: the chat, the Claude terminal, inline
+  actions, gptel and the agents' files, on the keys they have after SPC l.
+- ~+ai/new-slash-command~ (~SPC l m n~) :: Create the slash command NAME
   (.claude/commands/NAME.md) with DESCRIPTION.
-- ~+ai/open-claude-md~ (~SPC l f~) :: Open this project's CLAUDE.md,
+- ~+ai/open-claude-md~ (~SPC l m c~) :: Open this project's CLAUDE.md,
   offering to create one.
-- ~+ai/open-claude-settings~ (~SPC l S~) :: Open ~/.claude/settings.json;
+- ~+ai/open-claude-settings~ (~SPC l m s~) :: Open ~/.claude/settings.json;
   with prefix PROJECT, the project's own file.
-- ~+ai/set-claude-model~ (~SPC l o~) :: Use MODEL for new Claude sessions.
-- ~+ai/toggle-execute-code~ (~SPC l e~) :: Allow or forbid Claude to
+- ~+ai/set-claude-model~ (~SPC l t o~) :: Use MODEL for new Claude sessions.
+- ~+ai/terminal~ (~SPC l t c~) :: Focus this project's Claude terminal, or
+  start one when none runs.
+- ~+ai/terminal-compose~ (~SPC l t p~) :: Write a prompt for this project's
+  Claude terminal in a buffer.
+- ~+ai/terminal-compose-cancel~ (~C-c C-k~) :: Close this compose buffer
+  without sending.
+- ~+ai/terminal-compose-next~ (~M-n~) :: Replace the text with the prompt
+  sent N after the one shown.
+- ~+ai/terminal-compose-previous~ (~M-p~) :: Replace the text with the
+  prompt sent N before the one shown.
+- ~+ai/terminal-compose-send~ (~C-c C-c~) :: Send this prompt to the
+  project's Claude terminal and close.
+- ~+ai/toggle-execute-code~ (~SPC l t e~) :: Allow or forbid Claude to
   evaluate Emacs Lisp.
 
 ** Docs

@@ -66,12 +66,19 @@ needs you or finishes.")
   "Script that `+ai/install-claude-hooks' wires into ~/.claude/settings.json.")
 
 (defvar +ai-docs
-  '(:groups (("ai" "AI" (vterm)
-              ;; The module's own keys are in this map, not vterm's, so
-              ;; it is listed for `+ai/claude-leave' and its neighbours
-              ;; to show their keys.
-              +ai-claude-keys-mode-map +ai-claude-keys-mode vterm-mode-map))
+  '(:groups (("ai" "AI" (vterm agent-shell git-commit)
+              ;; The module's own keys are in these maps, not vterm's or
+              ;; the chat's, so they are listed for `+ai/claude-leave',
+              ;; the compose, rewrite and answer commands to show theirs.
+              +ai-claude-keys-mode-map +ai-claude-keys-mode vterm-mode-map
+              +ai-compose-mode-map +ai-compose-mode
+              +ai-rewrite-mode-map +ai-rewrite-mode
+              +ai-answer-mode-map +ai-answer-mode
+              agent-shell-mode-map git-commit-mode-map))
     :sections ((+ai-claude-keys-mode . "AI")
+               (+ai-compose-mode . "AI")
+               (+ai-rewrite-mode . "AI")
+               (+ai-answer-mode . "AI")
                (agent-shell-mode . "AI")))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
