@@ -528,7 +528,11 @@ such as Ollama, else the claude CLI with its own sign-in.")
         :desc "In a new worktree"         "w" #'+ai/terminal-worktree)
        (:prefix ("d" . "remote: cloud, background")
         :desc "Terminal with Remote Control" "r" #'+ai/terminal-remote
-        :desc "Open a cloud session here" "w" #'+ai/terminal-teleport)
+        :desc "Open a cloud session here" "w" #'+ai/terminal-teleport
+        :desc "Task to the cloud"         "c" #'+ai/cloud-task
+        :desc "Task to a background agent" "b" #'+ai/agent-dispatch
+        :desc "Background agents"         "a" #'+ai/agents
+        :desc "Attach to an agent"        "t" #'+ai/agent-attach)
        (:prefix ("g" . "gptel")
         :desc "Chat buffer"               "g" #'gptel
         :desc "Menu, model, tools"        "m" #'gptel-menu

@@ -111,7 +111,11 @@ agents' files, on the keys they have after SPC l."
     ("tw" "In a new worktree"    +ai/terminal-worktree)]
    ["Remote"
     ("dr" "Remote Control"       +ai/terminal-remote)
-    ("dw" "Cloud session here"   +ai/terminal-teleport)]
+    ("dw" "Cloud session here"   +ai/terminal-teleport)
+    ("dc" "Task to the cloud"    +ai/cloud-task)
+    ("db" "Background task"      +ai/agent-dispatch)
+    ("da" "Background agents"    +ai/agents)
+    ("dt" "Attach to an agent"   +ai/agent-attach)]
    ["gptel"
     ("gg" "Chat buffer"          gptel)
     ("gm" "Menu, model, tools"   gptel-menu)

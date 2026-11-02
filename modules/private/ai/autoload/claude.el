@@ -428,6 +428,119 @@ An empty NAME lets the CLI make one up."
                                 "--worktree"
                               (concat "--worktree " (shell-quote-argument name)))))
 
+;;
+;;; Cloud and background sessions
+
+;;;###autoload
+(defun +ai/cloud-task (task)
+  "Send TASK to a cloud session on claude.ai and follow it in a terminal.
+It runs on Anthropic's machines from the project's pushed branch, so the
+Emacs tools are out of its reach."
+  (interactive (list (read-string "Cloud task: ")))
+  (+ai--check-task task)
+  (+core-run-in-vterm "*claude cloud*" (concat "claude --cloud " (shell-quote-argument task))))
+
+(defun +ai--check-task (task)
+  "Refuse an empty TASK, or one the CLI would read as an option."
+  (when (string-empty-p (string-trim task))
+    (user-error "No task"))
+  (when (string-prefix-p "-" task)
+    (user-error "A task cannot start with -, the CLI would take it for an option")))
+
+;;;###autoload
+(defun +ai/agent-dispatch (task)
+  "Give TASK to a background agent working in this project.
+\\[+ai/agents] lists the agents, \\[+ai/agent-attach] opens one."
+  (interactive (list (read-string "Background task: ")))
+  (+ai--check-task task)
+  (unless (executable-find "claude")
+    (user-error "The claude CLI is not on PATH"))
+  (let* ((default-directory (+core-project-root 'noerror))
+         (buffer (generate-new-buffer " *claude bg*"))
+         (process
+          (make-process
+           :name "claude-bg" :buffer buffer :noquery t :connection-type 'pipe
+           :command (list "claude" "--bg" task)
+           :sentinel
+           (lambda (process _event)
+             (unless (process-live-p process)
+               (let ((said (with-current-buffer buffer
+                             (car (last (split-string (buffer-string) "\n" t))))))
+                 (kill-buffer buffer)
+                 (if (zerop (process-exit-status process))
+                     (message "Background agent started%s" (if said (concat ": " said) ""))
+                   (message "claude --bg failed: %s"
+                            (or said (format "exit %d" (process-exit-status process)))))))))))
+    ;; The task is on the command line; nothing comes on its input.
+    (process-send-eof process)))
+
+;;;###autoload
+(defun +ai/agents ()
+  "Show the background agents, Claude's agent view, in a terminal."
+  (interactive)
+  (+core-run-in-vterm "*claude agents*" "claude agents"))
+
+(defun +ai--background-agents ()
+  "The background sessions `claude agents --json' lists, as alists.
+The CLI holds Emacs while it starts, so it gets
+`+ai-tool-search-seconds' at most."
+  (unless (executable-find "claude")
+    (user-error "The claude CLI is not on PATH"))
+  (let ((errors (generate-new-buffer " *claude agents errors*")))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((process (make-process :name "claude-agents" :buffer (current-buffer)
+                                       :command '("claude" "agents" "--json")
+                                       :connection-type 'pipe :noquery t
+                                       :stderr errors :sentinel #'ignore))
+                (deadline (+ (float-time) +ai-tool-search-seconds)))
+            ;; Not the pipe's own "finished" line among the errors.
+            (set-process-sentinel (get-buffer-process errors) #'ignore)
+            (process-send-eof process)
+            (while (and (process-live-p process) (< (float-time) deadline))
+              (accept-process-output process 0.1 nil t))
+            (when (process-live-p process)
+              (delete-process process)
+              (user-error "claude agents --json did not answer in %d s"
+                          +ai-tool-search-seconds))
+            (while (accept-process-output process 0 nil t))
+            ;; The error stream is a pipe of its own; let it finish too.
+            (when-let* ((pipe (get-buffer-process errors)))
+              (while (accept-process-output pipe 0.05 nil t)))
+            (goto-char (point-min))
+            (let ((sessions (condition-case nil
+                                (json-parse-buffer :object-type 'alist :array-type 'list)
+                              (error
+                               (user-error "claude agents --json: %s"
+                                           (with-current-buffer errors
+                                             (string-trim (buffer-string))))))))
+              (seq-filter (lambda (session)
+                            (and (equal (alist-get 'kind session) "background")
+                                 (or (alist-get 'id session) (alist-get 'name session))))
+                          sessions))))
+      (when-let* ((pipe (get-buffer-process errors)))
+        (delete-process pipe))
+      (kill-buffer errors))))
+
+;;;###autoload
+(defun +ai/agent-attach ()
+  "Open a background agent in a terminal, to follow or answer it."
+  (interactive)
+  (let* ((agents (or (+ai--background-agents)
+                     (user-error "No background agent runs")))
+         (choices (mapcar (lambda (agent)
+                            (let ((id (or (alist-get 'id agent) (alist-get 'name agent))))
+                              (cons (format "%s  %s (%s, %s)" id
+                                            (or (alist-get 'name agent) "")
+                                            (or (alist-get 'status agent) "unknown")
+                                            (abbreviate-file-name (or (alist-get 'cwd agent) "?")))
+                                    id)))
+                          agents))
+         ;; The CLI opens a session by its id; a name opens a running one only.
+         (id (cdr (assoc (completing-read "Attach to: " choices nil t) choices))))
+    (+core-run-in-vterm (format "*claude %s*" id)
+                        (concat "claude attach " (shell-quote-argument id)))))
+
 ;; Normal state in the terminal reads Claude's screen. evil-collection's
 ;; vterm keys move Claude's cursor with arrow keys, which the TUI takes
 ;; as its history, so these put point back on the cursor instead.

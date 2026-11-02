@@ -28,7 +28,9 @@ with all of it on the same keys.
   Control, to drive it from claude.ai or the Claude app too; ~SPC l d w~
   opens one of your cloud sessions here; ~SPC l t w~ starts one in a new
   git worktree. The chat cannot do these: its adapter has no such
-  commands.
+  commands. ~SPC l d c~ sends a task to a cloud session and ~SPC l d b~
+  to a background agent; ~SPC l d a~ lists the agents and ~SPC l d t~
+  opens one.
 - Inline actions on the code: rewrite the region as a diff to accept or
   reject, explain, ask, a commit message. They go through gptel once it
   has a key, else through =claude -p= with the CLI's own sign-in, with no
@@ -95,6 +97,10 @@ appears; ~SPC l j~ goes there, on a chat to its button.
 | ~SPC l t w~ | ~+ai/terminal-worktree~ | a terminal in a new git worktree |
 | ~SPC l d r~ | ~+ai/terminal-remote~ | a terminal with Remote Control |
 | ~SPC l d w~ | ~+ai/terminal-teleport~ | open a cloud session here |
+| ~SPC l d c~ | ~+ai/cloud-task~ | a task to a cloud session |
+| ~SPC l d b~ | ~+ai/agent-dispatch~ | a task to a background agent |
+| ~SPC l d a~ | ~+ai/agents~ | the background agents |
+| ~SPC l d t~ | ~+ai/agent-attach~ | open a background agent |
 | ~SPC l g g~ | ~gptel~                               | a gptel chat buffer                   |
 | ~SPC l g m~ | ~gptel-menu~                          | its menu: model, preset, tools        |
 | ~SPC l g +~ | ~gptel-add~                           | the region into its context           |
@@ -208,8 +214,9 @@ the tools.
   columns are a readable line of prose, below 64 the terminal wraps a lot.
 - ~+ai-auto-allowed-tools~: the Emacs tools that run without asking, in
   the chat and in the terminal. Never empty.
-- ~+ai-tool-search-seconds~ (5): how long the project TODO search may
-  hold Emacs; past it the tool answers with what it found.
+- ~+ai-tool-search-seconds~ (5): how long the project TODO search, or the
+  list of background agents, may hold Emacs; past it the search answers
+  with what it found.
 - ~+ai-notify~ (t): the desktop notification; the faces
   ~+ai-status-permission~ and ~+ai-status-done~ colour the modeline entry.
 - ~+ai-inline-backend~ (=auto=, else =gptel= or =claude-cli=),
