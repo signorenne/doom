@@ -28,6 +28,20 @@ the message only.")
 readability. Cite lines, propose fixes, and rank findings by severity."))
   "Extra system prompts added to `gptel-directives'.")
 
+(defvar +ai-auto-allowed-tools
+  '("claude-code-ide-mcp-xref-find-references"
+    "claude-code-ide-mcp-xref-find-apropos"
+    "claude-code-ide-mcp-project-info"
+    "claude-code-ide-mcp-imenu-list-symbols"
+    "claude-code-ide-mcp-treesit-info"
+    "emacs_last_compilation" "emacs_project_todos" "emacs_editor_state"
+    "emacs_notes_search" "emacs_notes_list" "emacs_notes_read"
+    "emacs_notes_links")
+  "Emacs tools that run without asking, in chats and terminals alike.
+Names without the mcp__emacs-tools__ prefix.  The others, the build and
+the writers to the inbox and the notes, wait for Claude's approval.
+Never empty: claude-code-ide would pass a bare --allowedTools.")
+
 (defvar +ai-hook-script (file-name-concat doom-user-dir "bin/claude-emacs-hook")
   "Script that `+ai/install-claude-hooks' wires into ~/.claude/settings.json.")
 
@@ -59,6 +73,10 @@ readability. Cite lines, propose fixes, and rank findings by severity."))
         claude-code-ide-use-ide-diff t          ; review edits in ediff
         claude-code-ide-focus-claude-after-ediff t
         claude-code-ide-enable-execute-code nil ; elisp eval is off, SPC l e
+        ;; The read tools run unasked; the build and the writers ask.
+        claude-code-ide-mcp-allowed-tools
+        (mapcar (lambda (name) (concat "mcp__emacs-tools__" name))
+                +ai-auto-allowed-tools)
         claude-code-ide-vterm-anti-flicker t
         ;; The default swallows height-only resizes, which leaves the TUI
         ;; drawn for the old window height.
