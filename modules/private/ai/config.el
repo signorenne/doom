@@ -524,7 +524,11 @@ such as Ollama, else the claude CLI with its own sign-in.")
         :desc "IDE package menu"          "m" #'claude-code-ide-menu
         :desc "Plain terminal"            "T" #'+ai/claude-terminal
         :desc "Set model"                 "o" #'+ai/set-claude-model
-        :desc "Toggle the elisp tool"     "e" #'+ai/toggle-execute-code)
+        :desc "Toggle the elisp tool"     "e" #'+ai/toggle-execute-code
+        :desc "In a new worktree"         "w" #'+ai/terminal-worktree)
+       (:prefix ("d" . "remote: cloud, background")
+        :desc "Terminal with Remote Control" "r" #'+ai/terminal-remote
+        :desc "Open a cloud session here" "w" #'+ai/terminal-teleport)
        (:prefix ("g" . "gptel")
         :desc "Chat buffer"               "g" #'gptel
         :desc "Menu, model, tools"        "m" #'gptel-menu

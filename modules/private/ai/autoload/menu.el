@@ -107,7 +107,11 @@ agents' files, on the keys they have after SPC l."
     ("tm" "IDE package menu"     claude-code-ide-menu)
     ("tT" "Plain terminal"       +ai/claude-terminal)
     ("to" "Set model"            +ai/set-claude-model)
-    ("te" "Toggle elisp tool"    +ai/toggle-execute-code)]
+    ("te" "Toggle elisp tool"    +ai/toggle-execute-code)
+    ("tw" "In a new worktree"    +ai/terminal-worktree)]
+   ["Remote"
+    ("dr" "Remote Control"       +ai/terminal-remote)
+    ("dw" "Cloud session here"   +ai/terminal-teleport)]
    ["gptel"
     ("gg" "Chat buffer"          gptel)
     ("gm" "Menu, model, tools"   gptel-menu)

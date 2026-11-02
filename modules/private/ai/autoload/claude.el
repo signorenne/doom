@@ -395,6 +395,39 @@ model name can still be typed."
       (claude-code-ide-switch-to-buffer)
     (claude-code-ide)))
 
+(defun +ai--terminal-start-with (flags)
+  "Start another Claude terminal for this project, its CLI given FLAGS too."
+  (require 'claude-code-ide)
+  (let ((claude-code-ide-cli-extra-flags
+         (string-trim (concat (or claude-code-ide-cli-extra-flags "") " " flags))))
+    (claude-code-ide)))
+
+;;;###autoload
+(defun +ai/terminal-remote ()
+  "Start a Claude terminal for this project with Remote Control, so the
+session can be driven from claude.ai or the Claude app as well."
+  (interactive)
+  (+ai--terminal-start-with "--remote-control"))
+
+;;;###autoload
+(defun +ai/terminal-teleport ()
+  "Open one of your cloud sessions here, in a Claude terminal: the CLI
+lists them to pick from.  It wants a clean git tree, the session's
+branch pushed, and the same claude.ai account."
+  (interactive)
+  (+ai--terminal-start-with "--teleport"))
+
+;;;###autoload
+(defun +ai/terminal-worktree (name)
+  "Start a Claude terminal in a new git worktree NAME of this project.
+An empty NAME lets the CLI make one up."
+  (interactive (list (read-string "Worktree name (empty for a generated one): ")))
+  (when (string-prefix-p "-" name)
+    (user-error "A worktree name cannot start with -, the CLI would take it for an option"))
+  (+ai--terminal-start-with (if (string-empty-p name)
+                                "--worktree"
+                              (concat "--worktree " (shell-quote-argument name)))))
+
 ;; Normal state in the terminal reads Claude's screen. evil-collection's
 ;; vterm keys move Claude's cursor with arrow keys, which the TUI takes
 ;; as its history, so these put point back on the cursor instead.

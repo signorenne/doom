@@ -24,7 +24,11 @@ with all of it on the same keys.
   the fallback. Keys go to Claude; ~C-z~ gives normal state to read and
   copy, where the keys that would edit the screen only say how to type, ~i~
   goes back to Claude's prompt and ~p~ pastes into it. ~SPC l t p~ writes a
-  long prompt in a buffer of its own.
+  long prompt in a buffer of its own. ~SPC l d r~ starts one with Remote
+  Control, to drive it from claude.ai or the Claude app too; ~SPC l d w~
+  opens one of your cloud sessions here; ~SPC l t w~ starts one in a new
+  git worktree. The chat cannot do these: its adapter has no such
+  commands.
 - Inline actions on the code: rewrite the region as a diff to accept or
   reject, explain, ask, a commit message. They go through gptel once it
   has a key, else through =claude -p= with the CLI's own sign-in, with no
@@ -88,6 +92,9 @@ appears; ~SPC l j~ goes there, on a chat to its button.
 | ~SPC l t T~ | ~+ai/claude-terminal~                 | plain claude, no Emacs bridge         |
 | ~SPC l t o~ | ~+ai/set-claude-model~                | model for new sessions                |
 | ~SPC l t e~ | ~+ai/toggle-execute-code~             | let Claude eval elisp, off by default |
+| ~SPC l t w~ | ~+ai/terminal-worktree~ | a terminal in a new git worktree |
+| ~SPC l d r~ | ~+ai/terminal-remote~ | a terminal with Remote Control |
+| ~SPC l d w~ | ~+ai/terminal-teleport~ | open a cloud session here |
 | ~SPC l g g~ | ~gptel~                               | a gptel chat buffer                   |
 | ~SPC l g m~ | ~gptel-menu~                          | its menu: model, preset, tools        |
 | ~SPC l g +~ | ~gptel-add~                           | the region into its context           |
