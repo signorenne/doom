@@ -3,6 +3,9 @@
 # M-x +ai/install-claude-hooks; never fails the hook (Claude keeps working
 # even when Emacs is not running or emacsclient is unavailable).
 #   usage: claude-emacs-hook <event>
+# Emacs's own claude runs set CLAUDE_EMACS_HOOK_SKIP: a chat reports through
+# ACP, and an inline request or a butler answer is no session of a project.
+[ -n "$CLAUDE_EMACS_HOOK_SKIP" ] && exit 0
 event="${1:-unknown}"
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 command -v emacsclient >/dev/null 2>&1 || exit 0

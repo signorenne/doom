@@ -233,6 +233,9 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
                                      (side . right)
                                      (window-width . 72))) ; same as Claude
   :config
+  ;; A chat reports through ACP events, so the hook script stays quiet.
+  (setq agent-shell-anthropic-claude-environment
+        (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
   (set-popup-rule! "Agent @ " :ignore t))
 
 

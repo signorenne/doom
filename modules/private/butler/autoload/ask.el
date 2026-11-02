@@ -134,6 +134,8 @@ directory with no tools: he wants an answer, not an errand."
          ;; end up in the bubble as though he had said them.
          (errors (generate-new-buffer " *butler claude errors*"))
          (default-directory (expand-file-name "~/"))
+         ;; No session of a project, so the ai module's hook stays quiet.
+         (process-environment (cons "CLAUDE_EMACS_HOOK_SKIP=1" process-environment))
          (process
           (make-process
            :name "butler-claude"
