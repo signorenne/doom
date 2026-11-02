@@ -14,6 +14,8 @@ with all of it on the same keys.
   ~y~ allow once, ~n~ reject and stop the turn so you can say what to do
   instead, ~!~ always allow, ~v~ view the diff, which opens in the editor
   window, not beside the chat. Elsewhere in the chat those keys are evil's.
+  Once an edit lands, an open buffer of that file reloads, unless you
+  have changed it.
   A new chat starts with nothing in its prompt but the region, dired's
   files or the error at point; ~SPC l @~ adds a mention of the file and
   lines, focus staying in the code. ~C-u SPC l n~ picks another agent.

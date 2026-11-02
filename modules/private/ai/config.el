@@ -301,6 +301,8 @@ needs you or finishes.")
   ;; and tells the status when it waits for you or finishes unseen.
   (add-hook 'agent-shell-mode-hook #'+ai--chat-tools-h)
   (add-hook 'agent-shell-mode-hook #'+ai--chat-status-h)
+  ;; An open buffer of a file the chat edits shows the edit as it lands.
+  (add-hook 'agent-shell-mode-hook #'+ai--chat-reload-h)
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))

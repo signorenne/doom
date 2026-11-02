@@ -317,6 +317,29 @@ outside your home gets none."
          :on-event (lambda (_event)
                      (claude-code-ide-mcp-server-session-ended id)))))))
 
+(defun +ai--chat-edit-landed (event)
+  "Reload the buffers of the files a finished edit of the chat wrote.
+EVENT is agent-shell's tool-call-update.  A buffer you modified is
+left alone."
+  (let ((tool-call (map-nested-elt event '(:data :tool-call))))
+    (when (and (equal (map-elt tool-call :kind) "edit")
+               (equal (map-elt tool-call :status) "completed"))
+      (seq-doseq (location (map-elt tool-call :locations))
+        (when-let* ((path (map-elt location 'path))
+                    (buffer (find-buffer-visiting path)))
+          (with-current-buffer buffer
+            (unless (or (buffer-modified-p)
+                        (verify-visited-file-modtime buffer))
+              (revert-buffer :ignore-auto :noconfirm :preserve-modes))))))))
+
+;;;###autoload
+(defun +ai--chat-reload-h ()
+  "Reload a file's buffer as soon as one of this chat's edits lands."
+  (agent-shell-subscribe-to
+   :shell-buffer (current-buffer)
+   :event 'tool-call-update
+   :on-event #'+ai--chat-edit-landed))
+
 ;;;###autoload
 (defun +ai--chat-permission-responder (request)
   "Allow an Emacs read tool at once; leave every other tool to the buttons.
