@@ -47,6 +47,18 @@ Names without the mcp__emacs-tools__ prefix.  The others, the build and
 the writers to the inbox and the notes, wait for Claude's approval.
 Never empty: claude-code-ide would pass a bare --allowedTools.")
 
+(defvar +ai-notify t
+  "Non-nil to send a desktop notification when a hidden chat or terminal
+needs you or finishes.")
+
+(defface +ai-status-permission '((t :inherit warning))
+  "The modeline's AI entry while a permission is pending."
+  :group 'faces)
+
+(defface +ai-status-done '((t :inherit success))
+  "The modeline's AI entry when a hidden chat or terminal is done."
+  :group 'faces)
+
 (defvar +ai-hook-script (file-name-concat doom-user-dir "bin/claude-emacs-hook")
   "Script that `+ai/install-claude-hooks' wires into ~/.claude/settings.json.")
 
@@ -59,6 +71,17 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
     :sections ((+ai-claude-keys-mode . "AI")
                (agent-shell-mode . "AI")))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
+
+
+;;
+;;; Status
+
+;; Who needs you, in the modeline: a string remade only when that
+;; changes (autoload/status.el), so redisplay formats nothing for it.
+(defvar +ai--status-string ""
+  "The modeline's AI entry: empty, or the chat or terminal that needs you.")
+(put '+ai--status-string 'risky-local-variable t)
+(add-to-list 'mode-line-misc-info '+ai--status-string)
 
 
 ;;
@@ -248,8 +271,10 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
   (when (and (getenv "WAYLAND_DISPLAY") (executable-find "spectacle"))
     (setq agent-shell-screenshot-command '("spectacle" "-b" "-n" "-r" "-o")))
   :config
-  ;; Each chat reaches the Emacs tools through claude-code-ide's server.
+  ;; Each chat reaches the Emacs tools through claude-code-ide's server,
+  ;; and tells the status when it waits for you or finishes unseen.
   (add-hook 'agent-shell-mode-hook #'+ai--chat-tools-h)
+  (add-hook 'agent-shell-mode-hook #'+ai--chat-status-h)
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
@@ -397,6 +422,7 @@ Never empty: claude-code-ide would pass a bare --allowedTools.")
        :desc "Chat: new, C-u any agent" "A" #'+ai/chat-new
        :desc "Agent shell: compose"     "v" #'agent-shell-prompt-compose
        :desc "Chat: send region"        "x" #'agent-shell-send-region
+       :desc "Go to what needs you"     "j" #'+ai/attend
        ;; gptel is on Doom's SPC o l; the menu gathers it.
        ;; management
        :desc "CLAUDE.md (project)"      "f" #'+ai/open-claude-md

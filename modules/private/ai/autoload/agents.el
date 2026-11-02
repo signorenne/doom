@@ -148,34 +148,24 @@ Writes to ~/.claude/settings.json, keeping a .bak copy.  Safe to re-run."
 
 ;;;###autoload
 (defun +ai--claude-event (event dir)
-  "Handle hook EVENT for project DIR.  Called by emacsclient."
-  (let ((name (file-name-nondirectory (directory-file-name dir))))
-    (pcase event
-      ("stop"
-       ;; Pick up edits Claude made on disk in buffers that are not modified.
-       (let ((reverted 0))
-         (dolist (buf (buffer-list))
-           (with-current-buffer buf
-             (when (and buffer-file-name
-                        (file-in-directory-p buffer-file-name dir)
-                        (not (buffer-modified-p))
-                        (not (verify-visited-file-modtime buf))
-                        (file-exists-p buffer-file-name))
-               (revert-buffer :ignore-auto :noconfirm :preserve-modes)
-               (cl-incf reverted))))
-         (+ai--notify "Claude Code"
-                      (if (> reverted 0)
-                          (format "Finished in %s, %d buffer(s) reloaded"
-                                  name reverted)
-                        (format "Finished in %s" name)))))
-      ("notification"
-       (+ai--notify "Claude Code" (format "%s is waiting for you" name)))
-      (_ (+ai--notify "Claude Code" (format "%s: %s" name event))))
-    t))
-
-(defun +ai--notify (title body)
-  "Show a desktop notification, or a message if that fails."
-  (+core-os-notify title body))
+  "Handle hook EVENT for project DIR.  Called by emacsclient.
+The status and its notification say it only when the terminal is out
+of sight."
+  (pcase event
+    ("stop"
+     ;; Pick up edits Claude made on disk in buffers that are not modified.
+     (dolist (buf (buffer-list))
+       (with-current-buffer buf
+         (when (and buffer-file-name
+                    (file-in-directory-p buffer-file-name dir)
+                    (not (buffer-modified-p))
+                    (not (verify-visited-file-modtime buf))
+                    (file-exists-p buffer-file-name))
+           (revert-buffer :ignore-auto :noconfirm :preserve-modes))))
+     (+ai--terminal-event dir 'done))
+    ("notification"
+     (+ai--terminal-event dir 'permission)))
+  t)
 
 
 ;;
