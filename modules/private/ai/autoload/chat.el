@@ -8,7 +8,9 @@
 (defvar +ai-auto-allowed-tools)
 (defvar +ai-chat-output-lines)
 (defvar acp-logging-enabled)
+(defvar agent-shell-activity-group-expand-by-default)
 (defvar agent-shell-context-sources)
+(defvar agent-shell-ui--fold-toggle-state)
 (defvar agent-shell-mcp-servers)
 (defvar agent-shell-preferred-agent-config)
 (defvar agent-shell-session-strategy)
@@ -18,6 +20,7 @@
 (declare-function agent-shell--prompt-input-start "agent-shell-prompt")
 (declare-function agent-shell-cwd "agent-shell-project")
 (declare-function agent-shell-insert "agent-shell")
+(declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui")
 (declare-function agent-shell-interrupt "agent-shell")
 (declare-function agent-shell-open-transcript "agent-shell")
 (declare-function agent-shell-cycle-session-mode "agent-shell")
@@ -140,6 +143,54 @@ choose the agent, the usual one first."
   (let ((chat (+ai--chat-buffer-or-error)))
     (dolist (window (get-buffer-window-list chat nil t))
       (quit-window nil window))))
+
+;;;###autoload
+(defun +ai/chat-window ()
+  "Show this project's chat full size, in the editor window, as VS Code's
+Open in New Tab.  \\[+ai/chat-hide] brings the code back."
+  (interactive)
+  (let ((chat (+ai--chat-buffer-or-error))
+        (window (or (+ai--editor-window) (user-error "No editor window"))))
+    (dolist (side (get-buffer-window-list chat nil t))
+      (when (window-parameter side 'window-side)
+        (delete-window side)))
+    (select-window window)
+    (switch-to-buffer chat nil t)
+    (+ai--chat-at-prompt)))
+
+;;;###autoload
+(defun +ai/chat-frame ()
+  "Show this project's chat in a frame of its own, as VS Code's Open in
+New Window."
+  (interactive)
+  (let ((chat (+ai--chat-buffer-or-error)))
+    (dolist (side (get-buffer-window-list chat nil t))
+      (when (window-parameter side 'window-side)
+        (delete-window side)))
+    (select-frame-set-input-focus (make-frame '((name . "AI chat"))))
+    (switch-to-buffer chat nil t)
+    (delete-other-windows)
+    (+ai--chat-at-prompt)))
+
+(defvar-local +ai--chat-focus nil
+  "Non-nil while this chat folds its tool calls, as VS Code's Focus view.")
+
+;;;###autoload
+(defun +ai/chat-focus ()
+  "Fold the tool calls of this project's chat, or unfold them again.
+While folded, a new turn's calls start folded too."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (setq +ai--chat-focus (not +ai--chat-focus))
+    (if +ai--chat-focus
+        (setq-local agent-shell-activity-group-expand-by-default nil)
+      (kill-local-variable 'agent-shell-activity-group-expand-by-default))
+    ;; The fold-all command goes the other way from its last state, so it
+    ;; is told the opposite of the one wanted.
+    (setq-local agent-shell-ui--fold-toggle-state
+                (if +ai--chat-focus 'expanded 'collapsed))
+    (agent-shell-ui-toggle-all-fragments)
+    (message "Tool calls %s" (if +ai--chat-focus "folded" "shown"))))
 
 ;;;###autoload
 (defun +ai/chat-stop ()

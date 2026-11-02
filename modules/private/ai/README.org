@@ -21,7 +21,9 @@ with all of it on the same keys.
   files or the error at point; ~SPC l @~ adds the file as a mention, or
   with a region just those lines, and ~SPC l O~ a terminal's or a build's
   last output (VS Code's @terminal), focus staying in the code.
-  ~C-u SPC l n~ picks another agent.
+  ~C-u SPC l n~ picks another agent. ~SPC l w~ shows the chat full size in
+  the editor window and ~SPC l W~ in a frame of its own, as VS Code's new
+  tab and window; ~SPC l z~ folds its tool calls, as its Focus view.
 - The Claude terminal, [[https://github.com/manzaltu/claude-code-ide.el][claude-code-ide]]: Claude Code's own TUI in vterm,
   the fallback. Keys go to Claude; ~C-z~ gives normal state to read and
   copy, where the keys that would edit the screen only say how to type, ~i~
@@ -75,6 +77,9 @@ appears; ~SPC l j~ goes there, on a chat to its button.
 | ~SPC l i~   | ~+ai/chat-interrupt~                  | interrupt it, from any buffer         |
 | ~SPC l o~   | ~+ai/chat-options~                    | mode, model, thought level            |
 | ~SPC l v~   | ~+ai/chat-transcript~                 | its transcript                        |
+| ~SPC l w~ | ~+ai/chat-window~ | the chat full size, in the editor window |
+| ~SPC l W~ | ~+ai/chat-frame~ | the chat in a frame of its own |
+| ~SPC l z~ | ~+ai/chat-focus~ | fold or show the chat's tool calls |
 | ~SPC l j~   | ~+ai/attend~                          | go to what needs you                  |
 | ~SPC l s~   | ~agent-shell-send-region~             | the region into the chat              |
 | ~SPC l f~   | ~agent-shell-send-file~               | this file into the chat               |

@@ -505,6 +505,9 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "Chat: interrupt"            "i" #'+ai/chat-interrupt
        :desc "Chat: mode, model, thought" "o" #'+ai/chat-options
        :desc "Chat: transcript"           "v" #'+ai/chat-transcript
+       :desc "Chat: full window"          "w" #'+ai/chat-window
+       :desc "Chat: own frame"            "W" #'+ai/chat-frame
+       :desc "Chat: fold tool calls"      "z" #'+ai/chat-focus
        :desc "Go to what needs you"       "j" #'+ai/attend
        :desc "Send region to chat"        "s" #'agent-shell-send-region
        :desc "Send file to chat"          "f" #'agent-shell-send-file

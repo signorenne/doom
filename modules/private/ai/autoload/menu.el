@@ -81,7 +81,10 @@ agents' files, on the keys they have after SPC l."
     ("k" "Stop"                  +ai/chat-stop)
     ("i" "Interrupt"             +ai/chat-interrupt)
     ("j" "Go to what needs you"  +ai/attend)
-    ("o" "Mode, model, thought"  +ai/chat-options)]
+    ("o" "Mode, model, thought"  +ai/chat-options)
+    ("w" "Full window"           +ai/chat-window)
+    ("W" "Own frame"             +ai/chat-frame)
+    ("z" "Fold tool calls"       +ai/chat-focus)]
    ["Context"
     ("s" "Send region"           agent-shell-send-region)
     ("f" "Send file"             agent-shell-send-file)
