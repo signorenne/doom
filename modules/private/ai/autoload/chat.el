@@ -293,6 +293,7 @@ reads no line suffix in a mention.  Focus stays here."
                                 (format "%s (%s) " (+ai--chat-file-mention path) lines))
                         :no-focus t :shell-buffer chat)))
 
+;;;###autoload
 (defun +ai--fenced (text &optional language)
   "TEXT in a code fence longer than any run of backticks in it."
   (let ((fence "```"))

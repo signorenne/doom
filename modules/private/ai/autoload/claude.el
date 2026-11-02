@@ -14,6 +14,7 @@
 (defvar claude-code-ide-cli-extra-flags)
 (defvar claude-code-ide-enable-execute-code)
 (defvar compilation-ask-about-save)
+(declare-function +ai--fenced "chat")
 (declare-function claude-code-ide "claude-code-ide")
 (declare-function claude-code-ide--get-buffer-name "claude-code-ide")
 (declare-function claude-code-ide--get-working-directory "claude-code-ide")
@@ -589,9 +590,9 @@ prompts.  An active region comes along as a fenced block."
   (require 'claude-code-ide)
   (let* ((dir (claude-code-ide--get-working-directory))
          (block (when (use-region-p)
-                  (format "```%s\n%s\n```\n" (+core-language major-mode)
-                          (buffer-substring-no-properties
-                           (region-beginning) (region-end)))))
+                  (+ai--fenced (buffer-substring-no-properties
+                                (region-beginning) (region-end))
+                               (+core-language major-mode))))
          (buffer (get-buffer-create
                   (format "*claude-compose[%s]*"
                           (file-name-nondirectory (directory-file-name dir))))))

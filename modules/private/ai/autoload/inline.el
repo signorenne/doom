@@ -14,6 +14,7 @@
 (defvar gptel-use-tools)
 (declare-function +ai--chat-buffer "chat")
 (declare-function +ai--chat-start-quietly "chat")
+(declare-function +ai--fenced "chat")
 (declare-function +ai-answer-mode "config")
 (declare-function +ai-rewrite-mode "config")
 (declare-function agent-shell-insert "agent-shell")
@@ -500,10 +501,10 @@ A request writes only while its TOKEN is the one here.")
 (defun +ai--inline-code (beg end)
   "The code between BEG and END, fenced, with the file it is from."
   (let ((context (+ai--inline-context beg end)))
-    (format "From %s (%s):\n```%s\n%s\n```\n"
+    (format "From %s (%s):\n%s"
             (plist-get context :file) (plist-get context :mode)
-            (+core-language major-mode)
-            (string-trim-right (buffer-substring-no-properties beg end) "\n+"))))
+            (+ai--fenced (buffer-substring-no-properties beg end)
+                         (+core-language major-mode)))))
 
 ;;;###autoload
 (defun +ai/inline-explain ()
