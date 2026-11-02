@@ -4,7 +4,13 @@
 ;; hooks and session logs.
 
 (defvar +ai-hook-script)
+(declare-function +ai--chat-buffer "chat")
+(declare-function +ai--chat-start-quietly "chat")
+(declare-function +ai--claude-mcp "claude")
+(declare-function +ai--read-json "claude")
 (declare-function +cpp-preset-names "kit")
+(declare-function agent-shell--prompt-input-start "agent-shell-prompt")
+(declare-function agent-shell-insert "agent-shell")
 (declare-function org-capture "org-capture")
 
 (defun +ai--claude-md-commands (root)
@@ -166,6 +172,97 @@ of sight."
     ("notification"
      (+ai--terminal-event dir 'permission)))
   t)
+
+
+;;
+;;; Claude's settings, as VS Code's dialogs show them
+
+(defun +ai--mcp-servers ()
+  "Claude's MCP servers for this project, as (LABEL NAME SCOPE), read from
+its configuration files rather than `claude mcp list', which connects to
+each one first."
+  (let* ((dir (directory-file-name (expand-file-name (+core-project-root 'noerror))))
+         (user (+ai--read-json (expand-file-name "~/.claude.json")))
+         (scopes `(("user" . ,(alist-get 'mcpServers user))
+                   ("local" . ,(alist-get 'mcpServers
+                                          (alist-get (intern dir) (alist-get 'projects user))))
+                   ("project" . ,(alist-get 'mcpServers
+                                            (+ai--read-json (expand-file-name ".mcp.json" dir)))))))
+    (cl-loop for (scope . servers) in scopes
+             append (mapcar (lambda (server)
+                              (let ((name (symbol-name (car server))))
+                                (list (format "%s (%s)" name scope) name scope)))
+                            servers))))
+
+(defun +ai--read-mcp-server (prompt)
+  "Ask with PROMPT for one of Claude's MCP servers; return (NAME SCOPE)."
+  (let ((servers (or (+ai--mcp-servers)
+                     (user-error "No MCP server is configured for Claude here"))))
+    (cdr (assoc (completing-read prompt (mapcar #'car servers) nil t) servers))))
+
+;;;###autoload
+(defun +ai/claude-mcp-add (name target scope)
+  "Give Claude Code the MCP server NAME.
+TARGET is its URL, or its command line; SCOPE is local (this project,
+you), project (.mcp.json, shared) or user (every project)."
+  (interactive
+   (list (read-string "Server name: ")
+         (read-string "URL, or the command and its arguments: ")
+         (completing-read "Scope: " '("local" "project" "user") nil t nil nil "local")))
+  (when (or (string-empty-p name) (string-empty-p target))
+    (user-error "A name and a URL or a command are needed"))
+  (apply #'+ai--claude-mcp "add" "--scope" scope
+         (if (string-match-p "\\`https?://" target)
+             (list "--transport" "http" name target)
+           (cons name (cons "--" (split-string-and-unquote target))))))
+
+;;;###autoload
+(defun +ai/claude-mcp-remove (server)
+  "Take SERVER, (NAME SCOPE), away from Claude Code, after asking."
+  (interactive (list (+ai--read-mcp-server "Remove MCP server: ")))
+  (pcase-let ((`(,name ,scope) server))
+    (when (y-or-n-p (format "Remove %s from the %s scope? " name scope))
+      (+ai--claude-mcp "remove" "--scope" scope name))))
+
+;;;###autoload
+(defun +ai/claude-mcp-get (server)
+  "Show what Claude knows of SERVER, (NAME SCOPE), and whether it connects."
+  (interactive (list (+ai--read-mcp-server "MCP server: ")))
+  (+ai--claude-mcp "get" (car server)))
+
+(defun +ai--open-settings-at (key project)
+  "Open Claude's settings, the project's with PROJECT, at KEY."
+  (+ai/open-claude-settings project)
+  (goto-char (point-min))
+  (if (re-search-forward (format "\"%s\"[[:space:]]*:" key) nil t)
+      (beginning-of-line)
+    (message "No %s in %s yet" key (abbreviate-file-name buffer-file-name))))
+
+;;;###autoload
+(defun +ai/claude-hooks (&optional project)
+  "Open Claude's hooks; with PROJECT (\\[universal-argument]), the project's."
+  (interactive "P")
+  (+ai--open-settings-at "hooks" project))
+
+;;;###autoload
+(defun +ai/claude-permissions (&optional project)
+  "Open Claude's permission rules; with PROJECT (\\[universal-argument]), the
+project's."
+  (interactive "P")
+  (+ai--open-settings-at "permissions" project))
+
+;;;###autoload
+(defun +ai/claude-usage ()
+  "Show your plan's usage and limits, as VS Code's Account & usage: /usage
+in this project's chat, which costs nothing.  Not while its prompt holds
+text: /usage would be sent with it, as an ordinary turn."
+  (interactive)
+  (let ((chat (or (+ai--chat-buffer) (+ai--chat-start-quietly))))
+    (with-current-buffer chat
+      (when-let* ((start (agent-shell--prompt-input-start))
+                  ((not (string-blank-p (buffer-substring-no-properties start (point-max))))))
+        (user-error "The chat's prompt holds text; send or clear it first")))
+    (agent-shell-insert :text "/usage" :submit t :shell-buffer chat)))
 
 
 ;;

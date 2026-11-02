@@ -132,10 +132,29 @@ agents' files, on the keys they have after SPC l."
     ("mh" "Install Emacs hooks"  +ai/install-claude-hooks)
     ("ml" "Log session (org)"    +ai/log-session)
     ("md" "claude doctor"        +ai/claude-doctor)
-    ("mp" "claude mcp list"      +ai/claude-mcp-list)]
+    ("mp" "claude mcp list"      +ai/claude-mcp-list)
+    ("mm" "MCP, hooks, rules"    +ai/claude-config)
+    ("mu" "Usage and limits"     +ai/claude-usage)]
    ["Diagnostics"
     ("mt" "Chat's ACP traffic"   +ai/chat-traffic)
     ("D" "IDE status"            claude-code-ide-check-status)]])
+
+;;;###autoload (autoload '+ai/claude-config "private/ai/autoload/menu" nil t)
+(transient-define-prefix +ai/claude-config ()
+  "Claude Code's MCP servers, hooks, permission rules and usage, as VS
+Code's dialogs show them."
+  [["MCP servers"
+    ("l" "List, connected"       +ai/claude-mcp-list)
+    ("a" "Add"                   +ai/claude-mcp-add)
+    ("r" "Remove"                +ai/claude-mcp-remove)
+    ("g" "Details"               +ai/claude-mcp-get)]
+   ["Settings (C-u: the project's)"
+    ("h" "Hooks"                 +ai/claude-hooks)
+    ("p" "Permission rules"      +ai/claude-permissions)
+    ("s" "settings.json"         +ai/open-claude-settings)
+    ("c" "CLAUDE.md"             +ai/open-claude-md)]
+   ["Account"
+    ("u" "Usage and limits"      +ai/claude-usage)]])
 
 ;;;###autoload (autoload '+ai/chat-options "private/ai/autoload/menu" nil t)
 (transient-define-prefix +ai/chat-options ()

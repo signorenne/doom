@@ -64,6 +64,10 @@ When a hidden chat or terminal waits for a permission or finishes, the
 modeline says =AI PROJECT: permission= or =done= and a notification
 appears; ~SPC l j~ goes there, on a chat to its button.
 
+~SPC l m m~ holds what VS Code's dialogs do: Claude's MCP servers (list,
+add, remove, details, in the local, project or user scope), its hooks and
+its permission rules; ~SPC l m u~ shows your plan's usage and limits.
+
 * Keybindings
 | Key       | Command                             | What it does                          |
 |-----------+-------------------------------------+---------------------------------------|
@@ -121,6 +125,8 @@ appears; ~SPC l j~ goes there, on a chat to its button.
 | ~SPC l m d~ | ~+ai/claude-doctor~                   | claude doctor                         |
 | ~SPC l m p~ | ~+ai/claude-mcp-list~                 | the MCP servers claude knows          |
 | ~SPC l m t~ | ~+ai/chat-traffic~                    | the chat's ACP traffic                |
+| ~SPC l m m~ | ~+ai/claude-config~ | MCP servers, hooks, permission rules |
+| ~SPC l m u~ | ~+ai/claude-usage~ | your plan's usage and limits |
 
 The hub has the same keys without the =SPC l=, but ~h~ hides the chat (~q~
 quits a menu), ~C~ cancels an inline request and ~D~ shows the terminal's

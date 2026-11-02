@@ -553,4 +553,6 @@ such as Ollama, else the claude CLI with its own sign-in.")
         :desc "Log session to org"        "l" #'+ai/log-session
         :desc "claude doctor"             "d" #'+ai/claude-doctor
         :desc "claude mcp list"           "p" #'+ai/claude-mcp-list
-        :desc "Chat's ACP traffic"        "t" #'+ai/chat-traffic)))
+        :desc "Chat's ACP traffic"        "t" #'+ai/chat-traffic
+        :desc "MCP, hooks, permissions"   "m" #'+ai/claude-config
+        :desc "Usage and limits"          "u" #'+ai/claude-usage)))

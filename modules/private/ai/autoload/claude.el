@@ -81,6 +81,7 @@ A root outside your home is refused."
              (abbreviate-file-name (or root "/"))))
     root))
 
+;;;###autoload
 (defun +ai--read-json (file)
   "FILE's JSON as an alist, or nil when it is missing or unreadable."
   (when (file-readable-p file)
@@ -706,8 +707,51 @@ With no terminal running, start one and send once Claude is up."
   (+core-run-in-vterm "*claude doctor*" "claude doctor"))
 
 ;;;###autoload
+(defun +ai--claude-mcp (&rest args)
+  "Run claude mcp ARGS in this project, its output in *claude mcp*.
+Not a compilation: a build in *compilation* is left alone, and this
+never counts as the last build."
+  (unless (executable-find "claude")
+    (user-error "The claude CLI is not on PATH"))
+  (let ((dir (+core-project-root 'noerror))
+        (buffer (get-buffer-create "*claude mcp*")))
+    (with-current-buffer buffer
+      (when-let* ((running (get-buffer-process buffer)))
+        (delete-process running))
+      (special-mode)
+      (setq default-directory dir)
+      (setq-local revert-buffer-function
+                  (lambda (&rest _) (apply #'+ai--claude-mcp args)))
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "claude mcp " (mapconcat #'shell-quote-argument args " ") "\n\n")))
+    (let* ((default-directory dir)
+           (process
+            (make-process
+             :name "claude-mcp" :buffer buffer :noquery t :connection-type 'pipe
+             :command (append '("claude" "mcp") args)
+             :filter (lambda (process text)
+                       (when (buffer-live-p (process-buffer process))
+                         (with-current-buffer (process-buffer process)
+                           (let ((inhibit-read-only t))
+                             (save-excursion
+                               (goto-char (point-max))
+                               (insert text))))))
+             :sentinel (lambda (process _event)
+                         (unless (or (process-live-p process)
+                                     (not (buffer-live-p (process-buffer process))))
+                           (with-current-buffer (process-buffer process)
+                             (let ((inhibit-read-only t))
+                               (save-excursion
+                                 (goto-char (point-max))
+                                 (insert (format "\n[exit %d]\n"
+                                                 (process-exit-status process)))))))))))
+      ;; Its arguments say it all; nothing comes on its input.
+      (process-send-eof process))
+    (display-buffer buffer)))
+
+;;;###autoload
 (defun +ai/claude-mcp-list ()
-  "List the MCP servers the claude CLI knows about."
+  "List the MCP servers the claude CLI knows about, connecting to each."
   (interactive)
-  (let ((default-directory (+core-project-root 'noerror)))
-    (compile "claude mcp list")))
+  (+ai--claude-mcp "list"))
