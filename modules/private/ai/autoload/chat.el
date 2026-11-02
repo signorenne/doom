@@ -16,6 +16,10 @@
 (declare-function agent-shell-insert "agent-shell")
 (declare-function agent-shell-interrupt "agent-shell")
 (declare-function agent-shell-open-transcript "agent-shell")
+(declare-function agent-shell-cycle-session-mode "agent-shell")
+(declare-function agent-shell-set-session-mode "agent-shell")
+(declare-function agent-shell-set-session-model "agent-shell")
+(declare-function agent-shell-set-session-thought-level "agent-shell")
 (declare-function agent-shell-view-traffic "agent-shell")
 (declare-function agent-shell-project-buffers "agent-shell")
 (declare-function evil-insert-state "evil-states")
@@ -154,6 +158,34 @@ choose the agent, the usual one first."
   (interactive)
   (with-current-buffer (+ai--chat-buffer-or-error)
     (call-interactively #'agent-shell-open-transcript)))
+
+;;;###autoload
+(defun +ai/chat-set-mode ()
+  "Choose the permission mode of this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-set-session-mode)))
+
+;;;###autoload
+(defun +ai/chat-cycle-mode ()
+  "Go to the next permission mode of this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-cycle-session-mode)))
+
+;;;###autoload
+(defun +ai/chat-set-model ()
+  "Choose the model of this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-set-session-model)))
+
+;;;###autoload
+(defun +ai/chat-set-thought-level ()
+  "Choose the thought level of this project's chat, from any buffer."
+  (interactive)
+  (with-current-buffer (+ai--chat-buffer-or-error)
+    (call-interactively #'agent-shell-set-session-thought-level)))
 
 ;;;###autoload
 (defun +ai/chat-traffic ()

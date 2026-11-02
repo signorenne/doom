@@ -1,10 +1,13 @@
 ;;; private/ai/config.el -*- lexical-binding: t; -*-
 ;;
-;; Three ways to work with agents, all under SPC l (see +ai/menu):
-;;   claude-code-ide  Claude Code in a side window, connected to Emacs over
-;;                    MCP, so it sees the buffer, diagnostics and our tools.
-;;   agent-shell      the same agent in a plain Emacs buffer, over ACP.
-;;   gptel            inline chat and rewrites against the Claude API.
+;; Ways to work with agents, all under SPC l (see +ai/menu):
+;;   agent-shell      the chat, an Emacs buffer in a side panel over ACP,
+;;                    with permission buttons and diffs (SPC l l).
+;;   claude-code-ide  Claude Code's own terminal, the fallback (SPC l t).
+;;   inline           rewrite, explain, ask, commit message: gptel with a
+;;                    key, else the claude CLI (SPC l e, x, a).
+;;   gptel            chat and context against the API (SPC l g).
+;; Both the chat and the terminal reach the Emacs tools over MCP.
 
 (defvar +ai-claude-model nil
   "Model for the claude CLI, or nil for its default.
@@ -98,7 +101,7 @@ needs you or finishes.")
         claude-code-ide-focus-on-open t
         claude-code-ide-use-ide-diff t          ; review edits in ediff
         claude-code-ide-focus-claude-after-ediff t
-        claude-code-ide-enable-execute-code nil ; elisp eval is off, SPC l e
+        claude-code-ide-enable-execute-code nil ; elisp eval is off, SPC l t e
         ;; The read tools run unasked; the build and the writers ask.
         claude-code-ide-mcp-allowed-tools
         (mapcar (lambda (name) (concat "mcp__emacs-tools__" name))
@@ -413,7 +416,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
         gptel-cache t                   ; cache the prompt prefix
         gptel-track-media t
         gptel-org-branching-context t)
-  ;; System prompts, pick one in gptel's menu (SPC o l m).
+  ;; System prompts, pick one in gptel's menu (SPC l g m).
   (dolist (directive +ai-gptel-directives)
     (setf (alist-get (car directive) gptel-directives) (cdr directive)))
   (+ai--register-gptel-tools)
@@ -438,33 +441,52 @@ such as Ollama, else the claude CLI with its own sign-in.")
 ;;; Keybindings
 
 (map! :leader
-      (:prefix-map ("l" . "LLM: Claude, agents, gptel")
-       :desc "AI menu"                  "SPC" #'+ai/menu
-       ;; Claude Code IDE
-       :desc "Claude: start or focus"   "c" #'+ai/terminal
-       :desc "Claude: continue"         "C" #'claude-code-ide-continue
-       :desc "Claude: resume session"   "r" #'claude-code-ide-resume
-       :desc "Claude: compose prompt"   "p" #'+ai/terminal-compose
-       :desc "Claude: send region"      "s" #'claude-code-ide-insert-at-mentioned
-       :desc "Claude: toggle window"    "t" #'claude-code-ide-toggle
-       :desc "Claude: switch buffer"    "b" #'claude-code-ide-switch-to-buffer
-       :desc "Claude: sessions"         "l" #'claude-code-ide-list-sessions
-       :desc "Claude: stop"             "k" #'claude-code-ide-stop
-       :desc "Claude: IDE menu"         "M" #'claude-code-ide-menu
-       :desc "Claude: plain terminal"   "T" #'+ai/claude-terminal
-       :desc "Claude: doctor"           "d" #'+ai/claude-doctor
-       :desc "Claude: set model"        "o" #'+ai/set-claude-model
-       :desc "Claude: elisp tool"       "e" #'+ai/toggle-execute-code
-       ;; agent-shell
-       :desc "Chat: open or focus"      "a" #'+ai/chat
-       :desc "Chat: new, C-u any agent" "A" #'+ai/chat-new
-       :desc "Agent shell: compose"     "v" #'agent-shell-prompt-compose
-       :desc "Chat: send region"        "x" #'agent-shell-send-region
-       :desc "Go to what needs you"     "j" #'+ai/attend
-       ;; gptel is on Doom's SPC o l; the menu gathers it.
-       ;; management
-       :desc "CLAUDE.md (project)"      "f" #'+ai/open-claude-md
-       :desc "Claude settings.json"     "S" #'+ai/open-claude-settings
-       :desc "New slash command"        "n" #'+ai/new-slash-command
-       :desc "Install Emacs hooks"      "h" #'+ai/install-claude-hooks
-       :desc "Log session to org"       "L" #'+ai/log-session))
+      (:prefix-map ("l" . "AI: chat, terminal, inline, gptel")
+       :desc "AI hub"                     "SPC" #'+ai/menu
+       ;; The chat, on the short keys
+       :desc "Chat: open or focus"        "l" #'+ai/chat
+       :desc "Chat: new, C-u any agent"   "n" #'+ai/chat-new
+       :desc "Chat: resume a session"     "r" #'+ai/chat-resume
+       :desc "Chat: switch"               "b" #'agent-shell-switch-buffer
+       :desc "Chat: hide"                 "q" #'+ai/chat-hide
+       :desc "Chat: stop"                 "k" #'+ai/chat-stop
+       :desc "Chat: interrupt"            "i" #'+ai/chat-interrupt
+       :desc "Chat: mode, model, thought" "o" #'+ai/chat-options
+       :desc "Chat: transcript"           "v" #'+ai/chat-transcript
+       :desc "Go to what needs you"       "j" #'+ai/attend
+       :desc "Send region to chat"        "s" #'agent-shell-send-region
+       :desc "Send file to chat"          "f" #'agent-shell-send-file
+       :desc "Mention file and lines"     "@" #'+ai/chat-mention
+       :desc "Compose a chat prompt"      "c" #'agent-shell-prompt-compose
+       ;; Inline actions
+       :desc "Rewrite region"             "e" #'+ai/inline-rewrite
+       :desc "Explain"                    "x" #'+ai/inline-explain
+       :desc "Ask"                        "a" #'+ai/inline-ask
+       (:prefix ("t" . "Claude terminal")
+        :desc "Focus or start"            "c" #'+ai/terminal
+        :desc "New instance"              "n" #'claude-code-ide
+        :desc "Continue last"             "C" #'claude-code-ide-continue
+        :desc "Resume a session"          "r" #'claude-code-ide-resume
+        :desc "Toggle window"             "t" #'claude-code-ide-toggle
+        :desc "Stop"                      "k" #'claude-code-ide-stop
+        :desc "Compose prompt"            "p" #'+ai/terminal-compose
+        :desc "Send selection (@)"        "s" #'claude-code-ide-insert-at-mentioned
+        :desc "List sessions"             "l" #'claude-code-ide-list-sessions
+        :desc "IDE package menu"          "m" #'claude-code-ide-menu
+        :desc "Plain terminal"            "T" #'+ai/claude-terminal
+        :desc "Set model"                 "o" #'+ai/set-claude-model
+        :desc "Toggle the elisp tool"     "e" #'+ai/toggle-execute-code)
+       (:prefix ("g" . "gptel")
+        :desc "Chat buffer"               "g" #'gptel
+        :desc "Menu, model, tools"        "m" #'gptel-menu
+        :desc "Add to context"            "+" #'gptel-add
+        :desc "Add file to context"       "f" #'gptel-add-file)
+       (:prefix ("m" . "manage")
+        :desc "CLAUDE.md (project)"       "c" #'+ai/open-claude-md
+        :desc "Claude settings.json"      "s" #'+ai/open-claude-settings
+        :desc "New slash command"         "n" #'+ai/new-slash-command
+        :desc "Install Emacs hooks"       "h" #'+ai/install-claude-hooks
+        :desc "Log session to org"        "l" #'+ai/log-session
+        :desc "claude doctor"             "d" #'+ai/claude-doctor
+        :desc "claude mcp list"           "p" #'+ai/claude-mcp-list
+        :desc "Chat's ACP traffic"        "t" #'+ai/chat-traffic)))
