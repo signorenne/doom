@@ -43,13 +43,27 @@ and nothing here creates anything in it.")
   :defer t
   :init
   (setq org-fc-directories (list (expand-file-name org-directory)))
+  ;; The package's autoloads load one of its files alone, org-fc-review
+  ;; or org-fc-core, and only org-fc.el loads the rest: the awk indexer,
+  ;; the card types, the algorithms, and with them the :config below and
+  ;; the review keys. So every command loads org-fc, the card types'
+  ;; included, which have no autoload of their own.
+  (dolist (command '(org-fc-review org-fc-review-all org-fc-review-buffer
+                     org-fc-review-quit org-fc-review-edit org-fc-dashboard
+                     org-fc-update org-fc-update-all org-fc-help org-fc-demo
+                     org-fc-suspend-card org-fc-suspend-tree
+                     org-fc-suspend-buffer org-fc-suspend-region
+                     org-fc-unsuspend-card org-fc-unsuspend-tree
+                     org-fc-unsuspend-buffer org-fc-unsuspend-region
+                     org-fc-type-normal-init org-fc-type-double-init
+                     org-fc-type-text-input-init org-fc-type-cloze-init))
+    (autoload command "org-fc" nil t))
   :config
   ;; The schedule travels in the headings; the rating log is one append
   ;; per review on each machine, which the shared repository would only
   ;; turn into a conflict, so it stays local.
   (setq org-fc-review-history-file
-        (file-name-concat doom-data-dir "org-fc-reviews.tsv"))
-  (require 'org-fc-hydra nil t))
+        (file-name-concat doom-data-dir "org-fc-reviews.tsv")))
 
 ;; org-fc's review keys live in minor mode maps, which evil's normal state
 ;; would otherwise win over: RET would follow a link instead of flipping.
