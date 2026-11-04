@@ -2789,8 +2789,9 @@ Quick work on the code, through gptel with a key, else the claude CLI.
 | ~SPC l x~ | explain the region or the defun   |
 | ~SPC l a~ | a question, the region as context |
 
-In the rewrite's diff ~y~ accepts, ~n~ rejects, ~e~ opens ediff, ~r~ asks
-again with more. In an answer ~C-c C-c~ takes it to the chat. In a commit
+The rewrite's diff opens below without taking the cursor; ~C-x p~ goes to
+it. There ~y~ accepts, ~n~ rejects, ~e~ opens ediff, ~r~ asks again with
+more. In an answer ~C-c C-c~ takes it to the chat. In a commit
 buffer ~M-g~ writes the message from the staged diff.
 
 ** gptel

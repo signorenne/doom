@@ -460,8 +460,10 @@ such as Ollama, else the claude CLI with its own sign-in.")
 (map! :map +ai-answer-mode-map
       "C-c C-c" #'+ai/inline-answer-to-chat)
 
-(set-popup-rule! "^\\*ai-\\(rewrite\\|answer\\)\\*"
-  :side 'bottom :size 0.3 :select t :quit t)
+;; The diff comes when the answer does, maybe while you type elsewhere, so
+;; it never takes the cursor; an answer opens as you ask, and takes it.
+(set-popup-rule! "^\\*ai-rewrite\\*" :side 'bottom :size 0.3 :select nil :quit t)
+(set-popup-rule! "^\\*ai-answer\\*" :side 'bottom :size 0.3 :select t :quit t)
 
 ;; M-g in a commit buffer writes the message. gptel-magit-install binds M-g
 ;; and M-r again on every magit-mode-hook, so its commands are remapped too;

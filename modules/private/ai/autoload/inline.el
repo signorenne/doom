@@ -18,6 +18,8 @@
 (declare-function +ai-answer-mode "config")
 (declare-function +ai-rewrite-mode "config")
 (declare-function agent-shell-insert "agent-shell")
+(declare-function evil-normal-state "evil-states")
+(declare-function evil-normal-state-p "evil-states")
 (declare-function gptel-abort "gptel-request")
 (declare-function gptel-backend-key "gptel-request")
 (declare-function gptel-backend-name "gptel-request")
@@ -314,21 +316,30 @@ original text, the rewrite and the instruction.")
                 (diff-mode)
                 (setq buffer-read-only t)
                 (+ai-rewrite-mode +1)
+                ;; y and n are normal-state keys.
+                (when (and (bound-and-true-p evil-local-mode)
+                           (not (evil-normal-state-p)))
+                  (evil-normal-state))
                 (setq +ai--rewrite (list :source source :beg beg :end end
                                          :original original :new new
                                          :instruction instruction))
                 (goto-char (point-min))))
           (delete-file old-file)
           (delete-file new-file))
-        (pop-to-buffer buffer)
-        (when (bound-and-true-p evil-local-mode)
-          (evil-normal-state))))))
+        ;; Shown, not selected: the answer comes while you type elsewhere,
+        ;; where a y would have accepted it.
+        (display-buffer buffer)
+        (message "The rewrite is ready below%s"
+                 (if (fboundp '+popup/other)
+                     (substitute-command-keys ", \\[+popup/other] goes to it")
+                   ""))))))
 
 ;;;###autoload
 (defun +ai/inline-rewrite ()
   "Rewrite the region, or the defun at point, by an instruction.
-The rewrite comes as a diff: y accepts, n rejects, e opens ediff, r
-asks again with more to the instruction."
+The rewrite comes as a diff, shown below without taking the cursor:
+there y accepts, n rejects, e opens ediff, r asks again with more to
+the instruction."
   (interactive)
   (+ai--inline-backend)
   (let* ((bounds (+ai--inline-target "rewrite"))

@@ -170,9 +170,10 @@ In normal state there ~d~, ~x~, ~c~, ~r~, ~u~ and their capitals do nothing,
 ~y~ and ~s~ are as usual. In the prompt buffer ~C-c C-c~ sends, ~C-c C-k~
 drops it, ~M-p~ and ~M-n~ bring back the last prompts.
 
-A rewrite opens as a diff: ~y~ or ~C-c C-c~ accepts in one undo step, ~n~ or
-~C-c C-k~ rejects, ~e~ opens ediff, ~r~ asks again with more to the
-instruction. An answer opens below; ~C-c C-c~ there takes the question and
+A rewrite opens as a diff below and leaves the cursor where you type, since
+the answer can come while you work on; ~C-x p~ goes to it. There ~y~ or
+~C-c C-c~ accepts in one undo step, ~n~ or ~C-c C-k~ rejects, ~e~ opens
+ediff, ~r~ asks again with more to the instruction. An answer opens below; ~C-c C-c~ there takes the question and
 the answer into the chat's prompt. In a commit buffer ~M-g~ writes the
 message from the staged diff.
 
