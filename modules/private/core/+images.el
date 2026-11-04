@@ -223,9 +223,12 @@ has no cursor."
        :desc "Its facts, or its drawing" "i" #'+core/svg-facts-toggle
        :desc "Open it with the file, or not" "O" #'+core/view-on-open-toggle))
 
+;; evil-collection binds RET and <return> to `image-toggle-animation'
+;; once this file is read, over a RET bound here; taking its command
+;; instead takes both keys whenever they are bound.
 (map! :after image-mode
       :map image-mode-map
-      :n "RET" #'+core/image-play-toggle
+      :n [remap image-toggle-animation] #'+core/image-play-toggle
       :n "f" #'+core/image-fit
       :n "1" #'+core/image-original
       :n "n" #'image-next-file

@@ -3947,8 +3947,8 @@ bound.
 - ~+core/image-pan-right~ (~l~) :: Move the picture left under the window,
   '+core-image-pan-step' at a time.
 - ~+core/image-pan-up~ (~k~) :: Move the picture down under the window.
-- ~+core/image-play-toggle~ :: Play the moving picture, looping, or pause it
-  where it is.
+- ~+core/image-play-toggle~ (~RET~) :: Play the moving picture, looping, or
+  pause it where it is.
 - ~+core/install-daemon~ :: Start an Emacs daemon at every login.
 - ~+core/install-docsets~ :: Install the docsets of this buffer's language
   that are missing, again if a try failed; with ALL, the skipped ones too.
