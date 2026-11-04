@@ -1894,7 +1894,8 @@ the compilation database is and the versions of the tools.
 | ~F10~  | step over                |
 | ~F11~  | step into, ~S-F11~ out     |
 
-~F2~, ~F4~ to ~F9~ work wherever you are. ~F10~, ~F11~, ~S-F11~ and ~S-F5~
+~F2~, ~F4~ to ~F9~ work wherever you are: outside C and C++ ~F2~ is ~gd~,
+and ~F4~ says the file has no header. ~F10~, ~F11~, ~S-F11~ and ~S-F5~
 belong to a running debug session and do nothing outside one, where ~F10~
 opens the menu bar and ~F11~ makes the frame full screen.
 
@@ -4122,6 +4123,8 @@ bound.
   BEG to END.
 - ~+cpp/format-project~ (~SPC k g F~) :: Run clang-format over every tracked
   C and C++ file in the project.
+- ~+cpp/header-or-source~ (~<f4>~) :: Switch between this file's header and
+  its source.
 - ~+cpp/install-codelldb~ :: Download codelldb, the debugger for Rust, into
   Doom's debug-adapters.
 - ~+cpp/kit-family~ (~SPC k Y~) :: Build with FAMILY from now on, keeping

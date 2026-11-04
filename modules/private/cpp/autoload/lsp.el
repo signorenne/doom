@@ -22,6 +22,7 @@
 (defvar +cpp-lsp-server)
 (defvar +cpp-modes)
 (declare-function eglot-current-server "eglot")
+(declare-function eglot-server-capable "eglot")
 (declare-function eglot-ensure "eglot")
 (declare-function eglot-shutdown "eglot")
 (declare-function flycheck-has-current-errors-p "flycheck")
@@ -221,11 +222,32 @@ container both."
   "Jump to the declaration of the symbol at point.
 F2 goes to the definition, and from the definition back to the
 declaration; this goes to the declaration from anywhere, the header line
-rather than the body in the .cpp."
+rather than the body in the .cpp. It asks any language's server, and
+says so when there is none or it knows no declarations."
   (interactive)
-  (unless (and (fboundp 'eglot-current-server) (eglot-current-server))
-    (user-error "No language server here, SPC k l r starts one"))
-  (call-interactively #'eglot-find-declaration))
+  (cond
+   ((not (and (fboundp 'eglot-current-server) (eglot-current-server)))
+    (user-error (if (apply #'derived-mode-p +cpp-modes)
+                    "No language server here, SPC k l r starts one"
+                  "No language server here to ask for the declaration; F2 goes to the definition")))
+   ((not (eglot-server-capable :declarationProvider))
+    (user-error "This language server knows no declarations; F2 goes to the definition"))
+   (t (call-interactively #'eglot-find-declaration))))
+
+;;;###autoload
+(defun +cpp/header-or-source ()
+  "Switch between this file's header and its source.
+F4, as in Qt Creator: `find-sibling-file', which pairs the files that
+`find-sibling-rules' names, C and C++ ones; any other file is said to
+have neither."
+  (interactive)
+  (let ((file (expand-file-name
+               (or buffer-file-name
+                   (user-error "No file here, so no header or source to switch to")))))
+    (if (seq-some (lambda (rule) (string-match-p (car rule) file)) find-sibling-rules)
+        (find-sibling-file file)
+      (user-error "No header or source for %s: F4 switches between the two in C and C++"
+                  (file-name-nondirectory file)))))
 
 
 (defvar qml-ts-mode-indent-offset)

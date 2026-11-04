@@ -703,20 +703,20 @@ function, so `c-ts-mode-set-style' installs them."
 ;; Maven, npm and Python projects as well, in a project no module knows.
 (define-key +core-kit-project-map (kbd "SPC") (cons "What the project can do" #'+cpp/menu))
 
-;; Qt Creator's function keys. F2 and F4 only in C and C++ buffers; map!
-;; defers each map until its mode loads, so the four maps share one block.
-;; F6, S-F6 and SPC k R go by the project's language, as SPC k r does,
-;; so a Pascal or Rust project runs its own way rather than as C++.
-(map! :g "<f5>"  #'+cpp/debug-or-continue
+;; Qt Creator's function keys, in every buffer. F2 is gd in any language;
+;; S-F2 asks any language's server, and F4 says so in a file that has
+;; no header. F6, S-F6 and SPC k R go by the project's language, as
+;; SPC k r does, so a Pascal or Rust project runs its own way rather
+;; than as C++.
+(map! :g "<f2>"  #'+lookup/definition
+      :g "<S-f2>" #'+cpp/find-declaration
+      :g "<f4>"  #'+cpp/header-or-source
+      :g "<f5>"  #'+cpp/debug-or-continue
       :g "<f6>"  #'+core/run
       :g "<S-f6>" #'+core/build-and-run
       :g "<f7>"  #'projection-commands-build-project
       :g "<f8>"  #'projection-commands-configure-project
-      :g "<f9>"  #'dape-breakpoint-toggle
-      (:map (c-mode-map c++-mode-map c-ts-mode-map c++-ts-mode-map)
-       "<f2>"   #'+lookup/definition
-       "<S-f2>" #'+cpp/find-declaration
-       "<f4>"   #'find-sibling-file))
+      :g "<f9>"  #'dape-breakpoint-toggle)
 
 ;; The stepping keys, while a session runs. dape's mode for that has no
 ;; keymap of its own, and a map bound to `dape-active-mode-map' would

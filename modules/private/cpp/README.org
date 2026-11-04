@@ -392,6 +392,10 @@ explains the key, so no command sits on those two.
 | ~F6~  | run, ~F7~ build, ~F8~ configure               |
 | ~F9~  | breakpoint, ~F10~ over, ~F11~ into, ~S-F11~ out |
 
+They work in every buffer: outside C and C++ ~F2~ is ~gd~, ~S-F2~ asks that
+language's server for the declaration, and ~F4~ says the file has no
+header or source.
+
 * Templates
 =SPC k n= copies a template from =$DOOMDIR/templates/cpp/= and replaces
 ={{PROJECT}}= and ={{PROJECT_UPPER}}= with the name you give.
