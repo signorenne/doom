@@ -430,7 +430,10 @@ repository; ~+core-project-root-or-nil~ is the same with no fallback),
 or run that started last, whoever started it), ~+core-run-in-vterm~,
 ~+core-git~ and ~+core-git-state~ (no-repo, stopped, dirty, clean),
 ~+core-todo-regexp~, ~+core-language~ (a mode's language for a fenced
-block or a babel block, one table, ~+core-languages~).
+block or a babel block, one table, ~+core-languages~),
+~+core-read-or-empty~ (a setting's prompt, where an empty answer clears
+it: the value now is said in the prompt, not given as the default,
+which an empty answer would return).
 core loads first in the =:private= block and every one of them is
 autoloaded, so a module calls them without a declaration.
 

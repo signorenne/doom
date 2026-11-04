@@ -180,9 +180,8 @@ Written to .dir-locals.el, so it holds across sessions.  For the case
 detection cannot settle, a compiler installed on the host and in the
 container both."
   (interactive
-   (list (completing-read "Distrobox (empty to detect): "
-                          (+container-list) nil nil nil nil
-                          (+cpp--setting '+cpp-container))))
+   (list (+core-read-or-empty "Distrobox" "to detect" (+container-list)
+                              (+cpp--setting '+cpp-container))))
   (let ((name (and (not (string-empty-p name)) name))
         (root (+core-project-root)))
     (when (and name (not (executable-find "distrobox")))

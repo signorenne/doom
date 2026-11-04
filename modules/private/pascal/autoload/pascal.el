@@ -8,6 +8,7 @@
 (declare-function +core-project-root "lib")
 (declare-function +core-dir-locals-set "lib")
 (declare-function +core-compile "lib")
+(declare-function +core-read-or-empty "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (defvar +pascal-host-os)
@@ -354,9 +355,8 @@ lldb-dap on a Mac, `+core-os-debugger'."
 (defun +pascal/set-build-mode (mode)
   "Build with MODE from now on, kept in .dir-locals.el."
   (interactive
-   (list (completing-read "Build mode (empty for the project's default): "
-                          (+pascal--build-modes) nil nil nil nil
-                          (or +pascal-build-mode ""))))
+   (list (+core-read-or-empty "Build mode" "for the project's default"
+                              (+pascal--build-modes) +pascal-build-mode)))
   (let ((value (unless (string-empty-p mode) mode)))
     (+core-dir-locals-set (+pascal-root) '+pascal-build-mode value)
     (setq-local +pascal-build-mode value)
@@ -367,8 +367,8 @@ lldb-dap on a Mac, `+core-os-debugger'."
 (defun +pascal/set-widgetset (widgetset)
   "Build the LCL against WIDGETSET.  Empty leaves it to the project."
   (interactive
-   (list (completing-read "Widget set: " '("gtk2" "gtk3" "qt5" "qt6" "cocoa" "")
-                          nil nil nil nil (or +pascal-widgetset ""))))
+   (list (+core-read-or-empty "Widget set" "to leave it to the project"
+                              '("gtk2" "gtk3" "qt5" "qt6" "cocoa") +pascal-widgetset)))
   (let ((value (unless (string-empty-p widgetset) widgetset)))
     (+core-dir-locals-set (+pascal-root) '+pascal-widgetset value)
     (setq-local +pascal-widgetset value)
@@ -378,11 +378,11 @@ lldb-dap on a Mac, `+core-os-debugger'."
 (defun +pascal/set-target (target)
   "Build for TARGET, written CPU-OS.  Empty means this machine."
   (interactive
-   (list (completing-read "Target (empty for this machine): "
-                          '("x86_64-linux" "i386-linux" "aarch64-linux"
-                            "arm-linux" "arm-embedded" "x86_64-win64"
-                            "aarch64-darwin" "x86_64-darwin")
-                          nil nil nil nil (or +pascal-target ""))))
+   (list (+core-read-or-empty "Target" "for this machine"
+                              '("x86_64-linux" "i386-linux" "aarch64-linux"
+                                "arm-linux" "arm-embedded" "x86_64-win64"
+                                "aarch64-darwin" "x86_64-darwin")
+                              +pascal-target)))
   (let ((value (unless (string-empty-p target) target)))
     (+core-dir-locals-set (+pascal-root) '+pascal-target value)
     (setq-local +pascal-target value)
@@ -400,14 +400,15 @@ lldb-dap on a Mac, `+core-os-debugger'."
 
 ;;;###autoload
 (defun +pascal/set-main (file)
-  "Build FILE from now on, for a project that holds more than one program."
+  "Build FILE from now on, for a project that holds more than one program.
+Empty means the one the project names, or the only one."
   (interactive
-   (list (completing-read "Build which: "
-                          (mapcar (lambda (f) (file-relative-name f (+pascal-root)))
-                                  (append (+pascal--files (+pascal-root) "\\.lpi\\'")
-                                          (+pascal--files (+pascal-root) "\\.lpr\\'")
-                                          (+pascal--files (+pascal-root) "\\.dpr\\'")))
-                          nil nil nil nil (or +pascal-main ""))))
+   (list (+core-read-or-empty "Build which" "for the one the project names"
+                              (mapcar (lambda (f) (file-relative-name f (+pascal-root)))
+                                      (append (+pascal--files (+pascal-root) "\\.lpi\\'")
+                                              (+pascal--files (+pascal-root) "\\.lpr\\'")
+                                              (+pascal--files (+pascal-root) "\\.dpr\\'")))
+                              +pascal-main)))
   (let ((value (unless (string-empty-p file) file)))
     (+core-dir-locals-set (+pascal-root) '+pascal-main value)
     (setq-local +pascal-main value)

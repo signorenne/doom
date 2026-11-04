@@ -88,9 +88,8 @@ Signals an error unless NOERROR."
 With prefix argument PERSIST, write it to .dir-locals.el."
   (interactive
    (let* ((envs (+pio--envs))
-          (choice (completing-read "Environment (empty for the default): "
-                                   (cons "" envs) nil t nil nil
-                                   (or +pio-env ""))))
+          (choice (+core-read-or-empty "Environment" "for the default"
+                                       envs +pio-env t)))
      (list (unless (string-empty-p choice) choice) current-prefix-arg)))
   (setq-default +pio-env env)
   (setq +pio-env env)

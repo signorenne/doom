@@ -10,6 +10,7 @@
 (declare-function +core-project-root "lib")
 (declare-function +core-dir-locals-set "lib")
 (declare-function +core-compile "lib")
+(declare-function +core-read-or-empty "lib")
 
 (defvar +rust-cargo-timeout 10
   "Seconds to wait on `cargo metadata' before giving up on it.")
@@ -503,10 +504,10 @@ Nothing chosen means the defaults; everything means --all-features."
   "Build only workspace member MEMBER, or the whole workspace.
 Empty means the whole workspace."
   (interactive
-   (list (completing-read "Member (empty for the whole workspace): "
-                          (or (+rust--members)
-                              (user-error "cargo could not list the members"))
-                          nil nil nil nil (or +rust-member ""))))
+   (list (+core-read-or-empty "Member" "for the whole workspace"
+                              (or (+rust--members)
+                                  (user-error "cargo could not list the members"))
+                              +rust-member)))
   (let ((value (unless (string-empty-p member) member)))
     (+core-dir-locals-set (+rust-root) '+rust-member value)
     (setq-local +rust-member value)
@@ -527,8 +528,7 @@ Empty means the whole workspace."
 (defun +rust/set-target (target)
   "Build for TARGET from now on.  Empty means this machine."
   (interactive
-   (list (completing-read "Target (empty for this machine): "
-                          (+rust--targets) nil nil nil nil (or +rust-target ""))))
+   (list (+core-read-or-empty "Target" "for this machine" (+rust--targets) +rust-target)))
   (let ((value (unless (string-empty-p target) target)))
     (+core-dir-locals-set (+rust-root) '+rust-target value)
     (setq-local +rust-target value)

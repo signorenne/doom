@@ -304,6 +304,24 @@ left alone rather than replaced."
     (remhash (file-name-as-directory (expand-file-name root)) +core--dir-locals-cache)
     file))
 
+;;;###autoload
+(defun +core-read-or-empty (prompt empty collection current &optional require-match)
+  "Read one of COLLECTION, or nothing, which is \"\".
+The prompt is PROMPT, then what an empty answer does, EMPTY (\"for the
+defaults\", \"to detect\"), then CURRENT, the value now, when there is
+one.  CURRENT is said rather than given as the default: `completing-read'
+answers an empty input with its default, so a setting read that way
+could never be cleared."
+  ;; The default is "" and no candidate is, so vertico starts on the
+  ;; prompt line and RET there answers nothing; with "" among them it
+  ;; starts on whichever the history put first.
+  (completing-read (format "%s (empty %s%s): " prompt empty
+                           (if (and current (not (equal current "")))
+                               (format ", now %s" current)
+                             ""))
+                   (if (listp collection) (remove "" collection) collection)
+                   nil require-match nil nil ""))
+
 ;;
 ;;; Git
 
