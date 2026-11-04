@@ -172,12 +172,17 @@ Non-nil when it did."
                (blob (or (and object
                               (+git--live-git "rev-parse" "--verify" "--quiet" object))
                          'empty)))
-    (setq +git--live-label label)
-    (unless (equal blob +git--live-blob)
-      (+git--live-write-base blob)
-      (setq +git--live-blob blob)
-      (run-hooks '+git--live-baseline-functions)
-      t)))
+    (let ((renamed (not (equal label +git--live-label))))
+      (setq +git--live-label label)
+      (cond ((not (equal blob +git--live-blob))
+             (+git--live-write-base blob)
+             (setq +git--live-blob blob)
+             (run-hooks '+git--live-baseline-functions)
+             t)
+            ;; The same text under another name: the hunks on show stand.
+            ((and renamed +git--live-tick)
+             (+git--live-set-status (length +git--live-hunks))
+             nil)))))
 
 (defvar-local +git--live-baseline-functions nil
   "Run in the buffer after its baseline's text changed.")
