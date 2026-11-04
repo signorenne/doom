@@ -2670,9 +2670,11 @@ Claude in a side panel, an Emacs buffer you read and edit with evil.
 | ~C-c C-c~    | interrupt                           |
 | ~C-c SPC~    | the leader, insert state too        |
 
-A tool that wants permission shows buttons and point goes to them: ~y~
-allow, ~n~ reject and stop the turn, ~!~ always allow, ~v~ the diff, which
-opens in the editor window. Away from the buttons these keys are evil's.
+A tool that wants permission shows buttons; point stays where you type,
+and ~SPC l j~ goes to them in normal state. There, in normal state only,
+~y~ allows, ~n~ rejects and stops the turn, ~!~ always allows; ~v~ shows the
+diff, which opens in the editor window. Away from the buttons these keys
+are evil's.
 In the diff ~gy~ accepts, ~gn~ rejects.
 
 The modeline says =AI PROJECT: permission= or =done= when a hidden chat or

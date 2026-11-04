@@ -13,6 +13,7 @@
 (declare-function agent-shell-subscribe-to "agent-shell")
 (declare-function claude-code-ide--get-buffer-name "claude-code-ide")
 (declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
+(declare-function evil-normal-state "evil-states")
 
 (defvar +ai--attention nil
   "Buffers that need you, as (BUFFER KIND TIME); KIND is permission or done.")
@@ -142,7 +143,8 @@ the entry clears."
 ;;;###autoload
 (defun +ai/attend ()
   "Go to the chat or terminal that needs you, the one waiting longest.
-On a chat, to its permission button."
+On a chat, to its permission button in normal state, where y, n and !
+answer."
   (interactive)
   (let* ((entry (car (sort (copy-sequence +ai--attention)
                            (lambda (a b) (< (nth 2 a) (nth 2 b))))))
@@ -156,4 +158,8 @@ On a chat, to its permission button."
           (t (with-current-buffer buffer (claude-code-ide-switch-to-buffer))))
     (when (and (eq (nth 1 entry) 'permission)
                (derived-mode-p 'agent-shell-mode))
+      ;; The button's keys answer in normal state only. Entering it moves
+      ;; point back a character, so it comes before the jump.
+      (when (bound-and-true-p evil-local-mode)
+        (evil-normal-state))
       (agent-shell-jump-to-latest-permission-button-row))))

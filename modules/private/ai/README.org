@@ -11,9 +11,10 @@ with all of it on the same keys.
   the transcript. The header shows the permission mode (a chat starts in
   Auto, as VS Code's do: safe actions run, risky ones stop), the model and
   the context used; ~C-<tab>~ cycles the mode. A tool that wants
-  permission shows buttons, and point goes to them:
-  ~y~ allow once, ~n~ reject and stop the turn so you can say what to do
-  instead, ~!~ always allow, ~v~ view the diff, which opens in the editor
+  permission shows buttons; point stays where you type, and ~SPC l j~
+  takes you to them in normal state. There, in normal state only, ~y~
+  allows once, ~n~ rejects and stops the turn so you can say what to do
+  instead, ~!~ always allows; ~v~ views the diff, which opens in the editor
   window, not beside the chat. Elsewhere in the chat those keys are evil's.
   Once an edit lands, an open buffer of that file reloads, unless you
   have changed it.
@@ -63,7 +64,7 @@ terminal starts.
 
 When a hidden chat or terminal waits for a permission or finishes, the
 modeline says =AI PROJECT: permission= or =done= and a notification
-appears; ~SPC l j~ goes there, on a chat to its button.
+appears; ~SPC l j~ goes there, on a chat to its button in normal state.
 
 ~SPC l m m~ holds what VS Code's dialogs do: Claude's MCP servers (list,
 add, remove, details, in the local, project or user scope), its hooks and

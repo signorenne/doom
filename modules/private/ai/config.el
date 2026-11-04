@@ -377,6 +377,7 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   "n in normal state: reject on a permission button, evil's n elsewhere.")
 
 (declare-function agent-shell-cycle-session-mode "agent-shell")
+(declare-function evil-normal-state-p "evil-states")
 
 ;; evil-collection sets the chat's keys after any `after!' of ours runs,
 ;; so these go on its hook, which runs once its setup is done.
@@ -413,6 +414,36 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   (let ((+ai--chat-permission-request (plist-get args :acp-request))
         (+ai--chat-permission-buffer (map-elt (plist-get args :state) :buffer)))
     (apply fn args)))
+
+;; A request that came in moved point onto its buttons in every window of
+;; the chat, and so did one the responder answered, onto any still open:
+;; a y typed at the prompt answered it. Point stays; SPC l j goes there.
+(defadvice! +ai--chat-point-stays-a (fn &rest args)
+  "Leave point alone while agent-shell handles a request from the agent."
+  :around #'agent-shell-jump-to-latest-permission-button-row
+  ;; Non-nil as if it had jumped, or the caller goes to the end instead.
+  (or +ai--chat-permission-request
+      (apply fn args)))
+
+;; A button's keys sit in a text property keymap, above evil's, so they
+;; answered in insert state too. Its y, n and ! answer in normal state
+;; only; in another state they go on to evil's maps, and type nothing.
+(defun +ai--chat-answer-key-filter (command)
+  "COMMAND in normal state, or with evil off; else nil."
+  (and (or (not (bound-and-true-p evil-local-mode))
+           (evil-normal-state-p))
+       command))
+
+(defadvice! +ai--chat-answer-keys-a (&rest args)
+  "Let a permission button's y, n and ! answer in normal state only."
+  :before #'agent-shell--make-permission-button
+  ;; The buttons of a request share one keymap: changed once, in place.
+  (when-let* ((keymap (plist-get args :keymap)))
+    (dolist (key '(?y ?n ?!))
+      (when-let* ((entry (assq key (cdr keymap)))
+                  ((not (eq (car-safe (cdr entry)) 'menu-item))))
+        (setcdr entry `(menu-item "" ,(cdr entry)
+                                  :filter +ai--chat-answer-key-filter))))))
 
 
 ;;
