@@ -139,8 +139,8 @@ commit, OLD-PATH in its parent; `reading' while git is at it.")
      :coding 'utf-8-unix
      :stderr (make-pipe-process :name "sidebar-timeline-errors" :buffer nil
                                 :noquery t :filter #'ignore :sentinel #'ignore)
-     :command (list "git" "-c" "core.quotePath=false" "log" "--follow"
-                    (format "-%d" +sidebar-timeline-count)
+     ;; -z: fields and names end in NUL, and no name is quoted.
+     :command (list "git" "log" "-z" "--follow" (format "-%d" +sidebar-timeline-count)
                     "--format=%x01%h%x00%at%x00%an%x00%s" "--name-status" "--" path)
      :filter (lambda (_proc string) (push string chunks))
      :sentinel
@@ -148,10 +148,11 @@ commit, OLD-PATH in its parent; `reading' while git is at it.")
        (unless (process-live-p proc)
          (puthash key
                   (mapcar (lambda (entry)
-                            (pcase-let* ((`(,head ,change) (split-string entry "\n" t))
-                                         (`(,hash ,time ,author ,subject) (split-string head "\0"))
-                                         ;; M\tPATH, or R066\tOLD\tNEW for a rename.
-                                         (names (and change (cdr (split-string change "\t")))))
+                            ;; HASH TIME AUTHOR SUBJECT, the change's letter, then
+                            ;; its name, or the old and the new for R and C.
+                            (pcase-let* ((`(,hash ,time ,author ,subject ,_change . ,names)
+                                          (split-string entry "\0"))
+                                         (names (seq-remove #'string-empty-p names)))
                               (list hash (string-to-number (or time "0")) author subject
                                     (or (car (last names)) path) (or (car names) path))))
                           (split-string (apply #'concat (nreverse chunks)) "\x01" t))
