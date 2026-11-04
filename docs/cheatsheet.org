@@ -2682,7 +2682,8 @@ terminal needs you; ~SPC l j~ goes there.
 
 ** Claude's terminal
 Claude Code's own TUI in a side window, the fallback; with the chat open it
-goes below it, both in view.
+goes below it, both in view. A project can run several, :2 and on; a
+prompt buffer writes to the one it was opened from.
 
 | Key       | What it does                      |
 |-----------+-----------------------------------|

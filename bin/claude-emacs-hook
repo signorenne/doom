@@ -8,12 +8,16 @@
 [ -n "$CLAUDE_EMACS_HOOK_SKIP" ] && exit 0
 event="${1:-unknown}"
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
+# claude-code-ide gives each terminal its own port to Emacs: it tells which
+# of a project's terminals this is. Empty for a claude it did not start.
+port="${CLAUDE_CODE_SSE_PORT:-}"
 command -v emacsclient >/dev/null 2>&1 || exit 0
-# Both go into an elisp string: a quote or a backslash in a path must not
+# Each goes into an elisp string: a quote or a backslash in a path must not
 # end the string or change what is evaluated.
 esc() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
 # Doom names the socket after EMACS_SERVER_NAME when it is set; emacsclient
 # does not read that variable by itself.
 if [ -n "$EMACS_SERVER_NAME" ]; then set -- -s "$EMACS_SERVER_NAME"; else set --; fi
-emacsclient "$@" -q -e "(+ai--claude-event \"$(esc "$event")\" \"$(esc "$dir")\")" >/dev/null 2>&1 || true
+# An Emacs still on the handler of two arguments gets two.
+emacsclient "$@" -q -e "(condition-case nil (+ai--claude-event \"$(esc "$event")\" \"$(esc "$dir")\" \"$(esc "$port")\") (wrong-number-of-arguments (+ai--claude-event \"$(esc "$event")\" \"$(esc "$dir")\")))" >/dev/null 2>&1 || true
 exit 0

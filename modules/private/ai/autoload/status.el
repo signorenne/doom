@@ -11,7 +11,7 @@
 (defvar agent-shell-display-action)
 (declare-function agent-shell-jump-to-latest-permission-button-row "agent-shell")
 (declare-function agent-shell-subscribe-to "agent-shell")
-(declare-function claude-code-ide--get-buffer-name "claude-code-ide")
+(declare-function +ai--terminal-buffer "claude")
 (declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
 (declare-function evil-normal-state "evil-states")
 
@@ -130,11 +130,11 @@ the entry clears."
        :on-event (lambda (event) (+ai--chat-event buffer event))))))
 
 ;;;###autoload
-(defun +ai--terminal-event (dir kind)
-  "Note that DIR's Claude terminal needs you for KIND."
+(defun +ai--terminal-event (dir kind &optional port)
+  "Note that DIR's Claude terminal needs you for KIND.
+PORT, its connection to Emacs, tells which when the project runs several."
   (when-let* (((require 'claude-code-ide nil t))
-              (buffer (get-buffer (claude-code-ide--get-buffer-name
-                                   (file-name-as-directory dir)))))
+              (buffer (+ai--terminal-buffer dir port)))
     (+ai--attention-record
      buffer kind "Claude Code"
      (format "%s: %s" (file-name-nondirectory (directory-file-name dir))

@@ -159,10 +159,13 @@ Safe to re-run."
                  (abbreviate-file-name file))))))
 
 ;;;###autoload
-(defun +ai--claude-event (event dir)
+(defun +ai--claude-event (event dir &optional port)
   "Handle hook EVENT for project DIR.  Called by emacsclient.
+PORT, the terminal's connection to Emacs, says which of the project's
+terminals it is; empty or nil for a claude that has none.
 The status and its notification say it only when the terminal is out
 of sight."
+  (setq port (and port (not (string-empty-p port)) (string-to-number port)))
   (pcase event
     ("stop"
      ;; Pick up edits Claude made on disk in buffers that are not modified.
@@ -174,13 +177,13 @@ of sight."
                     (not (verify-visited-file-modtime buf))
                     (file-exists-p buffer-file-name))
            (revert-buffer :ignore-auto :noconfirm :preserve-modes))))
-     (+ai--terminal-event dir 'done)
+     (+ai--terminal-event dir 'done port)
      ;; What it wrote is not known file by file: anything under DIR.
      (run-hook-with-args '+ai-edit-functions
                          (or (+ai--turn-root dir) (file-name-as-directory dir))
                          nil))
     ("notification"
-     (+ai--terminal-event dir 'permission))
+     (+ai--terminal-event dir 'permission port))
     ;; A prompt sent: the project as it is now is where the turn starts.
     ("prompt"
      (+ai--turn-snapshot dir)))
