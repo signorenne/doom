@@ -72,6 +72,12 @@ changing size says nothing about the dashboard, so ~+dashboard-resize-h~
 is skipped while one is selected; the real frame's own resizes still
 run it, margins and all.
 
+The dashboard is laid out 80 columns wide, or as wide as its window when
+that is less, beside the side bar for one: the banner is left out when it
+does not fit, and the butler's bubble narrows. Doom's resize only centres
+it again, so once its window settles at another width it is laid out
+again.
+
 The greeting is whatever ~+ui-dashboard-greeting-function~ inserts, given
 the width to centre in; with the butler module on it is his, in his
 bubble, and ~+ui-dashboard-tick-hook~, run in the dashboard buffer at

@@ -465,7 +465,17 @@ says there after.")
   "Insert him saying the greeting of the hour, centred in WIDTH columns,
 his words in the dashboard's greeting face."
   (setq +butler--dashboard-width width)
-  (+butler--insert-speech (+butler-greeting) width '+ui-greeting))
+  (let ((+butler-bubble-width (+butler--dashboard-bubble-width width)))
+    (+butler--insert-speech (+butler-greeting) width '+ui-greeting)))
+
+(defun +butler--dashboard-bubble-width (width)
+  "The bubble's width that keeps him and it within WIDTH columns, a
+dashboard narrower than the block, beside the side bar; between
+`+butler-bubble-min-width' and `+butler-bubble-width'."
+  (max +butler-bubble-min-width
+       (min +butler-bubble-width
+            ;; The art, the gap, then the bubble's border and padding.
+            (- width (length (car +butler-art)) +butler--gap 4))))
 
 (defun +butler--dashboard-line ()
   "Something for him to say on the dashboard: a word of his own, a hint
@@ -497,7 +507,8 @@ shift under it."
           ;; The dashboard centres its text with a line prefix, which a
           ;; plain insert would not carry: he would land on the left edge.
           (let ((inhibit-read-only t)
-                (prefix (get-text-property start 'line-prefix)))
+                (prefix (get-text-property start 'line-prefix))
+                (+butler-bubble-width (+butler--dashboard-bubble-width width)))
             (with-silent-modifications
               (delete-region start end)
               (goto-char start)

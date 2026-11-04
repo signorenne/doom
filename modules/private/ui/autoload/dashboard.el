@@ -13,12 +13,38 @@
 (declare-function doom-color "doom-themes")
 (declare-function doom-blend "doom-themes")
 
-;; The widgets are laid out in an 80-column block, then handed to Doom's
-;; dashboard for their horizontal alignment.
+;; The widgets are laid out in an 80-column block, or in the dashboard
+;; window's width when that is less (beside the side bar, in a split),
+;; then handed to Doom's dashboard for their horizontal alignment.
+
+(defvar +ui--dashboard-laid-out nil
+  "The width the dashboard was last laid out in.")
+
+(defvar +ui--dashboard-relayout-timer nil
+  "The one-shot timer that lays the dashboard out again after a resize.")
 
 (defun +ui--dashboard-width ()
-  "The columns the dashboard is laid out in."
-  80)
+  "The columns the dashboard is laid out in: 80, or fewer when its window
+is narrower."
+  (if-let* ((window (get-buffer-window +dashboard-name 'visible)))
+      (min 80 (max 20 (1- (window-body-width window))))
+    80))
+
+;;;###autoload
+(defun +ui--dashboard-resized-h (_frame)
+  "Lay the dashboard out again once its window settles at a width it was
+not laid out in."
+  (when (and +ui--dashboard-laid-out
+             (get-buffer-window +dashboard-name 'visible)
+             (/= (+ui--dashboard-width) +ui--dashboard-laid-out))
+    (when (timerp +ui--dashboard-relayout-timer)
+      (cancel-timer +ui--dashboard-relayout-timer))
+    ;; Once the resize rests: dragging a window's edge resizes it many
+    ;; times a second.
+    (setq +ui--dashboard-relayout-timer
+          (run-with-timer 0.1 nil (lambda ()
+                                    (setq +ui--dashboard-relayout-timer nil)
+                                    (+dashboard-reload))))))
 
 (defun +ui--dashboard-centre-from (start)
   "Centre the dashboard text inserted since START with Doom's layout."
@@ -321,10 +347,12 @@ the ripple and the wave know where the letters start."
   (+ui--letters)
   (+ui--frames)
   (+ui--runs)
+  (setq +ui--dashboard-laid-out (+ui--dashboard-width))
   ;; At the current tick, so a reload of the dashboard does not restart
-  ;; the ripple with a jump.
+  ;; the ripple with a jump. Left out in a window too narrow for it.
   (let ((block-start (point)))
-    (dolist (row (+ui--frame +ui--tick))
+    (dolist (row (and (<= (+ui--banner-width) +ui--dashboard-laid-out)
+                      (+ui--frame +ui--tick)))
       (let* ((centred (+ui--centre row))
              (offset (- (length centred) (length row)))
              (start (point)))

@@ -93,6 +93,10 @@
 ;; nobody sees.
 (add-hook 'window-buffer-change-functions #'+ui--dashboard-shown-h)
 
+;; Doom's resize only centres the dashboard again; one laid out for a
+;; wider window runs off its edge, beside the side bar, after a resize.
+(add-hook 'window-size-change-functions #'+ui--dashboard-resized-h)
+
 ;; Nothing on the dashboard gets selected or lit up: no cursor, since there
 ;; is nothing to type into; no highlight when the mouse passes over a menu
 ;; entry; no region from a drag. Clicks and RET still open the entries.
