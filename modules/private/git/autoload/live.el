@@ -239,7 +239,8 @@ Non-nil when it did."
       (let ((hunks (+git--live-parse out)))
         (setq +git--live-hunks hunks)
         (funcall +git--live-draw-function hunks)
-        (+git--live-set-status (length hunks)))))
+        (+git--live-set-status (length hunks))
+        (+git--live-schedule-refine))))
    ((and (not +git--live-retried) +git--live-base-file
          (not (file-exists-p +git--live-base-file)))
     (setq +git--live-retried t
@@ -359,6 +360,130 @@ spec for each one that does not match. The others of EXISTING go."
              (unless (string-empty-p old-text)
                (overlay-put overlay 'before-string (+git--live-ghost old-text beg)))
              overlay)))))
+
+
+;;
+;;; The words that changed
+
+;; Marked only in the hunks a window shows, and once per text: smerge
+;; runs a diff of its own, with two temp files, for every hunk it
+;; refines. A timer does it, so neither a keystroke nor a redisplay
+;; waits for those diffs.
+
+(defvar +git-live-refine)
+(defvar +git-live-refine-max-lines)
+
+(defvar-local +git--live-refine-timer nil
+  "The one-shot timer that marks the changed words of the hunks on screen.")
+
+(defvar-local +git--live-refine-function #'+git--live-refine-inline
+  "How one hunk's changed words are marked: in place, or on two sides.")
+
+(defun +git--live-refine-pair (old-beg old-end new-beg new-end)
+  "Mark the words that changed from OLD-BEG..OLD-END to NEW-BEG..NEW-END,
+markers that may be in two buffers. The word overlays made, as
+\(REMOVED . ADDED)."
+  (require 'smerge-mode)
+  (let ((old-buffer (marker-buffer old-beg))
+        (new-buffer (marker-buffer new-beg)))
+    (cl-flet ((made (buffer beg end before face)
+                (with-current-buffer buffer
+                  (let (words)
+                    ;; smerge also leaves an overlay over each whole
+                    ;; region, with its shadow cursor's sensor on it.
+                    (dolist (overlay (overlays-in beg end))
+                      (unless (memq overlay before)
+                        (if (and (overlay-get overlay '+git-live-word)
+                                 (< (overlay-start overlay) (overlay-end overlay)))
+                            (progn (overlay-put overlay 'face face)
+                                   (overlay-put overlay 'priority -55)
+                                   (push overlay words))
+                          (delete-overlay overlay))))
+                    words))))
+      (let ((before-old (with-current-buffer old-buffer (overlays-in old-beg old-end)))
+            (before-new (with-current-buffer new-buffer (overlays-in new-beg new-end)))
+            (smerge-refine-shadow-cursor nil))
+        (smerge-refine-regions old-beg old-end new-beg new-end nil nil
+                               '((+git-live-word . removed))
+                               '((+git-live-word . added)))
+        (cons (made old-buffer old-beg old-end before-old '+git-live-removed-word)
+              (made new-buffer new-beg new-end before-new '+git-live-added-word))))))
+
+(defun +git--live-refine-inline (overlay)
+  "Mark the changed words of OVERLAY's hunk, in the buffer and in the
+removed lines drawn above it."
+  (let* ((beg (overlay-start overlay))
+         (end (overlay-end overlay))
+         (old (overlay-get overlay '+git-live-old))
+         (ghost (+git--live-ghost old beg))
+         (offset (- (length ghost) (length old)))
+         (new-beg (copy-marker beg))
+         (new-end (copy-marker end))
+         added)
+    (mapc #'delete-overlay (overlay-get overlay '+git-live-words))
+    (with-temp-buffer
+      (insert old)
+      (pcase-let ((`(,removed . ,new-words)
+                   (+git--live-refine-pair (copy-marker (point-min)) (copy-marker (point-max))
+                                           new-beg new-end)))
+        (dolist (word removed)
+          (add-face-text-property (+ offset (1- (overlay-start word)))
+                                  (+ offset (1- (overlay-end word)))
+                                  '+git-live-removed-word nil ghost))
+        (setq added new-words)))
+    (set-marker new-beg nil)
+    (set-marker new-end nil)
+    (overlay-put overlay 'before-string ghost)
+    (overlay-put overlay '+git-live-words added)))
+
+(defun +git--live-refinable-p (overlay)
+  "Non-nil when OVERLAY's hunk has lines on both sides, few enough."
+  (let ((old (overlay-get overlay '+git-live-old))
+        (beg (overlay-start overlay))
+        (end (overlay-end overlay)))
+    (and (< beg end)
+         (not (string-empty-p old))
+         (<= (count-lines beg end) +git-live-refine-max-lines)
+         (<= (cl-count ?\n old) +git-live-refine-max-lines))))
+
+(defun +git--live-refine-visible ()
+  "Mark the changed words of the hunks the windows show, once per text."
+  (when (and +git-live-refine +git--live-kind)
+    (dolist (window (get-buffer-window-list (current-buffer) nil t))
+      (let* ((from (window-start window))
+             (to (save-excursion
+                   (goto-char from)
+                   (forward-line (window-body-height window))
+                   (point))))
+        (dolist (overlay +git--live-overlays)
+          (when (and (overlay-buffer overlay)
+                     (< (overlay-start overlay) to)
+                     (> (overlay-end overlay) from)
+                     (+git--live-refinable-p overlay))
+            (let ((text (buffer-substring-no-properties (overlay-start overlay)
+                                                        (overlay-end overlay))))
+              (unless (equal text (overlay-get overlay '+git-live-refined))
+                (funcall +git--live-refine-function overlay)
+                (overlay-put overlay '+git-live-refined text)))))))))
+
+(defun +git--live-schedule-refine ()
+  "Mark the changed words on screen after a short rest."
+  (when (and +git-live-refine (not (timerp +git--live-refine-timer)))
+    (let ((buffer (current-buffer)))
+      (setq +git--live-refine-timer
+            (run-with-idle-timer (if-let* ((idle (current-idle-time)))
+                                     (time-add idle 0.1)
+                                   0.1)
+                                 nil
+                                 (lambda ()
+                                   (when (buffer-live-p buffer)
+                                     (with-current-buffer buffer
+                                       (setq +git--live-refine-timer nil)
+                                       (+git--live-refine-visible)))))))))
+
+(defun +git--live-scrolled-h (_window _start)
+  "Mark the words of the hunks scrolled into view, after redisplay."
+  (+git--live-schedule-refine))
 
 (defun +git--live-set-status (what &optional detail)
   "Say in the modeline what the view compares with: WHAT is the number
@@ -498,6 +623,7 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (add-hook 'after-revert-hook #'+git--live-reverted-h nil t)
   (add-hook 'window-buffer-change-functions #'+git--live-shown-h nil t)
   (add-hook 'window-selection-change-functions #'+git--live-shown-h nil t)
+  (add-hook 'window-scroll-functions #'+git--live-scrolled-h nil t)
   (add-hook 'kill-buffer-hook #'+git--live-stop-h nil t)
   (add-hook 'change-major-mode-hook #'+git--live-stop-h nil t)
   (setq +git--live-watch
@@ -513,6 +639,8 @@ The caller checked `+git--live-refusal', which set the toplevel."
   "Stop the engine in this buffer and take everything it drew away."
   (when (timerp +git--live-timer)
     (cancel-timer +git--live-timer))
+  (when (timerp +git--live-refine-timer)
+    (cancel-timer +git--live-refine-timer))
   (when (process-live-p +git--live-process)
     (delete-process +git--live-process))
   (mapc #'+git--live-delete-overlay +git--live-overlays)
@@ -520,6 +648,7 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (remove-hook 'after-revert-hook #'+git--live-reverted-h t)
   (remove-hook 'window-buffer-change-functions #'+git--live-shown-h t)
   (remove-hook 'window-selection-change-functions #'+git--live-shown-h t)
+  (remove-hook 'window-scroll-functions #'+git--live-scrolled-h t)
   (remove-hook 'kill-buffer-hook #'+git--live-stop-h t)
   (remove-hook 'change-major-mode-hook #'+git--live-stop-h t)
   (when +git--live-watch
@@ -529,6 +658,7 @@ The caller checked `+git--live-refusal', which set the toplevel."
     (delete-file +git--live-base-file))
   (setq +git--live-buffers (delq (current-buffer) +git--live-buffers))
   (setq +git--live-kind nil +git--live-timer nil +git--live-process nil
+        +git--live-refine-timer nil
         +git--live-overlays nil +git--live-hunks nil +git--live-watch nil
         +git--live-base-file nil +git--live-blob nil +git--live-dirty nil
         +git--live-resolve nil +git--live-retried nil +git--live-status nil)
