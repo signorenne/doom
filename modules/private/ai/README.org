@@ -227,6 +227,13 @@ Inside Claude's terminal, =/ide= shows the Emacs connection and =/mcp= lists
 the tools.
 
 * Configuration
+- ~+ai-turn-functions~ and ~+ai-edit-functions~: hooks for other modules,
+  called with the repository's toplevel and the turn's snapshot (a git
+  tree of the working tree, taken through a copy of the index when a
+  chat is sent a prompt, or the terminal once its hooks are in), and
+  with the toplevel and the files an agent's edit wrote (nil for "any",
+  as on the terminal's stop). The git views compare with the snapshot;
+  the side bar redraws on edits.
 - ~+ai-panel-width~ (72): the chat's and the terminal's side windows; 72
   columns are a readable line of prose, below 64 the terminal wraps a lot.
 - ~+ai-auto-allowed-tools~: the Emacs tools that run without asking, in
