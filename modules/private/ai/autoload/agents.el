@@ -4,6 +4,10 @@
 ;; hooks and session logs.
 
 (defvar +ai-hook-script)
+(defvar +ai-claude-settings-file)
+(defvar +ai-edit-functions)
+(declare-function +ai--turn-root "turn")
+(declare-function +ai--turn-snapshot "turn")
 (declare-function +ai--chat-buffer "chat")
 (declare-function +ai--chat-start-quietly "chat")
 (declare-function +ai--claude-mcp "claude")
@@ -89,7 +93,8 @@ With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
 ;;; Letting Claude Code notify Emacs
 
 (defvar +ai--hook-events
-  '(("Stop" . "stop") ("Notification" . "notification"))
+  '(("Stop" . "stop") ("Notification" . "notification")
+    ("UserPromptSubmit" . "prompt"))
   "Hook events `+ai/install-claude-hooks' installs, and their arguments.")
 
 (defun +ai--hook-entry (event-name)
@@ -101,14 +106,15 @@ With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
 
 ;;;###autoload
 (defun +ai/install-claude-hooks ()
-  "Tell Claude Code to notify Emacs when it stops or needs input.
-Writes to ~/.claude/settings.json, keeping a .bak copy.  Safe to re-run."
+  "Tell Claude Code to notify Emacs when it stops, needs input or is sent
+a prompt. Writes to `+ai-claude-settings-file', keeping a .bak copy.
+Safe to re-run."
   (interactive)
   ;; Checked before the file is read, so a missing script gets a clear
   ;; message rather than a parse error from a hand-edited settings.json.
   (unless (file-executable-p +ai-hook-script)
     (user-error "Hook script %s is missing or not executable" +ai-hook-script))
-  (let* ((file (expand-file-name "~/.claude/settings.json"))
+  (let* ((file (expand-file-name +ai-claude-settings-file))
          (settings (if (file-exists-p file)
                        (with-temp-buffer
                          (insert-file-contents file)
@@ -168,9 +174,16 @@ of sight."
                     (not (verify-visited-file-modtime buf))
                     (file-exists-p buffer-file-name))
            (revert-buffer :ignore-auto :noconfirm :preserve-modes))))
-     (+ai--terminal-event dir 'done))
+     (+ai--terminal-event dir 'done)
+     ;; What it wrote is not known file by file: anything under DIR.
+     (run-hook-with-args '+ai-edit-functions
+                         (or (+ai--turn-root dir) (file-name-as-directory dir))
+                         nil))
     ("notification"
-     (+ai--terminal-event dir 'permission)))
+     (+ai--terminal-event dir 'permission))
+    ;; A prompt sent: the project as it is now is where the turn starts.
+    ("prompt"
+     (+ai--turn-snapshot dir)))
   t)
 
 

@@ -212,8 +212,11 @@ The keys before this layout, and where they went:
    behind Claude Code, in its slash commands for one.
 3. Install the hooks once with ~SPC l m h~: a terminal tells Emacs then when
    it finishes or needs you, for the modeline and the notification, and
-   finished edits reload. It writes =~/.claude/settings.json= and keeps a
-   =.bak=. The chat and the inline actions need nothing for it.
+   finished edits reload; and when it is sent a prompt, so the project is
+   snapshotted for the git views' "agent turn" baseline.
+   It writes =~/.claude/settings.json= and keeps a =.bak=; run it again
+   after an update of this module adds a hook. The chat and the inline
+   actions need nothing for it: a chat snapshots on each prompt by itself.
 4. For gptel, optional: =ANTHROPIC_API_KEY=, or in =~/.authinfo.gpg=
    =machine api.anthropic.com login apikey password KEY=. With a key the
    inline actions go through gptel too.

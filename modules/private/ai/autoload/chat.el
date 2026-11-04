@@ -7,6 +7,7 @@
 (defvar +ai--chat-permission-request)
 (defvar +ai-auto-allowed-tools)
 (defvar +ai-chat-output-lines)
+(defvar +ai-edit-functions)
 (defvar acp-logging-enabled)
 (defvar agent-shell-activity-group-expand-by-default)
 (defvar agent-shell-context-sources)
@@ -14,6 +15,8 @@
 (defvar agent-shell-mcp-servers)
 (defvar agent-shell-preferred-agent-config)
 (defvar agent-shell-session-strategy)
+(declare-function +ai--turn-root "turn")
+(declare-function +ai--turn-snapshot "turn")
 (declare-function +ai--tool-root-allowed-p "claude")
 (declare-function +ai--tools-name-taken "claude")
 (declare-function agent-shell "agent-shell")
@@ -426,19 +429,26 @@ outside your home gets none."
                      (claude-code-ide-mcp-server-session-ended id)))))))
 
 (defun +ai--chat-edit-landed (event)
-  "Reload the buffers of the files a finished edit of the chat wrote.
-EVENT is agent-shell's tool-call-update.  A buffer you modified is
-left alone."
-  (let ((tool-call (map-nested-elt event '(:data :tool-call))))
+  "Reload the buffers of the files a finished edit of the chat wrote,
+then tell `+ai-edit-functions'. EVENT is agent-shell's
+tool-call-update.  A buffer you modified is left alone."
+  (let ((tool-call (map-nested-elt event '(:data :tool-call)))
+        paths)
     (when (and (equal (map-elt tool-call :kind) "edit")
                (equal (map-elt tool-call :status) "completed"))
       (seq-doseq (location (map-elt tool-call :locations))
-        (when-let* ((path (map-elt location 'path))
-                    (buffer (find-buffer-visiting path)))
-          (with-current-buffer buffer
-            (unless (or (buffer-modified-p)
-                        (verify-visited-file-modtime buffer))
-              (revert-buffer :ignore-auto :noconfirm :preserve-modes))))))))
+        (when-let* ((path (map-elt location 'path)))
+          (push path paths)
+          (when-let* ((buffer (find-buffer-visiting path)))
+            (with-current-buffer buffer
+              (unless (or (buffer-modified-p)
+                          (verify-visited-file-modtime buffer))
+                (revert-buffer :ignore-auto :noconfirm :preserve-modes))))))
+      (when paths
+        (let ((dir (file-name-directory (car paths))))
+          (run-hook-with-args '+ai-edit-functions
+                              (or (+ai--turn-root dir) dir)
+                              (nreverse paths)))))))
 
 ;;;###autoload
 (defun +ai--chat-reload-h ()
@@ -447,6 +457,22 @@ left alone."
    :shell-buffer (current-buffer)
    :event 'tool-call-update
    :on-event #'+ai--chat-edit-landed))
+
+(defun +ai--chat-turn-started (_event)
+  "Snapshot this chat's project: a turn begins."
+  (+ai--turn-snapshot default-directory))
+
+;;;###autoload
+(defun +ai--chat-turn-h ()
+  "Snapshot the project each time a prompt of this chat is sent."
+  (let ((chat (current-buffer)))
+    (agent-shell-subscribe-to
+     :shell-buffer chat
+     :event 'input-submitted
+     :on-event (lambda (event)
+                 (when (buffer-live-p chat)
+                   (with-current-buffer chat
+                     (+ai--chat-turn-started event)))))))
 
 ;;;###autoload
 (defun +ai--chat-permission-responder (request)

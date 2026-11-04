@@ -72,6 +72,9 @@ needs you or finishes.")
 (defvar +ai-hook-script (file-name-concat doom-user-dir "bin/claude-emacs-hook")
   "Script that `+ai/install-claude-hooks' wires into ~/.claude/settings.json.")
 
+(defvar +ai-claude-settings-file "~/.claude/settings.json"
+  "Claude Code's user settings, where `+ai/install-claude-hooks' writes.")
+
 (defvar +ai-docs
   '(:groups (("ai" "AI" (vterm agent-shell git-commit)
               ;; The module's own keys are in these maps, not vterm's or
@@ -99,6 +102,17 @@ needs you or finishes.")
   "The modeline's AI entry: empty, or the chat or terminal that needs you.")
 (put '+ai--status-string 'risky-local-variable t)
 (add-to-list 'mode-line-misc-info '+ai--status-string)
+
+;; An agent's turns and edits, for other modules: the git views take the
+;; project as it was when a turn began as a baseline, and follow edits
+;; (autoload/turn.el, git/autoload/live.el).
+(defvar +ai-turn-functions nil
+  "Called with ROOT and TREE when an agent's turn begins in the
+repository whose toplevel is ROOT; TREE is its working tree then.")
+
+(defvar +ai-edit-functions nil
+  "Called with ROOT and FILES when an agent's edit lands in the
+repository or directory ROOT; FILES nil means anything under ROOT.")
 
 
 ;;
@@ -326,6 +340,8 @@ needs you or finishes.")
   (add-hook 'agent-shell-mode-hook #'+ai--chat-status-h)
   ;; An open buffer of a file the chat edits shows the edit as it lands.
   (add-hook 'agent-shell-mode-hook #'+ai--chat-reload-h)
+  ;; Each prompt sent snapshots the project, the git views' "agent turn".
+  (add-hook 'agent-shell-mode-hook #'+ai--chat-turn-h)
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
