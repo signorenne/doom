@@ -115,7 +115,8 @@ transients is one key away on /, its dispatch."
     ("[" "Previous change"     +git/previous-change :transient t)
     ("." "Show the change here" diff-hl-show-hunk)
     ("s" "Stage this change"   +vc-gutter/stage-hunk)
-    ("r" "Revert this change"  +git/revert-change)]
+    ("r" "Revert this change"  +git/revert-change)
+    ("=" "Compare with: index, HEAD, a commit, the agent's turn" +git/live-baseline)]
    ["Tools"
     ("w" "Worktrees"           magit-worktree)
     ("!" "Run a git command"   magit-git-command)

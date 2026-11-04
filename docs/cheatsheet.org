@@ -1163,6 +1163,12 @@ you cannot edit, the file on the right, which you can. Empty lines pad
 the shorter side of each change so the two line up, and scrolling
 either side scrolls the other.
 
+Both compare with the index, as the fringe does: a change you stage
+leaves them. ~SPC g SPC =~ compares the buffer with HEAD, with a commit,
+or with the project as it was when an agent's last turn began, so you
+see only what the agent changed; the modeline says which, as in
+=[vs HEAD: 3]=.
+
 The popup is the quickest answer to "what did I just change here": it
 shows the old lines in place, and ~c~ puts them in the kill ring if you
 want the original back by hand.

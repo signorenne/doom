@@ -712,6 +712,65 @@ or with what `+git/live-baseline' picked."
 
 
 ;;
+;;; What the view compares with
+
+(declare-function +git--read-commit "commit")
+
+(defun +git--live-restart ()
+  "Look the baseline up and diff now, dropping a diff on its way."
+  (when (timerp +git--live-timer)
+    (cancel-timer +git--live-timer)
+    (setq +git--live-timer nil))
+  (when (process-live-p +git--live-process)
+    (let ((process +git--live-process))
+      (setq +git--live-process nil)
+      (delete-process process)))
+  (+git--live-resolve-baseline)
+  (+git--live-set-status "...")
+  (+git--live-diff))
+
+;;;###autoload
+(defun +git/live-baseline ()
+  "Pick what this buffer's view compares with: the index, HEAD, a
+commit, or the project as it was when an agent's last turn began. Kept
+for the buffer when the view is turned off and on again."
+  (interactive)
+  (let* ((root (or +git--live-root
+                   (and buffer-file-name
+                        (+git--live-toplevel (file-name-directory buffer-file-name)))
+                   (user-error "Not in a git repository")))
+         (choice (completing-read
+                  "Compare with: "
+                  (append '("Index" "HEAD" "Commit...")
+                          (and (fboundp '+ai-turn-tree) '("Agent's turn")))
+                  nil t))
+         (baseline
+          (pcase choice
+            ("Index" 'index)
+            ("HEAD" 'head)
+            ("Commit..."
+             (require 'magit)
+             (let* ((rev (+git--read-commit "Compare with"))
+                    (default-directory root)
+                    (hash (+git--live-git "rev-parse" "--verify" "--quiet"
+                                          (concat rev "^{commit}"))))
+               (unless hash
+                 (user-error "No commit %s" rev))
+               (cons 'commit hash)))
+            ("Agent's turn"
+             (if (+ai-turn-tree root)
+                 'agent
+               (message "No agent turn in this project yet")
+               nil)))))
+    (when baseline
+      (setq +git-live-baseline baseline)
+      (if (not +git--live-kind)
+          (message "The next view of this buffer compares with %s" choice)
+        (+git--live-restart)
+        (message "Changes against %s" +git--live-label)))))
+
+
+;;
 ;;; Moving through the changes
 
 (defun +git--live-view-p ()

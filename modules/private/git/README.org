@@ -48,6 +48,10 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - the old version beside the file (=SPC g V=): read-only on the left,
   lines lined up and scrolled together, kept up as you edit; =q= on the
   old version, or =SPC g V= again, closes it,
+- both compare with the index, as the fringe does; ~=~ in the hub picks
+  HEAD, a commit, or the project as it was when an agent's last turn
+  began (a chat's prompt, or the terminal's once its hooks are in, see
+  the AI module), for that buffer,
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
