@@ -74,6 +74,7 @@ Each module keeps its own notes, reachable with =SPC h d M=:
 [[file:../modules/private/pascal/README.org][pascal]],
 [[file:../modules/private/qtcreator/README.org][qtcreator]],
 [[file:../modules/private/rust/README.org][rust]],
+[[file:../modules/private/sidebar/README.org][sidebar]],
 [[file:../modules/private/ui/README.org][ui]],
 [[file:../modules/private/uml/README.org][uml]],
 [[file:../modules/private/web/README.org][web]]

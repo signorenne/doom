@@ -164,6 +164,7 @@
  web               ; Svelte, TypeScript, Tailwind, node and Electron
  uml               ; PlantUML: completion, live preview, templates
  git               ; magit tuned, the history and branch menus
+ sidebar           ; the side bar: Source Control
  media             ; a player on mpv, in a buffer of its own
  notes             ; documents, capture, agenda, roam
  ai                ; Claude Code, agent shells, gptel

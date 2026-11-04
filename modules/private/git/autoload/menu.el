@@ -91,6 +91,8 @@ transients is one key away on /, its dispatch."
     ("a" "This function's history" magit-log-trace-definition)
     ("v" "This file's changes in place" +git/live)
     ("V" "This file beside its old version" +git/split)
+    ("e" "The Source Control side bar" +sidebar/source-control
+     :if (lambda () (fboundp '+sidebar/source-control)))
     ("P" "This file as it was before" magit-blob-previous)
     ("t" "Time machine"        git-timemachine-toggle
      :if (lambda () (fboundp 'git-timemachine-toggle)))]

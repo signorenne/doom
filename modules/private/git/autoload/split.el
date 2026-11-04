@@ -354,7 +354,7 @@ on the left, REV on the right, both read-only, lined up."
   (let* ((parent (magit-rev-verify (concat rev "^")))
          (right (magit-find-file-noselect rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
-                                            (or parent "none"))))
+                                            (if parent (substring parent 0 7) "none"))))
          (hunks (+git--live-parse
                  (with-temp-buffer
                    (call-process "git" nil (list t nil) nil "--no-pager" "diff" "--no-color"

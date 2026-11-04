@@ -1,0 +1,56 @@
+#+title:    :private sidebar
+#+subtitle: the side bar: Source Control
+
+* Description
+A side bar on the left, as VS Code has one: a window that shows one view
+at a time. =H= and =L= step through the views, a click on a name in its
+header goes to that one, =q= closes it. It works only while it is on
+show: hidden, it does nothing, and catches up when shown again.
+
+The Source Control view shows the repository of the file in the editor:
+the branch and how far it is from its upstream, the staged files, the
+changed and untracked ones, and the latest commits, each unfolding to
+the files it changed. A change opens in the editor window, in place
+(=RET=) or beside its old version (=o=), the git module's views
+(=SPC g v=, =SPC g V=): a changed file against the index, a staged one
+against HEAD, a commit's file against its parent. It stages, unstages
+and discards as magit does, and commits, pushes and pulls through magit.
+It redraws when magit changes the repository, when a file is saved, when
+an agent's edit lands, and when the index or HEAD change on disk.
+
+* Keybindings
+| Key       | Command                   | What it does                                       |
+|-----------+---------------------------+----------------------------------------------------|
+| ~SPC g e~   | ~+sidebar/source-control~ | Source Control in the side bar; there already, close it |
+
+In the side bar, normal state:
+
+| Key         | What it does                                              |
+|-------------+-----------------------------------------------------------|
+| ~j~ ~k~         | move                                                      |
+| ~TAB~         | fold or unfold the section; ~S-TAB~ every section           |
+| ~gj~ ~gk~       | next, previous section at the same level                  |
+| ~^~ ~gh~        | up to the parent section                                  |
+| ~H~ ~L~         | previous, next view                                       |
+| ~gr~          | draw it again now                                         |
+| ~q~           | close the side bar                                        |
+
+In Source Control:
+
+| Key   | What it does                                                      |
+|-------+-------------------------------------------------------------------|
+| ~RET~   | open the change in place; on a commit, unfold it                  |
+| ~o~     | open the change beside its old version; on a commit, its diff     |
+| ~s~ ~u~   | stage, unstage the file, the selection, or a section's files      |
+| ~x~     | discard: a tracked file back to the index, an untracked one to the trash, after asking |
+| ~S~ ~U~   | stage, unstage everything                                         |
+| ~c~     | commit (magit)                                                    |
+| ~p~ ~F~   | push, pull (magit)                                                |
+
+* Configuration
+- =+sidebar-width= (32): columns of the side bar.
+- =+sidebar-scm-commits= (20): commits listed.
+- =+sidebar-icons= (t): file icons.
+- =+sidebar-pinned-roots=: workspace name to a directory the side bar
+  shows there, whatever file the editor shows.
+- =+sidebar-refresh-delay= (0.3): seconds of rest before a redraw.
