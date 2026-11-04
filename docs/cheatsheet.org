@@ -2102,7 +2102,7 @@ has none.
 | ~SPC m k x~ | build, then run                                  |
 | ~SPC m k y~ | the Lazarus build mode, ~SPC m k w~ the widget set |
 | ~SPC m k s~ | which program, when the project holds several    |
-| ~SPC m k C~ | clean                                            |
+| ~SPC m k C~ | clean: lib and bin to the trash, after asking    |
 | ~SPC m k I~ | what is installed, and what this project is      |
 
 ** The files
@@ -4292,7 +4292,8 @@ bound.
 - ~+pascal/build~ (~SPC k b~) :: Build the project with what it is set to.
 - ~+pascal/build-and-run~ (~SPC k x~) :: Build, and run it when the build
   worked.
-- ~+pascal/clean~ (~SPC k C~) :: Remove what the build made.
+- ~+pascal/clean~ (~SPC k C~) :: Move what the build made, lib/ and bin/, to
+  the trash, after asking.
 - ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, given the
   run arguments: with gdb, or lldb-dap on a Mac, '+core-os-debugger'.
 - ~+pascal/menu~ (~SPC k m~) :: What a Pascal build depends on, and the

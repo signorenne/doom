@@ -52,7 +52,7 @@ letters =SPC k= has in every project. The most used:
 | ~SPC m k y~ | the Lazarus build mode                        |
 | ~SPC m k w~ | the widget set: gtk2, gtk3, qt5, qt6          |
 | ~SPC m k s~ | which program, when the project holds several |
-| ~SPC m k C~ | clean                                         |
+| ~SPC m k C~ | clean: lib and bin to the trash, after asking |
 | ~SPC m k I~ | what is installed, and what this project is   |
 | ~SPC m k v~ | open the .lpi, .lpr or .dproj                 |
 

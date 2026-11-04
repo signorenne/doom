@@ -287,16 +287,20 @@ already compiled into lib/ are not compiled again."
 
 ;;;###autoload
 (defun +pascal/clean ()
-  "Remove what the build made."
+  "Move what the build made, lib/ and bin/, to the trash, after asking."
   (interactive)
-  (let ((root (+pascal-root)))
-    (+pascal--compile
-     "clean"
-     ;; A Lazarus project too: lazbuild has no clean, and --build-all
-     ;; would build everything again.
-     (format "rm -rf %s %s"
-             (shell-quote-argument (expand-file-name "lib" root))
-             (shell-quote-argument (expand-file-name "bin" root))))))
+  ;; A Lazarus project too: lazbuild has no clean, and --build-all
+  ;; would build everything again.
+  (let* ((root (+pascal-root))
+         (dirs (seq-filter #'file-directory-p
+                           (mapcar (lambda (dir) (expand-file-name dir root)) '("lib" "bin"))))
+         (names (mapconcat (lambda (dir) (concat (file-name-nondirectory dir) "/"))
+                           dirs " and ")))
+    (cond ((null dirs) (message "Nothing to clean: no lib/ or bin/ here"))
+          ((y-or-n-p (format "Move %s to the trash? " names))
+           (let ((delete-by-moving-to-trash t))
+             (dolist (dir dirs) (delete-directory dir t t)))
+           (message "%s in the trash" names)))))
 
 ;;;###autoload
 (defun +pascal/debug ()
