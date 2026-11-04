@@ -168,9 +168,8 @@ project of the file in the editor window, else its directory."
                     buffer `((side . left) (slot . -1)
                              (window-width . ,+sidebar-width)
                              (preserve-size . (t . nil))
-                             (dedicated . t)
-                             (window-parameters . ((no-delete-other-windows . t)
-                                                   (delete-window . +sidebar--delete-window)))))))
+                             (dedicated . t)))))
+    (+sidebar--own-window window)
     (setq +sidebar--last-view view
           +sidebar--wanted t)
     (+sidebar--hooks t)
@@ -187,6 +186,13 @@ project of the file in the editor window, else its directory."
     (when select
       (select-window window))
     window))
+
+(defun +sidebar--own-window (window)
+  "Give the side bar's WINDOW its parameters: delete-other-windows keeps
+it, and closing it any way closes the side bar. A layout restored from
+a saved state, a workspace's, rebuilds the window without them."
+  (set-window-parameter window 'no-delete-other-windows t)
+  (set-window-parameter window 'delete-window #'+sidebar--delete-window))
 
 ;;;###autoload
 (defun +sidebar--delete-window (window)
@@ -249,6 +255,7 @@ window shows the side bar."
   (when (eq frame (selected-frame))
     (if-let* ((window (+sidebar--window frame)))
         (with-current-buffer (window-buffer window)
+          (+sidebar--own-window window)
           (unless (equal +sidebar--shown-root (+sidebar--root))
             (+sidebar--request))
           (run-hook-with-args '+sidebar-editor-changed-functions
@@ -279,7 +286,8 @@ the side bar is on show.")
     (run-at-time 0 nil
                  (lambda ()
                    (when +sidebar--wanted
-                     (unless (+sidebar--window)
+                     (if-let* ((window (+sidebar--window)))
+                         (+sidebar--own-window window)
                        (+sidebar--show (or +sidebar--last-view (caar +sidebar-views))))
                      (+sidebar--request))))))
 
