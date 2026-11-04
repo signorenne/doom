@@ -624,23 +624,6 @@ def faces(dark):
     f('dirvish-vc-needs-merge-face', fg='syn_keyword')
     f('dirvish-vc-needs-update-face', fg='syn_keyword')
     f('dirvish-vc-unregistered-face', fg='dim')
-    f('treemacs-root-face', fg='syn_keyword', weight='bold', height=1.1)
-    f('treemacs-directory-face', fg='syn_function')
-    f('treemacs-file-face', fg='fg')
-    f('treemacs-git-modified-face', fg='yellow')
-    f('treemacs-git-added-face', fg='green')
-    f('treemacs-git-untracked-face', fg='syn_type')
-    f('treemacs-git-ignored-face', fg='dim')
-    f('treemacs-git-conflict-face', fg='red', weight='bold')
-    f('treemacs-tags-face', fg='syn_property')
-    f('imenu-list-entry-face-0', fg='syn_function')
-    f('imenu-list-entry-face-1', fg='syn_keyword')
-    f('imenu-list-entry-face-2', fg='syn_type')
-    f('imenu-list-entry-face-3', fg='syn_constant')
-    f('imenu-list-entry-subalist-face-0', fg='syn_function', weight='bold')
-    f('imenu-list-entry-subalist-face-1', fg='syn_keyword', weight='bold')
-    f('imenu-list-entry-subalist-face-2', fg='syn_type', weight='bold')
-    f('imenu-list-entry-subalist-face-3', fg='syn_constant', weight='bold')
     # Terminals.
     for name in ('black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'):
         base = {'black': 'ansi_black', 'white': 'ansi_white', 'cyan': 'teal'}.get(name, name)
@@ -763,9 +746,6 @@ def faces(dark):
             ('rxt-highlight-face', dict(bg='search')),
             ('sh-heredoc', dict(fg='syn_string')), ('sh-quoted-exec', dict(fg='syn_builtin')), ('sh-escaped-newline', dict(fg='dim')),
             ('tab-bar-tab-highlight', dict(bg='border', fg='fg')), ('tool-bar', dict(bg='bg_raised', fg='fg')),
-            ('treemacs-fringe-indicator-face', dict(fg='copper')), ('treemacs-marked-file-face', dict(fg='copper', weight='bold')),
-            ('treemacs-on-failure-pulse-face', dict(bg='del_hi', fg='fg')), ('treemacs-on-success-pulse-face', dict(bg='add_hi', fg='fg')),
-            ('treemacs-peek-mode-indicator-face', dict(bg='syn_type')),
             ('tty-menu-disabled-face', dict(bg='bg_raised', fg='dim')), ('tty-menu-enabled-face', dict(bg='bg_raised', fg='fg')),
             ('tty-menu-selected-face', dict(bg='region', fg='fg_strong')),
             ('wgrep-face', dict(bg='chg_bg', fg='fg')), ('wgrep-delete-face', dict(bg='del_bg', fg='red', strike_through=True)),
