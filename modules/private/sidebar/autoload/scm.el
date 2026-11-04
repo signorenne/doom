@@ -246,39 +246,43 @@ its old version with SPLIT."
 section's, after asking: a tracked file goes back to the index, an
 untracked one to the trash."
   (interactive)
-  (pcase (+sidebar--scm-files t)
-    (`(staged . ,_) (message "Staged: unstage it first (u)"))
-    (`(,_ . ,(and files (pred identity)))
-     (let* ((untracked (seq-filter #'+sidebar--scm-untracked-p files))
-            (tracked (seq-remove #'+sidebar--scm-untracked-p files))
-            (folders (seq-filter (lambda (file) (string-suffix-p "/" file)) untracked))
-            (loose (seq-remove (lambda (file) (string-suffix-p "/" file)) untracked))
-            (question
-             (concat
-              (+sidebar--capitalize
-               (string-join
-                (delq nil
-                      (list (when tracked
-                              (format "discard the changes to %d file%s"
-                                      (length tracked) (if (cdr tracked) "s" "")))
-                            (when loose
-                              (format "move %d untracked file%s to the trash"
-                                      (length loose) (if (cdr loose) "s" "")))
-                            (when folders
-                              (format "move the folder%s %s, and all in %s, to the trash"
-                                      (if (cdr folders) "s" "") (string-join folders ", ")
-                                      (if (cdr folders) "them" "it")))))
-                ", and "))
-              "? "))
-            ;; A whole section is many files gone at once: a full answer.
-            (whole (eq (oref (magit-current-section) type) '+sidebar-group)))
-       (when (if whole (yes-or-no-p question) (y-or-n-p question))
-         (dolist (file untracked)
-           (move-file-to-trash (expand-file-name file)))
-         (if tracked
-             (magit-run-git "restore" "--worktree" "--" tracked)
-           (+sidebar--request 'scm)))))
-    (_ (message "No file here"))))
+  (let ((selection (use-region-p)))
+    (pcase (+sidebar--scm-files t)
+      (`(staged . ,_) (message "Staged: unstage it first (u)"))
+      (`(,_ . ,(and files (pred identity)))
+       (let* ((untracked (seq-filter #'+sidebar--scm-untracked-p files))
+              (tracked (seq-remove #'+sidebar--scm-untracked-p files))
+              (folders (seq-filter (lambda (file) (string-suffix-p "/" file)) untracked))
+              (loose (seq-remove (lambda (file) (string-suffix-p "/" file)) untracked))
+              (clauses
+               (delq nil
+                     (list (when tracked
+                             (format "discard the changes to %d file%s"
+                                     (length tracked) (if (cdr tracked) "s" "")))
+                           (when loose
+                             (format "move %d untracked file%s to the trash"
+                                     (length loose) (if (cdr loose) "s" "")))
+                           (when folders
+                             (format "move the folder%s %s, and all in %s, to the trash"
+                                     (if (cdr folders) "s" "") (string-join folders ", ")
+                                     (if (cdr folders) "them" "it"))))))
+              (question
+               (concat (+sidebar--capitalize
+                        (if (cdr clauses)
+                            (concat (string-join (butlast clauses) ", ")
+                                    ", and " (car (last clauses)))
+                          (car clauses)))
+                       "? "))
+              ;; A whole section is many files gone at once: a full answer.
+              (whole (and (not selection)
+                          (eq (oref (magit-current-section) type) '+sidebar-group))))
+         (when (if whole (yes-or-no-p question) (y-or-n-p question))
+           (dolist (file untracked)
+             (move-file-to-trash (expand-file-name file)))
+           (if tracked
+               (magit-run-git "restore" "--worktree" "--" tracked)
+             (+sidebar--request 'scm)))))
+      (_ (message "No file here")))))
 
 ;;;###autoload
 (defun +sidebar/scm-stage-all ()
