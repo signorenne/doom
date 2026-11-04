@@ -499,7 +499,7 @@ its name, its folder dimmed, the letter at the right edge."
 
 ;;;###autoload
 (defun +sidebar/refresh ()
-  "Draw the view again now."
+  "Draw the view again now, or once the git status on its way lands."
   (interactive)
   (+sidebar--render))
 

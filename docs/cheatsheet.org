@@ -4448,7 +4448,8 @@ bound.
   point in it; with point there already, close the side bar.
 - ~+sidebar/previous-view~ (~H~) :: Show the side bar's previous view.
 - ~+sidebar/quit~ (~q~) :: Close the side bar.
-- ~+sidebar/refresh~ (~g r~) :: Draw the view again now.
+- ~+sidebar/refresh~ (~g r~) :: Draw the view again now, or once the git
+  status on its way lands.
 - ~+sidebar/reveal~ (~SPC o P~) :: Show the Explorer with point on the file
   in the editor, its folders unfolded, and go there.
 - ~+sidebar/scm-discard~ (~x~) :: Discard the changes to the file at point,
