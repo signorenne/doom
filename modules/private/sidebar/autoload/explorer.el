@@ -314,6 +314,19 @@ with Open editors, Outline or Timeline open, draw them for BUFFER."
            +sidebar--explorer-watches)
   (clrhash +sidebar--explorer-watches))
 
+;;;###autoload
+(defun +sidebar--explorer-left ()
+  "The Explorer is off the screen: watch no folder, follow no buffer for
+Outline, forget a reveal or an Outline asked for, and draw it afresh
+when it shows again."
+  (+sidebar--unwatch-all)
+  (+sidebar--outline-follow nil)
+  (when-let* ((explorer (get-buffer "*Sidebar: Explorer*")))
+    (with-current-buffer explorer
+      (setq +sidebar--dirty t
+            +sidebar--explorer-pending nil
+            +sidebar--outline-pending nil))))
+
 
 ;;
 ;;; What the commands act on

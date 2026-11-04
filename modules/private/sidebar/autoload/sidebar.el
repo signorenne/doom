@@ -173,13 +173,10 @@ project of the file in the editor window, else its directory."
     (setq +sidebar--last-view view
           +sidebar--wanted t)
     (+sidebar--hooks t)
-    ;; The Explorer's folders are watched only while the Explorer shows.
+    ;; The Explorer watches and follows only while it shows.
     (unless (eq view 'explorer)
-      (when (fboundp '+sidebar--unwatch-all)
-        (+sidebar--unwatch-all))
-      (when-let* ((explorer (get-buffer "*Sidebar: Explorer*")))
-        (with-current-buffer explorer
-          (setq +sidebar--dirty t))))
+      (when (fboundp '+sidebar--explorer-left)
+        (+sidebar--explorer-left)))
     (with-current-buffer buffer
       (when (or +sidebar--dirty (not (equal +sidebar--shown-root (+sidebar--root))))
         (+sidebar--render)))
@@ -332,15 +329,13 @@ hook stays while the side bar is wanted."
     (remove-hook '+ai-edit-functions #'+sidebar--changed-h)
     (remove-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
     (remove-hook 'first-change-hook #'+sidebar--buffers-changed-h)
-    (when (fboundp '+sidebar--outline-follow)
-      (+sidebar--outline-follow nil))
     (unless +sidebar--wanted
       (remove-hook 'persp-activated-functions #'+sidebar--workspace-h))
     (+sidebar--unwatch-gitdir)
     ;; Hidden, nothing watches: whatever changes meanwhile is caught by a
     ;; full drawing when shown.
-    (when (fboundp '+sidebar--unwatch-all)
-      (+sidebar--unwatch-all))
+    (when (fboundp '+sidebar--explorer-left)
+      (+sidebar--explorer-left))
     (dolist (entry +sidebar-views)
       (when-let* ((buffer (get-buffer (format "*Sidebar: %s*" (nth 1 entry)))))
         (with-current-buffer buffer
