@@ -101,6 +101,7 @@ lines' start and count, and the removed text."
       (and (not (string-empty-p top))
            (file-name-as-directory (expand-file-name top))))))
 
+;;;###autoload
 (defun +git--live-refusal ()
   "Why this buffer cannot have a view, or nil, setting its toplevel."
   (cond ((not buffer-file-name) "This buffer has no file")
@@ -175,6 +176,7 @@ Non-nil when it did."
 ;;
 ;;; The diff
 
+;;;###autoload
 (defun +git--live-coding ()
   "The coding system the buffer is sent to git in and read back with."
   (let ((coding (or buffer-file-coding-system 'utf-8-unix)))
@@ -251,6 +253,7 @@ Non-nil when it did."
     (+git--live-set-status
      "error" (car (split-string (string-trim (or errors "")) "\n"))))))
 
+;;;###autoload
 (defun +git--live-parse (out)
   "The hunks of OUT, git's -U0 answer, in order."
   (let (hunks)
@@ -286,19 +289,20 @@ Non-nil when it did."
 ;;
 ;;; Drawing
 
-(defun +git--live-spans (hunks)
-  "Each of HUNKS with the buffer region of its new lines, as (HUNK BEG
-. END). A hunk with no new lines is empty at the line that follows it."
+;;;###autoload
+(defun +git--live-spans (hunks &optional old)
+  "Each of HUNKS with the buffer region of its new lines, or its old
+lines with OLD, as (HUNK BEG . END). A hunk with no lines on that side
+is empty at the line that follows it."
   (save-excursion
     (save-restriction
       (widen)
       (goto-char (point-min))
       (let ((line 1) spans)
         (dolist (hunk hunks)
-          (let* ((count (+git--hunk-new-count hunk))
-                 (first (if (zerop count)
-                            (1+ (+git--hunk-new-start hunk))
-                          (+git--hunk-new-start hunk))))
+          (let* ((count (if old (+git--hunk-old-count hunk) (+git--hunk-new-count hunk)))
+                 (start (if old (+git--hunk-old-start hunk) (+git--hunk-new-start hunk)))
+                 (first (if (zerop count) (1+ start) start)))
             (forward-line (- first line))
             (setq line first)
             (let ((beg (point)))
@@ -307,11 +311,13 @@ Non-nil when it did."
                     spans))))
         (nreverse spans)))))
 
+;;;###autoload
 (defun +git--live-delete-overlay (overlay)
   "Delete OVERLAY and the word marks that belong to it."
   (mapc #'delete-overlay (overlay-get overlay '+git-live-words))
   (delete-overlay overlay))
 
+;;;###autoload
 (defun +git--live-reconcile (existing specs make)
   "Overlays for SPECS, keeping those of EXISTING that already match.
 Each spec is (BEG END . IDENTITY); an overlay matches when it spans BEG
@@ -341,6 +347,7 @@ spec for each one that does not match. The others of EXISTING go."
                "\n")
           (propertize text 'face '+git-live-removed)))
 
+;;;###autoload
 (defun +git--live-draw-inline (hunks)
   "Draw HUNKS in place: new lines tinted, removed ones above them."
   (setq +git--live-overlays
@@ -379,6 +386,7 @@ spec for each one that does not match. The others of EXISTING go."
 (defvar-local +git--live-refine-function #'+git--live-refine-inline
   "How one hunk's changed words are marked: in place, or on two sides.")
 
+;;;###autoload
 (defun +git--live-refine-pair (old-beg old-end new-beg new-end)
   "Mark the words that changed from OLD-BEG..OLD-END to NEW-BEG..NEW-END,
 markers that may be in two buffers. The word overlays made, as
@@ -409,6 +417,7 @@ markers that may be in two buffers. The word overlays made, as
         (cons (made old-buffer old-beg old-end before-old '+git-live-removed-word)
               (made new-buffer new-beg new-end before-new '+git-live-added-word))))))
 
+;;;###autoload
 (defun +git--live-refine-inline (overlay)
   "Mark the changed words of OVERLAY's hunk, in the buffer and in the
 removed lines drawn above it."
@@ -466,6 +475,7 @@ removed lines drawn above it."
                 (funcall +git--live-refine-function overlay)
                 (overlay-put overlay '+git-live-refined text)))))))))
 
+;;;###autoload
 (defun +git--live-schedule-refine ()
   "Mark the changed words on screen after a short rest."
   (when (and +git-live-refine (not (timerp +git--live-refine-timer)))
@@ -481,6 +491,7 @@ removed lines drawn above it."
                                        (setq +git--live-refine-timer nil)
                                        (+git--live-refine-visible)))))))))
 
+;;;###autoload
 (defun +git--live-scrolled-h (_window _start)
   "Mark the words of the hunks scrolled into view, after redisplay."
   (+git--live-schedule-refine))
@@ -497,6 +508,7 @@ of changes or a word; DETAIL goes in the tooltip."
 ;;
 ;;; When to diff
 
+;;;###autoload
 (defun +git--live-schedule (&optional resolve)
   "Diff again after a rest; look the baseline up first with RESOLVE."
   (when resolve
@@ -611,6 +623,7 @@ was modified here (the guard of the AI module's reload)."
 ;;
 ;;; Starting and stopping
 
+;;;###autoload
 (defun +git--live-start (kind)
   "Run the engine in this buffer for KIND, `live' or `split'.
 The caller checked `+git--live-refusal', which set the toplevel."
@@ -635,6 +648,7 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (+git--live-set-status "...")
   (+git--live-diff))
 
+;;;###autoload
 (defun +git--live-stop ()
   "Stop the engine in this buffer and take everything it drew away."
   (when (timerp +git--live-timer)

@@ -45,6 +45,9 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   lines tinted, removed lines drawn where they were, kept up as the
   file is edited, by you or by an agent; =]d= =[d= step through them,
   =r= in the hub puts one back,
+- the old version beside the file (=SPC g V=): read-only on the left,
+  lines lined up and scrolled together, kept up as you edit; =q= on the
+  old version, or =SPC g V= again, closes it,
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
@@ -57,6 +60,7 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 | ~t~         | ~+git/tag~                 | in magit: tag a commit by message or hash, a branch head, HEAD             |
 | ~SPC t B~   | ~+git-blame-line-mode~     | the commit behind the current line at its end, on in code buffers under 1M |
 | ~SPC g v~   | ~+git/live~                | this file's changes in place, kept up as it is edited                      |
+| ~SPC g V~   | ~+git/split~               | this file beside its old version, lined up and scrolled together           |
 | ~SPC g p~   | ~diff-hl-show-hunk~        | what the line under the cursor was, in a popup                             |
 | ~SPC g x~   | ~+git/conflicts~           | the conflict menu: which side to keep, where the next conflict is          |
 

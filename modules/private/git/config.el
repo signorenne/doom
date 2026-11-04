@@ -517,6 +517,12 @@ Each diff sends the whole buffer to git.")
 (defvar +git-live-mode-map (make-sparse-keymap)
   "Keys of a buffer showing its changes in place.")
 
+(defvar +git-split-mode-map (make-sparse-keymap)
+  "Keys of a file shown beside its old version.")
+
+(defvar +git-split-base-mode-map (make-sparse-keymap)
+  "Keys of the old version beside a file.")
+
 ;; A staging, a commit or a checkout through magit can change what the
 ;; index or HEAD holds; an agent's new turn changes its baseline.
 (add-hook 'magit-post-refresh-hook #'+git--live-refresh-all-h)
@@ -535,15 +541,18 @@ Each diff sends the whole buffer to git.")
        ;; changes, c copies the old text) and binds nothing that opens
        ;; it. The fringe says a line changed; this says what it was.
        :desc "Show the change here" "p" #'diff-hl-show-hunk
-       :desc "Changes in place"     "v" #'+git/live)
+       :desc "Changes in place"     "v" #'+git/live
+       :desc "Old version beside it" "V" #'+git/split)
       (:prefix "t"
        :desc "Who and when, on this line" "B" #'+git-blame-line-mode))
 
 ;; The view's own hunks, which follow its baseline; without a view the
 ;; same keys step through the fringe's, as Doom has them.
-(map! :map +git-live-mode-map
+(map! :map (+git-live-mode-map +git-split-mode-map)
       :n "]d" #'+git/next-change
       :n "[d" #'+git/previous-change)
+(map! :map +git-split-base-mode-map
+      :n "q" #'+git/split)
 
 ;; A conflict is worked through where it is: the two motions vim uses,
 ;; and the menu for which side to keep. Doom turns smerge-mode on by
