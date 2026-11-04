@@ -331,6 +331,7 @@ hook stays while the side bar is wanted."
     (dolist (entry +sidebar-views)
       (when-let* ((buffer (get-buffer (format "*Sidebar: %s*" (nth 1 entry)))))
         (with-current-buffer buffer
+          (+sidebar--drop-status)
           (setq +sidebar--dirty t))))
     (when (timerp +sidebar--timer)
       (cancel-timer +sidebar--timer)
@@ -354,17 +355,22 @@ hook stays while the side bar is wanted."
 (defvar-local +sidebar--status-process nil
   "The git status this view waits on.")
 
+(defun +sidebar--drop-status ()
+  "Drop the git status this view waits on."
+  (when (process-live-p +sidebar--status-process)
+    (let ((old +sidebar--status-process))
+      (setq +sidebar--status-process nil)
+      (delete-process old))))
+
 ;;;###autoload
 (defun +sidebar--with-status (repo then)
   "Read git's status of REPO in the background, then call THEN in this
 buffer with it, as `+sidebar--status-parse' gives it; at once with nil
-when REPO is nil. A status still on its way is dropped for the new one.
+when REPO is nil. A status still on its way is dropped for the new one;
+one that lands once no window shows the view only marks it stale.
 It runs with GIT_OPTIONAL_LOCKS=0, so it never rewrites the index the
 side bar watches."
-  (when (process-live-p +sidebar--status-process)
-    (let ((old +sidebar--status-process))
-      (setq +sidebar--status-process nil)
-      (delete-process old)))
+  (+sidebar--drop-status)
   (if (not repo)
       (funcall then nil)
     (let* ((buffer (current-buffer))
@@ -387,8 +393,10 @@ side bar watches."
                    (with-current-buffer buffer
                      (when (eq proc +sidebar--status-process)
                        (setq +sidebar--status-process nil)
-                       (funcall then (+sidebar--status-parse
-                                      (apply #'concat (nreverse chunks))))))))))))))
+                       (if (get-buffer-window buffer t)
+                           (funcall then (+sidebar--status-parse
+                                          (apply #'concat (nreverse chunks))))
+                         (setq +sidebar--dirty t))))))))))))
 
 (defun +sidebar--status-parse (out)
   "git's status OUT, porcelain v2 with -z, as (STAGED UNSTAGED UNTRACKED
