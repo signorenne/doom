@@ -111,6 +111,11 @@ moves by the drawing in place of vundo's."
 
 (add-hook 'evil-collection-setup-hook #'+core--undo-graph-keys-h)
 
+;; evil-snipe's s and S are a minor mode's keys and outrank the graph's
+;; own; snipe stays out of the graph, as it does out of undo-tree's.
+(after! evil-snipe
+  (add-to-list 'evil-snipe-disabled-modes 'vundo-mode))
+
 ;; vundo's j and k go only to the other branches of the fork just
 ;; behind you. Each branch is a line of the drawing, so these keys move
 ;; by the drawing instead: j and k to the line below and above, onto the
