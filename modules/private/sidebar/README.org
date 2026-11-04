@@ -4,8 +4,9 @@
 * Description
 A side bar on the left, as VS Code has one: a window that shows one view
 at a time. =H= and =L= step through the views, a click on a name in its
-header goes to that one, =q= closes it. It works only while it is on
-show: hidden, it does nothing, and catches up when shown again.
+header goes to that one, =q= closes it. The header names the view, and
+there is no modeline. It works only while it is on show: hidden, it
+does nothing, and catches up when shown again.
 
 The Explorer is the project's tree, in place of treemacs, between Open
 editors (the project's file buffers, a star on a modified one; =x=

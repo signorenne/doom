@@ -74,6 +74,10 @@ that took its window away brings it back.")
                            'keymap (+sidebar--tab-map key)))
              +sidebar-views "|"))
 
+(defun +sidebar--hide-mode-line-h ()
+  "Draw no modeline in this side bar buffer."
+  (setq mode-line-format nil))
+
 ;;;###autoload
 (defun +sidebar--view-setup (view)
   "Make this buffer VIEW's: called from the view's major mode."
@@ -81,6 +85,10 @@ that took its window away brings it back.")
         truncate-lines t
         header-line-format (+sidebar--header view)
         buffer-read-only t)
+  ;; The header names the view; a modeline would be the editor's, cut
+  ;; off at the side bar's width. Doom's modeline is put on once the mode
+  ;; is set up, hence the hook, after it.
+  (add-hook 'after-change-major-mode-hook #'+sidebar--hide-mode-line-h 90 t)
   (setq-local revert-buffer-function (lambda (&rest _) (+sidebar--render))))
 
 ;;;###autoload
