@@ -63,6 +63,27 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 
 (add-hook 'plantuml-mode-hook #'+uml--view-h)
 
+;; plantuml-mode completes through `plantuml-complete-symbol', an old
+;; command that does the completing itself: run by the popup as you
+;; type, it types the rest of a keyword unasked or shows the keywords in
+;; a *Completions* window. The keywords are the popup's candidates
+;; instead, and a word none of them starts goes on to the other sources.
+;; The mode's own capf signals off a word and keeps those sources out.
+(defvar plantuml-kwdList)
+
+(defun +uml-completion-at-point ()
+  "PlantUML's keywords for the word at point."
+  (when-let* ((bounds (bounds-of-thing-at-point 'symbol)))
+    (list (car bounds) (cdr bounds) plantuml-kwdList :exclusive 'no)))
+
+(defun +uml--completion-h ()
+  "Complete with `+uml-completion-at-point', not plantuml-mode's command."
+  (setq-local completion-at-point-functions
+              (cl-substitute #'+uml-completion-at-point 'plantuml-complete-symbol
+                             completion-at-point-functions)))
+
+(add-hook 'plantuml-mode-hook #'+uml--completion-h)
+
 ;; The server is a Java program, slow to start: when diagrams are among the
 ;; recent files, it starts while Emacs waits after starting.
 (defun +uml--warm-up-h (mode)
