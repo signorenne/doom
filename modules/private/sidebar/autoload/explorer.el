@@ -14,6 +14,7 @@
 (defvar +sidebar--dirty)
 (defvar +sidebar--last-view)
 (defvar +sidebar-views)
+(defvar +sidebar--status-process)
 
 (defvar-local +sidebar--explorer-states nil
   "Absolute path to git's letter for it, and folders holding a change
@@ -21,6 +22,9 @@ to `changed', for the last drawing.")
 
 (defvar-local +sidebar--explorer-pending nil
   "A file to point at once the Explorer is drawn.")
+
+(defvar-local +sidebar--outline-pending nil
+  "Non-nil to open Outline once the Explorer is drawn.")
 
 (defvar-local +sidebar--explorer-source nil
   "The editor's buffer when the Explorer was last drawn, whose outline and
@@ -198,7 +202,10 @@ are listed when it is first opened."
        (+sidebar--sync-watches)
        (when-let* ((file +sidebar--explorer-pending))
          (setq +sidebar--explorer-pending nil)
-         (+sidebar--explorer-point-at file))))))
+         (+sidebar--explorer-point-at file))
+       (when +sidebar--outline-pending
+         (setq +sidebar--outline-pending nil)
+         (+sidebar--outline-open))))))
 
 
 ;;
@@ -211,13 +218,22 @@ are listed when it is first opened."
                  (oref magit-root-section children))))
 
 ;;;###autoload
+(defun +sidebar--explorer-drawn-p ()
+  "Non-nil when this Explorer buffer is drawn and no status is on its
+way to draw it again."
+  (and magit-root-section (not (process-live-p +sidebar--status-process))))
+
+;;;###autoload
 (defun +sidebar--explorer-point-at (file)
   "Unfold FILE's folders in the Explorer and put point on it, in the side
-bar's window, which stays unselected if it was."
+bar's window, which stays unselected if it was; once it is drawn."
   (with-current-buffer (+sidebar--buffer 'explorer)
     (let ((root +sidebar--shown-root)
           (file (file-truename file)))
-      (when (and root (file-in-directory-p file root))
+      (cond
+       ((not (+sidebar--explorer-drawn-p))
+        (setq +sidebar--explorer-pending file))
+       ((and root (file-in-directory-p file root))
         (let ((section (+sidebar--explorer-root-section))
               (path root)
               (parts (split-string (file-relative-name file root) "/" t)))
@@ -233,7 +249,7 @@ bar's window, which stays unselected if it was."
               (goto-char (oref target start))
               (when-let* ((window (get-buffer-window (current-buffer))))
                 (set-window-point window (point)))))
-          (+sidebar--sync-watches))))))
+          (+sidebar--sync-watches)))))))
 
 ;;;###autoload
 (defun +sidebar--explorer-follow-h (buffer)

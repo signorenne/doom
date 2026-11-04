@@ -12,6 +12,7 @@
 (defvar +sidebar-timeline-count)
 (defvar imenu-auto-rescan)
 (defvar +sidebar--shown-root)
+(defvar +sidebar--outline-pending)
 
 (defvar +sidebar--outline-source nil
   "The buffer whose edits Outline follows.")
@@ -246,13 +247,15 @@ already, close the side bar."
 
 ;;;###autoload
 (defun +sidebar--outline-open ()
-  "Open the Explorer's Outline section and put point on it."
+  "Open the Explorer's Outline section and put point on it, once the
+Explorer is drawn."
   (with-current-buffer (+sidebar--buffer 'explorer)
-    (when-let* ((outline (and magit-root-section
-                              (seq-find (lambda (s) (eq (oref s type) '+sidebar-outline))
-                                        (oref magit-root-section children)))))
-      (magit-section-show outline)
-      (goto-char (oref outline start))
-      (when-let* ((window (get-buffer-window (current-buffer))))
-        (set-window-point window (point))
-        (set-window-start window (point))))))
+    (if (not (+sidebar--explorer-drawn-p))
+        (setq +sidebar--outline-pending t)
+      (when-let* ((outline (seq-find (lambda (s) (eq (oref s type) '+sidebar-outline))
+                                     (oref magit-root-section children))))
+        (magit-section-show outline)
+        (goto-char (oref outline start))
+        (when-let* ((window (get-buffer-window (current-buffer))))
+          (set-window-point window (point))
+          (set-window-start window (point)))))))
