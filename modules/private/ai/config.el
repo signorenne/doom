@@ -311,6 +311,8 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
 
 (use-package! agent-shell
   :defer t
+  ;; SPC l s, f, b and the hub's keys; the package autoloads none of them.
+  :commands (agent-shell-send-region agent-shell-send-file agent-shell-switch-buffer)
   :init
   ;; Signs in with the CLI's own account. For a key instead, set
   ;; `agent-shell-anthropic-authentication' with :api-key. C-u SPC l n
