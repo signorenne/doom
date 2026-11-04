@@ -361,6 +361,16 @@ toolchain file."
                                 (or (+cpp-kit-toolchain kit) (+cpp-kit-compiler kit)))))
   kit)
 
+;; Autoloaded: compdb.el and run.el ask it before a job in the background.
+;;;###autoload
+(defun +cpp--kit-compiler-missing-p (kit)
+  "Non-nil when KIT names a compiler, or a toolchain file, the host does
+not have: what `+container-for' looks for in the containers.  Located as
+a file opens, when no stopped container is looked in, such a kit can
+seem to be the host's, and nothing is to run for it on the host."
+  (when-let* ((program (or (+cpp-kit-compiler kit) (+cpp-kit-toolchain kit))))
+    (not (file-exists-p program))))
+
 
 ;;
 ;;; All the kits of a project, and the one in use

@@ -231,19 +231,24 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 ;; Any other project's database is found where its build wrote it and
 ;; made readable to clang, and a CMake project never configured is
 ;; configured in the background. The mode is tested first, so any other
-;; file leaves pio.el and compdb.el unloaded.
+;; file leaves pio.el and compdb.el unloaded. Opening a file starts no
+;; container: the kit is looked for in the running ones only, here and
+;; in the moment after, as the language server's is.
+(defvar +container-may-start)
 (add-hook! 'find-file-hook
   (defun +pio--compiledb-maybe-h ()
     "Ask for the compilation database when the file is C or C++."
     (when (derived-mode-p 'c-mode 'c++-mode 'c-ts-mode 'c++-ts-mode)
-      (+pio--compiledb-h)
-      (+cpp--compdb-h)
+      (let ((+container-may-start nil))
+        (+pio--compiledb-h)
+        (+cpp--compdb-h))
       ;; And what a run will ask CMake, once the opening is over.
       (let ((buffer (current-buffer)))
         (run-with-idle-timer 2 nil (lambda ()
                                      (when (buffer-live-p buffer)
                                        (with-current-buffer buffer
-                                         (+cpp--file-api-prefetch)))))))))
+                                         (let ((+container-may-start nil))
+                                           (+cpp--file-api-prefetch))))))))))
 
 ;; CMakeLists.txt: completion and documentation for commands and variables.
 (set-eglot-client! '(cmake-mode cmake-ts-mode)

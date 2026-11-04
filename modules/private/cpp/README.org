@@ -172,6 +172,12 @@ clangd runs there too, so every Qt type resolves; a jump into an SDK
 header opens through TRAMP, =/podman:<name>:/opt/...=, read only, from
 any buffer of the project.
 
+Opening a file starts no container: the kit is looked for in the
+running ones only, as the file opens and in the idle moment after. A
+build, a run or =SPC k ?= starts the stopped one that holds the
+compiler; a server started before that, for a kit found by its
+compiler alone, runs on the host until =SPC k l r=.
+
 Of the environment a Qt Creator kit sets, the loader's variables,
 =LD_LIBRARY_PATH= and =LD_PRELOAD=, are left out of every command. The
 PC target's kits put the target's libraries there, and a program of the
@@ -276,8 +282,9 @@ A CMake project never configured here is configured once, in the
 background, as its first file opens: by its first preset or into
 =build/=, with no compiler kit asked for. Not one whose kit runs in a
 container or with an SDK's environment, which would start the one or
-source the other behind your back, and not again in a session after a
-configure fails; =SPC k c= configures it where you can see why.
+source the other behind your back, nor one whose compiler is not on the
+host, and not again in a session after a configure fails; =SPC k c=
+configures it where you can see why.
 
 A project that has no database at all, qmake or a hand written Makefile,
 gets one thing more: ~SPC k l c~ writes a =.clangd= whose fallback flags

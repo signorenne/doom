@@ -66,9 +66,11 @@ left alone where the answer is what was asked for: a build, a run, a
 deploy.")
 
 (defvar +container--by-program (make-hash-table :test #'equal)
-  "(RUNNING-CONTAINERS . PROGRAM) to the container that has it, or `host'.
-Keyed by the running containers as well, so a container started later
-is looked at, and a miss cached while it was down does not stick.")
+  "(RUNNING-CONTAINERS . PROGRAM) to the container that has it, `host',
+or `not-running' when none of those running has it and the stopped ones
+were not asked.  Keyed by the running containers as well, so a container
+started later is looked at, and a miss cached while it was down does not
+stick.")
 
 ;;;###autoload
 (defun +container-for (program)
@@ -76,19 +78,26 @@ is looked at, and a miss cached while it was down does not stick.")
 The running ones are asked first; a stopped one is started to be
 asked, which is what running the program there would do anyway, and
 said so in the echo area. Unless `+container-may-start' says not to,
-in which case only the running ones answer and nothing is cached, so
-the stopped ones are asked the next time it is a fair question."
+in which case only the running ones answer, their no is kept for as
+long as the same ones run, and the stopped ones are asked the next time
+it is a fair question."
   (when (and program (not (file-exists-p program)))
     (let* ((running (+container-list))
            (key (cons running program))
            (known (gethash key +container--by-program)))
       (cond ((eq known 'host) nil)
-            (known known)
-            (t (let ((found (seq-find (lambda (name) (+container-has-p name program))
-                                      running)))
+            ((and known (not (eq known 'not-running))) known)
+            ((and known (not +container-may-start)) nil)
+            (t (let ((found (unless known
+                              (seq-find (lambda (name) (+container-has-p name program))
+                                        running))))
                  (cond
                   (found (puthash key found +container--by-program) found)
-                  ((not +container-may-start) nil)
+                  ((not +container-may-start)
+                   ;; A file opens, a server starts: each asks again, and
+                   ;; the running ones are not asked the same thing twice.
+                   (puthash key 'not-running +container--by-program)
+                   nil)
                   (t (setq found
                            (seq-find (lambda (name)
                                        (message "Starting %s to look for %s there"

@@ -29,6 +29,9 @@ here how to enter it.
 one only if none of them has the program, saying so while it does;
 what it finds is cached against the list of running containers, so a
 container started later is looked at again rather than a miss sticking.
+With ~+container-may-start~ nil, as when a file opens, it starts none:
+the running ones answer, and their no is kept for as long as the same
+ones run.
 
 ~+container-home~ asks the runtime once per container ever: a container
 keeps the home it was made with, so the answer is kept across sessions,

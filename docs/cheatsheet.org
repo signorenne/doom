@@ -1781,7 +1781,9 @@ A kit whose compiler lives in a distrobox runs every command there, with
 the SDK environment sourced: build, run, gdb, clangd, clang-tidy. Its
 =LD_LIBRARY_PATH= is left out: the PC target's kits point it at the
 target's libraries, and the container's own programs, clangd first,
-crash on them. Buffers are saved before every build, run and debug. Qt
+crash on them. Opening a file starts no stopped container; a build
+does, and ~SPC k l r~ then moves there a server that started on the
+host. Buffers are saved before every build, run and debug. Qt
 Creator's run configuration gives the executable, its arguments and its
 working directory.
 

@@ -14,6 +14,7 @@
 (declare-function +cpp/run-on-device "device")
 (declare-function +cpp--kit-config "kit")
 (declare-function +cpp-kit-abs-dir "kit")
+(declare-function +cpp--kit-compiler-missing-p "kit")
 (declare-function +cpp--kit-shell "container")
 (declare-function dape-continue "dape")
 (declare-function gdb "gdb-mi")
@@ -180,12 +181,14 @@ afterwards."
   "Ask CMake in the background for the codemodel of this project's build
 directory when it has no file API reply, so running or debugging finds
 it rather than waiting for CMake. Not for a remote file or a container
-kit, which a run asks for itself, nor during a build."
+kit, which a run asks for itself, nor one whose compiler is not on the
+host, which a stopped container may hold, nor during a build."
   (ignore-errors
     (let* ((kit (+cpp--kit))
            (dir (+cpp-kit-abs-dir kit)))
       (when (and (not (file-remote-p dir))
                  (not (+cpp-kit-container kit))
+                 (not (+cpp--kit-compiler-missing-p kit))
                  ;; A build, not a program's run, which is named run-something.
                  (not (seq-some (lambda (process)
                                   (and (process-live-p process)

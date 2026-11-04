@@ -18,8 +18,10 @@
 (declare-function +cpp-kit-env-script "kit")
 (declare-function +cpp-kit-env "kit")
 (declare-function +cpp-kit-dir "kit")
+(declare-function +cpp--kit-compiler-missing-p "kit")
 (declare-function +core-project-root-or-nil "lib")
 (defvar +cpp-modes)
+(defvar +container-may-start)
 (defvar projection-cmake-kit)
 
 (defvar +cpp-compdb-places
@@ -143,14 +145,16 @@ its servers again when what they read changed, or always with RESTART."
   "Configure ROOT, a CMake project with no build directory, in the
 background, then give clangd its database.  Not for a kit that runs in
 a container or with an SDK's environment, which would start the one or
-source the other behind your back; nor twice a session, so a configure
-that fails is not tried at every file."
+source the other behind your back, nor for one whose compiler is not
+on the host, which a stopped container may hold; nor twice a session,
+so a configure that fails is not tried at every file."
   (when-let* (((not (member root +cpp--configure-tried)))
               ((file-exists-p (expand-file-name "CMakeLists.txt" root)))
               ((executable-find "cmake"))
               (kit (ignore-errors (let ((default-directory root)) (+cpp--kit root))))
               ((not (+cpp-kit-configured kit)))
-              ((not (or (+cpp-kit-container kit) (+cpp-kit-env-script kit) (+cpp-kit-env kit)))))
+              ((not (or (+cpp-kit-container kit) (+cpp-kit-env-script kit) (+cpp-kit-env kit))))
+              ((not (+cpp--kit-compiler-missing-p kit))))
     (push root +cpp--configure-tried)
     (let* ((default-directory root)
            (name (file-name-nondirectory (directory-file-name root)))
@@ -178,7 +182,9 @@ that fails is not tried at every file."
              (if (eq (process-exit-status process) 0)
                  (progn (kill-buffer (process-buffer process))
                         (message "cmake: %s configured" name)
-                        (+cpp--compdb-update root 'restart))
+                        ;; Still the opening of a file: no container starts.
+                        (let ((+container-may-start nil))
+                          (+cpp--compdb-update root 'restart)))
                (message "cmake: the background configure of %s failed; SPC k c runs it where you can see why"
                         name)))))))))
 
