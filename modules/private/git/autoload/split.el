@@ -221,9 +221,20 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
       (insert-file-contents file))
     (set-buffer-modified-p nil)))
 
+(defun +git--split-base-name ()
+  "The old version's buffer name: this buffer's, and the baseline's."
+  (format "*base: %s (%s)*" (buffer-name) +git--live-label))
+
+(defun +git--split-rename-base-h ()
+  "Name the old version after a baseline of the same text."
+  (when (buffer-live-p +git--split-base)
+    (let ((name (+git--split-base-name)))
+      (with-current-buffer +git--split-base
+        (rename-buffer name t)))))
+
 (defun +git--split-reload-base-h ()
   "Make or refill the old version's buffer: the baseline changed."
-  (let ((name (format "*base: %s (%s)*" (buffer-name) +git--live-label)))
+  (let ((name (+git--split-base-name)))
     (unless (buffer-live-p +git--split-base)
       (setq +git--split-base (+git--split-make-base name major-mode))
       (let ((right (current-buffer)))
@@ -312,6 +323,7 @@ lines lined up, scrolled together, kept up as the buffer is edited."
   (cond
    ((not +git-split-mode)
     (remove-hook '+git--live-baseline-functions #'+git--split-reload-base-h t)
+    (remove-hook '+git--live-label-functions #'+git--split-rename-base-h t)
     (remove-hook 'window-scroll-functions #'+git--split-scrolled-h t)
     (+git--live-stop)
     (setq +git--live-draw-function #'+git--live-draw-inline
@@ -326,6 +338,7 @@ lines lined up, scrolled together, kept up as the buffer is edited."
     (setq +git--live-draw-function #'+git--split-draw
           +git--live-refine-function #'+git--split-refine)
     (add-hook '+git--live-baseline-functions #'+git--split-reload-base-h nil t)
+    (add-hook '+git--live-label-functions #'+git--split-rename-base-h nil t)
     (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t)
     (+git--live-start 'split)
     (+git--split-show)))

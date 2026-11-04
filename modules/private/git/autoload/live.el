@@ -180,12 +180,17 @@ Non-nil when it did."
              (run-hooks '+git--live-baseline-functions)
              t)
             ;; The same text under another name: the hunks on show stand.
-            ((and renamed +git--live-tick)
-             (+git--live-set-status (length +git--live-hunks))
+            (renamed
+             (when +git--live-tick
+               (+git--live-set-status (length +git--live-hunks)))
+             (run-hooks '+git--live-label-functions)
              nil)))))
 
 (defvar-local +git--live-baseline-functions nil
   "Run in the buffer after its baseline's text changed.")
+
+(defvar-local +git--live-label-functions nil
+  "Run in the buffer after its baseline's name changed and its text did not.")
 
 
 ;;
@@ -601,7 +606,8 @@ the hooks other packages put in it, and loses what the view drew."
                       +git--live-timer +git--live-resolve +git--live-tick
                       +git--live-retried +git--live-hunks +git--live-overlays
                       +git--live-watch +git--live-gitdir +git--live-draw-function
-                      +git--live-baseline-functions +git--live-refine-timer
+                      +git--live-baseline-functions +git--live-label-functions
+                      +git--live-refine-timer
                       +git--live-refine-function +git--live-status
                       +git-live-mode +git-split-mode +git--split-base +git--split-file
                       +git--split-overlays +git--split-expect +git--split-static))
