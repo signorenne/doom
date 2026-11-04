@@ -191,8 +191,8 @@ point; as (KIND . PATHS)."
   "Open the change at point in the editor window: in place, or beside
 its old version with SPLIT."
   (let* ((section (magit-current-section))
-         (type (oref section type))
-         (value (oref section value))
+         (type (and section (oref section type)))
+         (value (and section (oref section value)))
          (repo default-directory))
     (pcase type
       ('+sidebar-file
@@ -213,6 +213,7 @@ its old version with SPLIT."
              (select-window (+sidebar--editor-window))
              (magit-show-commit value))
          (magit-section-toggle section)))
+      ('nil (message "No file here"))
       (_ (magit-section-toggle section)))))
 
 ;;;###autoload
