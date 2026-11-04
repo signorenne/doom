@@ -46,6 +46,7 @@ that took its window away brings it back.")
   "VIEW's (KEY LABEL MODE RENDER)."
   (or (assq view +sidebar-views) (error "No side bar view %s" view)))
 
+;;;###autoload
 (defun +sidebar--buffer (view)
   "VIEW's buffer, made in its mode the first time."
   (pcase-let ((`(,_key ,label ,mode ,_render) (+sidebar--entry view)))
@@ -139,7 +140,7 @@ window, dedicated, or a popup."
   "The directory the side bar shows: the workspace's pin, else the
 project of the file in the editor window, else its directory."
   (file-name-as-directory
-   (expand-file-name
+   (file-truename
     (or (and (fboundp '+workspace-current-name)
              (alist-get (ignore-errors (+workspace-current-name))
                         +sidebar-pinned-roots nil nil #'equal))
@@ -163,16 +164,33 @@ project of the file in the editor window, else its directory."
                              (window-width . ,+sidebar-width)
                              (preserve-size . (t . nil))
                              (dedicated . t)
-                             (window-parameters . ((no-delete-other-windows . t)))))))
+                             (window-parameters . ((no-delete-other-windows . t)
+                                                   (delete-window . +sidebar--delete-window)))))))
     (setq +sidebar--last-view view
           +sidebar--wanted t)
     (+sidebar--hooks t)
+    ;; The Explorer's folders are watched only while the Explorer shows.
+    (unless (eq view 'explorer)
+      (when (fboundp '+sidebar--unwatch-all)
+        (+sidebar--unwatch-all))
+      (when-let* ((explorer (get-buffer "*Sidebar: Explorer*")))
+        (with-current-buffer explorer
+          (setq +sidebar--dirty t))))
     (with-current-buffer buffer
       (when (or +sidebar--dirty (not (equal +sidebar--shown-root (+sidebar--root))))
         (+sidebar--render)))
     (when select
       (select-window window))
     window))
+
+;;;###autoload
+(defun +sidebar--delete-window (window)
+  "Close the side bar's WINDOW for good, however it is closed: a
+workspace switch does not bring it back."
+  (setq +sidebar--wanted nil)
+  (let ((ignore-window-parameters t))
+    (delete-window window))
+  (+sidebar--hooks nil))
 
 (defun +sidebar--close ()
   "Close the side bar and go back to the editor window."
@@ -260,6 +278,7 @@ the side bar is on show.")
                        (+sidebar--show (or +sidebar--last-view (caar +sidebar-views))))
                      (+sidebar--request))))))
 
+;;;###autoload
 (defun +sidebar--watch-gitdir (root)
   "Watch ROOT's git dir, the index and HEAD, while the side bar shows it."
   (let ((gitdir (and root
@@ -332,18 +351,52 @@ hook stays while the side bar is wanted."
             (unless (string-empty-p top)
               (file-name-as-directory (expand-file-name top)))))))))
 
+(defvar-local +sidebar--status-process nil
+  "The git status this view waits on.")
+
 ;;;###autoload
-(defun +sidebar--status (repo)
-  "git's status of REPO, as (STAGED UNSTAGED UNTRACKED UNMERGED IGNORED):
-lists of (PATH . LETTER), paths from the toplevel; an untracked or
-ignored folder is one entry ending in a slash."
-  (let ((default-directory repo)
-        (process-environment (cons "GIT_OPTIONAL_LOCKS=0" process-environment))
-        staged unstaged untracked unmerged ignored)
-    (with-temp-buffer
-      (call-process "git" nil (list t nil) nil "status" "--porcelain=v2" "-z"
-                    "--untracked-files=normal" "--ignored=matching")
-      (let ((entries (split-string (buffer-string) "\0" t)))
+(defun +sidebar--with-status (repo then)
+  "Read git's status of REPO in the background, then call THEN in this
+buffer with it, as `+sidebar--status-parse' gives it; at once with nil
+when REPO is nil. A status still on its way is dropped for the new one.
+It runs with GIT_OPTIONAL_LOCKS=0, so it never rewrites the index the
+side bar watches."
+  (when (process-live-p +sidebar--status-process)
+    (let ((old +sidebar--status-process))
+      (setq +sidebar--status-process nil)
+      (delete-process old)))
+  (if (not repo)
+      (funcall then nil)
+    (let* ((buffer (current-buffer))
+           (chunks nil)
+           (default-directory repo)
+           (process-environment (cons "GIT_OPTIONAL_LOCKS=0" process-environment)))
+      (setq +sidebar--status-process
+            (make-process
+             :name "sidebar-status" :buffer nil :noquery t :connection-type 'pipe
+             :coding 'utf-8-unix
+             :stderr (make-pipe-process :name "sidebar-status-errors" :buffer nil
+                                        :noquery t :filter #'ignore :sentinel #'ignore)
+             :command '("git" "status" "--porcelain=v2" "-z"
+                        "--untracked-files=normal" "--ignored=matching")
+             :filter (lambda (_proc string) (push string chunks))
+             :sentinel
+             (lambda (proc _event)
+               (unless (process-live-p proc)
+                 (when (buffer-live-p buffer)
+                   (with-current-buffer buffer
+                     (when (eq proc +sidebar--status-process)
+                       (setq +sidebar--status-process nil)
+                       (funcall then (+sidebar--status-parse
+                                      (apply #'concat (nreverse chunks))))))))))))))
+
+(defun +sidebar--status-parse (out)
+  "git's status OUT, porcelain v2 with -z, as (STAGED UNSTAGED UNTRACKED
+UNMERGED IGNORED): lists of (PATH . LETTER), paths from the toplevel; an
+untracked or ignored folder is one entry ending in a slash."
+  (let (staged unstaged untracked unmerged ignored)
+    (progn
+      (let ((entries (split-string out "\0" t)))
         (while entries
           (let ((entry (pop entries)))
             (cond

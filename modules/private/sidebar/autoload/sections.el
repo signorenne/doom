@@ -10,6 +10,7 @@
 (declare-function +git-split-commit "../../git/autoload/split")
 (defvar +sidebar-outline-delay)
 (defvar +sidebar-timeline-count)
+(defvar imenu-auto-rescan)
 (defvar +sidebar--shown-root)
 
 (defvar +sidebar--outline-source nil
@@ -110,30 +111,69 @@ follows none."
 ;;
 ;;; Timeline
 
+;; git log --follow walks the history back, which takes a while in a
+;; long one: it runs in the background, once per file and HEAD, and the
+;; section draws what it found when it is done.
+(defvar +sidebar--timeline-cache (make-hash-table :test #'equal)
+  "(FILE . HEAD) to the file's commits, as (HASH DATE AUTHOR SUBJECT PATH),
+PATH the file's path in that commit; `reading' while git is at it.")
+
+(defun +sidebar--timeline-read (key repo path)
+  "Read the commits of PATH in REPO into the cache under KEY, then draw."
+  (when (> (hash-table-count +sidebar--timeline-cache) 200)
+    (clrhash +sidebar--timeline-cache))
+  (puthash key 'reading +sidebar--timeline-cache)
+  (let ((chunks nil)
+        (default-directory repo))
+    (make-process
+     :name "sidebar-timeline" :buffer nil :noquery t :connection-type 'pipe
+     :coding 'utf-8-unix
+     :stderr (make-pipe-process :name "sidebar-timeline-errors" :buffer nil
+                                :noquery t :filter #'ignore :sentinel #'ignore)
+     :command (list "git" "log" "--follow" (format "-%d" +sidebar-timeline-count)
+                    "--format=%x01%h%x00%ad%x00%an%x00%s" "--date=relative"
+                    "--name-only" "--" path)
+     :filter (lambda (_proc string) (push string chunks))
+     :sentinel
+     (lambda (proc _event)
+       (unless (process-live-p proc)
+         (puthash key
+                  (mapcar (lambda (entry)
+                            (let* ((lines (split-string entry "\n" t))
+                                   (fields (split-string (car lines) "\0")))
+                              (append fields (list (or (cadr lines) path)))))
+                          (split-string (apply #'concat (nreverse chunks)) "\x01" t))
+                  +sidebar--timeline-cache)
+         (+sidebar--request 'explorer))))))
+
 ;;;###autoload
 (defun +sidebar--insert-timeline (buffer)
-  "The commits of BUFFER's file, worked out when the section opens."
+  "The commits of BUFFER's file, read when the section first opens."
   (magit-insert-section (+sidebar-timeline nil t)
     (magit-insert-heading "Timeline")
     (magit-insert-section-body
-      (let* ((file (and (buffer-live-p buffer) (buffer-file-name buffer)))
+      (let* ((file (and (buffer-live-p buffer) (buffer-file-name buffer)
+                        (file-truename (buffer-file-name buffer))))
              (repo (and file (+sidebar--git-root (file-name-directory file))))
              (path (and repo (file-relative-name file repo)))
-             (lines (and path
-                         (let ((default-directory repo))
-                           (ignore-errors
-                             (process-lines "git" "log" "--follow"
-                                            (format "-%d" +sidebar-timeline-count)
-                                            "--format=%h%x00%ad%x00%an%x00%s"
-                                            "--date=relative" "--" path))))))
-        (if (not lines)
-            (insert (propertize "  No history\n" 'font-lock-face 'shadow))
-          (dolist (line lines)
-            (pcase-let ((`(,hash ,date ,author ,subject) (split-string line "\0")))
-              (magit-insert-section (+sidebar-revision (list hash path repo))
-                (insert "  " subject " "
-                        (propertize (concat date ", " author) 'font-lock-face 'shadow)
-                        "\n")))))))))
+             (head (and repo (let ((default-directory repo))
+                               (ignore-errors (car (process-lines "git" "rev-parse" "HEAD"))))))
+             (key (cons file head))
+             (entries (if path (gethash key +sidebar--timeline-cache 'unread) 'none)))
+        (pcase entries
+          ('unread
+           (+sidebar--timeline-read key repo path)
+           (insert (propertize "  Reading the history...\n" 'font-lock-face 'shadow)))
+          ('reading
+           (insert (propertize "  Reading the history...\n" 'font-lock-face 'shadow)))
+          ((or 'none 'nil)
+           (insert (propertize "  No history\n" 'font-lock-face 'shadow)))
+          (_
+           (pcase-dolist (`(,hash ,date ,author ,subject ,old-path) entries)
+             (magit-insert-section (+sidebar-revision (list hash old-path repo))
+               (insert "  " subject " "
+                       (propertize (concat date ", " author) 'font-lock-face 'shadow)
+                       "\n")))))))))
 
 
 ;;

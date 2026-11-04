@@ -89,11 +89,11 @@ it is open."
 ;;
 ;;; git's colours
 
-(defun +sidebar--explorer-git-states (repo)
-  "REPO's files and folders by absolute path: git's letter, and `changed'
-for the folders holding a change."
+(defun +sidebar--explorer-git-states (status repo)
+  "REPO's files and folders by absolute path, from git's STATUS: git's
+letter, and `changed' for the folders holding a change."
   (let ((states (make-hash-table :test #'equal)))
-    (pcase-let ((`(,staged ,unstaged ,untracked ,unmerged ,ignored) (+sidebar--status repo)))
+    (pcase-let ((`(,staged ,unstaged ,untracked ,unmerged ,ignored) status))
       (dolist (entry (append staged unstaged untracked unmerged ignored))
         (let ((path (expand-file-name (car entry) repo)))
           ;; The worktree's letter wins over the index's for a file that
@@ -179,23 +179,26 @@ are listed when it is first opened."
          (source (window-buffer (+sidebar--editor-window))))
     (setq +sidebar--shown-root root
           +sidebar--explorer-source source
-          default-directory root
-          +sidebar--explorer-states (and repo (+sidebar--explorer-git-states repo)))
+          default-directory root)
     (+sidebar--watch-gitdir repo)
-    ;; Outline follows its buffer's edits only while it is open: drawing
-    ;; it open sets that up again.
-    (+sidebar--outline-follow nil)
-    (+sidebar--redraw
-     (lambda ()
-       (magit-insert-section (+sidebar-explorer nil)
-         (+sidebar--insert-editors root)
-         (+sidebar--explorer-folder root 0 t)
-         (+sidebar--insert-outline source)
-         (+sidebar--insert-timeline source))))
-    (+sidebar--sync-watches)
-    (when-let* ((file +sidebar--explorer-pending))
-      (setq +sidebar--explorer-pending nil)
-      (+sidebar--explorer-point-at file))))
+    (+sidebar--with-status
+     repo
+     (lambda (status)
+       (setq +sidebar--explorer-states (and status (+sidebar--explorer-git-states status repo)))
+       ;; Outline follows its buffer's edits only while it is open:
+       ;; drawing it open sets that up again.
+       (+sidebar--outline-follow nil)
+       (+sidebar--redraw
+        (lambda ()
+          (magit-insert-section (+sidebar-explorer nil)
+            (+sidebar--insert-editors root)
+            (+sidebar--explorer-folder root 0 t)
+            (+sidebar--insert-outline source)
+            (+sidebar--insert-timeline source))))
+       (+sidebar--sync-watches)
+       (when-let* ((file +sidebar--explorer-pending))
+         (setq +sidebar--explorer-pending nil)
+         (+sidebar--explorer-point-at file))))))
 
 
 ;;
@@ -213,7 +216,7 @@ are listed when it is first opened."
 bar's window, which stays unselected if it was."
   (with-current-buffer (+sidebar--buffer 'explorer)
     (let ((root +sidebar--shown-root)
-          (file (expand-file-name file)))
+          (file (file-truename file)))
       (when (and root (file-in-directory-p file root))
         (let ((section (+sidebar--explorer-root-section))
               (path root)
@@ -405,6 +408,8 @@ to kill the buffers of what went."
   (let* ((path (+sidebar--explorer-file-path))
          (name (file-name-nondirectory (directory-file-name path)))
          (folder (directory-name-p path)))
+    (when (equal path +sidebar--shown-root)
+      (user-error "The root folder stays: trash it from a file manager"))
     (when (y-or-n-p (format "Move %s to the trash? " name))
       (let ((delete-by-moving-to-trash t))
         (if folder
@@ -413,7 +418,10 @@ to kill the buffers of what went."
       (dolist (buffer (buffer-list))
         (when-let* ((file (buffer-file-name buffer)))
           (when (and (if folder (file-in-directory-p file path) (equal file path))
-                     (y-or-n-p (format "Kill buffer %s too? " (buffer-name buffer))))
+                     (y-or-n-p (format "Kill buffer %s too%s? " (buffer-name buffer)
+                                       (if (buffer-modified-p buffer)
+                                           ", its unsaved changes lost"
+                                         ""))))
             (with-current-buffer buffer (set-buffer-modified-p nil))
             (kill-buffer buffer))))
       (+sidebar--explorer-done "Moved %s to the trash" name))))

@@ -116,20 +116,31 @@ the side bar."
     (setq +sidebar--shown-root (+sidebar--root)
           default-directory (or repo default-directory))
     (+sidebar--watch-gitdir repo)
-    (+sidebar--redraw
-     (lambda ()
-       (magit-insert-section (+sidebar-scm nil)
-         (if (not repo)
-             (insert (propertize "Not a git repository\n" 'font-lock-face 'shadow))
-           (pcase-let ((`(,staged ,unstaged ,untracked ,unmerged ,_ignored)
-                        (+sidebar--status repo)))
-             (insert (+sidebar--scm-branch))
-             (+sidebar--scm-group 'staged "Staged Changes" staged)
-             (+sidebar--scm-group 'unstaged "Changes" (append unmerged unstaged untracked))
-             (unless (or staged unstaged untracked unmerged)
-               (insert (propertize "  No changes\n" 'font-lock-face 'shadow)))
-             (+sidebar--scm-commits))))))))
+    (+sidebar--with-status
+     repo
+     (lambda (status)
+       (+sidebar--scm-draw repo status)))))
 
+(defun +sidebar--scm-draw (repo status)
+  "Draw Source Control for REPO from git's STATUS."
+  (+sidebar--redraw
+   (lambda ()
+     (magit-insert-section (+sidebar-scm nil)
+       (if (not repo)
+           (insert (propertize "Not a git repository\n" 'font-lock-face 'shadow))
+         (pcase-let ((`(,staged ,unstaged ,untracked ,unmerged ,_ignored) status))
+           (insert (+sidebar--scm-branch))
+           (+sidebar--scm-group 'staged "Staged Changes" staged)
+           (+sidebar--scm-group 'unstaged "Changes" (append unmerged unstaged untracked))
+           (unless (or staged unstaged untracked unmerged)
+             (insert (propertize "  No changes\n" 'font-lock-face 'shadow)))
+           (+sidebar--scm-commits)))))))
+
+
+(defun +sidebar--capitalize (string)
+  "STRING with its first letter in capitals."
+  (if (string-empty-p string) string
+    (concat (upcase (substring string 0 1)) (substring string 1))))
 
 ;;
 ;;; What the commands act on
@@ -236,13 +247,30 @@ untracked one to the trash."
   (pcase (+sidebar--scm-files t)
     (`(staged . ,_) (message "Staged: unstage it first (u)"))
     (`(,_ . ,(and files (pred identity)))
-     (let ((untracked (seq-filter #'+sidebar--scm-untracked-p files))
-           (tracked (seq-remove #'+sidebar--scm-untracked-p files)))
-       (when (y-or-n-p (format "Discard changes to %d file%s%s? "
-                               (length files) (if (cdr files) "s" "")
-                               (if untracked
-                                   (format " (%d untracked to the trash)" (length untracked))
-                                 "")))
+     (let* ((untracked (seq-filter #'+sidebar--scm-untracked-p files))
+            (tracked (seq-remove #'+sidebar--scm-untracked-p files))
+            (folders (seq-filter (lambda (file) (string-suffix-p "/" file)) untracked))
+            (loose (seq-remove (lambda (file) (string-suffix-p "/" file)) untracked))
+            (question
+             (concat
+              (+sidebar--capitalize
+               (string-join
+                (delq nil
+                      (list (when tracked
+                              (format "discard the changes to %d file%s"
+                                      (length tracked) (if (cdr tracked) "s" "")))
+                            (when loose
+                              (format "move %d untracked file%s to the trash"
+                                      (length loose) (if (cdr loose) "s" "")))
+                            (when folders
+                              (format "move the folder%s %s, and all in %s, to the trash"
+                                      (if (cdr folders) "s" "") (string-join folders ", ")
+                                      (if (cdr folders) "them" "it")))))
+                ", and "))
+              "? "))
+            ;; A whole section is many files gone at once: a full answer.
+            (whole (eq (oref (magit-current-section) type) '+sidebar-group)))
+       (when (if whole (yes-or-no-p question) (y-or-n-p question))
          (dolist (file untracked)
            (move-file-to-trash (expand-file-name file)))
          (if tracked
