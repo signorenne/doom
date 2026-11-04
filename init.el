@@ -43,7 +43,7 @@
  (popup +defaults) ; sane defaults for pop-up windows
  smooth-scroll     ; pixel scrolling
  ;;tabs            ; off: a tab per open file said nothing the buffer list does not
- treemacs          ; project drawer, SPC o p
+ ;;treemacs        ; replaced by :private sidebar, SPC o p
  ;;unicode           ; slow first run; :private ui sets the fontsets
  (vc-gutter +pretty) ; git diffs in the fringe; diff-hl is the only backend in Doom 3
  vi-tilde-fringe   ; tildes beyond end-of-buffer
@@ -69,7 +69,7 @@
 
  ;; Core Emacs behaviour
  :emacs
- (dired +icons)    ; file browser (+dirvish would take SPC o p from treemacs)
+ (dired +icons)    ; file browser (+dirvish would take SPC o p from the side bar)
  electric          ; smarter auto-indentation
  (ibuffer +icons)  ; buffer list
  tramp             ; remote files and containers, connections shared
@@ -164,7 +164,7 @@
  web               ; Svelte, TypeScript, Tailwind, node and Electron
  uml               ; PlantUML: completion, live preview, templates
  git               ; magit tuned, the history and branch menus
- sidebar           ; the side bar: Source Control
+ sidebar           ; the side bar: Explorer, Source Control
  media             ; a player on mpv, in a buffer of its own
  notes             ; documents, capture, agenda, roam
  ai                ; Claude Code, agent shells, gptel

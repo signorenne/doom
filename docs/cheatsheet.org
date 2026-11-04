@@ -770,8 +770,9 @@ the list: ~SPC SPC RET~ goes back.
 ** Dired and the file tree
 | Key       | What it opens                         |
 |-----------+---------------------------------------|
-| ~SPC o p~   | the project tree (treemacs)           |
-| ~SPC o P~   | find a file in the tree               |
+| ~SPC o p~   | the side bar's Explorer, the project's tree |
+| ~SPC o P~   | this file in the Explorer             |
+| ~SPC e t~   | the side bar on or off, left where you are |
 | ~SPC o -~   | the file manager, cursor on this file |
 | ~SPC f d~   | the same on a directory you name      |
 | ~SPC m SPC~ | the dired menu                        |

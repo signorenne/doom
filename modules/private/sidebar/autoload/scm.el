@@ -70,10 +70,10 @@ the side bar."
                       (ignore-errors
                         (split-string (car (process-lines "git" "rev-list" "--left-right"
                                                           "--count" "@{u}...HEAD")))))))
-    (concat (propertize (car branch) 'face 'magit-branch-local)
+    (concat (propertize (car branch) 'font-lock-face 'magit-branch-local)
             (if upstream
                 (format "  %s +%s -%s" (car upstream) (or (nth 1 counts) "?") (or (nth 0 counts) "?"))
-              (propertize "  no upstream" 'face 'shadow))
+              (propertize "  no upstream" 'font-lock-face 'shadow))
             "\n")))
 
 (defun +sidebar--scm-group (kind title files)
@@ -103,7 +103,7 @@ the side bar."
         (pcase-let ((`(,hash ,subject ,date) (split-string line "\0")))
           (magit-insert-section (+sidebar-commit hash t)
             (magit-insert-heading
-              (concat "  " subject " " (propertize date 'face 'shadow)))
+              (concat "  " subject " " (propertize date 'font-lock-face 'shadow)))
             (magit-insert-section-body
               (dolist (file (+sidebar--scm-commit-files hash))
                 (magit-insert-section (+sidebar-commit-file (cons hash (car file)))
@@ -120,14 +120,14 @@ the side bar."
      (lambda ()
        (magit-insert-section (+sidebar-scm nil)
          (if (not repo)
-             (insert (propertize "Not a git repository\n" 'face 'shadow))
+             (insert (propertize "Not a git repository\n" 'font-lock-face 'shadow))
            (pcase-let ((`(,staged ,unstaged ,untracked ,unmerged ,_ignored)
                         (+sidebar--status repo)))
              (insert (+sidebar--scm-branch))
              (+sidebar--scm-group 'staged "Staged Changes" staged)
              (+sidebar--scm-group 'unstaged "Changes" (append unmerged unstaged untracked))
              (unless (or staged unstaged untracked unmerged)
-               (insert (propertize "  No changes\n" 'face 'shadow)))
+               (insert (propertize "  No changes\n" 'font-lock-face 'shadow)))
              (+sidebar--scm-commits))))))))
 
 

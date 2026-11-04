@@ -36,7 +36,7 @@
 - the cursor keeps five lines from the top and bottom of the window
   (~scroll-margin~), as VS Code and Vim's scrolloff do; terminals and
   shells keep none,
-- Treemacs settings and documentation popups.
+- documentation popups.
 
 * The banner and the greeting
 The banner spells out ~+ui-banner-name~, your login name unless
@@ -108,7 +108,6 @@ it.
 | ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
 | ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
 | ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation in a popup           |
-| ~SPC e t~ | ~+treemacs/toggle~          | the project drawer, as Doom's ~SPC o p~ |
 | ~SPC h '~ | ~doom/describe-char~      | which font draws the character     |
 
 ~]e~ and ~[e~ are ~next-error~, which walks whatever buffer last reported

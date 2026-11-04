@@ -15,9 +15,6 @@
 (unless (modulep! :ui indent-guides)
   (warn! "No (:ui indent-guides): SPC t i and the off-until-asked rule here do nothing"))
 
-(unless (modulep! :ui treemacs)
-  (warn! "No (:ui treemacs): SPC e t and the treemacs settings here do nothing"))
-
 (unless (modulep! :ui smooth-scroll)
   (warn! "No (:ui smooth-scroll): the wheel scrolls by lines, and the pixel wheel's stop at the last line here does nothing"))
 

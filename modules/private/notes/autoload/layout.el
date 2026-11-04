@@ -7,13 +7,13 @@
 (defvar org-roam-buffer)
 (defvar imenu-list-buffer-name)
 (defvar imenu-list-minor-mode)
-(defvar treemacs--find-user-project-functions)
+(defvar +sidebar-pinned-roots)
 (declare-function org-roam-buffer-persistent-redisplay "org-roam-mode")
 (declare-function imenu-list-get-buffer-create "imenu-list")
 (declare-function imenu-list-minor-mode "imenu-list")
-(declare-function treemacs-current-visibility "treemacs-scope")
-(declare-function treemacs-get-local-window "treemacs-scope")
-(declare-function treemacs-add-and-display-current-project-exclusively "treemacs")
+(declare-function +sidebar--window "../../sidebar/autoload/sidebar")
+(declare-function +sidebar--show "../../sidebar/autoload/sidebar")
+(declare-function +sidebar/quit "../../sidebar/autoload/sidebar")
 (declare-function +workspace-current-name "workspaces")
 (declare-function +workspace-switch "workspaces")
 (declare-function +notes-daily-file "write")
@@ -30,7 +30,7 @@
   "Non-nil when one of the layout's panels is in this frame."
   (or (get-buffer-window org-roam-buffer)
       (get-buffer-window imenu-list-buffer-name)
-      (eq (treemacs-current-visibility) 'visible)))
+      (and (fboundp '+sidebar--window) (+sidebar--window))))
 
 (defvar imenu-list-auto-update)
 (declare-function imenu-list-start-timer "imenu-list")
@@ -62,8 +62,8 @@
     (imenu-list-minor-mode -1))
   (unless imenu-list-minor-mode
     (remove-hook 'persp-activated-functions #'+notes--layout-outline-h))
-  (when (eq (treemacs-current-visibility) 'visible)
-    (delete-window (treemacs-get-local-window))))
+  (when (and (fboundp '+sidebar--window) (+sidebar--window))
+    (+sidebar/quit)))
 
 (defun +notes--layout-show ()
   "Show a note with the tree, the roam buffer and the outline around it."
@@ -72,14 +72,13 @@
                           (find-file-noselect (+notes-daily-file)))))
   (let ((note (selected-window))
         (vault (file-name-as-directory (expand-file-name org-roam-directory))))
-    ;; The tree on the vault, a project or not. The workspace's own tree is
-    ;; made first, on the vault: until it exists treemacs hands out
-    ;; another workspace's project list, which would be the one replaced.
-    (let ((default-directory vault)
-          (treemacs--find-user-project-functions (list (lambda () vault))))
-      (when (eq (treemacs-current-visibility) 'none)
-        (treemacs-select-window))
-      (treemacs-add-and-display-current-project-exclusively))
+    ;; The tree on the vault, a project or not: the side bar's Explorer,
+    ;; pinned to the vault in this workspace whatever file shows.
+    (if (not (fboundp '+sidebar--show))
+        (message "The notes layout's tree needs :private sidebar")
+      (setf (alist-get +notes-layout-workspace +sidebar-pinned-roots nil nil #'equal)
+            vault)
+      (+sidebar--show 'explorer))
     (select-window note)
     ;; Doom's popup rule puts the roam buffer at the right edge, slot 1.
     (display-buffer (get-buffer-create org-roam-buffer))
@@ -105,7 +104,6 @@ note, above its outline.  Run again there, put the three away."
   (interactive)
   (require 'org-roam)
   (require 'imenu-list)
-  (require 'treemacs)
   (if (and (equal (+workspace-current-name) +notes-layout-workspace)
            (+notes--layout-shown-p))
       (+notes--layout-hide)

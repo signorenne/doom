@@ -816,13 +816,6 @@ around it; longer, it waits until it shows.")
                    evil-window-up evil-window-down))
   (advice-add command :around #'+ui--keep-out-of-side-windows-a))
 
-(after! treemacs
-  (setq treemacs-width 30
-        treemacs-is-never-other-window t)
-  (treemacs-follow-mode +1)         ; follow the current file
-  (treemacs-filewatch-mode +1)      ; refresh when files change on disk
-  (treemacs-git-mode 'deferred))    ; git status, without blocking
-
 (use-package! eldoc-box
   :defer t
   :config
@@ -843,9 +836,4 @@ around it; longer, it waits until it shows.")
        :desc "Where you are, in the header" "h" #'+ui-where-mode
        :desc "Minimap"                  "m" #'+ui/minimap)
       (:prefix "c"
-       :desc "Docs at point (popup)" "H" #'eldoc-box-help-at-point)
-      (:prefix ("e" . "explorer")
-       ;; The same command Doom's own SPC o p runs, so the two keys do
-       ;; not part ways: the package's `treemacs' opens where it last
-       ;; was, the toggle opens on the project and closes again.
-       :desc "Toggle Treemacs"       "t" #'+treemacs/toggle))
+       :desc "Docs at point (popup)" "H" #'eldoc-box-help-at-point))

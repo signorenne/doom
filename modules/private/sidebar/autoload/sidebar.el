@@ -293,6 +293,14 @@ hook stays while the side bar is wanted."
     (unless +sidebar--wanted
       (remove-hook 'persp-activated-functions #'+sidebar--workspace-h))
     (+sidebar--unwatch-gitdir)
+    ;; Hidden, nothing watches: whatever changes meanwhile is caught by a
+    ;; full drawing when shown.
+    (when (fboundp '+sidebar--unwatch-all)
+      (+sidebar--unwatch-all))
+    (dolist (entry +sidebar-views)
+      (when-let* ((buffer (get-buffer (format "*Sidebar: %s*" (nth 1 entry)))))
+        (with-current-buffer buffer
+          (setq +sidebar--dirty t))))
     (when (timerp +sidebar--timer)
       (cancel-timer +sidebar--timer)
       (setq +sidebar--timer nil))))
@@ -363,7 +371,9 @@ ignored folder is one entry ending in a slash."
 (defun +sidebar--icon (name &optional dir)
   "The icon of file NAME, or of a folder with DIR, and a space."
   (if (and +sidebar-icons (display-graphic-p) (require 'nerd-icons nil t))
-      (concat (if dir (nerd-icons-icon-for-dir name) (nerd-icons-icon-for-file name)) " ")
+      ;; font-lock would take a plain face away in these buffers.
+      (let ((icon (if dir (nerd-icons-icon-for-dir name) (nerd-icons-icon-for-file name))))
+        (concat (propertize icon 'font-lock-face (get-text-property 0 'face icon)) " "))
     ""))
 
 ;;;###autoload
@@ -375,10 +385,10 @@ its name, its folder dimmed, the letter at the right edge."
         (face (+sidebar--letter-face letter)))
     (concat (make-string (or indent 2) ?\s)
             (+sidebar--icon name)
-            (propertize name 'face face)
-            (if dir (concat " " (propertize (directory-file-name dir) 'face 'shadow)) "")
+            (propertize name 'font-lock-face face)
+            (if dir (concat " " (propertize (directory-file-name dir) 'font-lock-face 'shadow)) "")
             (propertize " " 'display '(space :align-to (- right 2)))
-            (propertize letter 'face face))))
+            (propertize letter 'font-lock-face face))))
 
 
 ;;
@@ -414,13 +424,35 @@ its name, its folder dimmed, the letter at the right edge."
   (interactive)
   (+sidebar--close))
 
+(defvar +sidebar--fold-commands
+  '(("TAB" . magit-section-toggle) ("<tab>" . magit-section-toggle)
+    ("<backtab>" . magit-section-cycle-global)
+    ("z a" . magit-section-toggle) ("z o" . magit-section-show)
+    ("z c" . magit-section-hide) ("z O" . magit-section-show-children)
+    ("z C" . magit-section-hide-children)
+    ("z r" . magit-section-show-level-4-all) ("z m" . magit-section-show-level-1-all)
+    ("z 1" . magit-section-show-level-1-all) ("z 2" . magit-section-show-level-2-all)
+    ("z 3" . magit-section-show-level-3-all) ("z 4" . magit-section-show-level-4-all))
+  "The magit-section command each folding key of the side bar runs.")
+
+;;;###autoload
+(defun +sidebar/fold ()
+  "Fold or unfold as the key pressed does in magit, then watch exactly the
+folders now on show."
+  (interactive)
+  (when-let* ((command (cdr (assoc (key-description (this-command-keys-vector))
+                                   +sidebar--fold-commands))))
+    (call-interactively command))
+  (when (eq +sidebar--view 'explorer)
+    (+sidebar--sync-watches)))
+
 ;;;###autoload
 (defun +sidebar--bind-common (map)
   "Bind the keys every view shares in MAP, for evil's normal state."
+  (apply #'evil-define-key* 'normal map
+         (mapcan (lambda (entry) (list (kbd (car entry)) #'+sidebar/fold))
+                 +sidebar--fold-commands))
   (evil-define-key* 'normal map
-    (kbd "TAB") #'magit-section-toggle
-    [tab] #'magit-section-toggle
-    [backtab] #'magit-section-cycle-global
     "gj" #'magit-section-forward-sibling
     "gk" #'magit-section-backward-sibling
     "^" #'magit-section-up

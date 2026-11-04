@@ -1,11 +1,22 @@
 #+title:    :private sidebar
-#+subtitle: the side bar: Source Control
+#+subtitle: the side bar: Explorer, Source Control
 
 * Description
 A side bar on the left, as VS Code has one: a window that shows one view
 at a time. =H= and =L= step through the views, a click on a name in its
 header goes to that one, =q= closes it. It works only while it is on
 show: hidden, it does nothing, and catches up when shown again.
+
+The Explorer is the project's tree, in place of treemacs: the project of
+the file in the editor (a workspace can pin a folder instead, as the
+notes layout pins the vault), folders first, each listing its files the
+first time it is opened. git's state colours the names, and a folder
+holding a change is coloured too; ignored files are dimmed. The folders
+on show are watched, so a file another program writes there appears.
+The file in the editor is unfolded to and pointed at. From the tree a
+file is made (=a=, a name ending in =/= makes a folder), renamed or moved
+(=r=, its buffers follow), copied (=c=), moved to the trash (=d=, after
+asking), and its name or path copied (=y=, =Y=, =gy=).
 
 The Source Control view shows the repository of the file in the editor:
 the branch and how far it is from its upstream, the staged files, the
@@ -21,6 +32,9 @@ an agent's edit lands, and when the index or HEAD change on disk.
 * Keybindings
 | Key       | Command                   | What it does                                       |
 |-----------+---------------------------+----------------------------------------------------|
+| ~SPC o p~   | ~+sidebar/explorer~       | the Explorer, pointing at this file; there already, close it |
+| ~SPC o P~   | ~+sidebar/reveal~         | this file in the Explorer, its folders unfolded    |
+| ~SPC e t~   | ~+sidebar/toggle~         | the side bar on or off, staying where you are      |
 | ~SPC g e~   | ~+sidebar/source-control~ | Source Control in the side bar; there already, close it |
 
 In the side bar, normal state:
@@ -28,12 +42,24 @@ In the side bar, normal state:
 | Key         | What it does                                              |
 |-------------+-----------------------------------------------------------|
 | ~j~ ~k~         | move                                                      |
-| ~TAB~         | fold or unfold the section; ~S-TAB~ every section           |
+| ~TAB~         | fold or unfold the section; ~S-TAB~ every section, ~z~ keys as in magit |
 | ~gj~ ~gk~       | next, previous section at the same level                  |
 | ~^~ ~gh~        | up to the parent section                                  |
 | ~H~ ~L~         | previous, next view                                       |
 | ~gr~          | draw it again now                                         |
 | ~q~           | close the side bar                                        |
+
+In the Explorer:
+
+| Key    | What it does                                                   |
+|--------+----------------------------------------------------------------|
+| ~RET~    | open the file in the editor window; on a folder, fold or unfold it |
+| ~o~      | open the file in a new window beside the editor                |
+| ~a~      | a new file in the folder at point; ending in ~/~, a folder       |
+| ~r~      | rename or move; its buffers follow                             |
+| ~c~      | copy, a folder with everything in it                           |
+| ~d~      | to the trash, after asking                                     |
+| ~y~ ~Y~ ~gy~ | copy the name, the path from the root, the full path           |
 
 In Source Control:
 

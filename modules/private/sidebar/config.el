@@ -2,13 +2,16 @@
 ;;
 ;; A side bar on the left, as VS Code has one: a window that shows one
 ;; view at a time, switched with H and L or a click on its header. The
+;; Explorer is the project's file tree, kept up as files change, with
+;; the file operations; it took treemacs' place (SPC o p, SPC e t). The
 ;; Source Control view lists the staged and the changed files and the
 ;; latest commits, and stages and commits with magit's keys; opening a
 ;; change shows it in place or beside its old version (the git module's
 ;; views). Everything in it works from the keyboard, evil first.
 
 (defvar +sidebar-views
-  '((scm "Source Control" +sidebar-scm-mode +sidebar--scm-render))
+  '((explorer "Explorer" +sidebar-explorer-mode +sidebar--explorer-render)
+    (scm "Source Control" +sidebar-scm-mode +sidebar--scm-render))
   "The side bar's views, in the order H and L step through them: (KEY
 LABEL MODE RENDER), RENDER drawing the view in its buffer.")
 
@@ -61,14 +64,17 @@ file the editor shows; the notes layout pins its vault.")
   :group 'vc)
 
 (defvar +sidebar-docs
-  '(:groups (("sidebar" "Side bar" nil +sidebar-scm-mode-map)))
+  '(:groups (("sidebar" "Side bar" nil +sidebar-explorer-mode-map +sidebar-scm-mode-map)))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
-
 
 ;; s and S stage, as in magit; evil-snipe leaves magit-mode's buffers
 ;; alone, and these derive from magit-section-mode, not magit-mode.
 (after! evil-snipe
-  (add-to-list 'evil-snipe-disabled-modes '+sidebar-scm-mode))
+  (add-to-list 'evil-snipe-disabled-modes '+sidebar-scm-mode)
+  (add-to-list 'evil-snipe-disabled-modes '+sidebar-explorer-mode))
+
+;; The Explorer points at the file the editor shows.
+(add-hook '+sidebar-editor-changed-functions #'+sidebar--explorer-follow-h)
 
 
 ;;
@@ -76,4 +82,9 @@ file the editor shows; the notes layout pins its vault.")
 
 (map! :leader
       (:prefix "g"
-       :desc "Source Control side bar" "e" #'+sidebar/source-control))
+       :desc "Source Control side bar" "e" #'+sidebar/source-control)
+      (:prefix "o"
+       :desc "Explorer side bar"        "p" #'+sidebar/explorer
+       :desc "This file in the Explorer" "P" #'+sidebar/reveal)
+      (:prefix ("e" . "explorer")
+       :desc "Side bar on or off"       "t" #'+sidebar/toggle))

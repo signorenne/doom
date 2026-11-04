@@ -1,7 +1,7 @@
 ;;; private/core/+dired.el -*- lexical-binding: t; -*-
 ;;
 ;; Every dired buffer is dirvish underneath, even without +dirvish (that
-;; flag would take SPC o p from treemacs). This is the file manager: a
+;; flag would take SPC o p from the side bar). This is the file manager: a
 ;; listing with icons, sizes and git state, and a preview pane on the right
 ;; for the file under the cursor. F hides the pane; b jumps to a place you
 ;; go often, the keys being the first letter of where you are going.
