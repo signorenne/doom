@@ -206,6 +206,7 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
       (+git-split-base-mode 1)
       (add-hook 'kill-buffer-hook #'+git--split-base-killed-h nil t)
       (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t)
+      (add-hook 'clone-indirect-buffer-hook #'+git--split-base-cloned-h nil t)
       (when (fboundp 'evil-normal-state)
         (evil-normal-state)))
     buffer))
@@ -300,6 +301,23 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
   (when-let* ((right +git--split-file))
     (setq +git--split-file nil)
     (+git--split-end right)))
+
+(defun +git--split-base-cloned-h ()
+  "Leave the split to the old version this buffer was cloned from, and
+take away what it drew."
+  (save-restriction
+    (widen)
+    (dolist (overlay (overlays-in (point-min) (point-max)))
+      (when (or (overlay-get overlay '+git-live) (overlay-get overlay '+git-live-word))
+        (delete-overlay overlay))))
+  (remove-hook 'kill-buffer-hook #'+git--split-base-killed-h t)
+  (remove-hook 'window-scroll-functions #'+git--split-scrolled-h t)
+  (remove-hook 'clone-indirect-buffer-hook #'+git--split-base-cloned-h t)
+  (dolist (variable '(+git--split-file +git--split-overlays +git--split-expect
+                      +git-split-base-mode))
+    (kill-local-variable variable))
+  (when (fboundp 'evil-normalize-keymaps)
+    (evil-normalize-keymaps)))
 
 (defun +git--split-check-h (_frame)
   "End the splits one of whose sides no window shows any more; after
@@ -414,7 +432,8 @@ both read-only, lined up."
       (set-buffer-modified-p nil)
       (+git-split-base-mode 1)
       (add-hook 'kill-buffer-hook #'+git--split-base-killed-h nil t)
-      (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t))
+      (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t)
+      (add-hook 'clone-indirect-buffer-hook #'+git--split-base-cloned-h nil t))
     (switch-to-buffer right)
     (with-current-buffer right
       (when (eq +git--live-kind 'static)
