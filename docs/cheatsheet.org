@@ -872,8 +872,8 @@ or ~SPC SPC~.
 | ~j k~   | down, up; the preview follows                               |
 | ~h l~   | the parent, into the thing under point; ~^~ and ~-~ go up too   |
 | ~RET~   | open it                                                     |
-| ~TAB~   | this directory: open it, again all the way down, again shut |
-| ~S-TAB~ | the whole listing, the same three steps                     |
+| ~TAB~   | this directory: open it one level, again shut               |
+| ~S-TAB~ | the whole listing: open, again all the way down, again shut |
 | ~gh~    | back out of an unfolded tree                                |
 | ~gj gk~ | next, previous directory line                               |
 | ~J~     | jump to a file here, by name                                |
@@ -3905,9 +3905,8 @@ bound.
   one under the cursor, each in a buffer.
 - ~+core/dired-search~ (~SPC m f~) :: Find files below the cursor's
   directory, every one of WORDS in their path.
-- ~+core/dired-subtree-cycle~ (~TAB~) :: Open the directory under the
-  cursor, then all the way down, then shut it: the three steps TAB takes on
-  a heading in an Org document.
+- ~+core/dired-subtree-cycle~ (~TAB~) :: Open the directory under the cursor
+  one level, or shut it when it is open.
 - ~+core/dirvish-directory~ (~SPC f d~) :: The file manager on DIR, asked,
   with the preview pane: Doom's find directory key, on dirvish.
 - ~+core/dirvish-here~ (~SPC o -~) :: The file manager on this file's

@@ -102,8 +102,8 @@ folder made without =git init= still has the Pascal keys.
 | ~SPC m 2~     | ~+core/dirvish-other-pane~    | a second listing beside this one  |
 | ~SPC m o~     | ~+core/dired-open-marked~     | open every marked file            |
 | ~SPC m b~     | ~+core/quick-access-add~      | this directory in the b menu, ~B~ drops one |
-| ~TAB~ (dired) | ~+core/dired-subtree-cycle~   | this directory: open, open all the way down, shut |
-| ~S-TAB~ (dired) | ~+core/dired-fold-cycle~    | the whole listing, the same three steps |
+| ~TAB~ (dired) | ~+core/dired-subtree-cycle~   | this directory: open one level, or shut |
+| ~S-TAB~ (dired) | ~+core/dired-fold-cycle~    | the whole listing: open, open all the way down, shut |
 | ~b /~ (dired) | quick access                | the root of the filesystem        |
 | ~SPC p >~     | ~+core/find-file-in-other-project~ | choose another project, then a file in it |
 | ~SPC s f~     | ~consult-fd~                  | a file by name, here and below, ~SPC f l~ too |

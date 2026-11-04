@@ -303,10 +303,11 @@ Mark what you want back and SPC m t puts it where it came from."
 ;;
 ;;; Folding, the way an Org document folds
 
-;; TAB on an Org heading opens it, then opens it all the way down, then
-;; shuts it; S-TAB does the same to the whole document. The listing
-;; folds the same way, and reads its state off the buffer rather than
-;; counting presses, so it picks up wherever the listing was left.
+;; S-TAB in an Org document opens every heading, then opens them all the
+;; way down, then shuts them. The listing folds the same way, and reads
+;; its state off the buffer rather than counting presses, so it picks up
+;; wherever the listing was left. TAB opens or shuts the one directory
+;; under the cursor, one level.
 ;; A document has a bottom and a directory tree has not, hence the limit.
 ;;
 ;; The opening is walked from the bottom of the region up: a listing
@@ -389,9 +390,9 @@ a directory moves everything below it.  At most
 
 ;;;###autoload
 (defun +core/dired-subtree-cycle ()
-  "Open the directory under the cursor, then all the way down, then shut
-it: the three steps TAB takes on a heading in an Org document.  On a
-file it does what TAB did before, and opens the file."
+  "Open the directory under the cursor one level, or shut it when it is
+open.  The directories inside stay shut.  On a file it does what TAB
+did before, and opens the file."
   (interactive nil dired-mode)
   (+core--dired-dirvish)
   (let ((file (dired-get-filename nil t)))
@@ -402,22 +403,11 @@ file it does what TAB did before, and opens the file."
       (dirvish-subtree--insert)
       (message "%s open" (file-name-nondirectory (directory-file-name file))))
      (t
-      ;; The marker holds the directory's own line while its listing
-      ;; grows underneath it.
-      (let* ((home (point-marker))
-             (region (lambda ()
-                       (save-excursion
-                         (goto-char home)
-                         (forward-line 1)
-                         (when-let* ((ov (dirvish-subtree--parent)))
-                           (cons (overlay-start ov) (overlay-end ov)))))))
-        (pcase-let ((`(,beg . ,end) (funcall region)))
-          (if (and beg (+core--dired-shut-p beg end))
-              (+core--dired-said (+core--dired-open-under region))
-            (goto-char home)
-            (dirvish-subtree-toggle)
-            (message "%s shut"
-                     (file-name-nondirectory (directory-file-name file))))))))))
+      ;; dirvish can leave the cursor on another line (the header, when
+      ;; this is the first directory), and the next TAB would act there.
+      (save-excursion (dirvish-subtree-toggle))
+      (message "%s shut"
+               (file-name-nondirectory (directory-file-name file)))))))
 
 ;;;###autoload
 (defun +core/dired-fold-cycle ()
