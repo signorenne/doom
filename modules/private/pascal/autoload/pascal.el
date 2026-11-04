@@ -8,6 +8,7 @@
 (declare-function +core-project-root "lib")
 (declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
+(declare-function +core-compile-then "lib")
 (declare-function +core-read-or-empty "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
@@ -207,9 +208,11 @@ or nil when it has not been built."
 ;;
 ;;; The commands
 
-(defun +pascal--compile (name command)
-  "Run COMMAND in a compilation buffer called NAME, from the root."
-  (+core-compile name command (+pascal-root)))
+(defun +pascal--compile (name command &optional comint)
+  "Run COMMAND in a compilation buffer called NAME, from the root.
+With COMINT the buffer takes input, which a program reading its
+standard input waits for."
+  (+core-compile name command (+pascal-root) comint))
 
 ;;;###autoload
 (defun +pascal/build ()
@@ -230,7 +233,7 @@ or nil when it has not been built."
 (defun +pascal/run ()
   "Run what the project builds, with the arguments it is set to."
   (interactive)
-  (+pascal--compile "run pascal" (+pascal-run-command)))
+  (+pascal--compile "run pascal" (+pascal-run-command) t))
 
 ;;;###autoload
 (defun +pascal/run-with-args (args)
@@ -240,23 +243,17 @@ or nil when it has not been built."
     (+pascal--compile "run pascal"
                       (string-join (delq nil (list (shell-quote-argument program)
                                                    (unless (string-empty-p args) args)))
-                                   " "))))
+                                   " ")
+                      t)))
 
 ;;;###autoload
 (defun +pascal/build-and-run ()
   "Build, and run it when the build worked."
   (interactive)
-  ;; Which binary is known only once the build is done: the newer of the
-  ;; two places, as `+pascal-program' picks, since a Lazarus project may
-  ;; build beside its file rather than in bin/.
-  (pcase-let ((`(,bin ,beside) (mapcar #'shell-quote-argument (+pascal--program-candidates))))
-    (+pascal--compile "build"
-                      (concat (+pascal-build-command)
-                              (format " && p=%s && { [ %s -nt %s ] || p=%s; } && \"$p\""
-                                      bin bin beside beside)
-                              (if (or (null +pascal-run-args) (string-empty-p +pascal-run-args))
-                                  ""
-                                (concat " " +pascal-run-args))))))
+  ;; The build where builds go, the program in a run buffer of its own,
+  ;; where it reads what is typed. Which binary is known once the build
+  ;; is done, and `+pascal/run' picks it then.
+  (+core-compile-then "build" (+pascal-build-command) (+pascal-root) #'+pascal/run))
 
 ;;;###autoload
 (defun +pascal-tests-file ()

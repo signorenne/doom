@@ -126,6 +126,31 @@ Returns the buffer, which carries NAME in `+core-compile-name'."
         (goto-char (point-max))))
     buffer))
 
+;;;###autoload
+(defun +core-compile-then (name command dir then)
+  "Run COMMAND as `+core-compile' does, and once it has finished cleanly
+call THEN, a function of no arguments, from the buffer this was asked
+from: a build, then the run that needs it, each in its own buffer.  A
+build that failed calls nothing, its output being what there is to
+read; nor does a re-run with g.  Returns the buffer."
+  (let ((origin (current-buffer))
+        (buffer (+core-compile name command dir)))
+    (with-current-buffer buffer
+      ;; Local, so it goes with this run: compile's next start in the
+      ;; buffer resets the mode, and the hook with it.
+      (add-hook 'compilation-finish-functions
+                (lambda (_buffer status)
+                  (if (not (equal status "finished\n"))
+                      (message "Build failed, so nothing was run")
+                    ;; Out of the sentinel, and from the buffer it was asked
+                    ;; from, which knows the project and its settings.
+                    (run-at-time 0 nil (lambda ()
+                                         (when (buffer-live-p origin)
+                                           (with-current-buffer origin
+                                             (funcall then)))))))
+                nil t))
+    buffer))
+
 (defvar +core-run-window-closes t
   "Close the window of a program that ran, finished cleanly and said
 nothing.  A window holding only compile's own header and closing line

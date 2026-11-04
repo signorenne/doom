@@ -228,9 +228,11 @@ features.  Each of them stopped at the flag it does not take."
 ;;
 ;;; The commands
 
-(defun +rust--compile (name command)
-  "Run COMMAND in a compilation buffer called NAME, from the root."
-  (+core-compile name command (+rust-root)))
+(defun +rust--compile (name command &optional comint)
+  "Run COMMAND in a compilation buffer called NAME, from the root.
+With COMINT the buffer takes input, which a program reading its
+standard input waits for."
+  (+core-compile name command (+rust-root) comint))
 
 ;;;###autoload
 (defun +rust/build ()
@@ -242,7 +244,7 @@ features.  Each of them stopped at the flag it does not take."
 (defun +rust/run ()
   "Run what the project builds, with the arguments it is set to."
   (interactive)
-  (+rust--compile "run rust" (+rust-run-command)))
+  (+rust--compile "run rust" (+rust-run-command) t))
 
 ;;;###autoload
 (defun +rust/run-with-args (args)
@@ -250,7 +252,8 @@ features.  Each of them stopped at the flag it does not take."
   (interactive (list (read-string "Arguments: " +rust-run-args)))
   (+rust--compile "run rust"
                   (+rust--command "run" (unless (string-empty-p args)
-                                          (concat "-- " args)))))
+                                          (concat "-- " args)))
+                  t))
 
 ;;;###autoload
 (defun +rust/test ()

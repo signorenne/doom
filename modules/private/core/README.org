@@ -48,8 +48,9 @@ on =q= shows it on =Q= instead; transient does that substitution itself.
 
 A build, a test or a check opens at the bottom and leaves the cursor
 where it was; a program's output, =F6= or =SPC k r= in any language, opens
-on the right with the cursor in it. =ESC= closes either, from it or from
-the source, and so does =q= once nothing is running in it.
+on the right with the cursor in it, and what you type there is the
+program's input. =ESC= closes either, from it or from the source, and so
+does =q= once nothing is running in it.
 
 * SPC k, the project's keys
 =SPC k= opens the keys of the project you are in, from the module that
@@ -426,8 +427,10 @@ since projectile walks the whole tree for a directory without a
 repository; ~+core-project-root-or-nil~ is the same with no fallback),
 ~+core-file-at-point~ (dired marks, the file at point, this file),
 ~+core-compile~ (a compilation buffer that carries its name in
-~+core-compile-name~), ~+core-last-compilation-buffer~ (the build, test
-or run that started last, whoever started it), ~+core-run-in-vterm~,
+~+core-compile-name~), ~+core-compile-then~ (the same, then a function
+once it finished cleanly: a build, then its run),
+~+core-last-compilation-buffer~ (the build, test or run that started
+last, whoever started it), ~+core-run-in-vterm~,
 ~+core-git~ and ~+core-git-state~ (no-repo, stopped, dirty, clean),
 ~+core-todo-regexp~, ~+core-language~ (a mode's language for a fenced
 block or a babel block, one table, ~+core-languages~),
