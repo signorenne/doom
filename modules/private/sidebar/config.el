@@ -72,7 +72,9 @@ file the editor shows; the notes layout pins its vault.")
   :group 'vc)
 
 (defvar +sidebar-docs
-  '(:groups (("sidebar" "Side bar" nil +sidebar-explorer-mode-map +sidebar-scm-mode-map)))
+  '(:groups (("sidebar" "Side bar" nil +sidebar-explorer-mode-map +sidebar-scm-mode-map))
+    :sections ((+sidebar-explorer-mode . "Side bar")
+               (+sidebar-scm-mode . "Side bar")))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
 ;; s and S stage, as in magit; evil-snipe leaves magit-mode's buffers

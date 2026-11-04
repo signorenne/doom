@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview
-#+generated: 2026-11-02 14:55
+#+generated: 2026-11-04 10:16
 #+options: toc:nil
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -786,6 +786,55 @@ the list: ~SPC SPC RET~ goes back.
 
 Inside vterm: =C-c C-t= copy mode, =C-q= sends the next key through raw,
 =C-z= switches between evil and emacs state.
+
+* Side bar
+VS Code's side bar: one window on the left that shows one view at a
+time, the Explorer or Source Control. ~SPC o p~ opens the Explorer on the
+file you are in, ~SPC g e~ Source Control, ~SPC t o~ the Explorer's
+Outline; pressed again from there, each closes it. ~SPC e t~ shows or
+hides it without leaving the file, and ~C-w h~ walks into it, ~C-w l~
+back. It shows the project of the file in the editor, kept up as files
+change, and does nothing while hidden.
+
+** Every view
+| Key     | What it does                                   |
+|---------+------------------------------------------------|
+| ~j~ ~k~     | move                                           |
+| ~TAB~     | fold or unfold the section                     |
+| ~gj~ ~gk~   | next, previous section at the same level       |
+| ~gh~      | up to the parent section                       |
+| ~H~ ~L~     | previous, next view                            |
+| ~gr~      | draw it again now                              |
+| ~q~       | close the side bar                             |
+
+S-TAB folds or unfolds every section; the =z= keys fold as in magit.
+
+** The Explorer
+Open editors, the project's file buffers, sits above the tree; the
+file's Outline and Timeline below it. Each is worked out only while it
+is open.
+
+| Key     | What it does                                                   |
+|---------+----------------------------------------------------------------|
+| ~RET~     | open the file; fold a folder; in the other sections, go there  |
+| ~o~       | open the file in a new window beside the editor                |
+| ~a~       | a new file in the folder at point, a folder if it ends in a slash |
+| ~r~       | rename or move; its buffers follow                             |
+| ~c~       | copy, a folder with everything in it                           |
+| ~d~       | to the trash, after asking                                     |
+| ~y~ ~Y~ ~gy~  | copy the name, the path from the root, the full path           |
+| ~x~ ~s~     | in Open editors: close, save that buffer                       |
+
+** Source Control
+| Key   | What it does                                                     |
+|-------+------------------------------------------------------------------|
+| ~RET~   | open the change in place (~SPC g v~); on a commit, unfold it       |
+| ~o~     | open it beside its old version (~SPC g V~); on a commit, its diff  |
+| ~s~ ~u~   | stage, unstage the file, the selection, or a section's files     |
+| ~x~     | discard, after asking: tracked back to the index, untracked to the trash |
+| ~S~ ~U~   | stage, unstage everything                                        |
+| ~c~     | commit                                                           |
+| ~p~ ~F~   | push, pull                                                       |
 
 * Dired, the file manager
 ~SPC o -~ opens it on the file you are in: the listing on the left with
@@ -3025,9 +3074,9 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC d x~ | dape-evaluate-expression   |
 
 ** SPC e: explorer
-| Key     | What it does    |
-|---------+-----------------|
-| ~SPC e t~ | Toggle Treemacs |
+| Key     | What it does       |
+|---------+--------------------|
+| ~SPC e t~ | Side bar on or off |
 
 ** SPC f: file
 | Key     | What it does                        |
@@ -3060,59 +3109,62 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC f y~ | Yank file path                      |
 
 ** SPC g: git
-| Key       | What it does          |
-|-----------+-----------------------|
-| ~SPC g '~   | Forge dispatch        |
-| ~SPC g .~   | Magit file dispatch   |
-| ~SPC g /~   | Magit dispatch        |
-| ~SPC g B~   | Magit blame           |
-| ~SPC g C~   | Magit clone           |
-| ~SPC g D~   | Magit file delete     |
-| ~SPC g F~   | Magit fetch           |
-| ~SPC g G~   | Magit status here     |
-| ~SPC g L~   | Magit buffer log      |
-| ~SPC g R~   | Revert file           |
-| ~SPC g S~   | Git stage this file   |
-| ~SPC g SPC~ | Git menu              |
-| ~SPC g U~   | Git unstage this file |
-| ~SPC g Y~   | Copy link to homepage |
-| ~SPC g [~   | Jump to previous hunk |
-| ~SPC g ]~   | Jump to next hunk     |
-| ~SPC g b~   | Magit switch branch   |
-| ~SPC g c R~ | Clone repo            |
-| ~SPC g c b~ | Branch                |
-| ~SPC g c c~ | Commit                |
-| ~SPC g c f~ | Fixup                 |
-| ~SPC g c i~ | Issue                 |
-| ~SPC g c p~ | Pull request          |
-| ~SPC g c r~ | Initialize repo       |
-| ~SPC g f c~ | Find commit           |
-| ~SPC g f f~ | Find file             |
-| ~SPC g f g~ | Find gitconfig file   |
-| ~SPC g f i~ | Find issue            |
-| ~SPC g f p~ | Find pull request     |
-| ~SPC g g~   | Magit status          |
-| ~SPC g h~   | History menu          |
-| ~SPC g l i~ | List issues           |
-| ~SPC g l n~ | List notifications    |
-| ~SPC g l p~ | List pull requests    |
-| ~SPC g l r~ | List repositories     |
-| ~SPC g l s~ | List submodules       |
-| ~SPC g n~   | Branches menu         |
-| ~SPC g o I~ | Browse issues         |
-| ~SPC g o P~ | Browse pull requests  |
-| ~SPC g o c~ | Browse commit         |
-| ~SPC g o h~ | Browse homepage       |
-| ~SPC g o i~ | Browse an issue       |
-| ~SPC g o o~ | Browse file or region |
-| ~SPC g o p~ | Browse a pull request |
-| ~SPC g o r~ | Browse remote         |
-| ~SPC g p~   | Show the change here  |
-| ~SPC g r~   | Revert hunk at point  |
-| ~SPC g s~   | Stage hunk at point   |
-| ~SPC g t~   | Git time machine      |
-| ~SPC g x~   | Conflicts             |
-| ~SPC g y~   | Copy link to remote   |
+| Key       | What it does            |
+|-----------+-------------------------|
+| ~SPC g '~   | Forge dispatch          |
+| ~SPC g .~   | Magit file dispatch     |
+| ~SPC g /~   | Magit dispatch          |
+| ~SPC g B~   | Magit blame             |
+| ~SPC g C~   | Magit clone             |
+| ~SPC g D~   | Magit file delete       |
+| ~SPC g F~   | Magit fetch             |
+| ~SPC g G~   | Magit status here       |
+| ~SPC g L~   | Magit buffer log        |
+| ~SPC g R~   | Revert file             |
+| ~SPC g S~   | Git stage this file     |
+| ~SPC g SPC~ | Git menu                |
+| ~SPC g U~   | Git unstage this file   |
+| ~SPC g V~   | Old version beside it   |
+| ~SPC g Y~   | Copy link to homepage   |
+| ~SPC g [~   | Jump to previous hunk   |
+| ~SPC g ]~   | Jump to next hunk       |
+| ~SPC g b~   | Magit switch branch     |
+| ~SPC g c R~ | Clone repo              |
+| ~SPC g c b~ | Branch                  |
+| ~SPC g c c~ | Commit                  |
+| ~SPC g c f~ | Fixup                   |
+| ~SPC g c i~ | Issue                   |
+| ~SPC g c p~ | Pull request            |
+| ~SPC g c r~ | Initialize repo         |
+| ~SPC g e~   | Source Control side bar |
+| ~SPC g f c~ | Find commit             |
+| ~SPC g f f~ | Find file               |
+| ~SPC g f g~ | Find gitconfig file     |
+| ~SPC g f i~ | Find issue              |
+| ~SPC g f p~ | Find pull request       |
+| ~SPC g g~   | Magit status            |
+| ~SPC g h~   | History menu            |
+| ~SPC g l i~ | List issues             |
+| ~SPC g l n~ | List notifications      |
+| ~SPC g l p~ | List pull requests      |
+| ~SPC g l r~ | List repositories       |
+| ~SPC g l s~ | List submodules         |
+| ~SPC g n~   | Branches menu           |
+| ~SPC g o I~ | Browse issues           |
+| ~SPC g o P~ | Browse pull requests    |
+| ~SPC g o c~ | Browse commit           |
+| ~SPC g o h~ | Browse homepage         |
+| ~SPC g o i~ | Browse an issue         |
+| ~SPC g o o~ | Browse file or region   |
+| ~SPC g o p~ | Browse a pull request   |
+| ~SPC g o r~ | Browse remote           |
+| ~SPC g p~   | Show the change here    |
+| ~SPC g r~   | Revert hunk at point    |
+| ~SPC g s~   | Stage hunk at point     |
+| ~SPC g t~   | Git time machine        |
+| ~SPC g v~   | Changes in place        |
+| ~SPC g x~   | Conflicts               |
+| ~SPC g y~   | Copy link to remote     |
 
 ** SPC h: help
 | Key          | What it does                     |
@@ -3380,7 +3432,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o F~   | Select frame                 |
 | ~SPC o M~   | Media player                 |
 | ~SPC o O~   | Reveal project in Finder     |
-| ~SPC o P~   | Find file in project sidebar |
+| ~SPC o P~   | This file in the Explorer    |
 | ~SPC o R~   | REPL (same window)           |
 | ~SPC o T~   | Open vterm here              |
 | ~SPC o a a~ | Agenda                       |
@@ -3408,7 +3460,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o l r~ | Rewrite                      |
 | ~SPC o l s~ | Send to gptel                |
 | ~SPC o o~   | Reveal in Finder             |
-| ~SPC o p~   | Project sidebar              |
+| ~SPC o p~   | Explorer side bar            |
 | ~SPC o r~   | REPL                         |
 | ~SPC o s I~ | Open in new iTerm window     |
 | ~SPC o s L~ | Send project to Launchbar    |
@@ -4329,13 +4381,26 @@ bound.
   branch changes.
 - ~+git/history~ (~SPC g h~) :: Rewrite history: the commit at point, or
   HEAD, or a range.
+- ~+git/live~ (~SPC g v~) :: Show this file's changes in place, kept up as
+  you edit; again to stop.
+- ~+git/live-baseline~ :: Pick what this buffer's view compares with: the
+  index, HEAD, a commit, or the project as it was when an agent's last turn
+  began.
 - ~+git/log-since-main~ :: The commits of this branch that main does not
   have.
 - ~+git/menu~ (~SPC g SPC~) :: Git: every day, the menus, the repositories,
   the tools.
+- ~+git/next-change~ (~] d~) :: Go to the next change of the view; without
+  one, the fringe's next.
 - ~+git/next-conflict~ :: The next conflict in this file, or the next file
   that has one.
+- ~+git/previous-change~ (~[ d~) :: Go to the previous change of the view;
+  without one, the fringe's.
 - ~+git/previous-conflict~ :: The conflict before this one.
+- ~+git/revert-change~ :: Put the change on this line back as the baseline
+  has it; without a view, revert the fringe's hunk.
+- ~+git/split~ (~SPC g V~) :: Show this file beside its old version, kept up
+  as you edit; again, or q on the old version, to close it.
 - ~+git/tag~ (~t~) :: Tags: where to put one, and what to do with them.
 - ~+git/tag-branch~ :: Tag the head of BRANCH as NAME, BRANCH picked with
   its last commit.
@@ -4348,6 +4413,62 @@ bound.
   here made a plain tag.
 - ~+git/uncommit~ :: Undo the last commit and keep its changes staged, to
   commit again differently.
+
+** Side bar
+- ~+sidebar/explorer~ (~SPC o p~) :: Show the Explorer in the side bar,
+  pointing at the file in the editor, and go there; there already, close the
+  side bar.
+- ~+sidebar/explorer-click~ (~<mouse-1>~) :: Open the file clicked on, or
+  fold the folder.
+- ~+sidebar/explorer-close~ (~x~) :: Kill the buffer of the Open editors
+  entry at point; Emacs asks first for a modified one.
+- ~+sidebar/explorer-copy~ (~c~) :: Copy the file or folder at point, a
+  folder with everything in it.
+- ~+sidebar/explorer-copy-name~ (~y~) :: Copy the name of the file or folder
+  at point.
+- ~+sidebar/explorer-copy-path~ (~g y~) :: Copy the absolute path of the
+  file or folder at point.
+- ~+sidebar/explorer-copy-relative-path~ (~Y~) :: Copy the path of the file
+  or folder at point from the root.
+- ~+sidebar/explorer-delete~ (~d~) :: Move the file or folder at point to
+  the trash, after asking, and offer to kill the buffers of what went.
+- ~+sidebar/explorer-new~ (~a~) :: Make a file in the folder at point and
+  open it; a name ending in a slash makes a folder.
+- ~+sidebar/explorer-open~ (~RET~) :: Open the file at point in the editor
+  window; fold or unfold a folder.
+- ~+sidebar/explorer-open-side~ (~o~) :: Open the file at point in a new
+  window right of the editor window.
+- ~+sidebar/explorer-rename~ (~r~) :: Rename or move the file or folder at
+  point; its buffers follow it.
+- ~+sidebar/explorer-save~ (~s~) :: Save the buffer of the Open editors
+  entry at point.
+- ~+sidebar/fold~ (~TAB~) :: Fold or unfold as the key pressed does in
+  magit, then watch exactly the folders now on show.
+- ~+sidebar/next-view~ (~L~) :: Show the side bar's next view.
+- ~+sidebar/outline~ (~SPC t o~) :: Show the Explorer with Outline open and
+  point in it; with point there already, close the side bar.
+- ~+sidebar/previous-view~ (~H~) :: Show the side bar's previous view.
+- ~+sidebar/quit~ (~q~) :: Close the side bar.
+- ~+sidebar/refresh~ (~g r~) :: Draw the view again now.
+- ~+sidebar/reveal~ (~SPC o P~) :: Show the Explorer with point on the file
+  in the editor, its folders unfolded, and go there.
+- ~+sidebar/scm-discard~ (~x~) :: Discard the changes to the file at point,
+  the selected ones, or the section's, after asking: a tracked file goes
+  back to the index, an untracked one to the trash.
+- ~+sidebar/scm-open~ (~RET~) :: Open the change at point in place; on a
+  heading or a commit, fold it.
+- ~+sidebar/scm-open-split~ (~o~) :: Open the change at point beside its old
+  version; on a commit, its diff.
+- ~+sidebar/scm-stage~ (~s~) :: Stage the file at point, the selected ones,
+  or the section's.
+- ~+sidebar/scm-stage-all~ (~S~) :: Stage every change.
+- ~+sidebar/scm-unstage~ (~u~) :: Unstage the file at point, the selected
+  ones, or the section's.
+- ~+sidebar/scm-unstage-all~ (~U~) :: Unstage everything.
+- ~+sidebar/source-control~ (~SPC g e~) :: Show Source Control in the side
+  bar and go there; there already, close the side bar.
+- ~+sidebar/toggle~ (~SPC e t~) :: Open the side bar on its last view,
+  staying where you are; close it if it is open.
 
 ** Media
 - ~+media/back~ (~h~) :: Five seconds back.
@@ -4401,8 +4522,8 @@ bound.
 - ~+notes/install-protocol-handler~ (~SPC n d P~) :: Register
   org-protocol:// with the desktop, so the browser can capture.
 - ~+notes/layout~ (~SPC n h~) :: Lay the notes out in the workspace "notes":
-  the vault's file tree at the left, the note, and at the right the roam
-  buffer, which follows the note, above its outline.
+  the side bar at the left, the vault's tree above the note's outline, the
+  note, and at the right the roam buffer, which follows the note.
 - ~+notes/log~ :: Show what changed in the notes lately.
 - ~+notes/menu~ (~SPC n SPC~) :: Notes and tasks: documents, capture,
   agenda, roam, the same keys as SPC n.
@@ -4534,7 +4655,7 @@ bound.
 - ~+ai/inline-rewrite-retry~ (~r~) :: Ask again, with more added to the
   instruction.
 - ~+ai/install-claude-hooks~ (~SPC l m h~) :: Tell Claude Code to notify
-  Emacs when it stops or needs input.
+  Emacs when it stops, needs input or is sent a prompt.
 - ~+ai/log-session~ (~SPC l m l~) :: Write a session note into the owning
   project's Progress, or the inbox.
 - ~+ai/menu~ (~SPC l SPC~) :: AI hub: the chat, the Claude terminal, inline

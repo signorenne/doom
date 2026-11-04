@@ -29,7 +29,7 @@ put them in twice; org-roam queues magit-section for itself, later.")
 
 (defvar +git-docs
   '(:groups (("git" "Git" (magit) magit-mode-map magit-status-mode-map
-              git-commit-mode-map))
+              git-commit-mode-map +git-live-mode-map +git-split-mode-map))
     :sections ((magit-status-mode . "Git")
                (magit-log-mode . "Git")
                (magit-diff-mode . "Git")

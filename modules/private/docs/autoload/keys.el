@@ -314,6 +314,8 @@ the rest; see `+docs-menu-problems', `+docs-leader-problems',
     ("minibuffer" . minibuffer)
     ("\\`Dired" . dired)
     ("\\`Org\\|\\`Notes\\|In a document" . org)
+    ("\\`Side bar, Source Control" . sidebar-scm)
+    ("\\`Side bar" . sidebar-explorer)  ; the Explorer, and what every view has
     ("" . code))
   "Where each part of the sheet's keys are looked up, by the first
 section or subsection name that matches: `skip' for the keys of a
@@ -386,6 +388,15 @@ key of evil's would look unbound.  Those maps are put aside here."
       ('org (with-temp-buffer (org-mode)
                               (when (fboundp 'evil-normal-state) (evil-normal-state))
                               (in-buffer)))
+      ;; A view's mode in a buffer of its own, not the side bar's, which
+      ;; the check must not open or redraw.
+      ((or 'sidebar-explorer 'sidebar-scm)
+       (let ((mode (if (eq context 'sidebar-scm) '+sidebar-scm-mode '+sidebar-explorer-mode)))
+         (if (not (fboundp mode))
+             t
+           (with-temp-buffer (funcall mode)
+                             (when (fboundp 'evil-normal-state) (evil-normal-state))
+                             (in-buffer)))))
       (_ (with-temp-buffer (c++-ts-mode)
                            (when (fboundp 'evil-normal-state) (evil-normal-state))
                            ;; C-i and C-m reach their own event through
