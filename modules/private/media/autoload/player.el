@@ -241,6 +241,11 @@ with APPEND."
     "r" #'+media/repeat "z" #'+media/shuffle "s" #'+media/stop
     "d" #'+media/remove-at-point "a" #'+media/queue-files "q" #'quit-window))
 
+;; evil-snipe's s is a minor mode's key and outranks the player's own;
+;; snipe stays out of the player, as it does out of dired and magit.
+(with-eval-after-load 'evil-snipe
+  (add-to-list 'evil-snipe-disabled-modes '+media-player-mode))
+
 (defun +media--quit ()
   "Stop mpv with the player's buffer."
   (+media--stop-waiting)
