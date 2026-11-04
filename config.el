@@ -50,6 +50,12 @@ The config's own, in themes/: made for long reading, measured for it.")
                   (mapc #'disable-theme custom-enabled-themes)
                   (load-theme on t))))))
 
+;; A daemon loads the theme once its first frame is made, a frame Emacs
+;; has drawn white: it flashes white, then turns dark. Loaded with the
+;; daemon, every frame is made in the theme's colours.
+(when (daemonp)
+  (add-hook 'after-init-hook #'doom-init-theme-h -90))
+
 ;; Line numbers in code and text; SPC t l turns a buffer's to relative,
 ;; then none. The column is as wide as the file's last line needs from
 ;; the start, so the text does not shift sideways while scrolling.
