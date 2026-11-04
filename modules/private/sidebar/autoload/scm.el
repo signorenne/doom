@@ -278,10 +278,11 @@ untracked one to the trash."
                                      (if (cdr folders) "them" "it"))))))
               (question
                (concat (+sidebar--capitalize
-                        (if (cdr clauses)
-                            (concat (string-join (butlast clauses) ", ")
-                                    ", and " (car (last clauses)))
-                          (car clauses)))
+                        (pcase (length clauses)
+                          (1 (car clauses))
+                          (2 (string-join clauses " and "))
+                          (_ (concat (string-join (butlast clauses) ", ")
+                                     ", and " (car (last clauses))))))
                        "? "))
               ;; A whole section is many files gone at once: a full answer.
               (whole (and (not selection)
