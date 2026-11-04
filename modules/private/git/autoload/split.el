@@ -22,6 +22,12 @@
 (defvar +git--live-overlays)
 (defvar +git--live-refine-function)
 
+;; The engine and its variables are live.el's; a split may be the first
+;; thing a session asks for, so live.el is loaded with this file.
+(let ((engine (symbol-function '+git-live-mode)))
+  (when (autoloadp engine)
+    (autoload-do-load engine '+git-live-mode)))
+
 (defvar-local +git--split-base nil
   "In the right side's buffer: the old version's buffer on the left.")
 
@@ -43,7 +49,7 @@ the scroll it causes is not sent back.")
 
 (defun +git--split-hunks ()
   "This right side's hunks."
-  (or +git--split-static +git--live-hunks))
+  (if (eq +git--live-kind 'static) +git--split-static +git--live-hunks))
 
 
 ;;
@@ -225,7 +231,12 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
           (setq +git--split-file right))))
     (with-current-buffer +git--split-base
       (rename-buffer name t))
-    (+git--split-fill +git--split-base +git--live-base-file (+git--live-coding))))
+    (+git--split-fill +git--split-base +git--live-base-file (+git--live-coding))
+    ;; The old text is new: the word marks drawn on it went with it.
+    (dolist (overlay +git--live-overlays)
+      (mapc #'delete-overlay (overlay-get overlay '+git-live-words))
+      (overlay-put overlay '+git-live-words nil)
+      (overlay-put overlay '+git-live-refined nil))))
 
 (defun +git--split-show ()
   "Put the old version in a window to the left of this buffer's."
@@ -270,7 +281,7 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
   "End BUFFER's split, as a right side."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
-      (cond (+git--split-static (+git--split-end-static))
+      (cond ((eq +git--live-kind 'static) (+git--split-end-static))
             ((bound-and-true-p +git-split-mode) (+git-split-mode -1))))))
 
 (defun +git--split-base-killed-h ()
@@ -327,20 +338,21 @@ lines lined up, scrolled together, kept up as the buffer is edited."
 q on the old version, to close it."
   (interactive)
   (cond (+git--split-file (+git--split-end +git--split-file))
-        (+git--split-static (+git--split-end (current-buffer)))
+        ((eq +git--live-kind 'static) (+git--split-end (current-buffer)))
         (t (+git-split-mode (if +git-split-mode -1 1))
            (when +git-split-mode
              (message "Beside %s" +git--live-label)))))
 
 ;;;###autoload
 (defun +git-live-open (file baseline &optional split)
-  "Visit FILE in the selected window with its changes against BASELINE
-in place, or beside it with SPLIT."
+  "Visit FILE in the selected window, which the caller makes the editor
+window, with its changes against BASELINE in place, or beside it with
+SPLIT."
   (let ((buffer (find-file-noselect file)))
     (switch-to-buffer buffer)
     (with-current-buffer buffer
-      (setq +git-live-baseline baseline)
-      (cond ((if split +git-split-mode +git-live-mode)
+      (setq-local +git-live-baseline baseline)
+      (cond ((if split (bound-and-true-p +git-split-mode) (bound-and-true-p +git-live-mode))
              (+git--live-schedule t))
             (split (+git-split-mode 1))
             (t (+git-live-mode 1))))
@@ -351,7 +363,8 @@ in place, or beside it with SPLIT."
   "Show what REV changed in FILE, a path from the toplevel: REV's parent
 on the left, REV on the right, both read-only, lined up."
   (require 'magit)
-  (let* ((parent (magit-rev-verify (concat rev "^")))
+  (let* ((default-directory (or (+git--live-toplevel default-directory) default-directory))
+         (parent (magit-rev-verify (concat rev "^")))
          (right (magit-find-file-noselect rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
                                             (if parent (substring parent 0 7) "none"))))
@@ -360,7 +373,9 @@ on the left, REV on the right, both read-only, lined up."
                    (call-process "git" nil (list t nil) nil "--no-pager" "diff" "--no-color"
                                  "--no-ext-diff" "--histogram" "-U0"
                                  ;; A root commit's parent is the empty tree.
-                                 (or parent "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+                                 (or parent
+                                     (car (process-lines "git" "hash-object" "-t" "tree"
+                                                         "/dev/null")))
                                  rev "--" file)
                    (buffer-string)))))
     (with-current-buffer left
@@ -378,7 +393,7 @@ on the left, REV on the right, both read-only, lined up."
       (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t))
     (switch-to-buffer right)
     (with-current-buffer right
-      (when (+git--split-hunks)
+      (when (eq +git--live-kind 'static)
         (+git--split-end-static))
       (setq +git--split-base left
             +git--split-static hunks

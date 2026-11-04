@@ -47,8 +47,8 @@ turn as `agent', or a commit as (commit . HASH).")
 (defvar-local +git--live-resolve nil
   "Non-nil when the baseline is to be looked up again before the diff.")
 
-(defvar-local +git--live-dirty nil
-  "Non-nil when an edit came while no window showed the buffer.")
+(defvar-local +git--live-tick nil
+  "The buffer's tick the shown hunks were diffed at.")
 
 (defvar-local +git--live-retried nil
   "Non-nil once a missing base file was written again for this diff.")
@@ -130,11 +130,9 @@ none, such as an agent's turn not taken yet."
   (let ((rel +git--live-rel))
     (pcase +git-live-baseline
       ('index
-       (if (+git--live-git "ls-files" "-u" "--" rel)
-           ;; Unmerged: the index holds the conflict's stages, not one text.
-           (if (string-empty-p (+git--live-git "ls-files" "-u" "--" rel))
-               (cons (concat ":" rel) "index")
-             (cons (concat "HEAD:" rel) "HEAD, unmerged"))
+       ;; Unmerged: the index holds the conflict's stages, not one text.
+       (if (not (string-empty-p (or (+git--live-git "ls-files" "-u" "--" rel) "")))
+           (cons (concat "HEAD:" rel) "HEAD, unmerged")
          (cons (concat ":" rel) "index")))
       ('head (cons (concat "HEAD:" rel) "HEAD"))
       ('agent
@@ -232,14 +230,17 @@ Non-nil when it did."
     ;; that is gone.
     (+git--live-schedule))
    ;; git exits 1 for a difference and for a base it cannot read; only
-   ;; a difference prints one.
-   ((or (eql status 0)
-        (and (eql status 1) (string-prefix-p "diff --git" out)))
+   ;; a difference prints one, and a good answer says nothing on stderr.
+   ((and (string-empty-p (or errors ""))
+         (or (eql status 0)
+             (and (eql status 1) (string-prefix-p "diff --git" out))))
     (setq +git--live-retried nil)
     (if (string-match-p "^Binary files " out)
-        (+git--live-set-status "binary")
+        (progn (message "A binary file: no view")
+               (+git--live-stop-h))
       (let ((hunks (+git--live-parse out)))
-        (setq +git--live-hunks hunks)
+        (setq +git--live-hunks hunks
+              +git--live-tick tick)
         (funcall +git--live-draw-function hunks)
         (+git--live-set-status (length hunks))
         (+git--live-schedule-refine))))
@@ -379,6 +380,7 @@ spec for each one that does not match. The others of EXISTING go."
 
 (defvar +git-live-refine)
 (defvar +git-live-refine-max-lines)
+(defvar smerge-refine-shadow-cursor)
 
 (defvar-local +git--live-refine-timer nil
   "The one-shot timer that marks the changed words of the hunks on screen.")
@@ -529,14 +531,20 @@ of changes or a word; DETAIL goes in the tooltip."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (setq +git--live-timer nil)
-      (when +git--live-kind
-        (if (not (get-buffer-window buffer t))
-            (setq +git--live-dirty t)
-          (setq +git--live-dirty nil)
-          (when +git--live-resolve
-            (setq +git--live-resolve nil)
-            (+git--live-resolve-baseline))
-          (+git--live-diff))))))
+      (cond
+       ((not +git--live-kind))
+       ;; Hidden: the window that shows it again schedules a run.
+       ((not (get-buffer-window buffer t)))
+       ;; The base file is not rewritten under a running diff; its answer
+       ;; schedules the next run.
+       ((process-live-p +git--live-process)
+        (+git--live-schedule))
+       (t
+        (let ((moved (and +git--live-resolve
+                          (progn (setq +git--live-resolve nil)
+                                 (+git--live-resolve-baseline)))))
+          (when (or moved (not (eql +git--live-tick (buffer-chars-modified-tick))))
+            (+git--live-diff))))))))
 
 (defun +git--live-changed-h (&rest _)
   "Diff again once typing rests."
@@ -550,6 +558,35 @@ of changes or a word; DETAIL goes in the tooltip."
   "Catch up with what came while no window showed the buffer, and look
 the baseline up again: the index may have moved meanwhile."
   (+git--live-schedule t))
+
+(defun +git--live-selected-h (window)
+  "Look the baseline up again when the buffer's window is selected; the
+same hook runs when it is left, which needs nothing."
+  (when (eq window (selected-window))
+    (+git--live-schedule t)))
+
+(defun +git--live-cloned-h ()
+  "Leave the view to the buffer this one was cloned from: the watch, the
+base file and the process are its own."
+  (setq +git--live-kind nil +git--live-watch nil +git--live-base-file nil
+        +git--live-process nil +git--live-timer nil +git--live-refine-timer nil
+        +git--live-overlays nil +git--live-gitdir nil +git--live-status nil
+        +git-live-mode nil)
+  (when (boundp '+git-split-mode)
+    (setq +git-split-mode nil))
+  (dolist (hook '(after-change-functions after-revert-hook window-buffer-change-functions
+                  window-selection-change-functions window-scroll-functions
+                  kill-buffer-hook change-major-mode-hook clone-indirect-buffer-hook
+                  after-set-visited-file-name-hook))
+    (kill-local-variable hook)))
+
+(defun +git--live-renamed-h ()
+  "Start the view again for the file's new name."
+  (let ((kind +git--live-kind))
+    (+git--live-stop)
+    (if (+git--live-refusal)
+        (+git--live-stop-h)
+      (+git--live-start kind))))
 
 (defun +git--live-stop-h ()
   "End the view of a buffer that is going or changing its major mode."
@@ -627,6 +664,8 @@ was modified here (the guard of the AI module's reload)."
 (defun +git--live-start (kind)
   "Run the engine in this buffer for KIND, `live' or `split'.
 The caller checked `+git--live-refusal', which set the toplevel."
+  (when +git--live-kind
+    (+git--live-stop))
   (setq +git--live-kind kind
         +git--live-rel (file-relative-name (file-truename buffer-file-name)
                                            (file-truename +git--live-root))
@@ -635,10 +674,12 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (add-hook 'after-change-functions #'+git--live-changed-h nil t)
   (add-hook 'after-revert-hook #'+git--live-reverted-h nil t)
   (add-hook 'window-buffer-change-functions #'+git--live-shown-h nil t)
-  (add-hook 'window-selection-change-functions #'+git--live-shown-h nil t)
+  (add-hook 'window-selection-change-functions #'+git--live-selected-h nil t)
   (add-hook 'window-scroll-functions #'+git--live-scrolled-h nil t)
   (add-hook 'kill-buffer-hook #'+git--live-stop-h nil t)
   (add-hook 'change-major-mode-hook #'+git--live-stop-h nil t)
+  (add-hook 'clone-indirect-buffer-hook #'+git--live-cloned-h nil t)
+  (add-hook 'after-set-visited-file-name-hook #'+git--live-renamed-h nil t)
   (setq +git--live-watch
         (ignore-errors
           (file-notify-add-watch buffer-file-name '(change)
@@ -661,10 +702,12 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (remove-hook 'after-change-functions #'+git--live-changed-h t)
   (remove-hook 'after-revert-hook #'+git--live-reverted-h t)
   (remove-hook 'window-buffer-change-functions #'+git--live-shown-h t)
-  (remove-hook 'window-selection-change-functions #'+git--live-shown-h t)
+  (remove-hook 'window-selection-change-functions #'+git--live-selected-h t)
   (remove-hook 'window-scroll-functions #'+git--live-scrolled-h t)
   (remove-hook 'kill-buffer-hook #'+git--live-stop-h t)
   (remove-hook 'change-major-mode-hook #'+git--live-stop-h t)
+  (remove-hook 'clone-indirect-buffer-hook #'+git--live-cloned-h t)
+  (remove-hook 'after-set-visited-file-name-hook #'+git--live-renamed-h t)
   (when +git--live-watch
     (file-notify-rm-watch +git--live-watch))
   (+git--live-unwatch-repo)
@@ -674,7 +717,7 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (setq +git--live-kind nil +git--live-timer nil +git--live-process nil
         +git--live-refine-timer nil
         +git--live-overlays nil +git--live-hunks nil +git--live-watch nil
-        +git--live-base-file nil +git--live-blob nil +git--live-dirty nil
+        +git--live-base-file nil +git--live-blob nil +git--live-tick nil
         +git--live-resolve nil +git--live-retried nil +git--live-status nil)
   (force-mode-line-update))
 
@@ -773,10 +816,6 @@ for the buffer when the view is turned off and on again."
 ;;
 ;;; Moving through the changes
 
-(defun +git--live-view-p ()
-  "Non-nil when this buffer shows a view with its own hunks."
-  (and +git--live-kind +git--live-overlays t))
-
 (defun +git--live-overlay-starts ()
   "Where the view's hunks start, in order."
   (sort (mapcar #'overlay-start
@@ -823,6 +862,7 @@ view, revert the fringe's hunk."
   (interactive)
   (if (not +git--live-kind)
       (call-interactively #'+vc-gutter/save-and-revert-hunk)
+    (barf-if-buffer-read-only)
     (if-let* ((overlay (+git--live-overlay-at-point)))
         (let ((beg (overlay-start overlay))
               (end (overlay-end overlay))

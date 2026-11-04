@@ -146,7 +146,17 @@ made once is replayed when the same conflict comes back (=rerere=).
   TOKEN=). Magit 4.6's own syntax colours in diffs are left off: on
   this config's history they were slower than delta (453 ms against
   94 to refresh a 9 KB diff) and stopped on an org hunk.
+- The views, =SPC g v= and =SPC g V=: ~+git-live-delay~ (0.3 s), the
+  rest after an edit before the buffer is diffed again, in the
+  background; ~+git-live-max-size~ (1M characters), the largest buffer a
+  view takes; ~+git-live-refine~ (t) and ~+git-live-refine-max-lines~
+  (40), the changed words, marked only in the hunks on screen and in
+  hunks no longer than that. Each hunk is one overlay, kept while it does
+  not change, so an edit redraws only its own hunk.
 - The files: =config.el= (settings, keys), =autoload/menu.el= (the three
   menus), =autoload/commit.el= (the subject, date, author, split,
   uncommit), =autoload/branch.el= (from main, delete merged, against
-  main).
+  main), =autoload/tag.el= (tags), =autoload/blame.el= (the line's
+  blame), =autoload/live.el= (the views' engine and the view in place),
+  =autoload/split.el= (the old version beside the file, a commit's
+  change).
