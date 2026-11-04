@@ -22,6 +22,10 @@ to `changed', for the last drawing.")
 (defvar-local +sidebar--explorer-pending nil
   "A file to point at once the Explorer is drawn.")
 
+(defvar-local +sidebar--explorer-source nil
+  "The editor's buffer when the Explorer was last drawn, whose outline and
+history it shows.")
+
 (defvar +sidebar--explorer-watches (make-hash-table :test #'equal)
   "Folder on show to its file-notify watch.")
 
@@ -76,7 +80,9 @@ it is open."
     "c" #'+sidebar/explorer-copy
     "y" #'+sidebar/explorer-copy-name
     "Y" #'+sidebar/explorer-copy-relative-path
-    "gy" #'+sidebar/explorer-copy-path))
+    "gy" #'+sidebar/explorer-copy-path
+    "x" #'+sidebar/explorer-close
+    "s" #'+sidebar/explorer-save))
 (define-key +sidebar-explorer-mode-map [mouse-1] #'+sidebar/explorer-click)
 
 
@@ -169,15 +175,23 @@ are listed when it is first opened."
 (defun +sidebar--explorer-render ()
   "Draw the Explorer for the directory the side bar shows."
   (let* ((root (+sidebar--root))
-         (repo (+sidebar--git-root root)))
+         (repo (+sidebar--git-root root))
+         (source (window-buffer (+sidebar--editor-window))))
     (setq +sidebar--shown-root root
+          +sidebar--explorer-source source
           default-directory root
           +sidebar--explorer-states (and repo (+sidebar--explorer-git-states repo)))
     (+sidebar--watch-gitdir repo)
+    ;; Outline follows its buffer's edits only while it is open: drawing
+    ;; it open sets that up again.
+    (+sidebar--outline-follow nil)
     (+sidebar--redraw
      (lambda ()
        (magit-insert-section (+sidebar-explorer nil)
-         (+sidebar--explorer-folder root 0 t))))
+         (+sidebar--insert-editors root)
+         (+sidebar--explorer-folder root 0 t)
+         (+sidebar--insert-outline source)
+         (+sidebar--insert-timeline source))))
     (+sidebar--sync-watches)
     (when-let* ((file +sidebar--explorer-pending))
       (setq +sidebar--explorer-pending nil)
@@ -220,14 +234,28 @@ bar's window, which stays unselected if it was."
 
 ;;;###autoload
 (defun +sidebar--explorer-follow-h (buffer)
-  "Point at BUFFER's file in the Explorer when it shows, after redisplay."
-  (when-let* ((file (buffer-file-name buffer))
-              (explorer (get-buffer "*Sidebar: Explorer*"))
+  "Point at BUFFER's file in the Explorer when it shows, after redisplay;
+with Open editors, Outline or Timeline open, draw them for BUFFER."
+  (when-let* ((explorer (get-buffer "*Sidebar: Explorer*"))
               ((get-buffer-window explorer)))
-    (if (buffer-local-value '+sidebar--dirty explorer)
-        (with-current-buffer explorer
-          (setq +sidebar--explorer-pending file))
-      (run-at-time 0 nil #'+sidebar--explorer-point-at file))))
+    (with-current-buffer explorer
+      (when (and (not (eq buffer +sidebar--explorer-source))
+                 (+sidebar--explorer-open-p '(+sidebar-editors +sidebar-outline +sidebar-timeline)))
+        (+sidebar--request 'explorer)))
+    (when-let* ((file (buffer-file-name buffer)))
+      (if (buffer-local-value '+sidebar--dirty explorer)
+          (with-current-buffer explorer
+            (setq +sidebar--explorer-pending file))
+        (run-at-time 0 nil #'+sidebar--explorer-point-at file)))))
+
+;;;###autoload
+(defun +sidebar--explorer-open-p (types)
+  "Non-nil when one of the Explorer's top sections of TYPES is open."
+  (when-let* ((explorer (get-buffer "*Sidebar: Explorer*")))
+    (with-current-buffer explorer
+      (and magit-root-section
+           (seq-find (lambda (s) (and (memq (oref s type) types) (not (oref s hidden))))
+                     (oref magit-root-section children))))))
 
 
 ;;
@@ -299,7 +327,8 @@ file at point, else the root."
   (interactive)
   (let ((path (+sidebar--explorer-path))
         (section (magit-current-section)))
-    (cond ((and path (not (directory-name-p path)))
+    (cond ((and section (+sidebar--section-open section)))
+          ((and path (not (directory-name-p path)))
            (select-window (+sidebar--editor-window))
            (find-file path))
           (section

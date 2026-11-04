@@ -17,7 +17,7 @@
   =…::drivers › (anonymous) › gap_event_observer(event, arg) → int   62/141  ✖1 ⚠2  ±2=;
   without a syntax tree, the symbol path (the file's is in the modeline);
   the symbol
-  outline at the side on ~SPC t o~; in the modeline, the line out of how
+  outline in the side bar on ~SPC t o~ (the sidebar module); in the modeline, the line out of how
   many the buffer has, the column out of how many the line has, and how
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so
   the fringe is left to the git gutter and the diagnostics; the minimap on
@@ -102,7 +102,6 @@ it.
 | ~SPC i e~ | ~emoji-search~            | insert an emoji by name            |
 | ~SPC i u~ | ~insert-char~             | insert any character by name       |
 | ~SPC t G~ | ~+ui/glyph-test~          | see whether the fonts render       |
-| ~SPC t o~ | ~imenu-list-smart-toggle~ | the symbol outline at the side     |
 | ~SPC t h~ | ~+ui-where-mode~          | the header line saying where you are |
 | ~SPC t m~ | ~+ui/minimap~             | the minimap on the right           |
 | ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |

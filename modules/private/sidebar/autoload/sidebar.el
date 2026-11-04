@@ -241,8 +241,14 @@ the side bar is on show.")
   (+sidebar--request))
 
 (defun +sidebar--saved-h ()
-  "A file was saved: its state in git may have changed."
-  (+sidebar--request 'scm))
+  "A file was saved: its state in git, and in Open editors, changed."
+  (+sidebar--request))
+
+(defun +sidebar--buffers-changed-h (&rest _)
+  "A file's buffer was killed or modified: Open editors, if open, changes."
+  (when (and buffer-file-name
+             (+sidebar--explorer-open-p '(+sidebar-editors)))
+    (+sidebar--request 'explorer)))
 
 (defun +sidebar--workspace-h (&rest _)
   "Bring the side bar back after a workspace switch took its window."
@@ -285,11 +291,17 @@ hook stays while the side bar is wanted."
         (add-hook 'magit-post-refresh-hook #'+sidebar--changed-h)
         (add-hook 'after-save-hook #'+sidebar--saved-h)
         (add-hook '+ai-edit-functions #'+sidebar--changed-h)
+        (add-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
+        (add-hook 'first-change-hook #'+sidebar--buffers-changed-h)
         (add-hook 'persp-activated-functions #'+sidebar--workspace-h))
     (remove-hook 'window-buffer-change-functions #'+sidebar--windows-h)
     (remove-hook 'magit-post-refresh-hook #'+sidebar--changed-h)
     (remove-hook 'after-save-hook #'+sidebar--saved-h)
     (remove-hook '+ai-edit-functions #'+sidebar--changed-h)
+    (remove-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
+    (remove-hook 'first-change-hook #'+sidebar--buffers-changed-h)
+    (when (fboundp '+sidebar--outline-follow)
+      (+sidebar--outline-follow nil))
     (unless +sidebar--wanted
       (remove-hook 'persp-activated-functions #'+sidebar--workspace-h))
     (+sidebar--unwatch-gitdir)

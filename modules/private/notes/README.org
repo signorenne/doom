@@ -122,7 +122,7 @@ meeting straight away.
 | ~SPC n r N~   | rename this note, its file and the links to it      |
 | ~SPC m m o s~ | star this note, or unstar it                        |
 | ~SPC n r S~   | the starred notes                                   |
-| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline  |
+| ~SPC n h~     | the notes layout: tree and outline, note, roam buffer |
 | ~SPC n r d n~ | write today's daily note                            |
 | ~SPC m m e~   | extract this heading into its own note              |
 | ~SPC n r t~   | the tags, how many notes each, then their notes     |
@@ -165,12 +165,12 @@ do the tags it inherits from its file, as org-roam keeps them; ~SPC n r m~
 writes the same set as a map.
 
 ~SPC n h~ lays the notes out in a workspace of their own, =notes=: the
-vault's file tree at the left, the note, and at the right the roam buffer,
-which follows the note, above its outline. It shows the vault file used
-last, or today's daily note; ~SPC n h~ there again puts the three panels
-away and leaves the note. The other workspaces keep their own windows;
-switching to one with no outline in sight pauses the outline's updates,
-and switching back resumes them.
+side bar at the left, the vault's tree above the note's outline (the
+sidebar module's Explorer, pinned to the vault there), the note, and at
+the right the roam buffer, which follows the note. It shows the vault
+file used last, or today's daily note; ~SPC n h~ there again puts the
+side bar and the roam buffer away and leaves the note. The other
+workspaces keep their own windows; the side bar shows each one's project.
 
 A picture belongs to the note it is in: ~SPC m a p~ pastes the one on the
 clipboard (=pngpaste= on a Mac, which ~doom doctor~ asks for), ~SPC m a c~
@@ -422,7 +422,7 @@ has no counterpart, and there is no phone app.
 | rename with links            | ~SPC n r N~, or edit =#+title= and save                                                                                        |
 | pasted and dropped pictures  | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline                                                                         |
 | callouts                     | =#+begin_warning= and the other kinds, ~C-c C-,~ ~W~                                                                             |
-| the workspace layout         | ~SPC n h~: tree, note, roam buffer, outline                                                                                  |
+| the workspace layout         | ~SPC n h~: tree and outline, note, roam buffer                                                                               |
 | tag pane with counts         | ~SPC n r t~                                                                                                                  |
 | bookmarks, starred           | ~SPC m m o s~ stars, ~SPC n r S~ lists                                                                                         |
 | daily notes, calendar        | ~SPC n r d t~ today, ~SPC n r d b~ and ~f~ the day before and after, ~SPC n r d d~ the calendar with the days that have one marked |

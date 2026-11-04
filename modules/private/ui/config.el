@@ -348,16 +348,6 @@ and its changes; or the symbol path without a syntax tree."
     "Take the header line down in a file of long lines."
     (+ui-where-mode -1)))
 
-;; The symbol outline at the side, VS Code's Outline: SPC t o opens
-;; and closes it; it follows point.
-(use-package! imenu-list
-  :defer t
-  :config
-  (setq imenu-list-position 'right
-        imenu-list-size 32
-        imenu-list-focus-after-activation nil
-        imenu-list-auto-resize nil))
-
 ;; Diagnostics at the end of the line as well as in the popup, the
 ;; most severe one; flymake is the checker, and eglot reports into it
 ;; directly.
@@ -832,7 +822,6 @@ around it; longer, it waits until it shows.")
        :desc "Glyph as elisp form"   "G" #'+ui/insert-glyph-form)
       (:prefix "t"
        :desc "Glyph test buffer"     "G" #'+ui/glyph-test
-       :desc "The outline of this buffer" "o" #'imenu-list-smart-toggle
        :desc "Where you are, in the header" "h" #'+ui-where-mode
        :desc "Minimap"                  "m" #'+ui/minimap)
       (:prefix "c"

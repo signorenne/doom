@@ -3,7 +3,9 @@
 ;; A side bar on the left, as VS Code has one: a window that shows one
 ;; view at a time, switched with H and L or a click on its header. The
 ;; Explorer is the project's file tree, kept up as files change, with
-;; the file operations; it took treemacs' place (SPC o p, SPC e t). The
+;; the file operations, under the open file buffers and above the file's
+;; outline and history; it took the places of treemacs (SPC o p, SPC e t)
+;; and imenu-list (SPC t o). The
 ;; Source Control view lists the staged and the changed files and the
 ;; latest commits, and stages and commits with magit's keys; opening a
 ;; change shows it in place or beside its old version (the git module's
@@ -23,6 +25,12 @@ LABEL MODE RENDER), RENDER drawing the view in its buffer.")
 
 (defvar +sidebar-scm-commits 20
   "How many of the latest commits Source Control lists.")
+
+(defvar +sidebar-outline-delay 1.0
+  "Seconds after the last edit before the Explorer's Outline is redrawn.")
+
+(defvar +sidebar-timeline-count 50
+  "How many commits of the file the Explorer's Timeline lists.")
 
 (defvar +sidebar-icons t
   "Non-nil for file icons in the side bar.")
@@ -87,4 +95,6 @@ file the editor shows; the notes layout pins its vault.")
        :desc "Explorer side bar"        "p" #'+sidebar/explorer
        :desc "This file in the Explorer" "P" #'+sidebar/reveal)
       (:prefix ("e" . "explorer")
-       :desc "Side bar on or off"       "t" #'+sidebar/toggle))
+       :desc "Side bar on or off"       "t" #'+sidebar/toggle)
+      (:prefix "t"
+       :desc "The outline of this buffer" "o" #'+sidebar/outline))

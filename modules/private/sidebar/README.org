@@ -7,7 +7,13 @@ at a time. =H= and =L= step through the views, a click on a name in its
 header goes to that one, =q= closes it. It works only while it is on
 show: hidden, it does nothing, and catches up when shown again.
 
-The Explorer is the project's tree, in place of treemacs: the project of
+The Explorer is the project's tree, in place of treemacs, between Open
+editors (the project's file buffers, a star on a modified one; =x=
+closes one, =s= saves it) and the file's Outline (its symbols, in place
+of imenu-list, =SPC t o=) and Timeline (its commits; =RET= opens one's
+change beside its old version). Those three are worked out only while
+they are open; Outline follows the file's edits a second after they
+rest. The tree is the project of
 the file in the editor (a workspace can pin a folder instead, as the
 notes layout pins the vault), folders first, each listing its files the
 first time it is opened. git's state colours the names, and a folder
@@ -35,6 +41,7 @@ an agent's edit lands, and when the index or HEAD change on disk.
 | ~SPC o p~   | ~+sidebar/explorer~       | the Explorer, pointing at this file; there already, close it |
 | ~SPC o P~   | ~+sidebar/reveal~         | this file in the Explorer, its folders unfolded    |
 | ~SPC e t~   | ~+sidebar/toggle~         | the side bar on or off, staying where you are      |
+| ~SPC t o~   | ~+sidebar/outline~        | the Explorer's Outline of this file; there already, close it |
 | ~SPC g e~   | ~+sidebar/source-control~ | Source Control in the side bar; there already, close it |
 
 In the side bar, normal state:
@@ -53,13 +60,14 @@ In the Explorer:
 
 | Key    | What it does                                                   |
 |--------+----------------------------------------------------------------|
-| ~RET~    | open the file in the editor window; on a folder, fold or unfold it |
+| ~RET~    | open the file in the editor window; on a folder, fold or unfold it; in Open editors, Outline and Timeline, go to the buffer, the symbol, the commit's change |
 | ~o~      | open the file in a new window beside the editor                |
 | ~a~      | a new file in the folder at point; ending in ~/~, a folder       |
 | ~r~      | rename or move; its buffers follow                             |
 | ~c~      | copy, a folder with everything in it                           |
 | ~d~      | to the trash, after asking                                     |
 | ~y~ ~Y~ ~gy~ | copy the name, the path from the root, the full path           |
+| ~x~ ~s~    | in Open editors: close, save that buffer                       |
 
 In Source Control:
 
@@ -80,3 +88,6 @@ In Source Control:
 - =+sidebar-pinned-roots=: workspace name to a directory the side bar
   shows there, whatever file the editor shows.
 - =+sidebar-refresh-delay= (0.3): seconds of rest before a redraw.
+- =+sidebar-outline-delay= (1.0): seconds after the last edit before
+  Outline is redrawn.
+- =+sidebar-timeline-count= (50): commits Timeline lists.
