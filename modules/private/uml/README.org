@@ -79,7 +79,8 @@ shows in about 0.24 s instead of 2.
 | ~SPC m s k~ | stop it; the next preview restarts it |
 
 The port is =+uml-server-port=, 8135, or the first free one above it, so
-two Emacs sessions do not fight over it.
+two Emacs sessions do not fight over it. The server listens on 127.0.0.1
+only, so nothing else on the network can reach it.
 
 * Templates
 ~SPC m n~ asks which kind and what to call it, copies the template and

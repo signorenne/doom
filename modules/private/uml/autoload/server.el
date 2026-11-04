@@ -16,6 +16,11 @@
 (defvar +uml--server-port nil
   "The port the running server answers on, or nil.")
 
+(defconst +uml--server-host "127.0.0.1"
+  "Where the server listens and is asked: loopback only, so nothing else
+on the network can reach it. An address, not localhost, which may be
+::1 first.")
+
 ;;;###autoload
 (defun +uml-server-running-p ()
   "Non-nil when our picoweb server is up."
@@ -24,7 +29,7 @@
 (defun +uml--port-free-p (port)
   "Non-nil when nothing is listening on PORT."
   (condition-case nil
-      (let ((p (make-network-process :name "uml-probe" :host "127.0.0.1"
+      (let ((p (make-network-process :name "uml-probe" :host +uml--server-host
                                      :service port :nowait nil)))
         (delete-process p)
         nil)
@@ -55,7 +60,9 @@ yet, since the first start has a JVM to load."
           (make-process
            :name "plantuml-picoweb"
            :buffer (get-buffer-create " *plantuml server*")
-           :command (list +uml-executable (format "-picoweb:%d" port))
+           ;; Without the address PlantUML listens on every interface.
+           :command (list +uml-executable
+                          (format "-picoweb:%d:%s" port +uml--server-host))
            :noquery t
            :sentinel
            (lambda (_proc event)
@@ -209,7 +216,8 @@ Returns the bytes, or signals with what PlantUML said."
     (let ((request (+uml--request source format options)))
      (cl-progv (mapcar #'car request) (mapcar #'cdr request)
       (let ((buffer (url-retrieve-synchronously
-                     (format "http://127.0.0.1:%d/render" port) t t +uml-render-timeout)))
+                     (format "http://%s:%d/render" +uml--server-host port)
+                     t t +uml-render-timeout)))
         (unless buffer (error "PlantUML did not answer within %ss" +uml-render-timeout))
         (pcase (prog1 (with-current-buffer buffer (+uml--read-response))
                  (kill-buffer buffer))
@@ -240,7 +248,7 @@ starting the server first when it is not up. DONE gets (ok BYTES) or
            (condition-case err
                (setq buffer
                      (url-retrieve
-                      (format "http://127.0.0.1:%d/render" port)
+                      (format "http://%s:%d/render" +uml--server-host port)
                       (lambda (status)
                         (when (timerp timer) (cancel-timer timer))
                         (let ((answer (if-let* ((err (plist-get status :error)))
