@@ -86,11 +86,20 @@ the side bar."
           (insert (+sidebar--file-line (car file) (cdr file)) "\n"))))))
 
 (defun +sidebar--scm-commit-files (hash)
-  "The files commit HASH changed, as (PATH . LETTER)."
-  (mapcar (lambda (line)
-            (let ((fields (split-string line "\t")))
-              (cons (car (last fields)) (substring (car fields) 0 1))))
-          (ignore-errors (process-lines "git" "show" "--name-status" "--format=" hash))))
+  "The files commit HASH changed, as (PATH LETTER OLD-PATH), OLD-PATH the
+file's name before a rename or the copy's source."
+  (let ((fields (with-temp-buffer
+                  (call-process "git" nil (list t nil) nil
+                                "show" "-z" "--name-status" "--format=" hash)
+                  (split-string (buffer-string) "\0" t)))
+        files)
+    ;; -z: the letter, then the name, or the old and the new for R and C.
+    (while fields
+      (let* ((letter (substring (string-trim-left (pop fields)) 0 1))
+             (old (pop fields))
+             (path (if (member letter '("R" "C")) (pop fields) old)))
+        (push (list path letter old) files)))
+    (nreverse files)))
 
 (defun +sidebar--scm-commits ()
   "The latest commits, each unfolding to its files."
@@ -105,9 +114,9 @@ the side bar."
             (magit-insert-heading
               (concat "  " subject " " (propertize date 'font-lock-face 'shadow)))
             (magit-insert-section-body
-              (dolist (file (+sidebar--scm-commit-files hash))
-                (magit-insert-section (+sidebar-commit-file (cons hash (car file)))
-                  (insert (+sidebar--file-line (car file) (cdr file) 4) "\n"))))))))))
+              (pcase-dolist (`(,path ,letter ,old) (+sidebar--scm-commit-files hash))
+                (magit-insert-section (+sidebar-commit-file (list hash path old))
+                  (insert (+sidebar--file-line path letter 4) "\n"))))))))))
 
 ;;;###autoload
 (defun +sidebar--scm-render ()
@@ -197,7 +206,7 @@ its old version with SPLIT."
       ('+sidebar-commit-file
        (select-window (+sidebar--editor-window))
        (let ((default-directory repo))
-         (+git-split-commit (car value) (cdr value))))
+         (apply #'+git-split-commit value)))
       ('+sidebar-commit
        (if split
            (let ((default-directory repo))
