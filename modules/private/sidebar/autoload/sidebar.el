@@ -107,9 +107,14 @@ stays on the same section, and folded sections stay folded."
       (set-window-start window (min window-start (point-max)) t))))
 
 (defun +sidebar--render ()
-  "Draw this side bar buffer's view now."
-  (setq +sidebar--dirty nil)
-  (funcall (nth 3 (+sidebar--entry +sidebar--view))))
+  "Draw this side bar buffer's view now; with a status of the same root
+on its way, once it lands. Starting that one over would never draw
+while changes come faster than git answers."
+  (if (and (process-live-p +sidebar--status-process)
+           (equal +sidebar--shown-root (+sidebar--root)))
+      (setq +sidebar--dirty t)
+    (setq +sidebar--dirty nil)
+    (funcall (nth 3 (+sidebar--entry +sidebar--view)))))
 
 
 ;;
@@ -393,10 +398,13 @@ side bar watches."
                    (with-current-buffer buffer
                      (when (eq proc +sidebar--status-process)
                        (setq +sidebar--status-process nil)
-                       (if (get-buffer-window buffer t)
-                           (funcall then (+sidebar--status-parse
-                                          (apply #'concat (nreverse chunks))))
-                         (setq +sidebar--dirty t))))))))))))
+                       (if (not (get-buffer-window buffer t))
+                           (setq +sidebar--dirty t)
+                         (funcall then (+sidebar--status-parse
+                                        (apply #'concat (nreverse chunks))))
+                         ;; Changed while git was at it.
+                         (when +sidebar--dirty
+                           (+sidebar--request +sidebar--view)))))))))))))
 
 (defun +sidebar--status-parse (out)
   "git's status OUT, porcelain v2 with -z, as (STAGED UNSTAGED UNTRACKED
