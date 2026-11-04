@@ -68,6 +68,18 @@ turn as `agent', or a commit as (commit . HASH).")
 (defvar-local +git--live-draw-function #'+git--live-draw-inline
   "How the hunks are drawn: in place, or by the split view.")
 
+(defconst +git--live-hooks
+  '((after-change-functions . +git--live-changed-h)
+    (after-revert-hook . +git--live-reverted-h)
+    (window-buffer-change-functions . +git--live-shown-h)
+    (window-selection-change-functions . +git--live-selected-h)
+    (window-scroll-functions . +git--live-scrolled-h)
+    (kill-buffer-hook . +git--live-stop-h)
+    (change-major-mode-hook . +git--live-stop-h)
+    (clone-indirect-buffer-hook . +git--live-cloned-h)
+    (after-set-visited-file-name-hook . +git--live-renamed-h))
+  "The engine's buffer-local hooks, as (HOOK . FUNCTION).")
+
 (defvar +git--live-buffers nil
   "Buffers the engine runs in.")
 
@@ -567,18 +579,28 @@ same hook runs when it is left, which needs nothing."
 
 (defun +git--live-cloned-h ()
   "Leave the view to the buffer this one was cloned from: the watch, the
-base file and the process are its own."
-  (setq +git--live-kind nil +git--live-watch nil +git--live-base-file nil
-        +git--live-process nil +git--live-timer nil +git--live-refine-timer nil
-        +git--live-overlays nil +git--live-gitdir nil +git--live-status nil
-        +git-live-mode nil)
-  (when (boundp '+git-split-mode)
-    (setq +git-split-mode nil))
-  (dolist (hook '(after-change-functions after-revert-hook window-buffer-change-functions
-                  window-selection-change-functions window-scroll-functions
-                  kill-buffer-hook change-major-mode-hook clone-indirect-buffer-hook
-                  after-set-visited-file-name-hook))
-    (kill-local-variable hook)))
+base file, the process and the old version are its own. The clone keeps
+the hooks other packages put in it, and loses what the view drew."
+  (save-restriction
+    (widen)
+    (dolist (overlay (overlays-in (point-min) (point-max)))
+      (when (or (overlay-get overlay '+git-live) (overlay-get overlay '+git-live-word))
+        (delete-overlay overlay))))
+  (pcase-dolist (`(,hook . ,function) +git--live-hooks)
+    (remove-hook hook function t))
+  (remove-hook 'window-scroll-functions '+git--split-scrolled-h t)
+  (dolist (variable '(+git--live-kind +git--live-root +git--live-rel +git--live-label
+                      +git--live-blob +git--live-base-file +git--live-process
+                      +git--live-timer +git--live-resolve +git--live-tick
+                      +git--live-retried +git--live-hunks +git--live-overlays
+                      +git--live-watch +git--live-gitdir +git--live-draw-function
+                      +git--live-baseline-functions +git--live-refine-timer
+                      +git--live-refine-function +git--live-status
+                      +git-live-mode +git-split-mode +git--split-base +git--split-file
+                      +git--split-overlays +git--split-expect +git--split-static))
+    (kill-local-variable variable))
+  (when (fboundp 'evil-normalize-keymaps)
+    (evil-normalize-keymaps)))
 
 (defun +git--live-renamed-h ()
   "Start the view again for the file's new name."
@@ -671,15 +693,8 @@ The caller checked `+git--live-refusal', which set the toplevel."
                                            (file-truename +git--live-root))
         +git--live-blob nil)
   (cl-pushnew (current-buffer) +git--live-buffers)
-  (add-hook 'after-change-functions #'+git--live-changed-h nil t)
-  (add-hook 'after-revert-hook #'+git--live-reverted-h nil t)
-  (add-hook 'window-buffer-change-functions #'+git--live-shown-h nil t)
-  (add-hook 'window-selection-change-functions #'+git--live-selected-h nil t)
-  (add-hook 'window-scroll-functions #'+git--live-scrolled-h nil t)
-  (add-hook 'kill-buffer-hook #'+git--live-stop-h nil t)
-  (add-hook 'change-major-mode-hook #'+git--live-stop-h nil t)
-  (add-hook 'clone-indirect-buffer-hook #'+git--live-cloned-h nil t)
-  (add-hook 'after-set-visited-file-name-hook #'+git--live-renamed-h nil t)
+  (pcase-dolist (`(,hook . ,function) +git--live-hooks)
+    (add-hook hook function nil t))
   (setq +git--live-watch
         (ignore-errors
           (file-notify-add-watch buffer-file-name '(change)
@@ -699,15 +714,8 @@ The caller checked `+git--live-refusal', which set the toplevel."
   (when (process-live-p +git--live-process)
     (delete-process +git--live-process))
   (mapc #'+git--live-delete-overlay +git--live-overlays)
-  (remove-hook 'after-change-functions #'+git--live-changed-h t)
-  (remove-hook 'after-revert-hook #'+git--live-reverted-h t)
-  (remove-hook 'window-buffer-change-functions #'+git--live-shown-h t)
-  (remove-hook 'window-selection-change-functions #'+git--live-selected-h t)
-  (remove-hook 'window-scroll-functions #'+git--live-scrolled-h t)
-  (remove-hook 'kill-buffer-hook #'+git--live-stop-h t)
-  (remove-hook 'change-major-mode-hook #'+git--live-stop-h t)
-  (remove-hook 'clone-indirect-buffer-hook #'+git--live-cloned-h t)
-  (remove-hook 'after-set-visited-file-name-hook #'+git--live-renamed-h t)
+  (pcase-dolist (`(,hook . ,function) +git--live-hooks)
+    (remove-hook hook function t))
   (when +git--live-watch
     (file-notify-rm-watch +git--live-watch))
   (+git--live-unwatch-repo)
