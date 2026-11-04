@@ -9,7 +9,7 @@
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
-(declare-function +core-dir-locals-set "lib")
+(declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 
 
@@ -157,8 +157,7 @@ says, else yarn."
    (list (completing-read "Package manager: "
                           (mapcar #'cdr +web-package-managers)
                           nil t nil nil (+web-manager))))
-  (+core-dir-locals-set (+web-root) '+web-package-manager manager)
-  (setq-local +web-package-manager manager)
+  (+core-project-setting-set (+web-root) '+web-package-manager manager)
   (message "Using %s here" manager))
 
 

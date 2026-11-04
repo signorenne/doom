@@ -305,6 +305,29 @@ left alone rather than replaced."
     file))
 
 ;;;###autoload
+(defun +core-project-setting-set (root variable value &optional modes)
+  "Set VARIABLE to VALUE for the project at ROOT, from now on and at once.
+Written to ROOT's .dir-locals.el, and set in every buffer of the project
+that is open: each one read the file as it opened and keeps what it read,
+so without this a command run from another buffer would go on with the
+old value.  A buffer of the project visits a file under ROOT, or visits
+none and is in a directory under it, dired's or a build's; with MODES,
+only one visiting a file in one of MODES.  Returns VALUE."
+  (+core-dir-locals-set root variable value)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (let ((place (or buffer-file-name default-directory)))
+        (when (and place
+                   (or (null modes)
+                       (and buffer-file-name (apply #'derived-mode-p modes)))
+                   ;; A remote place is no file of a local project, and
+                   ;; asking would reach for the host.
+                   (not (file-remote-p place))
+                   (file-in-directory-p place root))
+          (set (make-local-variable variable) value)))))
+  value)
+
+;;;###autoload
 (defun +core-read-or-empty (prompt empty collection current &optional require-match)
   "Read one of COLLECTION, or nothing, which is \"\".
 The prompt is PROMPT, then what an empty answer does, EMPTY (\"for the

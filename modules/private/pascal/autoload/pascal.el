@@ -6,7 +6,7 @@
 ;; from it.
 
 (declare-function +core-project-root "lib")
-(declare-function +core-dir-locals-set "lib")
+(declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 (declare-function +core-read-or-empty "lib")
 (declare-function dape "dape")
@@ -358,8 +358,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
    (list (+core-read-or-empty "Build mode" "for the project's default"
                               (+pascal--build-modes) +pascal-build-mode)))
   (let ((value (unless (string-empty-p mode) mode)))
-    (+core-dir-locals-set (+pascal-root) '+pascal-build-mode value)
-    (setq-local +pascal-build-mode value)
+    (+core-project-setting-set (+pascal-root) '+pascal-build-mode value)
     (message "%s" (if value (format "Build mode %s" value)
                     "The project's own build mode"))))
 
@@ -370,8 +369,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
    (list (+core-read-or-empty "Widget set" "to leave it to the project"
                               '("gtk2" "gtk3" "qt5" "qt6" "cocoa") +pascal-widgetset)))
   (let ((value (unless (string-empty-p widgetset) widgetset)))
-    (+core-dir-locals-set (+pascal-root) '+pascal-widgetset value)
-    (setq-local +pascal-widgetset value)
+    (+core-project-setting-set (+pascal-root) '+pascal-widgetset value)
     (message "%s" (if value (format "Against %s" value) "The project's widget set"))))
 
 ;;;###autoload
@@ -384,8 +382,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
                                 "aarch64-darwin" "x86_64-darwin")
                               +pascal-target)))
   (let ((value (unless (string-empty-p target) target)))
-    (+core-dir-locals-set (+pascal-root) '+pascal-target value)
-    (setq-local +pascal-target value)
+    (+core-project-setting-set (+pascal-root) '+pascal-target value)
     (message "%s" (if value (format "Building for %s" value)
                     "Building for this machine"))))
 
@@ -394,8 +391,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
   "Keep ARGS for the program, so SPC k r passes them every time."
   (interactive (list (read-string "Arguments: " +pascal-run-args)))
   (let ((value (unless (string-empty-p args) args)))
-    (+core-dir-locals-set (+pascal-root) '+pascal-run-args value)
-    (setq-local +pascal-run-args value)
+    (+core-project-setting-set (+pascal-root) '+pascal-run-args value)
     (message "%s" (if value (format "Arguments: %s" value) "No arguments"))))
 
 ;;;###autoload
@@ -410,8 +406,7 @@ Empty means the one the project names, or the only one."
                                               (+pascal--files (+pascal-root) "\\.dpr\\'")))
                               +pascal-main)))
   (let ((value (unless (string-empty-p file) file)))
-    (+core-dir-locals-set (+pascal-root) '+pascal-main value)
-    (setq-local +pascal-main value)
+    (+core-project-setting-set (+pascal-root) '+pascal-main value)
     (message "%s" (if value (format "Building %s" value) "The only one there is"))))
 
 

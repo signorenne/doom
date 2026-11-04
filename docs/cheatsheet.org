@@ -2063,7 +2063,8 @@ and C++ use: they ask what kind of project this is, so in a tree with a
 ~SPC k m~ sets it and writes it to =.dir-locals.el=, so it belongs to the
 project and not to the session: =y= the profile, =Y= dev against release,
 =f= the features, =F= no default features, =p= the workspace member, =T= the
-target triple, =a= the arguments the program is run with. The header
+target triple, =a= the arguments the program is run with. Every buffer of
+the project open at the time takes the new value at once. The header
 shows the command line those add up to before you press anything.
 
 ** What is installed

@@ -59,7 +59,8 @@ Chrome's protocol, not the one dape does.
 
 The package manager is read from the lock file (=yarn.lock=, =pnpm-lock=,
 =package-lock.json=, =bun.lock= or =bun.lockb=), so a project cloned from elsewhere is
-built the way its author built it. =m= overrides that per project.
+built the way its author built it. =m= overrides that per project, in
+=.dir-locals.el= and in every buffer of the project open at the time.
 
 * Starting a project
 ~SPC k n~ and one of:

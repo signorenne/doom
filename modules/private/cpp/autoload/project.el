@@ -115,17 +115,11 @@ Settings survive a restart and can be read or edited by hand, which is
 what a build configuration should do.  The C, C++, CMake and QML
 buffers of the project pick the value up at once."
   (when-let* ((root (+core-project-root 'noerror)))
-    (+core-dir-locals-set root key value)
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        ;; The C and C++ buffers, and the CMake and QML ones a project
-        ;; carries, which read the same settings.
-        (when (and buffer-file-name
-                   (apply #'derived-mode-p
-                          (append +cpp-modes
-                                  '(cmake-mode cmake-ts-mode qml-mode qml-ts-mode)))
-                   (file-in-directory-p buffer-file-name root))
-          (set (make-local-variable key) value)))))
+    ;; The C and C++ buffers, and the CMake and QML ones a project
+    ;; carries, which read the same settings.
+    (+core-project-setting-set root key value
+                               (append +cpp-modes
+                                       '(cmake-mode cmake-ts-mode qml-mode qml-ts-mode))))
   value)
 
 

@@ -62,7 +62,8 @@ it would run, then:
 |                  | =n= a new project                                   |
 
 Everything a setter changes is written to =.dir-locals.el=, so it is the
-project's and not the session's.
+project's and not the session's, and every buffer of the project open
+at the time takes it at once.
 
 * Starting a project
 ~SPC k n~ then =bin=, =lib= or =workspace=. cargo makes the skeleton, because

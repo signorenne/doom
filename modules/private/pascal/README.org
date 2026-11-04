@@ -23,7 +23,8 @@ The module adds:
   ~conf-mode~, since a form is a property list and not code,
 - what a build depends on, which is the Lazarus build mode, the widget
   set, the target, which program when there is more than one and the
-  run arguments, kept in =.dir-locals.el= and carried by every command,
+  run arguments, kept in =.dir-locals.el=, taken at once by every buffer
+  of the project open at the time, and carried by every command,
 - two projection types, so ~SPC k b~, ~SPC k r~ and, for a Free Pascal
   project with =tests/tests.lpr=, ~SPC k t~ work here as they do in a
   CMake tree,

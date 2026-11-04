@@ -8,7 +8,7 @@
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
-(declare-function +core-dir-locals-set "lib")
+(declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 (declare-function +core-read-or-empty "lib")
 
@@ -431,11 +431,9 @@ answer is asked of cargo rather than guessed."
   "Build with PROFILE from now on, kept in .dir-locals.el."
   (interactive (list (completing-read "Profile: " (+rust--profiles) nil nil nil nil
                                       (or +rust-profile "dev"))))
-  (let ((root (+rust-root)))
-    (+core-dir-locals-set root '+rust-profile
-                          (unless (equal profile "dev") profile))
-    (setq-local +rust-profile (unless (equal profile "dev") profile))
-    (message "Building with the %s profile" profile)))
+  (+core-project-setting-set (+rust-root) '+rust-profile
+                             (unless (equal profile "dev") profile))
+  (message "Building with the %s profile" profile))
 
 ;;;###autoload
 (defun +rust/toggle-profile ()
@@ -477,8 +475,7 @@ Nothing chosen means the defaults; everything means --all-features."
                       ((and available
                             (= (length chosen) (length available))) 'all)
                       (t (string-join chosen ",")))))
-    (+core-dir-locals-set (+rust-root) '+rust-features value)
-    (setq-local +rust-features value)
+    (+core-project-setting-set (+rust-root) '+rust-features value)
     (message "Features: %s"
              (pcase value
                ('nil "the defaults") ('all "all of them") ('none "none")
@@ -489,8 +486,7 @@ Nothing chosen means the defaults; everything means --all-features."
   "Build with no default features, or back to the defaults."
   (interactive)
   (let ((value (unless (eq +rust-features 'none) 'none)))
-    (+core-dir-locals-set (+rust-root) '+rust-features value)
-    (setq-local +rust-features value)
+    (+core-project-setting-set (+rust-root) '+rust-features value)
     (message "%s" (if value "No default features" "The default features"))))
 
 (defun +rust--members ()
@@ -509,8 +505,7 @@ Empty means the whole workspace."
                                   (user-error "cargo could not list the members"))
                               +rust-member)))
   (let ((value (unless (string-empty-p member) member)))
-    (+core-dir-locals-set (+rust-root) '+rust-member value)
-    (setq-local +rust-member value)
+    (+core-project-setting-set (+rust-root) '+rust-member value)
     (message "%s" (if value (format "Building %s alone" value)
                     "Building the whole workspace"))))
 
@@ -530,8 +525,7 @@ Empty means the whole workspace."
   (interactive
    (list (+core-read-or-empty "Target" "for this machine" (+rust--targets) +rust-target)))
   (let ((value (unless (string-empty-p target) target)))
-    (+core-dir-locals-set (+rust-root) '+rust-target value)
-    (setq-local +rust-target value)
+    (+core-project-setting-set (+rust-root) '+rust-target value)
     (message "%s" (if value (format "Building for %s" value)
                     "Building for this machine"))))
 
@@ -540,8 +534,7 @@ Empty means the whole workspace."
   "Keep ARGS for the program, so SPC k r passes them every time."
   (interactive (list (read-string "Arguments: " +rust-run-args)))
   (let ((value (unless (string-empty-p args) args)))
-    (+core-dir-locals-set (+rust-root) '+rust-run-args value)
-    (setq-local +rust-run-args value)
+    (+core-project-setting-set (+rust-root) '+rust-run-args value)
     (message "%s" (if value (format "Arguments: %s" value)
                     "No arguments"))))
 
