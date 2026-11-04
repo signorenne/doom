@@ -123,9 +123,9 @@ follows none."
 ;; long one: it runs in the background, once per file and HEAD, and the
 ;; section draws what it found when it is done.
 (defvar +sidebar--timeline-cache (make-hash-table :test #'equal)
-  "(FILE . HEAD) to the file's commits, as (HASH TIME AUTHOR SUBJECT PATH):
-TIME the author date in seconds, PATH the file's path in that commit;
-`reading' while git is at it.")
+  "(FILE . HEAD) to the file's commits, as (HASH TIME AUTHOR SUBJECT PATH
+OLD-PATH): TIME the author date in seconds, PATH the file's path in that
+commit, OLD-PATH in its parent; `reading' while git is at it.")
 
 (defun +sidebar--timeline-read (key repo path)
   "Read the commits of PATH in REPO into the cache under KEY, then draw."
@@ -139,18 +139,21 @@ TIME the author date in seconds, PATH the file's path in that commit;
      :coding 'utf-8-unix
      :stderr (make-pipe-process :name "sidebar-timeline-errors" :buffer nil
                                 :noquery t :filter #'ignore :sentinel #'ignore)
-     :command (list "git" "log" "--follow" (format "-%d" +sidebar-timeline-count)
-                    "--format=%x01%h%x00%at%x00%an%x00%s" "--name-only" "--" path)
+     :command (list "git" "-c" "core.quotePath=false" "log" "--follow"
+                    (format "-%d" +sidebar-timeline-count)
+                    "--format=%x01%h%x00%at%x00%an%x00%s" "--name-status" "--" path)
      :filter (lambda (_proc string) (push string chunks))
      :sentinel
      (lambda (proc _event)
        (unless (process-live-p proc)
          (puthash key
                   (mapcar (lambda (entry)
-                            (pcase-let* ((`(,head ,name) (split-string entry "\n" t))
-                                         (`(,hash ,time ,author ,subject) (split-string head "\0")))
+                            (pcase-let* ((`(,head ,change) (split-string entry "\n" t))
+                                         (`(,hash ,time ,author ,subject) (split-string head "\0"))
+                                         ;; M\tPATH, or R066\tOLD\tNEW for a rename.
+                                         (names (and change (cdr (split-string change "\t")))))
                               (list hash (string-to-number (or time "0")) author subject
-                                    (or name path))))
+                                    (or (car (last names)) path) (or (car names) path))))
                           (split-string (apply #'concat (nreverse chunks)) "\x01" t))
                   +sidebar--timeline-cache)
          (+sidebar--request 'explorer))))))
@@ -180,8 +183,8 @@ TIME the author date in seconds, PATH the file's path in that commit;
           (_
            ;; The age is worked out at each drawing, the cache lasting
            ;; until HEAD moves.
-           (pcase-dolist (`(,hash ,time ,author ,subject ,path) entries)
-             (magit-insert-section (+sidebar-revision (list hash path repo))
+           (pcase-dolist (`(,hash ,time ,author ,subject ,path ,old-path) entries)
+             (magit-insert-section (+sidebar-revision (list hash path repo old-path))
                (insert "  " subject " "
                        (propertize (format "%s ago, %s"
                                            (seconds-to-string (max 0 (- (float-time) time)) t)
@@ -213,10 +216,10 @@ window; nil when it is none of those."
            (goto-char (if (overlayp position) (overlay-start position) position))))
        t)
       ('+sidebar-revision
-       (pcase-let ((`(,hash ,path ,repo) value))
+       (pcase-let ((`(,hash ,path ,repo ,old-path) value))
          (select-window (+sidebar--editor-window))
          (let ((default-directory repo))
-           (+git-split-commit hash path)))
+           (+git-split-commit hash path old-path)))
        t))))
 
 (defun +sidebar--editor-at-point ()

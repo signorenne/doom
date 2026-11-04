@@ -359,11 +359,13 @@ SPLIT."
     buffer))
 
 ;;;###autoload
-(defun +git-split-commit (rev file)
+(defun +git-split-commit (rev file &optional old-file)
   "Show what REV changed in FILE, a path from the toplevel: REV's parent
-on the left, REV on the right, both read-only, lined up."
+on the left, read as OLD-FILE when REV renamed it, REV on the right,
+both read-only, lined up."
   (require 'magit)
   (let* ((default-directory (or (+git--live-toplevel default-directory) default-directory))
+         (old-file (or old-file file))
          (parent (magit-rev-verify (concat rev "^")))
          (right (magit-find-file-noselect rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
@@ -371,16 +373,16 @@ on the left, REV on the right, both read-only, lined up."
          (hunks (+git--live-parse
                  (with-temp-buffer
                    (call-process "git" nil (list t nil) nil "--no-pager" "diff" "--no-color"
-                                 "--no-ext-diff" "--histogram" "-U0"
+                                 "--no-ext-diff" "--histogram" "-M" "-U0"
                                  ;; A root commit's parent is the empty tree.
                                  (or parent
                                      (car (process-lines "git" "hash-object" "-t" "tree"
                                                          "/dev/null")))
-                                 rev "--" file)
+                                 rev "--" old-file file)
                    (buffer-string)))))
     (with-current-buffer left
       (when parent
-        (insert (with-current-buffer (magit-find-file-noselect parent file)
+        (insert (with-current-buffer (magit-find-file-noselect parent old-file)
                   (buffer-substring-no-properties (point-min) (point-max)))))
       (let ((delay-mode-hooks t))
         (ignore-errors (funcall (buffer-local-value 'major-mode right))))
