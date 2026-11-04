@@ -83,7 +83,9 @@ In Source Control:
 | ~p~ ~F~   | push, pull (magit)                                                |
 
 * Configuration
-- =+sidebar-width= (32): columns of the side bar.
+- =+sidebar-width= (32): columns of the side bar. The width holds, as
+  treemacs' did: a resize of the frame, =C-w == or a split leaves it as
+  it is, and dragging its edge does not move it.
 - =+sidebar-scm-commits= (20): commits listed.
 - =+sidebar-icons= (t): file icons.
 - =+sidebar-pinned-roots=: workspace name to a directory the side bar

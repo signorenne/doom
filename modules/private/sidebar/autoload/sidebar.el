@@ -85,6 +85,10 @@ that took its window away brings it back.")
         truncate-lines t
         header-line-format (+sidebar--header view)
         buffer-read-only t)
+  ;; Its width holds, as treemacs' did. Only preserved, it lapsed once a
+  ;; resize left it a pixel off, and C-w = then shared it out: 81
+  ;; columns after the frame went narrow and back.
+  (setq-local window-size-fixed 'width)
   ;; The header names the view; a modeline would be the editor's, cut
   ;; off at the side bar's width. Doom's modeline is put on once the mode
   ;; is set up, hence the hook, after it.
