@@ -320,6 +320,9 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   (setq agent-shell-preferred-agent-config 'claude-code
         agent-shell-display-action `((display-buffer-in-side-window)
                                      (side . right)
+                                     ;; Above the Claude terminals, whose
+                                     ;; slots start at 0, so both show.
+                                     (slot . -1)
                                      (window-width . ,+ai-panel-width))
         ;; Context on request: the region, dired's files or the error at
         ;; point, never the current line by itself.

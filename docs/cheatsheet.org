@@ -2679,7 +2679,8 @@ The modeline says =AI PROJECT: permission= or =done= when a hidden chat or
 terminal needs you; ~SPC l j~ goes there.
 
 ** Claude's terminal
-Claude Code's own TUI in a side window, the fallback.
+Claude Code's own TUI in a side window, the fallback; with the chat open it
+goes below it, both in view.
 
 | Key       | What it does                      |
 |-----------+-----------------------------------|

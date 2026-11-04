@@ -25,7 +25,8 @@ with all of it on the same keys.
   the editor window and ~SPC l W~ in a frame of its own, as VS Code's new
   tab and window; ~SPC l z~ folds its tool calls, as its Focus view.
 - The Claude terminal, [[https://github.com/manzaltu/claude-code-ide.el][claude-code-ide]]: Claude Code's own TUI in vterm,
-  the fallback. Keys go to Claude; ~C-z~ gives normal state to read and
+  the fallback. It opens on the chat's side, below the chat when both are
+  open, so neither hides the other. Keys go to Claude; ~C-z~ gives normal state to read and
   copy, where the keys that would edit the screen only say how to type, ~i~
   goes back to Claude's prompt and ~p~ pastes into it. ~SPC l t p~ writes a
   long prompt in a buffer of its own. ~SPC l d r~ starts one with Remote
