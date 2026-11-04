@@ -15,6 +15,7 @@
 (defvar +sidebar-refresh-delay)
 (defvar +sidebar-pinned-roots)
 (defvar +sidebar-icons)
+(defvar +sidebar--status-process)
 
 (defvar-local +sidebar--view nil
   "In a side bar buffer: the key of its view.")
