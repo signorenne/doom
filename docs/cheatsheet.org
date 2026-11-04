@@ -2723,7 +2723,7 @@ takes it for KRunner.
 |------------+---------------------------------------|
 | ~C-c C-o~    | back to the code, Claude stays open   |
 | ~C-c C-q~    | hide the window, Claude keeps running |
-| ~C-c C-k~    | stop the session                      |
+| ~C-c C-k~    | stop the session, after asking        |
 | ~C-c C-e~    | write a prompt in a buffer            |
 | ~C-c SPC~    | the leader, so ~C-c SPC l t t~ toggles  |
 | ~S-<return>~ | a newline in Claude's prompt          |
@@ -2732,7 +2732,8 @@ takes it for KRunner.
 
 In normal state ~d~, ~x~, ~c~, ~r~ and ~u~ only say how to type, ~i~ or ~C-z~
 goes back to Claude's prompt and ~p~ pastes into it. In the prompt buffer
-~C-c C-c~ sends, ~C-c C-k~ drops it, ~M-p~ ~M-n~ bring back the last ones.
+~C-c C-c~ sends, ~C-c C-k~ drops it, after asking when it holds text, ~M-p~
+~M-n~ bring back the last ones.
 
 Typing =/exit=, or ~C-c C-c~ twice, quits Claude and closes the buffer.
 
@@ -4689,6 +4690,8 @@ bound.
 - ~+ai/terminal-remote~ (~SPC l d r~) :: Start a Claude terminal for this
   project with Remote Control, so the session can be driven from claude.ai
   or the Claude app as well.
+- ~+ai/terminal-stop~ (~C-c C-k~) :: End this Claude terminal's session,
+  after asking.
 - ~+ai/terminal-teleport~ (~SPC l d w~) :: Open one of your cloud sessions
   here, in a Claude terminal: the CLI lists them to pick from.
 - ~+ai/terminal-worktree~ (~SPC l t w~) :: Start a Claude terminal in a new

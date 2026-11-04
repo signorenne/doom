@@ -158,7 +158,7 @@ KRunner's on KDE):
 |------------+----------------------------------------------|
 | ~C-c C-o~    | back to the code, Claude stays open          |
 | ~C-c C-q~    | hide the window, Claude keeps running        |
-| ~C-c C-k~    | stop the session                             |
+| ~C-c C-k~    | stop the session, after asking               |
 | ~C-c C-e~    | write a prompt in a buffer                   |
 | ~C-c SPC~    | the leader                                   |
 | ~S-<return>~ | a newline in Claude's prompt                 |
@@ -170,7 +170,8 @@ KRunner's on KDE):
 In normal state there ~d~, ~x~, ~c~, ~r~, ~u~ and their capitals do nothing,
 ~i a o I A O~ go back to Claude's prompt, ~p~ pastes into Claude; motions,
 ~y~ and ~s~ are as usual. In the prompt buffer ~C-c C-c~ sends, ~C-c C-k~
-drops it, ~M-p~ and ~M-n~ bring back the last prompts.
+drops it, asking first when it holds text, ~M-p~ and ~M-n~ bring back the
+last prompts.
 
 A rewrite opens as a diff below and leaves the cursor where you type, since
 the answer can come while you work on; ~C-x p~ goes to it. There ~y~ or

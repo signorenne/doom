@@ -18,6 +18,7 @@
 (declare-function claude-code-ide "claude-code-ide")
 (declare-function claude-code-ide--get-buffer-name "claude-code-ide")
 (declare-function claude-code-ide--get-working-directory "claude-code-ide")
+(declare-function claude-code-ide-stop "claude-code-ide")
 (declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
 (declare-function claude-code-ide-mcp-session-client "claude-code-ide-mcp")
 (declare-function evil-emacs-state "evil-states")
@@ -397,6 +398,16 @@ model name can still be typed."
       (claude-code-ide-switch-to-buffer)
     (claude-code-ide)))
 
+;;;###autoload
+(defun +ai/terminal-stop ()
+  "End this Claude terminal's session, after asking.
+C-c C-k there, a key that elsewhere only drops a draft."
+  (interactive)
+  (unless (bound-and-true-p claude-code-ide--session)
+    (user-error "Not in a Claude terminal"))
+  (when (y-or-n-p (format "End %s? " (buffer-name)))
+    (claude-code-ide-stop)))
+
 (defun +ai--terminal-start-with (flags)
   "Start another Claude terminal for this project, its CLI given FLAGS too."
   (require 'claude-code-ide)
@@ -661,9 +672,12 @@ With no terminal running, start one and send once Claude is up."
 
 ;;;###autoload
 (defun +ai/terminal-compose-cancel ()
-  "Close this compose buffer without sending."
+  "Close this compose buffer without sending.
+A draft with text in it goes only after asking."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (when (or (string-empty-p (string-trim (buffer-string)))
+            (y-or-n-p "Drop this prompt? "))
+    (kill-buffer (current-buffer))))
 
 ;;;###autoload
 (defun +ai/terminal-compose-previous (&optional n)

@@ -189,7 +189,7 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
       "C-c SPC" #'doom/leader              ; the leader, as M-SPC would be
       "C-c C-o" #'+ai/claude-leave         ; back to the code, Claude stays
       "C-c C-q" #'claude-code-ide-toggle   ; hide the window, Claude runs on
-      "C-c C-k" #'claude-code-ide-stop     ; end the session
+      "C-c C-k" #'+ai/terminal-stop        ; end the session, after asking
       "C-c C-e" #'+ai/terminal-compose     ; write a long prompt in a buffer
       "S-<return>" #'claude-code-ide-insert-newline  ; a newline in the prompt
       "C-<escape>" #'claude-code-ide-send-escape     ; ESC to Claude
