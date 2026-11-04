@@ -263,6 +263,8 @@ Non-nil when it did."
     (+git--live-resolve-baseline)
     (+git--live-diff))
    (t
+    ;; The hunks on show are not this text's: the next run diffs again.
+    (setq +git--live-tick nil)
     (+git--live-set-status
      "error" (car (split-string (string-trim (or errors "")) "\n"))))))
 
