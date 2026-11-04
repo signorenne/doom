@@ -117,7 +117,8 @@ packages it wrote into the build directory are named. =SPC k o= copies
 the newest into =+cpp-package-dir=, asked once. =SPC k S= runs one of the
 project's scripts, executables under =scripts/=, =tools/=, =bin/= or a
 shell script at the top, where the kit runs, with the arguments last
-given. Targets come from the file API reply of the build directory,
+given; it opens as a program's run does, on the right with the cursor
+in it, and reads what you type there. Targets come from the file API reply of the build directory,
 the shared one Qt Creator writes, or from the generator's help when
 there is none, so custom targets are there whoever configured. The
 generator's list is kept until its build file changes: asked in a

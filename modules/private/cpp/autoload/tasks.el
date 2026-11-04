@@ -158,6 +158,8 @@ tester.  The arguments last given are offered again."
   (let* ((root (+core-project-root))
          (kit (and (+cpp--kind-p 'cmake) (+cpp--kit root)))
          (line (string-trim (concat (shell-quote-argument (concat "./" script)) " " args))))
-    (+cpp--compile (format "script: %s" (file-name-nondirectory script))
+    ;; Named a run: a script asks questions, so its buffer opens as a
+    ;; program's does, on the right with the cursor in it.
+    (+cpp--compile (format "run script: %s" (file-name-nondirectory script))
                    (if kit (+cpp--kit-shell kit line root) line)
                    t)))

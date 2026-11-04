@@ -1829,7 +1829,8 @@ All of it runs where the kit runs: the hpkg of fdc-mule is made in the
 container with the ARM SDK sourced, from =build/horizon-sdk-Release=,
 and the packages it wrote are named when it ends. The target and the
 destination are kept in =.dir-locals.el= after the first time; the
-arguments a script was run with are offered again.
+arguments a script was run with are offered again. A script opens on
+the right with the cursor in it, and reads what you type there.
 
 ** CMake panel: the kit
 | Key | What it does                                                                               |
