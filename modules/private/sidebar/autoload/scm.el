@@ -162,6 +162,8 @@ point; as (KIND . PATHS)."
         (deactivate-mark)
         (when (fboundp 'evil-normal-state) (evil-normal-state))
         (and files (cons kind (nreverse files)))))
+     ;; Not drawn yet.
+     ((null section) nil)
      ((eq (oref section type) '+sidebar-group)
       (cons (oref section value)
             (mapcar (lambda (child) (cdr (oref child value))) (oref section children))))
