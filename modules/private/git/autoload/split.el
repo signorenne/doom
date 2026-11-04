@@ -367,21 +367,30 @@ both read-only, lined up."
   (let* ((default-directory (or (+git--live-toplevel default-directory) default-directory))
          (old-file (or old-file file))
          (parent (magit-rev-verify (concat rev "^")))
+         ;; The file before REV, unless REV added it.
+         (before (and parent
+                      (zerop (call-process "git" nil nil nil "cat-file" "-e"
+                                           (concat parent ":" old-file)))
+                      (concat parent ":" old-file)))
          (right (magit-find-file-noselect rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
                                             (if parent (substring parent 0 7) "none"))))
          (hunks (+git--live-parse
                  (with-temp-buffer
-                   (call-process "git" nil (list t nil) nil "--no-pager" "diff" "--no-color"
-                                 "--no-ext-diff" "--histogram" "-M" "-U0"
-                                 ;; A root commit's parent is the empty tree.
-                                 (or parent
-                                     (car (process-lines "git" "hash-object" "-t" "tree"
-                                                         "/dev/null")))
-                                 rev "--" old-file file)
+                   (apply #'call-process "git" nil (list t nil) nil "--no-pager" "diff"
+                          "--no-color" "--no-ext-diff" "--histogram" "-U0"
+                          (if before
+                              ;; Blob against blob: a rename or a copy is a change
+                              ;; like any other.
+                              (list before (concat rev ":" file))
+                            ;; Added, against the empty tree for a root commit.
+                            (list (or parent
+                                      (car (process-lines "git" "hash-object" "-t" "tree"
+                                                          "/dev/null")))
+                                  rev "--" file)))
                    (buffer-string)))))
     (with-current-buffer left
-      (when parent
+      (when before
         (insert (with-current-buffer (magit-find-file-noselect parent old-file)
                   (buffer-substring-no-properties (point-min) (point-max)))))
       (let ((delay-mode-hooks t))
