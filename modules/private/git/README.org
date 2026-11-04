@@ -40,7 +40,11 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   scope read off the staged paths,
 - the history of the function at point (=a= in the hub) and of the
   region's lines (=L= with a region), and the file as it was before
-  (=v=),
+  (=P=),
+- a file's changes in place, as VS Code shows them (=SPC g v=): added
+  lines tinted, removed lines drawn where they were, kept up as the
+  file is edited, by you or by an agent; =]d= =[d= step through them,
+  =r= in the hub puts one back,
 - the Git chapter of the cheat sheet, =SPC h /= from any magit buffer.
 
 * Keybindings
@@ -52,6 +56,9 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 | ~C-c C-t~   | ~+git/commit-conventional~ | in the commit buffer: type(scope):                                         |
 | ~t~         | ~+git/tag~                 | in magit: tag a commit by message or hash, a branch head, HEAD             |
 | ~SPC t B~   | ~+git-blame-line-mode~     | the commit behind the current line at its end, on in code buffers under 1M |
+| ~SPC g v~   | ~+git/live~                | this file's changes in place, kept up as it is edited                      |
+| ~SPC g p~   | ~diff-hl-show-hunk~        | what the line under the cursor was, in a popup                             |
+| ~SPC g x~   | ~+git/conflicts~           | the conflict menu: which side to keep, where the next conflict is          |
 
 Everything else is magit's own, under the keys evil gives it: =SPC g g=
 status, then =s u= stage and unstage, =c= commit, =p= push, =F= pull,

@@ -465,6 +465,65 @@ git's answer, once after an edit.")
 
 
 ;;
+;;; Changes in place, and beside the file
+
+;; SPC g v shows a file's changes inside it while it is edited: added
+;; lines tinted, removed ones drawn above them as text that is not in
+;; the buffer, the words that changed marked. SPC g V puts the old
+;; version beside the file instead, read-only, lines lined up and
+;; scrolled together. Both compare with the index, as the fringe does,
+;; until = in SPC g SPC picks HEAD, a commit, or the project as it was
+;; when an agent's last turn began (autoload/live.el, autoload/split.el).
+(defvar +git-live-delay 0.3
+  "Seconds of rest after an edit before the view is diffed again.")
+
+(defvar +git-live-max-size (* 1024 1024)
+  "The largest buffer a live or split view takes, in characters.
+Each diff sends the whole buffer to git.")
+
+(defvar +git-live-refine t
+  "Non-nil to mark the words that changed inside a changed line.")
+
+(defvar +git-live-refine-max-lines 40
+  "A hunk with more lines than this on either side gets no word marks.")
+
+(defface +git-live-added '((t :inherit diff-added :extend t))
+  "A line the baseline does not have."
+  :group 'vc)
+
+(defface +git-live-removed '((t :inherit diff-removed :extend t))
+  "A line of the baseline the buffer no longer has."
+  :group 'vc)
+
+(defface +git-live-added-word '((t :inherit diff-refine-added))
+  "The words that changed in an added line."
+  :group 'vc)
+
+(defface +git-live-removed-word '((t :inherit diff-refine-removed))
+  "The words that changed in a removed line."
+  :group 'vc)
+
+(defface +git-split-filler '((t :inherit shadow :extend t))
+  "The empty lines that keep the two sides of a split lined up."
+  :group 'vc)
+
+;; What the view compares with, in the modeline: one global entry that
+;; shows a string of the buffer's own, remade only when the view changes.
+(defvar-local +git--live-status nil
+  "The modeline's view entry, such as \"[vs index: 3]\", or nil.")
+(put '+git--live-status 'risky-local-variable t)
+(add-to-list 'mode-line-misc-info '+git--live-status)
+
+(defvar +git-live-mode-map (make-sparse-keymap)
+  "Keys of a buffer showing its changes in place.")
+
+;; A staging, a commit or a checkout through magit can change what the
+;; index or HEAD holds; an agent's new turn changes its baseline.
+(add-hook 'magit-post-refresh-hook #'+git--live-refresh-all-h)
+(add-hook '+ai-turn-functions #'+git--live-turn-h)
+
+
+;;
 ;;; Keybindings
 
 (map! :leader
@@ -475,9 +534,16 @@ git's answer, once after an edit.")
        ;; Doom sets up the popup's own keys (n and p step through the
        ;; changes, c copies the old text) and binds nothing that opens
        ;; it. The fringe says a line changed; this says what it was.
-       :desc "Show the change here" "p" #'diff-hl-show-hunk)
+       :desc "Show the change here" "p" #'diff-hl-show-hunk
+       :desc "Changes in place"     "v" #'+git/live)
       (:prefix "t"
        :desc "Who and when, on this line" "B" #'+git-blame-line-mode))
+
+;; The view's own hunks, which follow its baseline; without a view the
+;; same keys step through the fringe's, as Doom has them.
+(map! :map +git-live-mode-map
+      :n "]d" #'+git/next-change
+      :n "[d" #'+git/previous-change)
 
 ;; A conflict is worked through where it is: the two motions vim uses,
 ;; and the menu for which side to keep. Doom turns smerge-mode on by

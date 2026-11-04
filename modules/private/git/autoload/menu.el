@@ -89,7 +89,8 @@ transients is one key away on /, its dispatch."
     ("B" "Blame this file"     magit-blame-addition)
     ("L" "This file's history, the region's lines if any" magit-log-buffer-file)
     ("a" "This function's history" magit-log-trace-definition)
-    ("v" "This file as it was before" magit-blob-previous)
+    ("v" "This file's changes in place" +git/live)
+    ("P" "This file as it was before" magit-blob-previous)
     ("t" "Time machine"        git-timemachine-toggle
      :if (lambda () (fboundp 'git-timemachine-toggle)))]
    ["Menus"
@@ -109,11 +110,11 @@ transients is one key away on /, its dispatch."
      :if (lambda () (fboundp '+vc/browse-at-remote-kill)))
     ("i" "Ignore a file"       magit-gitignore)]
    ["This buffer"
-    ("]" "Next change"         +vc-gutter/next-hunk :transient t)
-    ("[" "Previous change"     +vc-gutter/previous-hunk :transient t)
+    ("]" "Next change"         +git/next-change :transient t)
+    ("[" "Previous change"     +git/previous-change :transient t)
     ("." "Show the change here" diff-hl-show-hunk)
     ("s" "Stage this change"   +vc-gutter/stage-hunk)
-    ("r" "Revert this change"  +vc-gutter/save-and-revert-hunk)]
+    ("r" "Revert this change"  +git/revert-change)]
    ["Tools"
     ("w" "Worktrees"           magit-worktree)
     ("!" "Run a git command"   magit-git-command)
