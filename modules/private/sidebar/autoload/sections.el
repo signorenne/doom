@@ -123,8 +123,9 @@ follows none."
 ;; long one: it runs in the background, once per file and HEAD, and the
 ;; section draws what it found when it is done.
 (defvar +sidebar--timeline-cache (make-hash-table :test #'equal)
-  "(FILE . HEAD) to the file's commits, as (HASH DATE AUTHOR SUBJECT PATH),
-PATH the file's path in that commit; `reading' while git is at it.")
+  "(FILE . HEAD) to the file's commits, as (HASH TIME AUTHOR SUBJECT PATH):
+TIME the author date in seconds, PATH the file's path in that commit;
+`reading' while git is at it.")
 
 (defun +sidebar--timeline-read (key repo path)
   "Read the commits of PATH in REPO into the cache under KEY, then draw."
@@ -139,17 +140,17 @@ PATH the file's path in that commit; `reading' while git is at it.")
      :stderr (make-pipe-process :name "sidebar-timeline-errors" :buffer nil
                                 :noquery t :filter #'ignore :sentinel #'ignore)
      :command (list "git" "log" "--follow" (format "-%d" +sidebar-timeline-count)
-                    "--format=%x01%h%x00%ad%x00%an%x00%s" "--date=relative"
-                    "--name-only" "--" path)
+                    "--format=%x01%h%x00%at%x00%an%x00%s" "--name-only" "--" path)
      :filter (lambda (_proc string) (push string chunks))
      :sentinel
      (lambda (proc _event)
        (unless (process-live-p proc)
          (puthash key
                   (mapcar (lambda (entry)
-                            (let* ((lines (split-string entry "\n" t))
-                                   (fields (split-string (car lines) "\0")))
-                              (append fields (list (or (cadr lines) path)))))
+                            (pcase-let* ((`(,head ,name) (split-string entry "\n" t))
+                                         (`(,hash ,time ,author ,subject) (split-string head "\0")))
+                              (list hash (string-to-number (or time "0")) author subject
+                                    (or name path))))
                           (split-string (apply #'concat (nreverse chunks)) "\x01" t))
                   +sidebar--timeline-cache)
          (+sidebar--request 'explorer))))))
@@ -177,10 +178,15 @@ PATH the file's path in that commit; `reading' while git is at it.")
           ((or 'none 'nil)
            (insert (propertize "  No history\n" 'font-lock-face 'shadow)))
           (_
-           (pcase-dolist (`(,hash ,date ,author ,subject ,old-path) entries)
-             (magit-insert-section (+sidebar-revision (list hash old-path repo))
+           ;; The age is worked out at each drawing, the cache lasting
+           ;; until HEAD moves.
+           (pcase-dolist (`(,hash ,time ,author ,subject ,path) entries)
+             (magit-insert-section (+sidebar-revision (list hash path repo))
                (insert "  " subject " "
-                       (propertize (concat date ", " author) 'font-lock-face 'shadow)
+                       (propertize (format "%s ago, %s"
+                                           (seconds-to-string (max 0 (- (float-time) time)) t)
+                                           author)
+                                   'font-lock-face 'shadow)
                        "\n")))))))))
 
 
