@@ -47,22 +47,29 @@
 ;;
 ;;; Outline
 
+(defun +sidebar--outline-symbols (index)
+  "The entries of the imenu INDEX that name a symbol: imenu gives (nil)
+for a buffer with none, and a *Rescan* entry."
+  (seq-filter (lambda (entry)
+                (and (consp entry) (stringp (car entry))
+                     (not (equal (car entry) "*Rescan*"))))
+              index))
+
 (defun +sidebar--outline-entries (index depth)
   "Sections for the imenu INDEX, DEPTH levels in."
-  (dolist (entry index)
-    (unless (equal (car entry) "*Rescan*")
-      (if (imenu--subalist-p entry)
-          (magit-insert-section (+sidebar-symbols (car entry))
-            (magit-insert-heading
-              (concat (make-string (* 2 depth) ?\s)
-                      (propertize (substring-no-properties (car entry))
-                          'font-lock-face 'font-lock-type-face)))
-            (+sidebar--outline-entries (cdr entry) (1+ depth)))
-        (magit-insert-section (+sidebar-symbol entry)
-          (insert (make-string (* 2 depth) ?\s)
-                  (propertize (substring-no-properties (car entry))
-                              'font-lock-face 'font-lock-function-name-face)
-                  "\n"))))))
+  (dolist (entry (+sidebar--outline-symbols index))
+    (if (imenu--subalist-p entry)
+        (magit-insert-section (+sidebar-symbols (car entry))
+          (magit-insert-heading
+            (concat (make-string (* 2 depth) ?\s)
+                    (propertize (substring-no-properties (car entry))
+                                'font-lock-face 'font-lock-type-face)))
+          (+sidebar--outline-entries (cdr entry) (1+ depth)))
+      (magit-insert-section (+sidebar-symbol entry)
+        (insert (make-string (* 2 depth) ?\s)
+                (propertize (substring-no-properties (car entry))
+                            'font-lock-face 'font-lock-function-name-face)
+                "\n")))))
 
 ;;;###autoload
 (defun +sidebar--insert-outline (buffer)
@@ -76,7 +83,7 @@
                             (let ((imenu-auto-rescan t))
                               (imenu--make-index-alist t)))))))
         (+sidebar--outline-follow buffer)
-        (if (seq-remove (lambda (entry) (equal (car entry) "*Rescan*")) index)
+        (if (+sidebar--outline-symbols index)
             (+sidebar--outline-entries index 1)
           (insert (propertize "  No outline\n" 'font-lock-face 'shadow)))))))
 
