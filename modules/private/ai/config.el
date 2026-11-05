@@ -418,6 +418,10 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
         "gF" #'agent-shell-fork
         "ge" nil))))
 
+;; SPC l c's buffer is for typing, as the terminal's compose buffer is.
+(after! evil
+  (evil-set-initial-state 'agent-shell-viewport-edit-mode 'insert))
+
 ;; The responder needs the tool's own name, which the model cannot write;
 ;; agent-shell keeps only the title, and for a shell command that is the
 ;; model's description.
