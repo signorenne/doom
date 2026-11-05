@@ -353,12 +353,14 @@ the instruction."
     (deactivate-mark)
     (+ai--rewrite-request (current-buffer) beg end original instruction)))
 
+(defun +ai--rewrite-or-error ()
+  "This *ai-rewrite* buffer's plist, or a user error in any other buffer."
+  (or +ai--rewrite (user-error "Not in an *ai-rewrite* buffer")))
+
 (defun +ai--rewrite-close ()
   "Close *ai-rewrite* and go back to its source; return the plist."
-  (let ((rewrite +ai--rewrite)
+  (let ((rewrite (+ai--rewrite-or-error))
         (buffer (current-buffer)))
-    (unless rewrite
-      (user-error "Not in an *ai-rewrite* buffer"))
     (when-let* ((window (get-buffer-window buffer)))
       (quit-window nil window))
     (kill-buffer buffer)
@@ -370,7 +372,7 @@ the instruction."
 (defun +ai/inline-rewrite-accept ()
   "Put the rewrite in place of the region, in one undo step."
   (interactive)
-  (let* ((rewrite +ai--rewrite)
+  (let* ((rewrite (+ai--rewrite-or-error))
          (source (plist-get rewrite :source))
          (beg (plist-get rewrite :beg))
          (end (plist-get rewrite :end)))
@@ -405,7 +407,7 @@ the instruction."
 (defun +ai/inline-rewrite-ediff ()
   "Compare the region and the rewrite in ediff."
   (interactive)
-  (let ((rewrite +ai--rewrite)
+  (let ((rewrite (+ai--rewrite-or-error))
         (old (get-buffer-create "*ai-original*"))
         (new (get-buffer-create "*ai-rewritten*")))
     (dolist (pair (list (cons old :original) (cons new :new)))
@@ -421,6 +423,7 @@ the instruction."
 (defun +ai/inline-rewrite-retry ()
   "Ask again, with more added to the instruction."
   (interactive)
+  (+ai--rewrite-or-error)
   (let* ((more (read-string "Add to the instruction: "))
          (rewrite (+ai--rewrite-close)))
     (+ai--rewrite-request (plist-get rewrite :source)
@@ -552,6 +555,8 @@ A request writes only while its TOKEN is the one here.")
 (defun +ai/inline-answer-to-chat ()
   "Put the question and this answer into the project's chat prompt."
   (interactive)
+  (unless (bound-and-true-p +ai-answer-mode)
+    (user-error "Not in an *ai-answer* buffer"))
   (let ((text (format "%s\n\nAn answer I got:\n\n%s"
                       +ai--answer-question
                       (string-trim (buffer-substring-no-properties

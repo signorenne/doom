@@ -692,6 +692,12 @@ prompts.  An active region comes along as a fenced block."
     (when (bound-and-true-p evil-local-mode)
       (evil-insert-state))))
 
+(defun +ai--compose-check ()
+  "Refuse a compose command outside a prompt buffer: there it would send,
+drop or replace the text of whatever buffer it is run in."
+  (unless (bound-and-true-p +ai-compose-mode)
+    (user-error "Not in a prompt buffer of SPC l t p")))
+
 (defun +ai--terminal-send (buffer text)
   "Paste TEXT into the Claude terminal BUFFER and submit it.
 A bracketed paste, so a newline in TEXT does not submit early."
@@ -726,6 +732,7 @@ meanwhile drops the prompt."
 To the one it was written for; when that one has ended, to the one used
 last; with none running, start one and send once Claude is up."
   (interactive)
+  (+ai--compose-check)
   (let ((text (string-trim (buffer-string)))
         (compose (current-buffer))
         (dir +ai--compose-dir))
@@ -747,6 +754,7 @@ last; with none running, start one and send once Claude is up."
   "Close this compose buffer without sending.
 A draft with text in it goes only after asking."
   (interactive)
+  (+ai--compose-check)
   (when (or (string-empty-p (string-trim (buffer-string)))
             (y-or-n-p "Drop this prompt? "))
     (kill-buffer (current-buffer))))
@@ -755,6 +763,7 @@ A draft with text in it goes only after asking."
 (defun +ai/terminal-compose-previous (&optional n)
   "Replace the text with the prompt sent N before the one shown."
   (interactive "p")
+  (+ai--compose-check)
   (unless +ai--compose-history
     (user-error "No prompt sent yet"))
   (let ((index (+ (or +ai--compose-index -1) (or n 1))))
