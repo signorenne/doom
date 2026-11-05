@@ -603,15 +603,18 @@ table holds them so."
          (annotate (lambda (tag)
                      (let ((n (cdr (assoc tag counts))))
                        (format "  %d note%s" n (if (= n 1) "" "s"))))))
-    (completing-read
-     "Tag: "
-     (lambda (string pred action)
-       (if (eq action 'metadata)
-           `(metadata (display-sort-function . identity)
-                      (cycle-sort-function . identity)
-                      (annotation-function . ,annotate))
-         (complete-with-action action counts string pred)))
-     nil t)))
+    (let ((tag (completing-read
+                "Tag: "
+                (lambda (string pred action)
+                  (if (eq action 'metadata)
+                      `(metadata (display-sort-function . identity)
+                                 (cycle-sort-function . identity)
+                                 (annotation-function . ,annotate))
+                    (complete-with-action action counts string pred)))
+                nil t)))
+      ;; RET on nothing returns nothing, even with a match required.
+      (when (string-empty-p tag) (user-error "No tag picked"))
+      tag)))
 
 ;;;###autoload
 (defun +notes/roam-tags (tag)
@@ -668,6 +671,11 @@ map only when you say so."
                  ;; Before the tags are read: the list comes from org-roam.
                  (require 'org-roam)
                  (list (completing-read "Map the notes tagged: " (+notes--roam-tags)))))
+  ;; The tag names the map's file: nothing, or a slash, is no tag.
+  (setq tag (string-trim tag))
+  (cond ((string-empty-p tag) (user-error "A map needs a tag"))
+        ((not (string-match-p "\\`[[:alnum:]_@#%]+\\'" tag))
+         (user-error "%S is not a tag: letters, digits and _ @ # %% only" tag)))
   (require 'org-roam)
   (let* ((file (+notes--roam-map-file tag))
          (nodes (+notes--roam-nodes-tagged tag))

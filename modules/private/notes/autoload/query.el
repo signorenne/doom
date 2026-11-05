@@ -1016,6 +1016,7 @@ after either as its own."
   "Insert a notes-query block of the headings QUERY, an Org QL string,
 finds in this note's folder."
   (interactive (list (read-string "Query: " "todo:")))
+  (when (string-blank-p query) (user-error "A query table needs a query"))
   (+notes--insert-block "notes-query"
                         (format ":from %s :query %S"
                                 (if (+notes--at-vault-root-p) "agenda" "folder") query)))

@@ -35,6 +35,11 @@
   (interactive
    (let ((kind (+uml--read-kind)))
      (list kind (read-string (format-prompt "Name" "diagram") nil nil "diagram"))))
+  ;; A name, not a path: nothing, or a slash, would write "   .puml" or
+  ;; outside this folder.
+  (setq name (string-trim name))
+  (cond ((string-empty-p name) (user-error "A diagram needs a name"))
+        ((string-match-p "/" name) (user-error "Name the diagram, not a path: %s" name)))
   (let ((template (file-name-concat +uml-templates-dir (concat kind ".puml"))))
     (unless (file-exists-p template)
       (user-error "No template for %s in %s" kind +uml-templates-dir))

@@ -78,6 +78,8 @@ down in the first place."
   (interactive
    (list (and (eq (+notes--state) 'dirty)
               (read-string "Message: " (+notes--message)))))
+  (when (and message (string-blank-p message))
+    (user-error "A commit needs a message; nothing staged"))
   (pcase (+notes--state)
     ('no-repo
      (user-error "%s is not a repository, run +notes/init-repo"

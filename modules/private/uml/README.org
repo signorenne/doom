@@ -86,8 +86,8 @@ two Emacs sessions do not fight over it. The server listens on 127.0.0.1
 only, so nothing else on the network can reach it.
 
 * Templates
-~SPC m n~ asks which kind and what to call it, copies the template and
-opens it with the title filled in.
+~SPC m n~ asks which kind and what to call it, a name in this folder and
+not a path, copies the template and opens it with the title filled in.
 
 | Kind           | For                                          |
 |----------------+----------------------------------------------|
