@@ -207,13 +207,28 @@ this makes is not sent back."
                                                 (with-current-buffer right (+git--split-hunks))
                                                 (and +git--split-file t))))))))
 
+(defun +git--split-header (window base)
+  "Give the old version's BASE a header line as tall as the one of WINDOW,
+the file's, naming what it is; none when that window has none. A row
+taken on one side only would put every line a row off its counterpart."
+  (let* ((height (window-header-line-height window))
+         (format (and (> height 0)
+                      (list " " (replace-regexp-in-string
+                                 "\\`\\*base: \\|\\*\\(?:<[0-9]+>\\)?\\'" "" (buffer-name base))
+                            (propertize " " 'display `(space :width 0 :height (,height)))))))
+    (with-current-buffer base
+      (unless (equal-including-properties format header-line-format)
+        (setq header-line-format format)))))
+
 (defun +git--split-align ()
   "Line the old version's window up with this right side's window, which
-stays where it is."
+stays where it is: a header line as the file has, and at the top the
+line that corresponds to the file's."
   (when-let* ((base +git--split-base)
               ((buffer-live-p base))
               (window (get-buffer-window (current-buffer)))
               (base-window (get-buffer-window base (window-frame window))))
+    (+git--split-header window base)
     (+git--split-scroll-to base-window
                            (+git--split-map (line-number-at-pos (window-start window) t)
                                             (+git--split-hunks) nil))))
