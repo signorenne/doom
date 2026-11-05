@@ -446,12 +446,12 @@ letter for where to look:
 |---------+-------------------------------------------------|
 | ~p d D P~ | the project, here, a directory, another project |
 | ~*~       | the word under the cursor                       |
-| ~b l~     | every open buffer, this buffer                  |
+| ~b B~     | this buffer, every open buffer, as under ~SPC s~  |
 | ~r~       | replace: the same places, in its own menu       |
 | ~R~       | replace in the project, without asking where    |
 
 ~r~ opens the replace menu, which asks where with the same letters the
-search column uses: ~l~ this buffer, ~p~ the project, ~d~ this directory, ~D~
+search column uses: ~b~ this buffer, ~p~ the project, ~d~ this directory, ~D~
 one it asks for, ~P~ another project, ~f~ the files marked in dired. What
 you set above is carried into it and written at its top, so a replace
 is never wider than the search you were about to run.
@@ -4024,6 +4024,7 @@ bound.
   of project is run.
 - ~+core/run-with-args~ (~SPC k R~) :: Run what this project builds once,
   with arguments asked for.
+- ~+core/search-all-buffers~ :: Search every open buffer, as SPC s B does.
 - ~+core/search-cwd-with-flags~ :: Search this directory and below.
 - ~+core/search-menu~ (~SPC s SPC~) :: Find text, and change it, with what
   to look for set before you look.

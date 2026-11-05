@@ -125,11 +125,11 @@ language, so it pastes into a chat or an issue as it is."
     ("a" +core/yank-file-path
      :description (lambda () (+core--copy-description
                               "absolute" (+core--copy-file-value #'identity))))
-    ("d" +core/yank-file-directory
+    ("N" +core/yank-file-directory
      :description (lambda () (+core--copy-description
                               "directory" (+core--copy-file-value #'file-name-directory))))]
    ["Here"
-    ("l" +core/yank-file-line
+    ("L" +core/yank-file-line
      :description (lambda () (+core--copy-description
                               "path:line" (condition-case nil (+core--line-reference)
                                             (user-error "")))))

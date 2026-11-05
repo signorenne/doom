@@ -95,6 +95,13 @@ It takes extra flags as :args, so they go there."
                       ;; With F the text goes to ripgrep as it is.
                       (if (+core--search-flag-p "-F") word (regexp-quote word)))))
 
+;; consult-line-multi alone searches the project's buffers; SPC s B asks
+;; it for every buffer, and so does the menu's B.
+(transient-define-suffix +core/search-all-buffers ()
+  "Search every open buffer, as SPC s B does."
+  (interactive)
+  (consult-line-multi t))
+
 ;;
 ;;; Replacing
 
@@ -241,7 +248,7 @@ are: one kind of file, one set of names, whole words, either case."
   "Replace, in the same places the search menu looks."
   [:description +core--replace-menu-description
    ["Replace in"
-    ("l" "This buffer"          +core/replace-in-buffer-suffix)
+    ("b" "This buffer"          +core/replace-in-buffer-suffix)
     ("p" "The project"          +core/replace-in-project-suffix)
     ("d" "This directory"       +core/replace-in-cwd-suffix)
     ("D" "A directory..."       +core/replace-in-other-cwd-suffix)
@@ -290,8 +297,8 @@ search or replace would reach."
     ("D" "A directory..."       +core/search-other-cwd-with-flags)
     ("P" "Another project"      +core/search-other-project-with-flags)
     ("*" "The word at point"    +core/search-symbol-with-flags)
-    ("b" "Every open buffer"    consult-line-multi)
-    ("l" "This buffer"          +default/search-buffer)]
+    ("b" "This buffer"          +default/search-buffer)
+    ("B" "Every open buffer"    +core/search-all-buffers)]
    ["Replace"
     ("r" "Where to replace..."  +core/replace-menu-suffix)
     ("R" "The project, at once" +core/replace-in-project-suffix)]])
