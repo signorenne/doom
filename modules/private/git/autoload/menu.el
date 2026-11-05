@@ -72,53 +72,56 @@
 ;;;###autoload (autoload '+git/menu "private/git/autoload/menu" nil t)
 (transient-define-prefix +git/menu ()
   "Git: every day, the menus, the repositories, the tools.
-The keys agree with SPC g where both have the command, b switches a
-branch and B blames as there; what magit spreads over its own
-transients is one key away on /, its dispatch."
+A command SPC g has too is on its key there and under its name there,
+but for ] [ and r, which follow a view of the buffer's changes when one
+is on; push and pull are > and <, as p shows the change and F fetches
+there. What magit spreads over its own transients is one key away on
+/, its dispatch."
   [["Every day"
-    ("g" "Status"              magit-status)
+    ("g" "Magit status"        magit-status)
     ("c" "Commit"              magit-commit)
     ("u" "Uncommit the last"   +git/uncommit)
-    ("p" "Push"                magit-push)
-    ("f" "Fetch"               magit-fetch)
-    ("F" "Pull"                magit-pull)
+    (">" "Push"                magit-push)
+    ("<" "Pull"                magit-pull)
+    ("F" "Magit fetch"         magit-fetch)
     ("l" "Log"                 magit-log)
-    ("G" "Every branch in one graph" magit-log-all-branches)
+    ("A" "Every branch in one graph" magit-log-all-branches)
     ("d" "Diff"                magit-diff)
-    ("b" "Switch branch"       magit-branch-checkout)
-    ("B" "Blame this file"     magit-blame-addition)
-    ("L" "This file's history, the region's lines if any" magit-log-buffer-file)
+    ("b" "Magit switch branch" magit-branch-checkout)
+    ("e" "Source Control side bar" +sidebar/source-control
+     :if (lambda () (fboundp '+sidebar/source-control)))]
+   ["This file"
+    ("B" "Magit blame"         magit-blame-addition)
+    ("L" "Magit buffer log"    magit-log-buffer-file)
     ("a" "This function's history" magit-log-trace-definition)
-    ("v" "This file's changes in place" +git/live)
-    ("V" "This file beside its old version" +git/split)
-    ("e" "The Source Control side bar" +sidebar/source-control
-     :if (lambda () (fboundp '+sidebar/source-control)))
+    ("v" "Changes in place"    +git/live)
+    ("V" "Old version beside it" +git/split)
     ("P" "This file as it was before" magit-blob-previous)
-    ("t" "Time machine"        git-timemachine-toggle
+    ("t" "Git time machine"    git-timemachine-toggle
      :if (lambda () (fboundp 'git-timemachine-toggle)))]
-   ["Menus"
-    ("h" "History: rewrite commits" +git/history)
-    ("n" "Branches"            +git/branches)
+   ["Its changes"
+    ("]" "Next change"         +git/next-change :transient t)
+    ("[" "Previous change"     +git/previous-change :transient t)
+    ("p" "Show the change here" diff-hl-show-hunk)
+    ("s" "Stage hunk at point" +vc-gutter/stage-hunk)
+    ("r" "Revert this change"  +git/revert-change)
+    ("=" "Compare with: index, HEAD, a commit, the agent's turn" +git/live-baseline)]]
+  [["Menus"
+    ("h" "History menu"        +git/history)
+    ("n" "Branches menu"       +git/branches)
     ("x" "Conflicts"           +git/conflicts)
     ("z" "Stashes"             magit-stash)
     ("M" "Remotes"             magit-remote)
     ("T" "Tags"                +git/tag)
-    ("/" "Everything else: magit's dispatch" magit-dispatch)]
+    ("/" "Magit dispatch"      magit-dispatch)]
    ["Repositories"
-    ("C" "Clone"               magit-clone)
-    ("I" "Init here"           magit-init)
-    ("o" "Browse this on the forge" +vc/browse-at-remote
-     :if (lambda () (fboundp '+vc/browse-at-remote)))
-    ("y" "Copy a link to this" +vc/browse-at-remote-kill
-     :if (lambda () (fboundp '+vc/browse-at-remote-kill)))
+    ("C" "Magit clone"         magit-clone)
+    ("I" "Initialize repo"     magit-init)
+    ("o" "Browse file or region" +vc/git-link
+     :if (lambda () (fboundp '+vc/git-link)))
+    ("y" "Copy link to remote" +vc/git-link-kill
+     :if (lambda () (fboundp '+vc/git-link-kill)))
     ("i" "Ignore a file"       magit-gitignore)]
-   ["This buffer"
-    ("]" "Next change"         +git/next-change :transient t)
-    ("[" "Previous change"     +git/previous-change :transient t)
-    ("." "Show the change here" diff-hl-show-hunk)
-    ("s" "Stage this change"   +vc-gutter/stage-hunk)
-    ("r" "Revert this change"  +git/revert-change)
-    ("=" "Compare with: index, HEAD, a commit, the agent's turn" +git/live-baseline)]
    ["Tools"
     ("w" "Worktrees"           magit-worktree)
     ("!" "Run a git command"   magit-git-command)
