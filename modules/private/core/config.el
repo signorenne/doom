@@ -508,13 +508,16 @@ re-run starts it at the editor's priority again.")
 ;; opened by itself whose server is taken gives its files to that
 ;; server, in a window of its own, and quits, so emacsclient and the
 ;; files reach the same Emacs. EMACS_SERVER_NAME set to a name no server
-;; has gives an Emacs of its own, with its own server.
+;; has gives an Emacs of its own, with its own server; one started with
+;; any option keeps its own session too, without a server
+;; (`+core-own-session', in +hand-off.el).
 ;;
 ;; Done once Emacs is idle, from a timer rather than from
 ;; `doom-after-init-hook': an error in one of Doom's first hooks ends its
 ;; startup there, the hooks after it with it, which would leave an Emacs
 ;; with no server. And a file Finder hands over comes as an event just
 ;; after startup.
+(defvar +core-own-session)
 (defun +core--start-server-h ()
   "Run the Emacs server, or hand this Emacs's files to the one running."
   (require 'server)
@@ -522,6 +525,9 @@ re-run starts it at the editor's priority again.")
     (setq server-name name))
   (cond ((process-live-p server-process))   ; Doom started it
         ((not (server-running-p)) (server-start))
+        ((bound-and-true-p +core-own-session)
+         (message "Server %s runs elsewhere; this Emacs, started with options, keeps its own session"
+                  server-name))
         (initial-window-system (+core--hand-off-to-server))))
 
 (unless (daemonp)

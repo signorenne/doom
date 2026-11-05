@@ -18,15 +18,35 @@ without a window."
                           `(progn (mapc #'find-file ',files)
                                   (select-frame-set-input-focus (selected-frame))))))))
 
+(defun +core--start-args ()
+  "The arguments this Emacs was started with, the program's name left out.
+By the time the config loads Emacs has taken the ones it handled itself,
+--debug-init and -q among them, out of `command-line-args'; on Linux the
+kernel keeps them all."
+  (let ((file "/proc/self/cmdline"))
+    (if (file-readable-p file)
+        (cdr (split-string (with-temp-buffer
+                             (set-buffer-multibyte nil)
+                             (insert-file-contents-literally file)
+                             (buffer-string))
+                           "\0" t))
+      (cdr command-line-args))))
+
+(defvar +core-own-session nil
+  "Non-nil when this GUI Emacs was started with an option: it keeps a
+session of its own and never hands its files to a running server.")
+
 ;; A GUI Emacs started with only file names while a server runs opens
 ;; them there and quits, so only the server's window appears. A start
-;; with options wants a session of its own.
-(when (and initial-window-system (not (daemonp)) (not noninteractive)
-           (not (seq-some (lambda (arg) (string-match-p "\\`[-+]" arg))
-                          (cdr command-line-args))))
-  (require 'server)
-  (when-let* ((name (getenv "EMACS_SERVER_NAME")))
-    (setq server-name name))
-  (when (and (server-running-p)
-             (+core--open-in-server (mapcar #'expand-file-name (cdr command-line-args))))
-    (kill-emacs)))
+;; with any option wants a session of its own, here and when the server
+;; is looked for again once Emacs is up (config.el).
+(when (and initial-window-system (not (daemonp)) (not noninteractive))
+  (setq +core-own-session
+        (seq-some (lambda (arg) (string-match-p "\\`[-+]" arg)) (+core--start-args)))
+  (unless +core-own-session
+    (require 'server)
+    (when-let* ((name (getenv "EMACS_SERVER_NAME")))
+      (setq server-name name))
+    (when (and (server-running-p)
+               (+core--open-in-server (mapcar #'expand-file-name (cdr command-line-args))))
+      (kill-emacs))))
