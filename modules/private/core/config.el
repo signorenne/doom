@@ -1511,11 +1511,12 @@ It advises the commands that quit, SPC q q's among them."
   (let ((y-or-n-p-use-read-key t))
     (apply fn args)))
 
+;; SPC q f's command is autoloaded from Doom's lib/ui.el, which no
+;; feature names, so it is advised at once: the advice holds once the
+;; file loads.
 (advice-add 'save-buffers-kill-emacs :around #'+core--answer-anywhere-a)
 (advice-add 'save-buffers-kill-terminal :around #'+core--answer-anywhere-a)
-(with-eval-after-load 'doom-ui
-  (when (fboundp 'doom/delete-frame-with-prompt)
-    (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)))
+(advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)
 
 ;; Closing a frame asks nothing. Emacs closes it from
 ;; `delete-frame-functions', with redisplay off, and Doom's workspaces
