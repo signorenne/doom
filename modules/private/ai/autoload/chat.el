@@ -171,11 +171,31 @@ choose the agent, the usual one first."
     (agent-shell '(4)))
   (+ai--chat-at-prompt))
 
+(defun +ai--chat-frame (chat)
+  "The frame of its own CHAT has, from \\[+ai/chat-frame], or nil."
+  (seq-find (lambda (frame) (eq (frame-parameter frame '+ai-chat) chat))
+            (frame-list)))
+
+(defun +ai--chat-frame-close (chat)
+  "Close the frame of its own CHAT has, while another frame is on show."
+  (when-let* ((frame (+ai--chat-frame chat))
+              ((seq-some (lambda (other)
+                           (not (or (eq other frame) (frame-parent other)
+                                    (frame-initial-p other))))
+                         (visible-frame-list))))
+    (delete-frame frame)))
+
+(defun +ai--chat-frame-close-h ()
+  "Close this chat's frame of its own as the chat ends: left open, it
+would show whatever buffer came next, under the chat's name."
+  (+ai--chat-frame-close (current-buffer)))
+
 ;;;###autoload
 (defun +ai/chat-hide ()
-  "Hide this project's chat; it keeps running."
+  "Hide this project's chat; it keeps running.  A frame of its own closes."
   (interactive)
   (let ((chat (+ai--chat-buffer-or-error)))
+    (+ai--chat-frame-close chat)
     (dolist (window (get-buffer-window-list chat nil t))
       (quit-window nil window))))
 
@@ -184,27 +204,39 @@ choose the agent, the usual one first."
   "Show this project's chat full size, in the editor window, as VS Code's
 Open in New Tab.  \\[+ai/chat-hide] brings the code back."
   (interactive)
-  (let ((chat (+ai--chat-buffer-or-error))
-        (window (or (+ai--editor-window) (user-error "No editor window"))))
-    (dolist (side (get-buffer-window-list chat nil t))
-      (when (window-parameter side 'window-side)
-        (delete-window side)))
-    (select-window window)
-    (switch-to-buffer chat nil t)
-    (+ai--chat-at-prompt)))
+  (let ((chat (+ai--chat-buffer-or-error)))
+    ;; From a frame of its own, it moves back to the editor's frame.
+    (+ai--chat-frame-close chat)
+    (let ((window (or (+ai--editor-window) (user-error "No editor window"))))
+      (dolist (side (get-buffer-window-list chat nil t))
+        (when (window-parameter side 'window-side)
+          (delete-window side)))
+      (select-window window)
+      (switch-to-buffer chat nil t)
+      (+ai--chat-at-prompt))))
 
 ;;;###autoload
 (defun +ai/chat-frame ()
   "Show this project's chat in a frame of its own, as VS Code's Open in
-New Window."
+New Window.  When it has one already, go there.  The windows that
+showed it give it up: its side window closes, the editor window shows
+its code again.  Hiding or ending the chat closes the frame."
   (interactive)
-  (let ((chat (+ai--chat-buffer-or-error)))
-    (dolist (side (get-buffer-window-list chat nil t))
-      (when (window-parameter side 'window-side)
-        (delete-window side)))
-    (select-frame-set-input-focus (make-frame '((name . "AI chat"))))
-    (switch-to-buffer chat nil t)
-    (delete-other-windows)
+  (let* ((chat (+ai--chat-buffer-or-error))
+         (frame (+ai--chat-frame chat)))
+    (unless frame
+      (dolist (window (get-buffer-window-list chat nil t))
+        (if (window-parameter window 'window-side)
+            (delete-window window)
+          (switch-to-prev-buffer window)))
+      (setq frame (make-frame `((name . "AI chat") (+ai-chat . ,chat))))
+      (with-current-buffer chat
+        (add-hook 'kill-buffer-hook #'+ai--chat-frame-close-h nil t)))
+    (select-frame-set-input-focus frame)
+    (if-let* ((window (get-buffer-window chat frame)))
+        (select-window window)
+      (switch-to-buffer chat nil t)
+      (delete-other-windows))
     (+ai--chat-at-prompt)))
 
 (defvar-local +ai--chat-focus nil
