@@ -497,10 +497,20 @@ such as Ollama, else the claude CLI with its own sign-in.")
 (map! :map +ai-answer-mode-map
       "C-c C-c" #'+ai/inline-answer-to-chat)
 
+;; q closes it, as ESC does; it is read-only, so evil's q, a macro, is no use.
+(after! evil
+  (evil-define-minor-mode-key 'normal '+ai-answer-mode
+    (kbd "q") #'quit-window))
+
 ;; The diff comes when the answer does, maybe while you type elsewhere, so
 ;; it never takes the cursor; an answer opens as you ask, and takes it.
 (set-popup-rule! "^\\*ai-rewrite\\*" :side 'bottom :size 0.3 :select nil :quit t)
 (set-popup-rule! "^\\*ai-answer\\*" :side 'bottom :size 0.3 :select t :quit t)
+
+;; A chat's transcript (SPC l v) and its ACP traffic (SPC l m t) open as
+;; the other helper buffers do. The traffic is kept: it is the only log.
+(set-popup-rule! "^\\*ai-transcript\\*$" :side 'bottom :size 0.4 :select t :quit t)
+(set-popup-rule! "^\\*acp-.* traffic\\*$" :side 'bottom :size 0.3 :select t :quit t :ttl nil)
 
 ;; What claude mcp says opens the same way, the cursor left where it was;
 ;; ESC or q closes it. Kept: the command may still be writing to it. The

@@ -10,6 +10,7 @@
 (defvar +ai-edit-functions)
 (defvar acp-logging-enabled)
 (defvar agent-shell--state)
+(defvar agent-shell--transcript-file)
 (defvar agent-shell-activity-group-expand-by-default)
 (defvar agent-shell-context-sources)
 (defvar agent-shell-display-action)
@@ -28,7 +29,6 @@
 (declare-function agent-shell-insert "agent-shell")
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui")
 (declare-function agent-shell-interrupt "agent-shell")
-(declare-function agent-shell-open-transcript "agent-shell")
 (declare-function agent-shell-cycle-session-mode "agent-shell")
 (declare-function agent-shell-set-session-mode "agent-shell")
 (declare-function agent-shell-set-session-model "agent-shell")
@@ -313,10 +313,29 @@ While folded, a new turn's calls start folded too."
 
 ;;;###autoload
 (defun +ai/chat-transcript ()
-  "Open the transcript of this project's chat, from any buffer."
+  "Open the transcript of this project's chat, from any buffer.
+It opens below, read-only, as it is on disk now; q or ESC closes it.
+agent-shell's own command opens the file itself in the code's window."
   (interactive)
-  (with-current-buffer (+ai--chat-buffer-or-error)
-    (call-interactively #'agent-shell-open-transcript)))
+  (let* ((chat (+ai--chat-buffer-or-error))
+         (file (buffer-local-value 'agent-shell--transcript-file chat))
+         (buffer (get-buffer-create "*ai-transcript*")))
+    (unless (and file (file-exists-p file))
+      (user-error "%s has no transcript yet" (buffer-name chat)))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert-file-contents file))
+      (unless (derived-mode-p 'markdown-mode)
+        (if (fboundp 'gfm-mode) (gfm-mode) (markdown-mode)))
+      (setq buffer-read-only t
+            default-directory (file-name-directory file)
+            header-line-format (format " %s" (abbreviate-file-name file)))
+      (when (fboundp 'evil-local-set-key)
+        (evil-local-set-key 'normal "q" #'quit-window))
+      ;; The last turn is the one looked for.
+      (goto-char (point-max)))
+    (pop-to-buffer buffer)))
 
 ;;;###autoload
 (defun +ai/chat-set-mode ()

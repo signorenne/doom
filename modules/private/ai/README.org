@@ -88,7 +88,7 @@ its permission rules; ~SPC l m u~ shows your plan's usage and limits.
 | ~SPC l k~   | ~+ai/chat-stop~                       | end the chat                             |
 | ~SPC l i~   | ~+ai/chat-interrupt~                  | interrupt it, from any buffer            |
 | ~SPC l o~   | ~+ai/chat-options~                    | mode, model, thought level               |
-| ~SPC l v~   | ~+ai/chat-transcript~                 | its transcript                           |
+| ~SPC l v~   | ~+ai/chat-transcript~                 | its transcript, read-only                |
 | ~SPC l w~   | ~+ai/chat-window~                     | the chat full size, in the editor window |
 | ~SPC l W~   | ~+ai/chat-frame~                      | the chat in a frame of its own           |
 | ~SPC l z~   | ~+ai/chat-focus~                      | fold or show the chat's tool calls       |

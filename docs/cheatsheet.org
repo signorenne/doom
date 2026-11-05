@@ -2657,7 +2657,7 @@ Claude in a side panel, an Emacs buffer you read and edit with evil.
 | ~SPC l k~ | end it                                      |
 | ~SPC l i~ | interrupt it, from any buffer               |
 | ~SPC l o~ | its mode, model and thought level           |
-| ~SPC l v~ | its transcript                              |
+| ~SPC l v~ | its transcript, read-only                   |
 | ~SPC l j~ | go to what needs you                        |
 | ~SPC l s~ | send the region                             |
 | ~SPC l f~ | send this file                              |
