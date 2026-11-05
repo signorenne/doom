@@ -4,7 +4,9 @@
 ;; dozen of its own transients, each under its key; these gather them
 ;; by what you are trying to do. SPC g SPC is the hub, SPC g h the
 ;; history (rewriting commits), SPC g n the branches. A command in two
-;; of them has the same key in both: u uncommits, r rebases, b switches.
+;; of them has the same key in both: u uncommits, r rebases, b switches;
+;; but pull, F in the branch menu as in magit, < in the hub, which keeps
+;; SPC g's keys and has F fetch there.
 
 (require 'transient)
 
