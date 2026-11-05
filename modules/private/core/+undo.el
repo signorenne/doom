@@ -78,7 +78,7 @@ so turning it off from another buffer took two presses; this is one."
                       (funcall key "s S") " saved  "
                       (funcall key "d") " what changed  "
                       (funcall key "RET") " keep this  "
-                      (funcall key "q") " put it back")))
+                      (funcall key "q ESC") " put it back")))
       (add-hook 'pre-command-hook #'+core--undo-note-trail-h nil t)
       (add-hook 'post-command-hook #'+core--undo-diff-follow-h nil t)))
   (when (modulep! :ui nav-flash)
@@ -87,10 +87,12 @@ so turning it off from another buffer took two presses; this is one."
   (+core--undo-graph-keys-h 'vundo))
 
 ;; evil-collection gives the graph h j k l and puts vundo's own d back
-;; after this module is read, so these go in once it has.
+;; after this module is read, so these go in once it has. ESC puts the
+;; buffer back as q does: the graph is not a popup, so Doom's ESC would
+;; only leave it in normal state, where it already is.
 (defun +core--undo-graph-keys-h (mode &rest _)
-  "The graph's keys that evil-collection has not got, its d, and the
-moves by the drawing in place of vundo's."
+  "The graph's keys that evil-collection has not got, its d and ESC, and
+the moves by the drawing in place of vundo's."
   (when (eq mode 'vundo)
     (map! :map vundo-mode-map
           :n [remap evil-next-line]     #'+core/undo-graph-down
@@ -100,7 +102,8 @@ moves by the drawing in place of vundo's."
           :n [remap evil-window-bottom] #'+core/undo-graph-end
           :n "s" #'vundo-goto-last-saved
           :n "S" #'vundo-goto-next-saved
-          :n "d" #'+core/undo-diff)
+          :n "d" #'+core/undo-diff
+          :n [escape] #'vundo-quit)
     ;; C-n, C-j and the rest of vundo's own keys for the same moves.
     (map! :map vundo-mode-map
           [remap vundo-next]      #'+core/undo-graph-down
