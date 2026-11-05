@@ -547,6 +547,23 @@ Each diff sends the whole buffer to git.")
 (add-hook 'magit-post-refresh-hook #'+git--live-refresh-all-h)
 (add-hook '+ai-turn-functions #'+git--live-turn-h)
 
+;; Doom's C-w c closes the workspace round the last window it counts, and
+;; it counts no dedicated window, the old version's among them: on the
+;; file beside its old version it would close the workspace, the file's
+;; buffer with it. On either side it ends the split instead, as q does.
+(defun +git--split-close-window-a (&rest _)
+  "End the split the selected window shows a side of, instead of closing
+the window, or the workspace round it."
+  (with-current-buffer (window-buffer (selected-window))
+    (when (or (buffer-live-p (bound-and-true-p +git--split-base))
+              (buffer-live-p (bound-and-true-p +git--split-file)))
+      (+git/split)
+      t)))
+
+(when (modulep! :ui workspaces)
+  (advice-add '+workspace/close-window-or-workspace :before-until
+              #'+git--split-close-window-a))
+
 
 ;;
 ;;; Keybindings

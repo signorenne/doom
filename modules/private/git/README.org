@@ -47,7 +47,8 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   =r= in the hub puts one back,
 - the old version beside the file (=SPC g V=): read-only on the left,
   lines lined up and scrolled together, kept up as you edit; =q= on the
-  old version, or =SPC g V= again, closes it,
+  old version, =C-w c= on either side, or =SPC g V= again, closes it and
+  leaves the file in its window,
 - both compare with the index, as the fringe does; ~=~ in the hub picks
   HEAD, a commit, or the project as it was when an agent's last turn
   began (a chat's prompt, or the terminal's once its hooks are in, see

@@ -1217,7 +1217,8 @@ the cursor back. ~SPC g v~ again turns it off.
 ~SPC g V~ is VS Code's diff editor: the old version on the left, which
 you cannot edit, the file on the right, which you can. Empty lines pad
 the shorter side of each change so the two line up, and scrolling
-either side scrolls the other.
+either side scrolls the other. ~q~ on the old version closes it, as
+~C-w c~ on either side does; the file stays in its window.
 
 Both compare with the index, as the fringe does: a change you stage
 leaves them. ~SPC g SPC =~ compares the buffer with HEAD, with a commit,
