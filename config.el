@@ -74,7 +74,10 @@ The config's own, in themes/: made for long reading, measured for it.")
 ;;
 ;;; which-key
 
-;; Show the key hints sooner.
+;; Show the key hints sooner, and the labels whole: which-key cut them at
+;; 27 characters, "+AI: chat, terminal, inlin...". 35 is the longest
+;; under the leader.
 (after! which-key
   (setq which-key-idle-delay 0.3
-        which-key-idle-secondary-delay 0.05))
+        which-key-idle-secondary-delay 0.05
+        which-key-max-description-length 35))
