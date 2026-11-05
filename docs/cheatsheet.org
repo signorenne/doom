@@ -3431,7 +3431,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n r r~   | Toggle roam buffer             |
 | ~SPC n r s~   | Sync database                  |
 | ~SPC n r t~   | Notes by tag                   |
-| ~SPC n r u~   | Graph UI (browser)             |
+| ~SPC n r u~   | Graph in the browser           |
 | ~SPC n r v~   | Review the graph               |
 | ~SPC n s~     | Search notes                   |
 | ~SPC n t~     | Todo list                      |
@@ -4578,6 +4578,8 @@ bound.
   notes carry it, then open one of those notes.
 - ~+notes/roam-todo-files~ (~SPC n r h~) :: List the roam notes that hold a
   task.
+- ~+notes/roam-ui-open~ (~SPC n r u~) :: Show the graph in the browser,
+  once.
 - ~+notes/sync~ (~SPC n G~) :: Commit the notes, then pull and push them, in
   the background.
 - ~+notes/university-agenda~ (~SPC o a u~) :: Two weeks of the courses'

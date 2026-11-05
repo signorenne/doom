@@ -91,6 +91,12 @@ A project file with no tasks yet is still a refile target. Archives under
 =archives/= stay in the graph, so they can be found and linked, but leave
 the dashboard, project capture and refile; a paused task keeps its state.
 
+Every project and course, the project index and University are an
+=index.org=: each opens as a buffer named for its folder,
+=alpha_outcome/index.org=, its tasks show in the agenda under its title,
+and a message names it by its place in the vault,
+=projects/alpha_outcome/index.org=.
+
 ** Roam
 [[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
 it. A note is one of thirteen kinds, each a set of

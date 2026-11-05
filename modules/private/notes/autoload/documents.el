@@ -86,7 +86,8 @@ repository when it is not one yet.  Run again, it changes nothing."
              (abbreviate-file-name org-directory)
              (if created
                  (format ", created %s"
-                         (mapconcat #'file-name-nondirectory created ", "))
+                         (mapconcat (lambda (file) (file-relative-name file org-directory))
+                                    created ", "))
                "")
              (if new-repo ", now a git repository" ""))))
 

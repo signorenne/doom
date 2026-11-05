@@ -201,6 +201,23 @@ going through every link of a long note is the slow part."
                       (org-in-regexp org-link-any-re 1))))
       found)))
 
+;; Every project, every course and two documents are an index.org: each
+;; is named by its folder, alpha/index.org rather than index.org<3>, and
+;; its agenda category is its title rather than index. A #+category of
+;; its own stays.
+(add-hook! 'org-mode-hook
+  (defun +notes--name-index-h ()
+    "Name a vault index.org by its folder, its agenda category its title."
+    (when-let* ((file buffer-file-name)
+                ((equal (file-name-nondirectory file) "index.org"))
+                ((file-in-directory-p file org-directory)))
+      (unless (local-variable-p 'org-category)
+        (setq-local org-category (+notes--project-title file)))
+      (rename-buffer (concat (file-name-nondirectory
+                              (directory-file-name (file-name-directory file)))
+                             "/index.org")
+                     t))))
+
 (add-hook! 'org-mode-hook
   (defun +notes--show-pictures-h ()
     "Show the note's pictures as it opens, when it has any."
@@ -500,7 +517,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Review the graph"       "v" #'+notes/roam-review
         :desc "Tasks hidden in notes"  "h" #'+notes/roam-todo-files
         :desc "How to work with roam"  "?" #'+notes/roam-guide
-        :desc "Graph UI (browser)"     "u" #'org-roam-ui-open
+        :desc "Graph in the browser"   "u" #'+notes/roam-ui-open
         :desc "Graph UI mode"          "U" #'org-roam-ui-mode))
       ;; Doom's usual key for the timer, which packages.el installs.
       (:prefix "t"

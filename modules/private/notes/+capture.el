@@ -62,17 +62,20 @@ habit, a reading or a snippet belongs in."
 (declare-function org-capture-get "org-capture")
 
 (defun +notes--discard-aborted-project-h ()
-  "Delete the project file an aborted goal capture created."
+  "Delete the project file an aborted goal capture created, and say so:
+the last word was its save's, \"written\"."
   (when-let* (((bound-and-true-p org-note-abort))
               (file (org-capture-get :+notes-new-project))
-              ((file-exists-p file)))
+              ((file-exists-p file))
+              (title (+notes--project-title file)))
     (when-let* ((buffer (find-buffer-visiting file)))
       (with-current-buffer buffer (set-buffer-modified-p nil))
       (kill-buffer buffer))
     (delete-file file)
     (let ((dir (file-name-directory file)))
       (when (directory-empty-p dir) (delete-directory dir)))
-    (setq +notes--roam-todo-files nil)))
+    (setq +notes--roam-todo-files nil)
+    (message "Capture aborted: the new project %S is not kept" title)))
 
 (add-hook 'org-capture-after-finalize-hook #'+notes--discard-aborted-project-h)
 

@@ -189,10 +189,26 @@ including those with no TODOs."
   (let ((files (+notes--roam-todo-files)))
     (if (null files)
         (message "No roam note holds a task")
+      ;; By their place in the vault: every project is an index.org.
       (message "%d note(s) with tasks: %s"
                (length files)
-               (mapconcat #'file-name-nondirectory files ", ")))))
+               (mapconcat (lambda (file) (file-relative-name file org-roam-directory))
+                          files ", ")))))
 
+
+(defvar org-roam-ui-mode)
+(defvar org-roam-ui-open-on-start)
+(declare-function org-roam-ui-open "org-roam-ui")
+
+;;;###autoload
+(defun +notes/roam-ui-open ()
+  "Show the graph in the browser, once. org-roam-ui's own open starts its
+server first, which opens the browser by itself, then opens it again."
+  (interactive)
+  (require 'org-roam-ui)
+  (if (or org-roam-ui-mode (not org-roam-ui-open-on-start))
+      (org-roam-ui-open)
+    (org-roam-ui-mode 1)))
 
 ;;;###autoload
 (defun +notes/roam-guide ()

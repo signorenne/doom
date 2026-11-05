@@ -118,7 +118,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("r *" "Star this note"      +notes/roam-star)
     ("r v" "Review the graph"    +notes/roam-review)
     ("r h" "Tasks hidden in notes" +notes/roam-todo-files)
-    ("r u" "Graph in browser"    org-roam-ui-open)
+    ("r u" "Graph in the browser" +notes/roam-ui-open)
     ("r s" "Sync database"       org-roam-db-sync)
     ("r ?" "How to work with roam" +notes/roam-guide)]
    ["Keep"

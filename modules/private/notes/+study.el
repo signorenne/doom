@@ -128,6 +128,28 @@ and nothing here creates anything in it.")
                :annotation-function #'+notes--fc-context-annotation)))
     (apply fn args)))
 
+;; org-noter loads its EPUB and DjVu modules when their modes are in this
+;; list, and each said ATTENTION in the echo area, at the first capture,
+;; for a package not installed. Only those installed are listed.
+(after! org-noter-core
+  (setq org-noter-supported-modes
+        (seq-filter (lambda (mode)
+                      (pcase mode
+                        ('nov-mode (locate-library "nov"))
+                        ('djvu-read-mode (locate-library "djvu"))
+                        (_ t)))
+                    org-noter-supported-modes)))
+
+;; org-fc makes a card's algorithm with an empty list for an argument,
+;; which EIEIO takes for an object name, obsolete, and said so in the
+;; echo area for every card made. It is made without one.
+(defun +notes--fc-constructor-a (constructor)
+  "CONSTRUCTOR, without the name org-fc gives it."
+  (lambda (&rest slots)
+    (apply constructor (if (equal slots '(nil)) nil slots))))
+
+(advice-add 'org-fc-algo-constructor :filter-return #'+notes--fc-constructor-a)
+
 ;; Transclusion: a map can show what it links to, rather than only naming it.
 ;; The text stays in its own note; in the map it is read only, and
 ;; #+transclude lines are what is saved.
