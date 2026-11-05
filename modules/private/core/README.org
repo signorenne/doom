@@ -340,8 +340,9 @@ file beside the original, numbered when the name is taken or already
 given to another file of the batch; nothing is overwritten, and ffmpeg
 is told so too (=-n=). It runs in the background, each job from its
 file's folder, where pandoc finds a document's pictures; a failure's
-command and output go to =*Conversions*=, and a missing program is
-named before anything starts (=doom doctor= lists them).
+command and output go to =*Conversions*=, which opens at the bottom
+then, the cursor left where it was, and a missing program is named
+before anything starts (=doom doctor= lists them).
 
 - Pictures (vips, or ImageMagick): to PNG, JPEG, WebP or AVIF; resized
   to a long side or a percentage; a copy without metadata (place,
@@ -378,6 +379,10 @@ named before anything starts (=doom doctor= lists them).
   renames, through temporary names so swaps work; if one rename fails,
   every file is put back. Buffers visiting a renamed file follow it.
 - Hex: the file in hexl.
+
+The checksums, the duplicates and the rename preview open at the
+bottom with the cursor in them, and =ESC= or =q= closes them, the cursor
+going back to the listing.
 
 * Data files
 ~SPC m v~ says whether a JSON, YAML, TOML, XML, CSV or INI file is valid

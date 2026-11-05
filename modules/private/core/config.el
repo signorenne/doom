@@ -439,6 +439,16 @@ re-run starts it at the editor's priority again.")
 ;; log.
 (set-popup-rule! "^\\*Latency\\*$" :side 'bottom :size 0.35 :select t :quit t :ttl nil)
 
+;; The file tools' reports, the checksums, the duplicates and the rename
+;; preview, open at the bottom with the cursor in them, as SPC h d C's
+;; does, and ESC or q closes them; shown from the file manager they took
+;; its two line header window. The conversions' log opens there when a
+;; job failed, the cursor left where it was, and is kept: it gathers
+;; every failure of the session.
+(set-popup-rule! "^\\*\\(?:SHA\\(?:1\\|256\\|512\\)\\|MD5\\|Checksums\\|Duplicates\\|Rename\\)\\*$"
+  :side 'bottom :size 0.4 :select t :quit t)
+(set-popup-rule! "^\\*Conversions\\*$" :side 'bottom :size 0.3 :select nil :quit t :ttl nil)
+
 ;; A reload sets every popup rule again, Doom's and this config's, in
 ;; front of the copy already there, so each reload adds a copy of every
 ;; rule for each buffer shown to be matched against. Doom's own cleanup

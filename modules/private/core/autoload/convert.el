@@ -101,9 +101,11 @@ deleted, when it made it."
                              (delete-file output))))
                        (let ((said (with-current-buffer buffer (buffer-string))))
                          (with-current-buffer (get-buffer-create +core--convert-log)
-                           (goto-char (point-max))
-                           (insert (format "$ %s\n%s\n" (mapconcat #'shell-quote-argument command " ")
-                                           said)))))
+                           (unless (derived-mode-p 'special-mode) (special-mode))
+                           (let ((inhibit-read-only t))
+                             (goto-char (point-max))
+                             (insert (format "$ %s\n%s\n" (mapconcat #'shell-quote-argument command " ")
+                                             said))))))
                      (kill-buffer buffer)
                      (if (< done total)
                          (progn (message "Converting... %d of %d" done total)
@@ -112,6 +114,10 @@ deleted, when it made it."
                          (dolist (dir dirs)
                            (dolist (dired (dired-buffers-for-dir dir))
                              (with-current-buffer dired (revert-buffer)))))
+                       (when failed
+                         (with-current-buffer +core--convert-log
+                           (goto-char (point-max)))
+                         (display-buffer +core--convert-log))
                        (message "%s" (if failed
                                     (format "Converted %d of %d; %s failed, see %s"
                                             (- total (length failed)) total

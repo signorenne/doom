@@ -506,7 +506,25 @@ A GIF is drawn by Emacs, to play."
       (dolist (made (list cache (concat cache ".jpg")))
         (when (and (file-exists-p made) (file-newer-than-file-p file made))
           (delete-file made)))
-      cache)))
+      cache))
+
+  ;; A popup closed gives the cursor to the window used last, but Emacs
+  ;; passes over a dedicated one, and dirvish dedicates its listing: a
+  ;; report opened from the file manager, the checksums or the
+  ;; duplicates, left the cursor in the preview pane as it closed. The
+  ;; listing it was opened from takes it back.
+  (when (modulep! :ui popup)
+    (defadvice! +core--popup-back-to-listing-a (fn window)
+      :around #'+popup--delete-window
+      (let ((listing (and (eq window (selected-window))
+                          (get-mru-window nil t t))))
+        (prog1 (funcall fn window)
+          (when (and listing (window-live-p listing)
+                     (not (eq listing (selected-window)))
+                     (window-dedicated-p listing)
+                     (with-current-buffer (window-buffer listing)
+                       (derived-mode-p 'dired-mode)))
+            (select-window listing)))))))
 
 ;; The keys that make it a file manager. M-n narrows the listing as you
 ;; type, which is Doom's; the rest of the file manager's own work is on
