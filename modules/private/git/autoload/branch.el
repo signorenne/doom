@@ -50,8 +50,10 @@ the list.  Main itself and the current branch stay."
                                           "branch" "--merged" main
                                           "--format=%(if)%(worktreepath)%(then)%(else)%(refname:short)%(end)")))))
     (cond ((null merged) (message "No branch is merged into %s" main))
-          ((y-or-n-p (format "Delete %d merged branch(es): %s? "
-                             (length merged) (string-join merged ", ")))
+          ((y-or-n-p (if (cdr merged)
+                         (format "Delete %d merged branches: %s? "
+                                 (length merged) (string-join merged ", "))
+                       (format "Delete the merged branch %s? " (car merged))))
            (apply #'magit-run-git "branch" "-d" merged)
            (message "Deleted %s" (string-join merged ", "))))))
 
