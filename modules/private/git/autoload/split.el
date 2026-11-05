@@ -255,7 +255,9 @@ The mode's hooks do not run, so no language server or checker starts
 on it; font-lock is turned on by hand, as the global mode never sees it."
   (let ((buffer (generate-new-buffer name)))
     (with-current-buffer buffer
-      (let ((delay-mode-hooks t))
+      ;; The macro, not a let: it makes the variable the buffer's before
+      ;; binding it, as the mode is about to.
+      (delay-mode-hooks
         (ignore-errors (funcall mode)))
       (setq delayed-mode-hooks nil)
       (font-lock-mode 1)
@@ -269,11 +271,21 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
         (evil-normal-state)))
     buffer))
 
+(defvar doom-inhibit-local-var-hooks)
+
+(defun +git--split-find-blob (rev file)
+  "magit's buffer of FILE at REV. Doom's hooks that run once a file's
+local variables are set, where a language server starts, do not run on
+it: a server would only warn that it cannot place the copy. The default
+value is bound: the file's buffer, current here, has a value of its own."
+  (cl-letf (((default-value 'doom-inhibit-local-var-hooks) t))
+    (magit-find-file-noselect rev file)))
+
 (defun +git--split-blob-text (rev file)
   "FILE's text at REV, as magit reads it. The buffer magit reads it
 into goes again, unless it was open before."
   (let* ((buffers (buffer-list))
-         (blob (magit-find-file-noselect rev file)))
+         (blob (+git--split-find-blob rev file)))
     (prog1 (with-current-buffer blob
              (buffer-substring-no-properties (point-min) (point-max)))
       (unless (memq blob buffers)
@@ -491,7 +503,7 @@ both read-only, lined up."
                                            (concat parent ":" old-file)))
                       (concat parent ":" old-file)))
          (buffers (buffer-list))
-         (right (magit-find-file-noselect rev file))
+         (right (+git--split-find-blob rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
                                             (if parent (substring parent 0 7) "none"))))
          (hunks (+git--live-parse
@@ -511,7 +523,7 @@ both read-only, lined up."
     (with-current-buffer left
       (when before
         (insert (+git--split-blob-text parent old-file)))
-      (let ((delay-mode-hooks t))
+      (delay-mode-hooks
         (ignore-errors (funcall (buffer-local-value 'major-mode right))))
       (setq delayed-mode-hooks nil)
       (font-lock-mode 1)
