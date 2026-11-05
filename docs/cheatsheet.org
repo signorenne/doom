@@ -392,29 +392,29 @@ Every jump above leaves a trail, and this is how you walk it.
 | ~SPC s m~ | jump to a bookmark                                  |
 
 ** Finding a file
-| Key     | What it does                                     |
-|---------+--------------------------------------------------|
-| ~SPC SPC~ | any file of the project, by fragments            |
-| ~SPC .~   | any file, from here                              |
-| ~SPC f r~ | a recent one                                     |
-| ~SPC s f~ | any file by name, here and below; ~C-u~ asks where |
-| ~SPC ,~   | an open buffer in this workspace                 |
-| ~SPC <~   | an open buffer anywhere                          |
-| ~F4~      | the header of this source, and back              |
-| ~gf~      | the file named under the cursor                  |
+| Key     | What it does                                             |
+|---------+----------------------------------------------------------|
+| ~SPC SPC~ | any file of the project, by fragments                    |
+| ~SPC .~   | any file, from here                                      |
+| ~SPC f r~ | a recent one                                             |
+| ~SPC s f~ | any file by name, here and below; ~SPC u~ first asks where |
+| ~SPC ,~   | an open buffer in this workspace                         |
+| ~SPC <~   | an open buffer anywhere                                  |
+| ~F4~      | the header of this source, and back                      |
+| ~gf~      | the file named under the cursor                          |
 
 Fragments in any order: =cou hpp= finds =include/demo/counter.hpp=.
 
 ** Finding text
-| Key     | What it searches                          |
-|---------+-------------------------------------------|
-| ~SPC /~   | the whole project, live                   |
-| ~SPC *~   | the project for the word under the cursor |
-| ~SPC s d~ | this directory and below, ~C-u~ to pick one |
-| ~SPC s D~ | another directory, asked for              |
-| ~SPC s B~ | every open buffer                         |
-| ~SPC s I~ | the symbols of every open buffer          |
-| ~SPC s P~ | another project                           |
+| Key     | What it searches                                  |
+|---------+---------------------------------------------------|
+| ~SPC /~   | the whole project, live                           |
+| ~SPC *~   | the project for the word under the cursor         |
+| ~SPC s d~ | this directory and below, ~SPC u~ first to pick one |
+| ~SPC s D~ | another directory, asked for                      |
+| ~SPC s B~ | every open buffer                                 |
+| ~SPC s I~ | the symbols of every open buffer                  |
+| ~SPC s P~ | another project                                   |
 
 In the results: ~C-j C-k~ move and the file shows behind, ~RET~ goes
 there, ~C-c C-e~ turns the list into a buffer you can edit; ~C-c C-c~
@@ -2650,7 +2650,7 @@ Claude in a side panel, an Emacs buffer you read and edit with evil.
 | Key     | What it does                                |
 |---------+---------------------------------------------|
 | ~SPC l l~ | open or focus it; from it, back to the code |
-| ~SPC l n~ | a new chat, ~C-u~ another agent               |
+| ~SPC l n~ | a new chat; ~SPC u~ first, another agent      |
 | ~SPC l r~ | a chat that lists the earlier ones          |
 | ~SPC l b~ | another chat                                |
 | ~SPC l q~ | hide it, it runs on                         |
@@ -3336,7 +3336,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC l m s~ | Claude settings.json         |
 | ~SPC l m t~ | Chat's ACP traffic           |
 | ~SPC l m u~ | Usage and limits             |
-| ~SPC l n~   | Chat: new, C-u any agent     |
+| ~SPC l n~   | Chat: new, SPC u any agent   |
 | ~SPC l o~   | Chat: mode, model, thought   |
 | ~SPC l q~   | Chat: hide                   |
 | ~SPC l r~   | Chat: resume a session       |

@@ -315,7 +315,7 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   :commands (agent-shell-send-region agent-shell-send-file)
   :init
   ;; Signs in with the CLI's own account. For a key instead, set
-  ;; `agent-shell-anthropic-authentication' with :api-key. C-u SPC l n
+  ;; `agent-shell-anthropic-authentication' with :api-key. SPC u SPC l n
   ;; picks another agent.
   (setq agent-shell-preferred-agent-config 'claude-code
         agent-shell-display-action `((display-buffer-in-side-window)
@@ -561,7 +561,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "AI hub"                     "SPC" #'+ai/menu
        ;; The chat, on the short keys
        :desc "Chat: open or focus"        "l" #'+ai/chat
-       :desc "Chat: new, C-u any agent"   "n" #'+ai/chat-new
+       :desc "Chat: new, SPC u any agent" "n" #'+ai/chat-new
        :desc "Chat: resume a session"     "r" #'+ai/chat-resume
        :desc "Chat: switch"               "b" #'+ai/chat-switch
        :desc "Chat: hide"                 "q" #'+ai/chat-hide

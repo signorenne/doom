@@ -22,7 +22,7 @@ with all of it on the same keys.
   files or the error at point; ~SPC l @~ adds the file as a mention, or
   with a region just those lines, and ~SPC l O~ a terminal's or a build's
   last output (VS Code's @terminal), focus staying in the code.
-  ~C-u SPC l n~ picks another agent. ~SPC l w~ shows the chat full size in
+  ~SPC u SPC l n~ picks another agent. ~SPC l w~ shows the chat full size in
   the editor window and ~SPC l W~ in a frame of its own, as VS Code's new
   tab and window; pressed again, ~SPC l W~ goes to that frame, and hiding
   or ending the chat closes it. ~SPC l z~ folds its tool calls, as its
@@ -80,7 +80,7 @@ its permission rules; ~SPC l m u~ shows your plan's usage and limits.
 |-----------+-------------------------------------+------------------------------------------|
 | ~SPC l SPC~ | ~+ai/menu~                            | the hub                                  |
 | ~SPC l l~   | ~+ai/chat~                            | open or focus the chat; from it, back    |
-| ~SPC l n~   | ~+ai/chat-new~                        | a new chat, ~C-u~ another agent            |
+| ~SPC l n~   | ~+ai/chat-new~                        | a new chat; ~SPC u~ first, another agent   |
 | ~SPC l r~   | ~+ai/chat-resume~                     | a chat that lists the earlier ones       |
 | ~SPC l b~   | ~+ai/chat-switch~                     | another chat, in the side panel          |
 | ~SPC l q~   | ~+ai/chat-hide~                       | hide the panel, the chat runs on         |
@@ -205,7 +205,7 @@ The keys before this layout, and where they went:
 | SPC l o | ~SPC l t o~                                           |
 | SPC l e | ~SPC l t e~                                           |
 | SPC l a | ~SPC l l~                                             |
-| SPC l A | ~C-u SPC l n~                                         |
+| SPC l A | ~SPC u SPC l n~                                       |
 | SPC l v | ~SPC l c~                                             |
 | SPC l x | ~SPC l s~, this project's chat, no picker             |
 | SPC l f | ~SPC l m c~                                           |
