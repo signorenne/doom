@@ -425,7 +425,7 @@ there, ~C-c C-e~ turns the list into a buffer you can edit; ~C-c C-c~
 writes the edits back to every file. That last pair is a rename across the
 project in three keys.
 
-*** The menu
+*** The search menu, SPC s SPC
 ~SPC s SPC~ holds the same searches with the options in front of you, and
 the replaces with them. Press the letters for what you want, then the
 letter for where to look:

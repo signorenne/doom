@@ -154,7 +154,10 @@ folded line cannot be shown."
           description))
 
 (defun +docs--read-tips ()
-  "Every key row of the hand written cheat sheet, as (SECTION . TIP)."
+  "Every key row of the hand written cheat sheet, as (SECTION . TIP).
+A key under a third level heading is named by that heading, the
+nearest: the search menu's flags stand under one inside Finding text,
+and w is no motion of that section's."
   (let ((tips nil) (section nil) (subsection nil))
     (with-temp-buffer
       (insert-file-contents +docs-cheatsheet-file)
@@ -169,7 +172,7 @@ folded line cannot be shown."
            ((string-match "\\`\\* \\(.+\\)" line)
             (setq section (match-string 1 line)
                   subsection nil))
-           ((string-match "\\`\\*\\* \\(.+\\)" line)
+           ((string-match "\\`\\*\\*\\*? \\(.+\\)" line)
             (setq subsection (match-string 1 line)))
            ((and section
                  (string-match "\\`| ~\\([^|]+?\\)~ +| \\([^|]+?\\) +|" line))
