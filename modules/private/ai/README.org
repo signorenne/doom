@@ -24,10 +24,10 @@ with all of it on the same keys.
   last output (VS Code's @terminal), focus staying in the code.
   ~SPC u SPC l n~ picks another agent. ~SPC l w~ shows the chat full size in
   the editor window and ~SPC l W~ in a frame of its own, as VS Code's new
-  tab and window; pressed again, ~SPC l W~ goes to that frame, and hiding
-  or ending the chat closes it. From the full-size chat ~SPC l l~ brings
-  the code back and the chat to its panel. ~SPC l z~ folds its tool
-  calls, as its Focus view.
+  tab and window; that frame bears the chat's name, ~SPC l W~ pressed again
+  or ~SPC l l~ goes to it, and hiding or ending the chat closes it. From
+  the full-size chat ~SPC l l~ brings the code back and the chat to its
+  panel. ~SPC l z~ folds its tool calls, as its Focus view.
 - The Claude terminal, [[https://github.com/manzaltu/claude-code-ide.el][claude-code-ide]]: Claude Code's own TUI in vterm,
   the fallback. It opens on the chat's side, below the chat when both are
   open, so neither hides the other. Keys go to Claude; ~C-z~ gives normal state to read and

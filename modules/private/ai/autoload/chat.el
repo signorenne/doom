@@ -158,7 +158,19 @@ that window shows the code again and the chat goes back to its panel."
           (display-buffer chat agent-shell-display-action)
           (select-window window)))
     (require 'agent-shell)
-    (call-interactively #'agent-shell)
+    (let ((frame (when-let* ((chat (+ai--chat-buffer))
+                             (frame (+ai--chat-frame chat))
+                             ;; Not once that frame shows something else.
+                             ((get-buffer-window chat frame)))
+                   frame)))
+      ;; With a frame of its own, the chat is there, not again in a panel.
+      (let ((display-buffer-overriding-action
+             (if frame
+                 `((display-buffer-reuse-window) (reusable-frames . ,frame))
+               display-buffer-overriding-action)))
+        (call-interactively #'agent-shell))
+      (when frame
+        (select-frame-set-input-focus frame)))
     (+ai--chat-at-prompt)))
 
 ;;;###autoload
@@ -266,7 +278,7 @@ its code again.  Hiding or ending the chat closes the frame."
         (if (window-parameter window 'window-side)
             (delete-window window)
           (switch-to-prev-buffer window)))
-      (setq frame (make-frame `((name . "AI chat") (+ai-chat . ,chat))))
+      (setq frame (make-frame `((name . ,(buffer-name chat)) (+ai-chat . ,chat))))
       (with-current-buffer chat
         (add-hook 'kill-buffer-hook #'+ai--chat-frame-close-h nil t)))
     (select-frame-set-input-focus frame)
