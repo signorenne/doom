@@ -72,9 +72,14 @@ CMake's with the project's first preset when it has presets, else make."
 (defun +ai/new-slash-command (name description &optional global)
   "Create the slash command NAME (.claude/commands/NAME.md) with DESCRIPTION.
 With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
-  (interactive (list (read-string "Command name (without /): ")
-                     (read-string "Description: ")
-                     current-prefix-arg))
+  (interactive (let ((name (read-string "Command name (without /): ")))
+                 ;; Refused before the description is asked for.
+                 (when (string-blank-p name)
+                   (user-error "No command name"))
+                 (list name (read-string "Description: ") current-prefix-arg)))
+  ;; An empty one would write .md, a command with no name.
+  (when (string-blank-p name)
+    (user-error "No command name"))
   (let* ((dir (if global (expand-file-name "~/.claude/commands/")
                 (expand-file-name ".claude/commands/" (+core-project-root 'noerror))))
          (file (expand-file-name (concat name ".md") dir)))
