@@ -203,62 +203,102 @@ including those with no TODOs."
 ;;
 ;;; Promoting a heading into a note
 
-(declare-function org-roam-extract-subtree "org-roam-node")
 (declare-function org-roam-tag-add "org-roam-node")
+(declare-function org-roam-tag-completions "org-roam-node")
+(declare-function org-roam-promote-entire-buffer "org-roam-node")
 (declare-function org-roam-db-update-file "org-roam-db")
+(defvar org-roam-db-update-on-save)
 
 ;;;###autoload
 (defun +notes/roam-extract ()
   "Move the subtree at point into its own note and leave a link where it was.
 org-roam's own extract cuts the heading out and stops there.  This one also
 stamps the new note with the date, asks for its tags, and puts a link back
-in the place the heading came from, so the day still reads as a story."
+in the place the heading came from, so the day still reads as a story.
+Where the note goes and its tags are asked before anything changes, so
+C-g at either leaves the heading where it was."
   (interactive)
   (require 'org-roam)
+  ;; Before anything is asked: a heading that cannot leave would leave a
+  ;; note behind with no link to it.
+  (barf-if-buffer-read-only)
   (org-back-to-heading t)
+  ;; Not org-roam's extract: it asks again where to write once it has
+  ;; given the heading an ID and saved, and cuts the heading out before
+  ;; the new note exists. Here the note is written first, from a copy.
   (let* ((title (org-get-heading t t t t))
-         (origin (copy-marker (line-beginning-position)))
+         (file (+notes--roam-read-subject (org-roam-node-create :title title)))
+         (_ (when (file-exists-p file)
+              (user-error "%s exists already; give the heading another title"
+                          (file-relative-name file org-roam-directory))))
+         (tags (let ((crm-separator "[ \t]*:[ \t]*"))
+                 (completing-read-multiple "Tag: " (org-roam-tag-completions))))
          (source (current-buffer))
-         (before (buffer-list)))
-    ;; The extraction cuts and pastes through the kill ring. Keep it from
-    ;; appending to whatever was killed last, from leaving the heading on
-    ;; top of what you had yanked, and from reaching the system clipboard.
-    (let ((last-command nil)
-          (kill-ring kill-ring)
-          (kill-ring-yank-pointer kill-ring-yank-pointer)
-          (interprogram-cut-function nil))
-      (let ((org-roam-extract-new-file-path
-             (+notes--roam-subject-path (org-roam-node-create :title title))))
-        (org-roam-extract-subtree)))
-    ;; The new note is the org buffer that was not open before.
-    (let ((target (seq-find (lambda (b) (and (not (memq b before))
-                                             (buffer-file-name b)
-                                             (string-suffix-p ".org" (buffer-file-name b))))
-                            (buffer-list))))
-      (unless target (user-error "The note was not created"))
-      (with-current-buffer target
-        (goto-char (point-min))
-        ;; A journal entry carries the time it was written; keep that,
-        ;; and date a heading that had none now.
-        (unless (org-entry-get (point-min) "CREATED")
-          (org-entry-put (point-min) "CREATED"
-                         (format-time-string "[%Y-%m-%d %a %H:%M]")))
-        (goto-char (point-min))
-        (call-interactively #'org-roam-tag-add)
-        ;; A blank line between the header and the text, like the templates.
-        (goto-char (point-min))
-        (when (re-search-forward "^#\\+filetags:.*$" nil t)
-          (forward-line 1)
-          (unless (looking-at-p "^$") (insert "\n")))
-        (save-buffer)
-        (org-roam-db-update-file (buffer-file-name))
-        (let ((id (org-entry-get (point-min) "ID")))
-          (with-current-buffer source
-            (save-excursion
-              (goto-char origin)
-              (insert (format "- [[id:%s][%s]]\n" id title)))
-            (save-buffer)))
-        (message "%s is a note now, linked from where it was" title)))))
+         (start (point-marker))
+         (end (save-excursion (org-end-of-subtree t t) (point-marker)))
+         ;; A new subject's directory, made now that nothing is left to
+         ;; ask, before Doom asks whether to make it.
+         (note (progn (make-directory (file-name-directory file) t)
+                      (find-file-noselect file)))
+         id linked
+         (link-back
+          (lambda ()
+            ;; Once, from the body or from the cleanup below.
+            (unless linked
+              (setq linked t)
+              (with-current-buffer source
+                (save-excursion
+                  (delete-region start end)
+                  (goto-char start)
+                  (insert (format "- [[id:%s][%s]]\n" id title)))
+                (save-buffer))))))
+    (unwind-protect
+        (with-current-buffer note
+          (insert (with-current-buffer source
+                    (buffer-substring-no-properties start end)))
+          (goto-char (point-min))
+          (while (> (org-current-level) 1) (org-promote-subtree))
+          ;; A journal entry carries the time it was written; keep that,
+          ;; and date a heading that had none now.
+          (unless (org-entry-get (point) "CREATED")
+            (org-entry-put (point) "CREATED" (format-time-string "[%Y-%m-%d %a %H:%M]")))
+          (setq id (org-id-get-create))
+          ;; On disk before the heading leaves the source, but kept from
+          ;; the database until it has: an ID the heading or one under it
+          ;; already had would be in two files, and org-roam then drops
+          ;; the node.
+          (let ((org-roam-db-update-on-save nil))
+            (save-buffer))
+          (funcall link-back)
+          ;; org-roam makes the heading the title by killing its line. Keep
+          ;; that from appending to whatever was killed last, now or at your
+          ;; next kill, from sitting on top of what you had yanked, and from
+          ;; reaching the system clipboard.
+          (let ((last-command nil)
+                (this-command this-command)
+                (kill-ring kill-ring)
+                (kill-ring-yank-pointer kill-ring-yank-pointer)
+                (interprogram-cut-function nil))
+            (org-roam-promote-entire-buffer))
+          (when tags
+            (goto-char (point-min))
+            (org-roam-tag-add tags))
+          ;; A blank line between the header and the text, like the templates.
+          (goto-char (point-min))
+          (when (or (re-search-forward "^#\\+filetags:.*$" nil t)
+                    (re-search-forward "^#\\+title:.*$" nil t))
+            (forward-line 1)
+            (unless (looking-at-p "^$") (insert "\n")))
+          (save-buffer)
+          (org-roam-db-update-file file))
+      ;; Once the note is on disk the heading's place holds the link to
+      ;; it, whatever stopped the rest; before that nothing has changed.
+      (if (file-exists-p file)
+          (funcall link-back)
+        (when (buffer-live-p note)
+          (with-current-buffer note (set-buffer-modified-p nil))
+          (kill-buffer note))))
+    (message "%s is a note now, linked from where it was" title)))
 
 ;;
 ;;; Renaming a note

@@ -103,8 +103,9 @@ actions, decisions, progress, with the repository and the kit in its
 head), person, meeting, and for work and study, course (~C~), lecture
 (~l~), case study (~k~) and design doc (~D~). Concept, solution, howto,
 hardware and question ask for their subject directory under
-=resources/wiki/=; a reference goes to =resources/sources/manuals/= with
-its URL in =ROAM_REFS=, a project to =projects/=, a person to
+=resources/wiki/=, a new one when you type a name that is not there and
+press ~M-RET~; a reference goes to =resources/sources/manuals/= with its URL in
+=ROAM_REFS=, a project to =projects/=, a person to
 =resources/wiki/people/=, a meeting to =capture/meetings/=, apart from the
 dailies in =capture/journal/= so that the next and previous daily
 (~SPC n r d f~, ~SPC n r d b~) are days only. Where the four others go is

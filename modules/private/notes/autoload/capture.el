@@ -178,12 +178,23 @@ removes it again instead of leaving an empty active project."
   (+notes--roam-path (+notes--project-path (org-roam-node-title node))))
 
 ;;;###autoload
-(defun +notes--roam-subject-path (node)
-  "Choose a knowledge subject home for NODE, within resources/wiki."
+(defun +notes--roam-read-subject (node)
+  "Ask for NODE's subject directory under resources/wiki and return the
+note's path there.  A directory typed that is not there yet is a new
+subject; it is not made here, so a question after this one can still be
+cancelled without leaving it behind."
   (let* ((root (expand-file-name "resources/wiki/" org-roam-directory))
-         (dir (read-directory-name "Subject directory: " root nil t))
+         (dir (read-directory-name "Subject directory: " root))
          (file (expand-file-name (concat (org-roam-node-slug node) ".org") dir)))
     (unless (file-in-directory-p file root) (user-error "Choose a directory under resources/wiki"))
+    file))
+
+;;;###autoload
+(defun +notes--roam-subject-path (node)
+  "Choose a knowledge subject home for NODE, within resources/wiki; a new
+subject's directory is made."
+  (let ((file (+notes--roam-read-subject node)))
+    (make-directory (file-name-directory file) t)
     file))
 
 ;;;###autoload

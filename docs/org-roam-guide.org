@@ -92,9 +92,10 @@ in step 1, or write a new one with a real idea in it first: =GAP is the
 layer that decides who can connect=.
 
 Press =SPC m m e=. It asks =Subject directory:=; pick the one under
-=resources/wiki/= that BLE belongs to, =RET=. Then =Extract node to:=
-with the file name already filled in, =RET=. Then =Tag:=, type =ble=,
-=RET=.
+=resources/wiki/= that BLE belongs to, =RET=, or type a new one and press
+=M-RET=, which takes the name as typed where =RET= would take a directory
+it matches. Then =Tag:=, type =ble=, =RET=. Nothing changes until both
+are answered, so =C-g= at either leaves the heading where it was.
 
 The heading is gone from the day and a link sits where it was. Follow it:
 a note with the date, the title, the tag and the text, ready to be linked
