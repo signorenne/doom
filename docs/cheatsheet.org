@@ -2255,9 +2255,8 @@ so nothing here depends on it.
 Opening a diagram opens its preview beside it; you do not ask for it.
 The window appears at once saying it is drawing, and the diagram
 replaces that when it arrives, because the first drawing of a session
-has a JVM to start. When diagrams are among your recent files, the
-server starts and draws once while Emacs waits after starting, so the
-first diagram shows at once. Move to another diagram and the preview follows.
+has a JVM to start; nothing starts it before a diagram asks for it.
+Move to another diagram and the preview follows.
 
 The redraw waits for a pause in the typing, so a burst of keys costs one
 drawing rather than one per key, and the typing never waits for it: the

@@ -84,15 +84,9 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
 
 (add-hook 'plantuml-mode-hook #'+uml--completion-h)
 
-;; The server is a Java program, slow to start: when diagrams are among the
-;; recent files, it starts while Emacs waits after starting.
-(defun +uml--warm-up-h (mode)
-  "Start the PlantUML server ahead when MODE is PlantUML's, and have it
-draw once, which loads what its first drawing would."
-  (when (eq mode 'plantuml-mode)
-    (+uml-render-async "@startuml\na -> b\n@enduml\n" 'svg nil #'ignore)))
-
-(add-hook '+core-warm-up-functions #'+uml--warm-up-h)
+;; The server is not started ahead, with Emacs or with a frame, even when
+;; diagrams are among the recent files: that held a JVM for the whole
+;; session, diagram or not, to save the first preview a second or two.
 
 
 ;;
