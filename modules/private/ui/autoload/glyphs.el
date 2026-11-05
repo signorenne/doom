@@ -98,7 +98,10 @@ Anything shown as a box is a missing glyph."
            ("Math / Greek"  . ("∀ ∃ ∈ ∉ ∑ ∏ ∫ √ ∞ ≠ ≤ ≥ ≈ ≡ ¬ ∧ ∨ ⊕ λ π Σ Ω μ ∂ ∇"))
            ("Symbols"       . ("✓ ✗ ★ ☆ ♥ ♦ ☰ ☑ ☒ ⚠ ⚡ ⚙ ⏻ ⌘ ⌥ ⇧ ⌫ ⏎ ␣ ⏱"))
            ("Operators"     . ("-> => != === <= >= :: |> <| <> ++ -- ** // /* */ <!-- --> www"))
-           ("Powerline/PUA" . ("        ")))))
+           ;; The raw code points a shell prompt draws with, so the fontset
+           ;; is tested and not nerd-icons' face: branch, line, lock, the
+           ;; four dividers.
+           ("Powerline/PUA" . ("      ")))))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -112,6 +115,7 @@ Anything shown as a box is a missing glyph."
         (insert (format "\nFonts: %s, symbol %s, emoji %s\n"
                         (face-attribute 'default :family)
                         (+ui--font-family doom-symbol-font)
-                        (+ui--font-family doom-emoji-font))))
+                        (+ui--font-family doom-emoji-font)))
+        (goto-char (point-min)))
       (special-mode))
     (pop-to-buffer buf)))
