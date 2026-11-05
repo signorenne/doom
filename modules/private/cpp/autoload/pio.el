@@ -161,6 +161,8 @@ a prefix, and C-c C-c sends the monitor its C-c."
 (defun +pio/home ()
   "Start PlatformIO Home and open it in the browser."
   (interactive)
+  (unless (executable-find "pio")
+    (user-error "pio is not installed, so there is no PlatformIO Home to start"))
   (let ((default-directory (or (+pio--root 'noerror) default-directory)))
     (start-process "pio-home" "*pio home*" "pio" "home")
     (message "PlatformIO Home is starting, kill *pio home* to stop it")))
