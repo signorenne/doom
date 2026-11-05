@@ -78,8 +78,9 @@ org-protocol fills it; the bookmarklets entry covers it."
 
 ;; The SPC n keys, laid out: d the documents, c the captures, r roam, as
 ;; on the leader; the agenda views under a, SPC o a there; and the
-;; single keys the leader has, h g G p u P B. q closes the menu and ? then
-;; a key explains it, so nothing sits on those.
+;; single keys the leader has, h g G p u P B. q closes the menu, also as
+;; the last key of two, and ? then a key explains it, so nothing ends in
+;; those: org-ql find is a /, not a q.
 ;;;###autoload (autoload '+notes/menu "private/notes/autoload/menu" nil t)
 (transient-define-prefix +notes/menu ()
   "Notes and tasks: documents, capture, agenda, roam, the same keys as SPC n."
@@ -105,7 +106,7 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a i" "Inbox"          +notes/inbox)
     ("a u" "University agenda" +notes/university-agenda)
     ("a t" "Todo list"      org-todo-list)
-    ("a q" "Query (org-ql)" +notes/query)]]
+    ("a /" "Query (org-ql)" +notes/query)]]
   [["Roam (r)"
     ("r f" "Find or create node" org-roam-node-find)
     ("r n" "Capture node"        org-roam-capture)
