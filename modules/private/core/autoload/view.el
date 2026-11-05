@@ -299,9 +299,13 @@ it is smaller, at `+core-view--pan' when it is larger."
       (unless (zerop top)
         (let ((shim (make-overlay (point-min) (point-min) nil t)))
           (overlay-put shim '+core-image-shim t)
+          ;; Its newline adds no height. A line of text tall, a gap of a
+          ;; few pixels pushed a picture almost the window's height past
+          ;; its bottom, and redisplay tried for ever to bring that line
+          ;; into view: an ER diagram froze Emacs.
           (overlay-put shim 'before-string
                        (concat (propertize " " 'display `(space :width 1 :height (,top)))
-                               "\n"))))
+                               (propertize "\n" 'line-height t)))))
       (when window
         (let ((x (max 0 (min (- (car size) (car fit))
                              (round (- (* (car +core-view--pan) (car size)) (/ (car fit) 2))))))
@@ -330,9 +334,12 @@ place the last one was, when it is SOURCE's again."
   (with-current-buffer (+core-view--buffer)
     (unless (derived-mode-p 'special-mode) (special-mode))
     ;; As image-mode does: redisplay would scroll back to point and undo a pan.
+    ;; Nor does it bring the line with point fully into view: there is no
+    ;; cursor here, and a picture that cannot fit loops it for ever.
     (setq-local cursor-type nil
                 truncate-lines t
                 auto-hscroll-mode nil
+                make-cursor-line-fully-visible nil
                 evil-normal-state-cursor nil
                 evil-motion-state-cursor nil)
     (when (bound-and-true-p outline-minor-mode) (outline-minor-mode -1))
@@ -358,6 +365,7 @@ place the last one was, when it is SOURCE's again."
       (goto-char (point-min))
       (kill-local-variable 'cursor-type)
       (kill-local-variable 'auto-hscroll-mode)
+      (kill-local-variable 'make-cursor-line-fully-visible)
       (kill-local-variable 'evil-normal-state-cursor)
       (kill-local-variable 'evil-motion-state-cursor)
       (setq-local truncate-lines t)

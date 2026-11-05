@@ -129,10 +129,13 @@ the line; the height goes in an overlay above it."
                   ;; A line of its own, as tall as the gap: a newline
                   ;; drawn as the space itself would end no line, and
                   ;; the picture would sit beside it rather than below.
+                  ;; The newline adds no height: a line of text tall, a
+                  ;; gap of a few pixels pushed the picture past the
+                  ;; window's bottom, and redisplay looped for ever.
                   (overlay-put shim 'before-string
                                (concat (propertize " " 'display
                                                    `(space :width 1 :height (,top)))
-                                       "\n")))))))))))
+                                       (propertize "\n" 'line-height t))))))))))))
 
 ;;;###autoload
 (defun +core-image-uncenter ()
