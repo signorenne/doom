@@ -152,7 +152,8 @@ already answer with the new one."
 With prefix argument PERSIST, write the choice to .dir-locals.el so the
 whole project uses it."
   (interactive
-   (list (intern (completing-read "Language server: " '("clangd" "ccls")
+   (list (intern (completing-read (format-prompt "Language server" +cpp-lsp-server)
+                                  '("clangd" "ccls")
                                   nil t nil nil
                                   (symbol-name +cpp-lsp-server)))
          current-prefix-arg))

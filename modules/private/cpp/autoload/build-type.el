@@ -352,13 +352,14 @@ exist is made.  Written to .dir-locals.el like any kit choice."
           (current (+cpp--kit-type kit))
           ;; Qt Creator's Profile is offered by its own name.
           (named (delq nil (mapcar #'+cpp--named-type (+cpp--siblings kit kits)))))
-     (list (completing-read
-            (format "Build type (now %s, family %s: %s): "
-                    (or current "unknown") (+cpp--kit-family kit)
-                    (+cpp--types-summary kit kits))
-            (or (+cpp-kit-configs kit) (append +cpp-build-types (seq-uniq named))) nil t nil nil
-            (car (seq-remove (lambda (ty) (equal ty current))
-                             (or (+cpp-kit-configs kit) +cpp-build-types)))))))
+     (let ((other (car (seq-remove (lambda (ty) (equal ty current))
+                                   (or (+cpp-kit-configs kit) +cpp-build-types)))))
+       (list (completing-read
+              (format-prompt "Build type (now %s, family %s: %s)" other
+                             (or current "unknown") (+cpp--kit-family kit)
+                             (+cpp--types-summary kit kits))
+              (or (+cpp-kit-configs kit) (append +cpp-build-types (seq-uniq named))) nil t nil nil
+              other)))))
   (let* ((root (+core-project-root))
          (kit (+cpp--kit root))
          (kits (+cpp--kits root))

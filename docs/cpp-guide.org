@@ -111,8 +111,10 @@ one line before anything runs. =F10=, =F11= and =S-F5= belong to a
 running session and do nothing outside one.
 
 A program that takes arguments is run with =SPC k R=, which asks for
-them; =SPC k m a= writes them down for the project so =F6= passes them
-every time. The cursor goes into the run buffer as it starts, so a
+them, the kept ones the default; =SPC k m a= writes them down for the
+project so =F6= passes them every time. Where the project builds several
+programs, the first =F6= asks which and keeps the answer; =S-F6= asks
+before it builds. The cursor goes into the run buffer as it starts, so a
 program that asks a question can be answered there; a program that
 printed something keeps its window when it ends, and one that printed
 nothing takes the window with it. A window that stayed is closed with

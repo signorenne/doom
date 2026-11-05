@@ -695,7 +695,7 @@ not there yet becomes a fresh build directory on the host."
                                            "stale: configured before the project moved")
                                    name)))
                          (+cpp--stale-directories root))))
-          (choice (completing-read "Kit: " rows nil nil nil nil current)))
+          (choice (completing-read (format-prompt "Kit" current) rows nil nil nil nil current)))
      (list (or (cdr (assoc choice rows)) (string-trim choice)))))
   (let ((root (+core-project-root)))
     (+core-dir-locals-set root '+cpp-kit name)

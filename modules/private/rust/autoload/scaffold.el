@@ -128,7 +128,7 @@ written twice is a manifest cargo refuses."
 KIND is \"bin\" for a program, \"lib\" for a library, \"workspace\" for
 several crates together."
   (interactive
-   (cons (completing-read "Kind: " (+rust-project-kinds) nil t nil nil "bin")
+   (cons (completing-read (format-prompt "Kind" "bin") (+rust-project-kinds) nil t nil nil "bin")
          (+core-read-new-project)))
   (unless (executable-find "cargo")
     (user-error "cargo is not installed: %s, then rustup default stable"

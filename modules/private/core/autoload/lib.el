@@ -405,6 +405,20 @@ only one visiting a file in one of MODES.  Returns VALUE."
   value)
 
 ;;;###autoload
+(defun +core-read-arguments (current &optional keep)
+  "Read a program's arguments, one string.  CURRENT are the ones kept for
+the project.  To run once they are the default, said in the prompt, and
+RET takes them; with KEEP, to keep new ones, an empty answer is none and
+CURRENT is said as the value now, as `+core-read-or-empty' does.  M-n
+brings CURRENT back to edit either way."
+  (let ((current (and current (not (string-empty-p current)) current)))
+    (if keep
+        (read-from-minibuffer (format "Arguments (empty for none%s): "
+                                      (if current (format ", now %s" current) ""))
+                              nil nil nil nil current)
+      (read-string (format-prompt "Arguments" current) nil nil current))))
+
+;;;###autoload
 (defun +core-read-or-empty (prompt empty collection current &optional require-match)
   "Read one of COLLECTION, or nothing, which is \"\".
 The prompt is PROMPT, then what an empty answer does, EMPTY (\"for the

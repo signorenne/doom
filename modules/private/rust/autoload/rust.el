@@ -14,6 +14,7 @@
 (declare-function +core-read-or-empty "lib")
 (declare-function +core-need-program "lib")
 (declare-function +core-show-report "lib")
+(declare-function +core-read-arguments "lib")
 (defvar +rust-codelldb)
 
 (defvar +rust-cargo-timeout 10
@@ -272,7 +273,9 @@ the crate, as C++ names it for the program."
 ;;;###autoload
 (defun +rust/run-with-args (args)
   "Run the project once with ARGS, without writing them down."
-  (interactive (list (read-string "Arguments: " +rust-run-args)))
+  ;; What cannot work is said before the arguments are asked for.
+  (interactive (progn (+rust-root) (+rust--need-cargo)
+                      (list (+core-read-arguments +rust-run-args))))
   (+rust--compile (+rust--run-name)
                   (+rust--command "run" (unless (string-empty-p args)
                                           (concat "-- " args)))
@@ -490,7 +493,8 @@ answer is asked of cargo rather than guessed."
 ;;;###autoload
 (defun +rust/set-profile (profile)
   "Build with PROFILE from now on, kept in .dir-locals.el."
-  (interactive (list (completing-read "Profile: " (+rust--profiles) nil nil nil nil
+  (interactive (list (completing-read (format-prompt "Profile" (or +rust-profile "dev"))
+                                      (+rust--profiles) nil nil nil nil
                                       (or +rust-profile "dev"))))
   (+core-project-setting-set (+rust-root) '+rust-profile
                              (unless (equal profile "dev") profile))
@@ -593,7 +597,8 @@ Empty means the whole workspace."
 ;;;###autoload
 (defun +rust/set-run-args (args)
   "Keep ARGS for the program, so SPC k r passes them every time."
-  (interactive (list (read-string "Arguments: " +rust-run-args)))
+  (interactive (progn (+rust-root)
+                      (list (+core-read-arguments +rust-run-args 'keep))))
   (let ((value (unless (string-empty-p args) args)))
     (+core-project-setting-set (+rust-root) '+rust-run-args value)
     (message "%s" (if value (format "Arguments: %s" value)

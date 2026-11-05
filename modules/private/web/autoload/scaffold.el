@@ -159,7 +159,7 @@ KIND is one of `+web-project-kinds': a SvelteKit application, the same
 wrapped as an Electron desktop application, a library, a static page,
 or a TypeScript program for node."
   (interactive
-   (cons (completing-read "Kind: " (+web-project-kinds) nil t nil nil "sveltekit")
+   (cons (completing-read (format-prompt "Kind" "sveltekit") (+web-project-kinds) nil t nil nil "sveltekit")
          (+core-read-new-project)))
   (unless (executable-find "node")
     (user-error "node is not installed"))

@@ -59,7 +59,7 @@ application with a window."
   (interactive
    (let ((kinds (or (+pascal-project-kinds)
                     (user-error "No templates in %s" +pascal-templates-dir))))
-     (cons (completing-read "Kind: " kinds nil t nil nil (car kinds))
+     (cons (completing-read (format-prompt "Kind" (car kinds)) kinds nil t nil nil (car kinds))
            (+core-read-new-project))))
   (cond ((member name +pascal--reserved-words)
          (user-error "%s is a Pascal keyword: a program cannot be called that" name))

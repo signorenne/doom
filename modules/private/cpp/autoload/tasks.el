@@ -85,7 +85,8 @@ packages it wrote are named."
                   (user-error "No packaging target in %s; SPC k B lists every target"
                               (+cpp-kit-name kit)))
                  ((and (null (cdr candidates)) (not current-prefix-arg)) (car candidates))
-                 (t (completing-read "Package with: " candidates nil t nil nil kept))))))
+                 (t (completing-read (format-prompt "Package with" kept)
+                                     candidates nil t nil nil kept))))))
   (+cpp--save-project-buffers)
   (let* ((root (+core-project-root))
          (kit (+cpp--kit root)))
@@ -151,8 +152,11 @@ tester.  The arguments last given are offered again."
                        (user-error "No scripts in %s: nothing executable under scripts/, tools/, bin/ or a .sh at the top"
                                    (abbreviate-file-name root))))
           (script (completing-read "Run: " scripts nil t)))
-     (list script (read-string (format "%s arguments: " script)
-                               (gethash script +cpp--script-args)))))
+     (list script (let ((last (gethash script +cpp--script-args)))
+                    (read-string (format-prompt "%s arguments"
+                                                (and last (not (string-empty-p last)) last)
+                                                script)
+                                 nil nil last)))))
   (+cpp--save-project-buffers)
   (puthash script args +cpp--script-args)
   (let* ((root (+core-project-root))

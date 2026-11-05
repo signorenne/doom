@@ -161,7 +161,7 @@ says, else yarn."
 (defun +web/set-manager (manager)
   "Build with MANAGER from now on, kept in .dir-locals.el."
   (interactive
-   (list (completing-read "Package manager: "
+   (list (completing-read (format-prompt "Package manager" (+web-manager))
                           (mapcar #'cdr +web-package-managers)
                           nil t nil nil (+web-manager))))
   (+core-project-setting-set (+web-root) '+web-package-manager manager)
@@ -347,7 +347,11 @@ Linux and Windows build on a Linux machine, Windows through wine as
 electron-builder arranges; macOS builds on a Mac, unsigned unless a
 certificate is set up, and the template's CI workflow signs it."
   (interactive
-   (list (completing-read "Package for: "
+   (list (completing-read (format-prompt "Package for"
+                                         (pcase system-type
+                                           ('darwin "mac")
+                                           ('windows-nt "win")
+                                           (_ "linux")))
                           '("linux" "win" "mac" "current") nil t nil nil
                           (pcase system-type
                             ('darwin "mac")

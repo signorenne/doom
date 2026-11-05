@@ -116,7 +116,7 @@ framework: one key for whatever kind of project is being started."
    (let ((kinds (append (or (+cpp-project-kinds)
                             (user-error "No templates in %s" +cpp-templates-dir))
                         (when (executable-find "pio") '("platformio")))))
-     (cons (completing-read "Template: " kinds nil t nil nil (car kinds))
+     (cons (completing-read (format-prompt "Template" (car kinds)) kinds nil t nil nil (car kinds))
            (+core-read-new-project))))
   (if (equal kind "platformio")
       (progn

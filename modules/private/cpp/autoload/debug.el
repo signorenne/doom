@@ -87,8 +87,8 @@ gdbserver on a board, the server a PlatformIO board is debugged
 through, qemu started with -g.  The symbols come from the executable
 as it was built here."
   (interactive
-   (list (read-string "Attach to (host:port): "
-                      (format "localhost:%s" (or (bound-and-true-p +cpp-debug-port) 2345)))))
+   (let ((here (format "localhost:%s" (or (bound-and-true-p +cpp-debug-port) 2345))))
+     (list (read-string (format-prompt "Attach to, host:port" here) nil nil here))))
   (+cpp--save-project-buffers)
   (let* ((root (+core-project-root))
          (kit (and (+cpp--kind-p 'cmake) (+cpp--kit root)))

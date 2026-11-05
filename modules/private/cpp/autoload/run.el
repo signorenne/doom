@@ -17,6 +17,8 @@
 (declare-function +cpp--kit-compiler-missing-p "kit")
 (declare-function +cpp--kit-shell "container")
 (declare-function +core-need-program "lib")
+(declare-function +core-read-arguments "lib")
+(declare-function +core-read-or-empty "lib")
 (declare-function dape-continue "dape")
 (declare-function gdb "gdb-mi")
 (declare-function projection-commands-run-project "projection-commands")
@@ -253,7 +255,9 @@ run and debug pass the same words."
 ;;;###autoload
 (defun +cpp--pick-executable (kit)
   "The executable to run for KIT: the run target chosen for the project,
-Qt Creator's active run configuration, the only one there is, or asked."
+Qt Creator's active run configuration, the only one there is, or asked.
+One asked for is the project's run target from then on, kept in
+.dir-locals.el, so F6, S-F6 and F5 ask once; SPC k m A picks another."
   (let* ((exes (seq-filter (lambda (a) (eq (alist-get 'type a) 'cmake-executable))
                            (+cpp--executable-artifacts kit)))
          (root (+core-project-root))
@@ -268,10 +272,13 @@ Qt Creator's active run configuration, the only one there is, or asked."
                                exes))))
     (cond (named (alist-get 'arg0 named))
           ((= (length exes) 1) (alist-get 'arg0 (car exes)))
-          (exes (alist-get 'arg0
-                           (let ((rows (mapcar (lambda (a) (cons (alist-get 'name a) a)) exes)))
-                             (cdr (assoc (completing-read "Run executable: " rows nil t)
-                                         rows)))))
+          (exes (let* ((rows (mapcar (lambda (a) (cons (alist-get 'name a) a)) exes))
+                       (name (completing-read (format-prompt "Run executable" nil)
+                                              rows nil t)))
+                  (+cpp--set-setting '+cpp-run-target name)
+                  (message "Run target: %s, saved to .dir-locals.el; SPC k m A picks another"
+                           name)
+                  (alist-get 'arg0 (cdr (assoc name rows)))))
           (t (user-error "No executable known for kit %s; configure and build first (SPC k c, SPC k b)"
                          (+cpp-kit-name kit))))))
 
@@ -280,13 +287,13 @@ Qt Creator's active run configuration, the only one there is, or asked."
 ;;; Run
 
 ;;;###autoload
-(defun +cpp/run (&optional args)
+(defun +cpp/run (&optional args exe)
   "Run one of the project's executables, passing it ARGS.
 ARGS defaults to what `+cpp/set-run-args' stored for this project, or to
 Qt Creator's run configuration.  The program runs where the kit runs, in
 the working directory Qt Creator uses, or beside the executable.  CMake
-projects offer their targets; anything else uses projection's run command,
-which for PlatformIO means upload."
+projects offer their targets, EXE when it is given; anything else uses
+projection's run command, which for PlatformIO means upload."
   (interactive)
   (+cpp--save-project-buffers)
   (let ((root (+core-project-root)))
@@ -299,7 +306,7 @@ which for PlatformIO means upload."
           (if (+cpp--device-run-p kit)
               ;; Qt Creator's run configuration is on the device.
               (+cpp/run-on-device args)
-            (let* ((exe (+cpp--pick-executable kit))
+            (let* ((exe (or exe (+cpp--pick-executable kit)))
                    (dir (let ((qtc (plist-get active :run-dir)))
                           (if (and qtc (file-directory-p qtc)) qtc
                             (file-name-directory exe)))))
@@ -327,25 +334,31 @@ which for PlatformIO means upload."
      (+core-project-root)
      (unless (+cpp--kind-p 'cmake)
        (user-error "This kind of project cannot be run with arguments"))
-     (list (read-string "Program arguments: "))))
+     (list (+core-read-arguments
+            (or (+cpp--setting '+cpp-run-args)
+                (plist-get (+qtcreator-active (+core-project-root)) :run-args))))))
   (+cpp/run args))
 
 ;;;###autoload
 (defun +cpp/set-run-target (name)
-  "Run the executable target NAME with SPC k r, from now on."
+  "Run the executable target NAME with SPC k r, from now on.  Empty goes
+back to Qt Creator's run configuration, the only one, or a choice."
   (interactive
    (let* ((exes (seq-filter (lambda (a) (eq (alist-get 'type a) 'cmake-executable))
                             (+cpp--executable-artifacts (+cpp--kit)))))
-     (list (completing-read "Run target: " (mapcar (lambda (a) (alist-get 'name a)) exes)
-                            nil nil nil nil (+cpp--setting '+cpp-run-target)))))
-  (+cpp--set-setting '+cpp-run-target name)
-  (message "Run target: %s, saved to .dir-locals.el" name))
+     (list (+core-read-or-empty "Run target" "to choose again"
+                                (mapcar (lambda (a) (alist-get 'name a)) exes)
+                                (+cpp--setting '+cpp-run-target)))))
+  (let ((value (unless (string-empty-p name) name)))
+    (+cpp--set-setting '+cpp-run-target value)
+    (message "Run target: %s, saved to .dir-locals.el"
+             (or value "chosen again at the next run"))))
 
 ;;;###autoload
 (defun +cpp/set-run-args (args)
   "Set the ARGS every run of this project passes to the executable."
-  (interactive (list (read-string "Program arguments: "
-                                  (+cpp--setting '+cpp-run-args ""))))
+  (interactive (progn (+core-project-root)
+                      (list (+core-read-arguments (+cpp--setting '+cpp-run-args) 'keep))))
   (+cpp--set-setting '+cpp-run-args args)
   (message "Run arguments: %s, saved to .dir-locals.el"
            (if (string-empty-p args) "none" args)))
@@ -468,12 +481,13 @@ dape looks for it there; SPC k d in a Rust buffer uses it afterwards."
 ;;; Build and run in one
 
 (defvar +cpp--run-after-build nil
-  "(ORIGIN . BUILD): the buffer a build was started from, which should be
-followed by a run, and the build's compilation buffer.  The buffer and
-not a flag: a timer runs in whatever buffer happens to be current when
-it fires, and `+cpp/run' asks the current buffer which project it is
-in.  The build's own buffer, since any compilation that finished first,
-the assembly view's, ran the program before the build was done.")
+  "(ORIGIN BUILD . EXE): the buffer a build was started from, which should
+be followed by a run, the build's compilation buffer, and the executable
+picked before it, or nil.  The buffer and not a flag: a timer runs in
+whatever buffer happens to be current when it fires, and `+cpp/run'
+asks the current buffer which project it is in.  The build's own
+buffer, since any compilation that finished first, the assembly view's,
+ran the program before the build was done.")
 
 ;; Autoloaded: on `compilation-finish-functions', added in config.el.
 ;;;###autoload
@@ -482,25 +496,32 @@ the assembly view's, ran the program before the build was done.")
 A build that failed stops here, with its output where it is: the reason
 is what you wanted to see, not a program that cannot have changed."
   (when (and +cpp--run-after-build
-             (eq buffer (cdr +cpp--run-after-build))
+             (eq buffer (cadr +cpp--run-after-build))
              (buffer-live-p buffer))
-    (let ((origin (car +cpp--run-after-build)))
+    (pcase-let ((`(,origin ,_build . ,exe) +cpp--run-after-build))
       (setq +cpp--run-after-build nil)
       (if (equal status "finished\n")
+          ;; What runs was settled before the build, so nothing is asked
+          ;; from this timer, while you may be typing elsewhere.
           (run-at-time 0 nil
                        (lambda ()
                          (when (buffer-live-p origin)
                            (with-current-buffer origin
-                             (call-interactively #'+cpp/run)))))
+                             (+cpp/run nil exe)))))
         (message "Build failed, so nothing was run")))))
 
 ;;;###autoload
 (defun +cpp/build-and-run ()
   "Build the project and run it when the build succeeded.
-The two keys in one, since that is the pair you press all day."
+The two keys in one, since that is the pair you press all day.  Which
+executable runs is asked, when it has to be, before the build starts."
   (interactive)
-  (let ((origin (current-buffer))
-        build)
+  (let* ((origin (current-buffer))
+         (root (+core-project-root))
+         (kit (and (+cpp--kind-p 'cmake) (+cpp--kit root)))
+         (exe (and kit (not (+cpp--device-run-p kit))
+                   (+cpp--pick-executable kit)))
+         build)
     (setq +cpp--run-after-build nil)
     ;; The build's buffer, from the hook that sees it start; set once the
     ;; command is back, so a build it interrupted is not taken for it.
@@ -509,4 +530,4 @@ The two keys in one, since that is the pair you press all day."
                  compilation-start-hook)))
       (call-interactively #'projection-commands-build-project))
     (when build
-      (setq +cpp--run-after-build (cons origin build)))))
+      (setq +cpp--run-after-build (cons origin (cons build exe))))))

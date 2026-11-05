@@ -203,7 +203,8 @@ then its templates."
          (makers (if here (cons here (remq here makers)) makers))
          (entry (if (cdr makers)
                     (let ((choice (completing-read
-                                   "New project in: " (mapcar label makers)
+                                   (format-prompt "New project in" (funcall label (car makers)))
+                                   (mapcar label makers)
                                    nil t nil nil (funcall label (car makers)))))
                       (seq-find (lambda (e) (equal (funcall label e) choice)) makers))
                   (car makers))))

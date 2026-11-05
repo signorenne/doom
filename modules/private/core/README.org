@@ -469,7 +469,10 @@ last, whoever started it), ~+core-run-in-vterm~,
 block or a babel block, one table, ~+core-languages~),
 ~+core-read-or-empty~ (a setting's prompt, where an empty answer clears
 it: the value now is said in the prompt, not given as the default,
-which an empty answer would return), ~+core-project-setting-set~ (a
+which an empty answer would return), ~+core-read-arguments~ (a program's
+arguments, the kept ones the default for one run, or said as the value
+now when new ones are kept; one prompt for every language),
+~+core-project-setting-set~ (a
 setting written to the project's =.dir-locals.el= and set in every
 buffer of the project already open, which read the file as it opened).
 core loads first in the =:private= block and every one of them is

@@ -13,6 +13,7 @@
 (declare-function +core-read-or-empty "lib")
 (declare-function +core-need-program "lib")
 (declare-function +core-show-report "lib")
+(declare-function +core-read-arguments "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (defvar +pascal-host-os)
@@ -253,7 +254,9 @@ standard input waits for."
 ;;;###autoload
 (defun +pascal/run-with-args (args)
   "Run the program once with ARGS, without writing them down."
-  (interactive (list (read-string "Arguments: " +pascal-run-args)))
+  ;; What cannot work is said before the arguments are asked for.
+  (interactive (progn (or (+pascal-program) (user-error "Nothing built yet: F7 first"))
+                      (list (+core-read-arguments +pascal-run-args))))
   (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
     (+pascal--compile (+pascal--run-name)
                       (string-join (delq nil (list (shell-quote-argument program)
@@ -412,7 +415,8 @@ lldb-dap on a Mac, `+core-os-debugger'."
 ;;;###autoload
 (defun +pascal/set-run-args (args)
   "Keep ARGS for the program, so SPC k r passes them every time."
-  (interactive (list (read-string "Arguments: " +pascal-run-args)))
+  (interactive (progn (+pascal-root)
+                      (list (+core-read-arguments +pascal-run-args 'keep))))
   (let ((value (unless (string-empty-p args) args)))
     (+core-project-setting-set (+pascal-root) '+pascal-run-args value)
     (message "%s" (if value (format "Arguments: %s" value) "No arguments"))))

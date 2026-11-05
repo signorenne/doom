@@ -210,8 +210,12 @@ latest file opened in a tree-sitter mode was C or C++.
 
 Run and debug take Qt Creator's run configuration when there is one: the
 target, the arguments and the working directory; =A= in the panel chooses
-another target, =a= other arguments, both kept in =.dir-locals.el=. Every
-build, run and debug saves the project's buffers first.
+another target, =a= other arguments, both kept in =.dir-locals.el=. With
+neither and several executables, the first =F6=, =S-F6= or =F5= asks which
+and keeps the answer as the run target, so it asks once; =S-F6= asks
+before its build starts, never after. =SPC k R= offers the kept arguments
+as its default. Every build, run and debug saves the project's buffers
+first.
 
 A kit whose Qt Creator kit names a device, the mule's ARM kit and its
 =FDC_PROTO_B=, runs there: =SPC k r= starts the installed executable on
