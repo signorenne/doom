@@ -1547,23 +1547,34 @@ answered yes: the quit has asked about each of them."
   "The buffers a frame closing kept because of their unsaved work.")
 
 (defun +core--keep-unsaved-h ()
-  "Refuse to kill this buffer when it holds unsaved work."
-  (if (and (buffer-modified-p) (or buffer-file-name buffer-offer-save))
+  "Refuse to kill this buffer when it holds unsaved work: its file's, or
+the file's it shares the text of, as an unfinished capture does."
+  (if (and (buffer-modified-p)
+           (or buffer-file-name buffer-offer-save
+               (and (buffer-base-buffer) (buffer-file-name (buffer-base-buffer)))))
       (progn (push (current-buffer) +core--kept-unsaved) nil)
     t))
 
+;; Doom deletes the closing frame's workspace only when it is the one
+;; the selected frame shows, and the close button of a frame not
+;; selected, the usual case on KDE, left it behind with its buffers. The
+;; frame closing is the one selected while that runs.
 (defun +core--frame-close-asks-nothing-a (fn &rest args)
   "Call FN with ARGS, every question it would ask answered no, and keep
-each buffer it would have asked about."
+each buffer it would have asked about.  FN runs in the frame closing,
+the first of ARGS."
   ;; yes-or-no-p is C: with short answers it asks through y-or-n-p.
   (let ((save-some-buffers-default-predicate #'ignore)
         (use-short-answers t)
-        (+core--kept-unsaved nil))
+        (+core--kept-unsaved nil)
+        (frame (car args)))
     (add-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h)
     (unwind-protect
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore)
                   ((symbol-function 'map-y-or-n-p) (lambda (&rest _) 0)))
-          (apply fn args))
+          (if (frame-live-p frame)
+              (with-selected-frame frame (apply fn args))
+            (apply fn args)))
       (remove-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h))
     (when-let* ((kept (seq-filter #'buffer-live-p (delete-dups +core--kept-unsaved))))
       (message "Kept unsaved, SPC b B finds them: %s"

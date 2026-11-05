@@ -134,8 +134,9 @@ frame of a daemon leaves Emacs running, which is the point of it.
 quit: in the daemon one you do not save stays open, unsaved, for the
 next frame; an Emacs of its own quits without it. A program still
 running is asked about too. Closing a frame any other way, its
-window's close button too, asks nothing: an unsaved file stays open, and
-~SPC b B~ finds it.
+window's close button too, whether the frame is the one in front or not,
+asks nothing: its workspace goes, and an unsaved file or an unfinished
+capture stays open, named in a message; ~SPC b B~ finds it.
 
 ** Open the config
 | Key       | What it opens                |
