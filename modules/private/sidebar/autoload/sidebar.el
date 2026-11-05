@@ -531,12 +531,15 @@ untracked or ignored folder is one entry ending in a slash."
 ;;;###autoload
 (defun +sidebar--file-line (path letter &optional indent)
   "A line for the file at PATH with status LETTER, INDENT columns in:
-its name, its folder dimmed, the letter at the right edge."
-  (let ((name (file-name-nondirectory path))
-        (dir (file-name-directory path))
-        (face (+sidebar--letter-face letter)))
+its name, its folder dimmed, the letter at the right edge. A PATH ending
+in a slash is a folder, git's one entry for an untracked one."
+  (let* ((folder (directory-name-p path))
+         (path (directory-file-name path))
+         (name (file-name-nondirectory path))
+         (dir (file-name-directory path))
+         (face (+sidebar--letter-face letter)))
     (concat (make-string (or indent 2) ?\s)
-            (+sidebar--icon name)
+            (+sidebar--icon name folder)
             (propertize name 'font-lock-face face)
             (if dir (concat " " (propertize (directory-file-name dir) 'font-lock-face 'shadow)) "")
             (propertize " " 'display '(space :align-to (- right 2)))
