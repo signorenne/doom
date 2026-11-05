@@ -393,16 +393,32 @@ file at point, else the root."
   (apply #'message message args)
   (+sidebar--request 'explorer))
 
+(defun +sidebar--explorer-blank-p (name)
+  "Non-nil when NAME, a path as typed, is empty or has a blank part."
+  (or (string-blank-p name)
+      (seq-some #'string-blank-p (split-string name "/" t))))
+
+(defun +sidebar--explorer-target (prompt from verb)
+  "A new path for FROM, read with PROMPT; refused when it is FROM again or
+names nothing, with what to type for VERB, move or copy."
+  (let ((to (expand-file-name (read-file-name prompt (file-name-directory from)
+                                              nil nil (file-name-nondirectory from)))))
+    (when (or (equal (directory-file-name to) from)
+              (+sidebar--explorer-blank-p (file-name-nondirectory (directory-file-name to))))
+      (user-error "Type a new name, or a path to %s %s to" verb (file-name-nondirectory from)))
+    to))
+
 ;;;###autoload
 (defun +sidebar/explorer-new ()
   "Make a file in the folder at point and open it; a name ending in a
 slash makes a folder."
   (interactive)
   (let* ((dir (+sidebar--explorer-dir))
-         (path (expand-file-name
-                (read-string (format "New in %s (end with / for a folder): "
-                                     (abbreviate-file-name dir)))
-                dir)))
+         (name (read-string (format "New in %s (end with / for a folder): "
+                                    (abbreviate-file-name dir))))
+         (path (if (+sidebar--explorer-blank-p name)
+                   (user-error "Type a name for the new file, or one ending in / for a folder")
+                 (expand-file-name name dir))))
     (when (file-exists-p path)
       (user-error "%s exists" (abbreviate-file-name path)))
     (if (directory-name-p path)
@@ -421,8 +437,7 @@ slash makes a folder."
   (interactive)
   (require 'dired-aux)
   (let* ((from (directory-file-name (+sidebar--explorer-file-path)))
-         (to (expand-file-name (read-file-name "Rename or move to: " (file-name-directory from)
-                                               nil nil (file-name-nondirectory from)))))
+         (to (+sidebar--explorer-target "Rename or move to: " from "move")))
     (when (file-exists-p to)
       (user-error "%s exists" (abbreviate-file-name to)))
     (make-directory (file-name-directory to) t)
@@ -460,8 +475,7 @@ to kill the buffers of what went."
   "Copy the file or folder at point, a folder with everything in it."
   (interactive)
   (let* ((from (directory-file-name (+sidebar--explorer-file-path)))
-         (to (expand-file-name (read-file-name "Copy to: " (file-name-directory from)
-                                               nil nil (file-name-nondirectory from)))))
+         (to (+sidebar--explorer-target "Copy to: " from "copy")))
     (when (file-exists-p to)
       (user-error "%s exists" (abbreviate-file-name to)))
     (if (file-directory-p from)
