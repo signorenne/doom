@@ -633,6 +633,10 @@ send every folding command of magit's through `+sidebar/fold'."
   (evil-define-key* 'normal map
     [down-mouse-1] #'ignore
     [drag-mouse-1] #'ignore)
+  ;; The width is fixed: a drag of its edge would only complain, at each
+  ;; step of the mouse, that nothing can be resized.
+  (define-key map [right-divider down-mouse-1] #'ignore)
+  (define-key map [vertical-line down-mouse-1] #'ignore)
   (evil-define-key* 'normal map
     "gj" #'magit-section-forward-sibling
     "gk" #'magit-section-backward-sibling
