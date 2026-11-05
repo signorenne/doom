@@ -614,14 +614,18 @@ in a sliver between them."
         (window (+core-view--window)))
     (when (and window (not (eq (window-parameter window 'window-side) side)))
       (delete-window window))
-    (display-buffer (+core-view--buffer)
-                    `(display-buffer-in-side-window
-                      (side . ,side)
-                      (window-width . ,+core-view-width)
-                      (slot . 0)
-                      (dedicated . t)
-                      (window-parameters . ((no-delete-other-windows . t)
-                                            (+core-view . t)))))
+    ;; Beside a popup on its side, the roam buffer at the right, the view
+    ;; splits that popup's window: a popup hands a split to the source,
+    ;; and the view went above it, at the top.
+    (let ((ignore-window-parameters t))
+      (display-buffer (+core-view--buffer)
+                      `(display-buffer-in-side-window
+                        (side . ,side)
+                        (window-width . ,+core-view-width)
+                        (slot . 0)
+                        (dedicated . t)
+                        (window-parameters . ((no-delete-other-windows . t)
+                                              (+core-view . t))))))
     ;; A picture beside the view just lost half its window. Fitted again
     ;; now rather than when image-mode notices, it is never drawn
     ;; spilling out of its window.
