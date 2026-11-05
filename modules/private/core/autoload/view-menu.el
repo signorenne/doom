@@ -38,22 +38,24 @@ A name, not the function: only compared, never called."
 (transient-define-prefix +core/view-menu ()
   "What the view beside this buffer can do."
   [["Picture"
-    ("+" "zoom in" +core/view-zoom-in :transient t)
-    ("-" "zoom out" +core/view-zoom-out :transient t)
-    ("0" "fit the window" +core/view-fit :transient t)
-    ("1" "its own size" +core/view-original :transient t)
-    ("b" "background: checker, light, dark" +core/view-background
+    ("+" "Zoom in" +core/view-zoom-in :transient t)
+    ("-" "Zoom out" +core/view-zoom-out :transient t)
+    ("0" "Fit the window" +core/view-fit :transient t)
+    ("1" "Its own size" +core/view-original :transient t)
+    ("b" "Background: checker, light, dark" +core/view-background
      :transient t :if +core--view-menu-svg-p)]
+   ;; The keys of SPC m P beside a diagram or an SVG: f follows, F is
+   ;; the diagram's format.
    ["View"
-    ("p" "show or hide it" +core/view-toggle)
-    ("r" "draw it again now" +core/view-refresh)
-    ("F" "follow my typing, or not" +core/view-follow-toggle)
-    ("O" "open it with the file, or not" +core/view-on-open-toggle)
-    ("c" "close it" +core/view-close)]
+    ("p" "Show or hide it" +core/view-toggle)
+    ("r" "Draw it again now" +core/view-refresh)
+    ("f" "Follow my typing, or not" +core/view-follow-toggle)
+    ("O" "Open it with every file, or not" +core/view-on-open-toggle)
+    ("c" "Close it" +core/view-close)]
    ["SVG" :if +core--view-menu-svg-p
-    ("h" "outline the element here, or not" +core/svg-here-toggle)
-    ("i" "its facts, or its drawing" +core/svg-facts-toggle)
-    ("e" "write it as a PNG" +core/svg-export)]
+    ("h" "Outline the element here, or not" +core/svg-here-toggle)
+    ("i" "Its facts, or its drawing" +core/svg-facts-toggle)
+    ("e" "Write it as a PNG" +core/svg-export)]
    ["Diagram" :if +core--view-menu-diagram-p
-    ("P" "draw as PNG or SVG" +core--view-menu-uml-format)
-    ("e" "write it to a file" +core--view-menu-uml-export)]])
+    ("F" "Draw as PNG or SVG" +core--view-menu-uml-format)
+    ("e" "Write it to a file" +core--view-menu-uml-export)]])
