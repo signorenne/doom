@@ -323,7 +323,10 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
                                      ;; Above the Claude terminals, whose
                                      ;; slots start at 0, so both show.
                                      (slot . -1)
-                                     (window-width . ,+ai-panel-width))
+                                     ;; Columns of text, as claude-code-ide
+                                     ;; sizes the terminal: a plain number
+                                     ;; counts the fringes and left it 70.
+                                     (window-width . (body-columns . ,+ai-panel-width)))
         ;; Context on request: the region, dired's files or the error at
         ;; point, never the current line by itself.
         agent-shell-context-sources '(files region error)
