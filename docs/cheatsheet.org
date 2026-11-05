@@ -4687,8 +4687,8 @@ bound.
   (.claude/commands/NAME.md) with DESCRIPTION.
 - ~+ai/open-claude-md~ (~SPC l m c~) :: Open this project's CLAUDE.md,
   offering to create one.
-- ~+ai/open-claude-settings~ (~SPC l m s~) :: Open ~/.claude/settings.json;
-  with prefix PROJECT, the project's own file.
+- ~+ai/open-claude-settings~ (~SPC l m s~) :: Open Claude's settings; with
+  prefix PROJECT, the project's own file.
 - ~+ai/set-claude-model~ (~SPC l t o~) :: Use MODEL for new Claude sessions.
 - ~+ai/terminal~ (~SPC l t c~) :: Focus this project's Claude terminal, or
   start one when none runs.

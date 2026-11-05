@@ -62,11 +62,12 @@ CMake's with the project's first preset when it has presets, else make."
 
 ;;;###autoload
 (defun +ai/open-claude-settings (&optional project)
-  "Open ~/.claude/settings.json; with prefix PROJECT, the project's own file."
+  "Open Claude's settings; with prefix PROJECT, the project's own file.
+Claude's settings are `+ai-claude-settings-file', where the hooks go."
   (interactive "P")
   (find-file (if project
                  (expand-file-name ".claude/settings.json" (+core-project-root 'noerror))
-               (expand-file-name "~/.claude/settings.json"))))
+               (expand-file-name +ai-claude-settings-file))))
 
 ;;;###autoload
 (defun +ai/new-slash-command (name description &optional global)
