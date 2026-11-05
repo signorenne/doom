@@ -1472,6 +1472,19 @@ It advises the commands that quit, SPC q q's among them."
   (when (fboundp 'doom/delete-frame-with-prompt)
     (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)))
 
+;; Emacs runs `delete-frame-functions' with redisplay off. Doom's
+;; workspaces kill the closing frame's workspace from there, and ask
+;; about each buffer still modified: a question never drawn, which
+;; Emacs then waited on for good, every new frame blank.
+(defun +core--frame-close-asks-a (fn &rest args)
+  "Call FN with ARGS with redisplay on, its questions drawn and
+answered by the next key."
+  (let ((inhibit-redisplay nil))
+    (apply #'+core--answer-anywhere-a fn args)))
+
+(when (modulep! :ui workspaces)
+  (advice-add '+workspaces-delete-associated-workspace-h :around #'+core--frame-close-asks-a))
+
 
 ;;
 ;;; Contextual menus
