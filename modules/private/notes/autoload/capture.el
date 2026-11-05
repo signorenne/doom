@@ -249,7 +249,7 @@ an error in a %(...) of a template is written into the path instead."
 (defun +notes--roam-new-only-h ()
   "Refuse a course, lecture, case study or design doc for a node that has
 a file already: org-roam would write the template into that file."
-  (when (and (member (org-capture-get :key) '("C" "l" "k" "D"))
+  (when (and (member (org-capture-get :key) '("u" "l" "k" "D"))
              (org-roam-node-file org-roam-capture--node))
     (user-error "%S is a note already, %s; to make a new one of that title, type it and press M-RET"
                 (org-roam-node-title org-roam-capture--node)
@@ -287,7 +287,7 @@ capture passes the buffer it was started from; a command, its own."
          (file (buffer-file-name (or (buffer-base-buffer buffer) buffer))))
     (cond ((and file (seq-find (lambda (course) (file-in-directory-p file (file-name-directory course)))
                                courses)))
-          ((null courses) (user-error "No active course yet; SPC n r n C makes one"))
+          ((null courses) (user-error "No active course yet; SPC n r n u makes one"))
           (t (let ((choices (mapcar (lambda (course) (cons (+notes--project-title course) course))
                                     courses)))
                (cdr (assoc (completing-read "Course: " choices nil t) choices)))))))

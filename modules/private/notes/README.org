@@ -100,7 +100,7 @@ applies to), howto (when, steps, gotchas), hardware (a board or part:
 pinout, toolchain, gotchas), reference (a source: key points, quotes, my
 take), question, project (a dashboard, goal, completion criteria, next
 actions, decisions, progress, with the repository and the kit in its
-head), person, meeting, and for work and study, course (~C~), lecture
+head), person, meeting, and for work and study, course (~u~), lecture
 (~l~), case study (~k~) and design doc (~D~). Concept, solution, howto,
 hardware and question ask for their subject directory under
 =resources/wiki/=, a new one when you type a name that is not there and
@@ -263,7 +263,7 @@ Courses, case studies and a project's design work are notes of the graph
 like any other, with live tables in them that say what is open.
 
 ** Courses and lectures
-~SPC n r n C~ makes a course, =areas/university/<course>/index.org=,
+~SPC n r n u~ makes a course, =areas/university/<course>/index.org=,
 active and tagged =course=: an overview (teacher, term, exam), its
 timetable, its assignments and exams, and live tables of its lectures,
 its board, what is due in the next two weeks and its case studies. A

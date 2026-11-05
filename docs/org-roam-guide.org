@@ -368,7 +368,7 @@ The pattern that works, from a paper, a chapter or a library's docs:
    key points in your words, quotes only when the wording matters;
 2. a concept note for each idea worth its own name, linked from the
    reference;
-3. a question note, =SPC n r n q=, for every thing you did not follow. It
+3. a question note, =SPC n r n Q=, for every thing you did not follow. It
    has three headings on purpose: what I do not understand, what I tried,
    answer. Leaving the answer empty is the point;
 4. a map of the topic, =SPC n r m=, once you have more than a handful.
@@ -396,7 +396,7 @@ rereading the note is the better review for that.
 
 * Work and study
 ** A course from scratch
-Say the term starts with Signals and Systems. =SPC n r n= then =C=,
+Say the term starts with Signals and Systems. =SPC n r n= then =u=,
 titled "Signals and Systems", makes the course's folder,
 =areas/university/signals_and_systems/=, and its index: fill in its
 Overview now, the teacher, the term, the exam. Under Timetable write each

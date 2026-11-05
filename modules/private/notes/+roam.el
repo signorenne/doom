@@ -122,7 +122,9 @@ day is written under.")
                               ,(concat +notes-roam-head ":ref:\n"
                                        "#+source: [cite:@${citar-citekey}]\n\n"))
            :unnarrowed t :empty-lines-before 1)
-          ("q" "question: something to work out" plain
+          ;; q and C are org-capture's own keys in its menu, Abort and
+          ;; Customize: the question is on Q and the course on u.
+          ("Q" "question: something to work out" plain
            "* Answer in one line\n%?\n\n* What I do not understand\n\n* What I tried\n\n* Answer\n"
            :target (file+head "${+notes--roam-subject-path}"
                               ,(concat +notes-roam-head ":question:\n\n"))
@@ -151,7 +153,7 @@ day is written under.")
           ;; A course is a folder of its own under areas/university/,
           ;; its index the hub, its lectures beside it; it has a status,
           ;; as a project has, so a finished one leaves the agenda.
-          ("C" "course: a university course's hub" plain
+          ("u" "course: a university course's hub" plain
            ,(replace-regexp-in-string "^- Teacher:$" "- Teacher: %?" +notes-course-body t t)
            :target (file+head "${+notes--roam-course-path}"
                               ,(concat (replace-regexp-in-string ":END:" ":STATUS: active\n:END:" +notes-roam-head t t)

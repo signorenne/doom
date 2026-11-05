@@ -2480,12 +2480,12 @@ a folder of its own; the first five ask for their subject folder under
 | ~SPC n r n s~ | solution   | =resources/wiki/<subject>/=  |
 | ~SPC n r n h~ | howto      | =resources/wiki/<subject>/=  |
 | ~SPC n r n b~ | hardware   | =resources/wiki/<subject>/=  |
-| ~SPC n r n q~ | question   | =resources/wiki/<subject>/=  |
+| ~SPC n r n Q~ | question   | =resources/wiki/<subject>/=  |
 | ~SPC n r n r~ | reference  | =resources/sources/manuals/= |
 | ~SPC n r n p~ | project    | =projects/<project>/=        |
 | ~SPC n r n P~ | person     | =resources/wiki/people/=     |
 | ~SPC n r n m~ | meeting    | =capture/meetings/=          |
-| ~SPC n r n C~ | course     | =areas/university/<course>/= |
+| ~SPC n r n u~ | course     | =areas/university/<course>/= |
 | ~SPC n r n l~ | lecture    | its course's =lectures/=     |
 | ~SPC n r n k~ | case study | =resources/case-studies/=    |
 | ~SPC n r n D~ | design doc | its project's =design/=      |
