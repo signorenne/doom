@@ -3753,7 +3753,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k l l~ | Link compile_commands.json into the root |
 | ~SPC k l r~ | Restart it                               |
 | ~SPC k l s~ | Switch server: clangd, ccls              |
-| ~SPC k m~   | The project's panel                      |
+| ~SPC k m~   | CMake panel: what you set                |
 | ~SPC k n~   | New project                              |
 | ~SPC k o~   | Copy the package out                     |
 | ~SPC k p B~ | Boards                                   |
@@ -3767,7 +3767,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k p i~ | compile_commands.json                    |
 | ~SPC k p l~ | Devices                                  |
 | ~SPC k p m~ | Serial monitor                           |
-| ~SPC k p n~ | New project                              |
+| ~SPC k p n~ | New PlatformIO project                   |
 | ~SPC k p t~ | Test                                     |
 | ~SPC k p u~ | Upload                                   |
 | ~SPC k r~   | Run                                      |

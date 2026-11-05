@@ -231,4 +231,4 @@ CMake flags are the keys: -D sets a cache variable, -U clears one,
     ("v j" "compile_commands.json" +cpp/open-compile-commands)
     ("v d" ".dir-locals.el"   +cpp/open-dir-locals)
     ("w" "Write the setup to .dir-locals.el" +cpp/write-dir-locals)
-    ("G" "Generate the presets from the setup" +cpp/write-presets)]])
+    ("G" "Generate the presets" +cpp/write-presets)]])

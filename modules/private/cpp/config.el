@@ -652,7 +652,7 @@ function, so `c-ts-mode-set-style' installs them."
 (defvar +cpp-kit-map
   (+core-kit-keymap
    `(("SPC" "Kit menu: what you do" #'+cpp/menu)
-     ("m" "The project's panel" #'+core/build-panel)
+     ("m" "CMake panel: what you set" #'+core/build-panel)
      ;; Build. Doom's SPC c C recompiles, so the kit prefix does not.
      ("c" "Configure" #'projection-commands-configure-project)
      ("b" "Build" #'projection-commands-build-project)
@@ -719,7 +719,7 @@ function, so `c-ts-mode-set-style' installs them."
        ("L" "Install a library" #'+pio/lib-install)
        ("U" "Update the packages" #'+pio/update)
        ("H" "PlatformIO Home" #'+pio/home)
-       ("n" "New project" #'+pio/new-project)))))
+       ("n" "New PlatformIO project" #'+pio/new-project)))))
   "SPC k in a C or C++ project: CMake, PlatformIO, Meson or make.")
 
 ;; And its menu of what a project can do, which reads Cargo, Gradle,
