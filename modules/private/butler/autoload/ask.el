@@ -210,6 +210,9 @@ with what he found, and answers in a sentence."
   (interactive (list (read-string (format "%s, at your service. Ask: " +butler-name)
                                   nil '+butler-ask-history)
                      current-prefix-arg))
+  ;; Nothing typed is nothing to look up, and not a question for Claude.
+  (when (string-blank-p question)
+    (user-error "%s: you asked me nothing, %s" +butler-name +butler-address))
   (unless (fboundp '+docs-search)
     (user-error "%s: there is nothing to read, %s; the docs module is off"
                 +butler-name +butler-address))

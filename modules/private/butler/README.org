@@ -21,7 +21,8 @@ terminal, and says something worth hearing:
   more than one reading is settled by pressing a number rather than by
   him guessing; ~c~ there puts it to Claude instead. A key is an answer
   one can act on, so lines of prose stand aside when two of the hits
-  carry one.
+  carry one. With nothing typed he says you asked him nothing, and
+  nothing goes to Claude.
   When the words alone do not settle it, or when asked with ~C-u~, or on
   ~A~ for a question you know to be a hard one, he puts it to Claude
   through gptel with the lines he found, so the answer is a sentence;
