@@ -62,6 +62,15 @@ is marked."
                   (when picture (funcall picture)))))))))
 
 ;;;###autoload
+(defun +uml--diagram ()
+  "The diagram a command means: this buffer, or the one the view shows.
+Anywhere else it refuses, before the command asks or changes anything."
+  (let ((buffer (or (ignore-errors (+core-view-source)) (current-buffer))))
+    (unless (with-current-buffer buffer (derived-mode-p 'plantuml-mode))
+      (user-error "Not a PlantUML buffer"))
+    buffer))
+
+;;;###autoload
 (defun +uml--view-h ()
   "Give a diagram its preview, drawn again as you type."
   ;; plantuml-lsp reports what `plantuml -syntax' finds, the drawing's
@@ -75,6 +84,7 @@ is marked."
 SVG stays sharp at any size; PNG is what a few diagram kinds render
 more faithfully."
   (interactive)
-  (setq +uml-preview-format (if (eq +uml-preview-format 'svg) 'png 'svg))
-  (message "The preview is drawn as %s" (upcase (symbol-name +uml-preview-format)))
-  (+core-view-redraw (+core-view-source)))
+  (let ((diagram (+uml--diagram)))
+    (setq +uml-preview-format (if (eq +uml-preview-format 'svg) 'png 'svg))
+    (message "The preview is drawn as %s" (upcase (symbol-name +uml-preview-format)))
+    (+core-view-redraw diagram)))
