@@ -296,6 +296,16 @@ the side bar is on show.")
              (+sidebar--explorer-open-p '(+sidebar-editors)))
     (+sidebar--request 'explorer)))
 
+(defun +sidebar--frame-deleted-h (frame)
+  "Let go of everything as FRAME goes, when it is the only one showing the
+side bar: it went with the frame, and comes back in no other."
+  (when (and (+sidebar--window frame)
+             (not (seq-some (lambda (other)
+                              (and (not (eq other frame)) (+sidebar--window other)))
+                            (frame-list))))
+    (setq +sidebar--wanted nil)
+    (+sidebar--hooks nil)))
+
 (defun +sidebar--workspace-h (&rest _)
   "Bring the side bar back after a workspace switch took its window."
   (when +sidebar--wanted
@@ -356,6 +366,7 @@ hook stays while the side bar is wanted."
         (add-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
         (add-hook 'first-change-hook #'+sidebar--buffers-changed-h)
         (add-hook 'persp-activated-functions #'+sidebar--workspace-h)
+        (add-hook 'delete-frame-functions #'+sidebar--frame-deleted-h)
         (advice-add 'dirvish-peek-setup-h :around #'+sidebar--no-peek-a))
     (remove-hook 'window-buffer-change-functions #'+sidebar--windows-h)
     (remove-hook 'magit-post-refresh-hook #'+sidebar--changed-h)
@@ -363,6 +374,7 @@ hook stays while the side bar is wanted."
     (remove-hook '+ai-edit-functions #'+sidebar--changed-h)
     (remove-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
     (remove-hook 'first-change-hook #'+sidebar--buffers-changed-h)
+    (remove-hook 'delete-frame-functions #'+sidebar--frame-deleted-h)
     (advice-remove 'dirvish-peek-setup-h #'+sidebar--no-peek-a)
     (unless +sidebar--wanted
       (remove-hook 'persp-activated-functions #'+sidebar--workspace-h))
