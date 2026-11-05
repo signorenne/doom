@@ -14,7 +14,8 @@ closes one, =s= saves it) and the file's Outline (its symbols, in place
 of imenu-list, =SPC t o=) and Timeline (its commits; =RET= opens one's
 change beside its old version). Those three are worked out only while
 they are open; Outline follows the file's edits a second after they
-rest. The tree is the project of
+rest, and it and Open editors follow a file read again from disk, as
+after an agent's write. The tree is the project of
 the file in the editor (a workspace can pin a folder instead, as the
 notes layout pins the vault), folders first, each listing its files the
 first time it is opened. git's state colours the names, and a folder

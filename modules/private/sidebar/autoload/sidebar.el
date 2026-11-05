@@ -318,6 +318,13 @@ side bar: it went with the frame, and comes back in no other."
     (setq +sidebar--wanted nil)
     (+sidebar--hooks nil)))
 
+(defun +sidebar--reverted-h ()
+  "A file's buffer was read again from its file, as after an agent's
+write: Open editors' star and Outline's symbols, if open, change."
+  (when (and buffer-file-name
+             (+sidebar--explorer-open-p '(+sidebar-editors +sidebar-outline)))
+    (+sidebar--request 'explorer)))
+
 (defun +sidebar--workspace-h (&rest _)
   "Bring the side bar back after a workspace switch took its window."
   (when +sidebar--wanted
@@ -377,6 +384,7 @@ hook stays while the side bar is wanted."
         (add-hook '+ai-edit-functions #'+sidebar--changed-h)
         (add-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
         (add-hook 'first-change-hook #'+sidebar--buffers-changed-h)
+        (add-hook 'after-revert-hook #'+sidebar--reverted-h)
         (add-hook 'persp-activated-functions #'+sidebar--workspace-h)
         (add-hook 'delete-frame-functions #'+sidebar--frame-deleted-h)
         (advice-add 'dirvish-peek-setup-h :around #'+sidebar--no-peek-a))
@@ -386,6 +394,7 @@ hook stays while the side bar is wanted."
     (remove-hook '+ai-edit-functions #'+sidebar--changed-h)
     (remove-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
     (remove-hook 'first-change-hook #'+sidebar--buffers-changed-h)
+    (remove-hook 'after-revert-hook #'+sidebar--reverted-h)
     (remove-hook 'delete-frame-functions #'+sidebar--frame-deleted-h)
     (advice-remove 'dirvish-peek-setup-h #'+sidebar--no-peek-a)
     (unless +sidebar--wanted
