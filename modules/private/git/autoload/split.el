@@ -71,8 +71,8 @@ when it is empty."
     (when (< beg end)
       (overlay-put overlay 'face face))
     (when (> pad 0)
-      (overlay-put overlay (if (= beg end) 'before-string 'after-string)
-                   (+git--split-filler pad beg)))
+      ;; Above the line that follows, so the padding takes no line number.
+      (+git--live-put-above overlay end (+git--split-filler pad end)))
     overlay))
 
 (defun +git--split-draw (hunks)
@@ -214,7 +214,7 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
 (defun +git--split-fill (buffer file coding)
   "Put FILE's text, read in CODING, into the old version's BUFFER."
   (with-current-buffer buffer
-    (mapc #'delete-overlay +git--split-overlays)
+    (mapc #'+git--live-delete-overlay +git--split-overlays)
     (setq +git--split-overlays nil)
     (let ((inhibit-read-only t)
           (coding-system-for-read coding))

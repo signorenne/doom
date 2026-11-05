@@ -338,9 +338,31 @@ is empty at the line that follows it."
 
 ;;;###autoload
 (defun +git--live-delete-overlay (overlay)
-  "Delete OVERLAY and the word marks that belong to it."
+  "Delete OVERLAY, the word marks and the lines above that belong to it."
   (mapc #'delete-overlay (overlay-get overlay '+git-live-words))
+  (when-let* ((above (overlay-get overlay '+git-live-above)))
+    (delete-overlay above))
   (delete-overlay overlay))
+
+;;;###autoload
+(defun +git--live-put-above (overlay pos text)
+  "Draw TEXT, whole lines, above the line that starts at POS, for OVERLAY.
+They are drawn on the newline that ends the line before, so the line at
+POS keeps its number and TEXT's lines show none, as VS Code draws them;
+before POS when no line is above it."
+  (let ((above (overlay-get overlay '+git-live-above)))
+    (if (and (> pos (point-min)) (eq (char-before pos) ?\n))
+        (progn
+          (unless (and above (overlay-buffer above))
+            ;; Text typed at the end of that line stays outside it.
+            (setq above (make-overlay (1- pos) pos nil t nil))
+            (overlay-put above '+git-live t)
+            (overlay-put overlay '+git-live-above above))
+          (overlay-put above 'display (concat "\n" text)))
+      (when above
+        (delete-overlay above)
+        (overlay-put overlay '+git-live-above nil))
+      (overlay-put overlay 'before-string text))))
 
 ;;;###autoload
 (defun +git--live-reconcile (existing specs make)
@@ -390,7 +412,7 @@ spec for each one that does not match. The others of EXISTING go."
              (when (< beg end)
                (overlay-put overlay 'face '+git-live-added))
              (unless (string-empty-p old-text)
-               (overlay-put overlay 'before-string (+git--live-ghost old-text beg)))
+               (+git--live-put-above overlay beg (+git--live-ghost old-text beg)))
              overlay)))))
 
 
@@ -468,7 +490,7 @@ removed lines drawn above it."
         (setq added new-words)))
     (set-marker new-beg nil)
     (set-marker new-end nil)
-    (overlay-put overlay 'before-string ghost)
+    (+git--live-put-above overlay beg ghost)
     (overlay-put overlay '+git-live-words added)))
 
 (defun +git--live-refinable-p (overlay)
