@@ -5,6 +5,7 @@
 (declare-function consult-org-heading "consult-org")
 (declare-function consult-line "consult")
 (declare-function org-fold-show-all "org-fold")
+(declare-function org-fontify-entities "org")
 (declare-function which-key--get-bindings "which-key")
 (declare-function evil-get-auxiliary-keymap "evil-core")
 
@@ -867,9 +868,11 @@ what the session has done."
             (+docs--leader-walk doom-leader-map))))
 
 (defun +docs--org-escape (s)
-  "Make S safe inside an org table cell."
+  "Make S safe inside an org table cell.  A | would end the cell, so it
+is org's entity for one, which the sheet draws as | (its #+startup line
+says entitiespretty)."
   (thread-last (string-trim s)
-               (replace-regexp-in-string "|" "/")
+               (string-replace "|" "\\vert{}")
                ;; Docstrings come back with curly quotes; keep the sheet ASCII.
                (replace-regexp-in-string "[\u2018\u2019]" "'")
                (replace-regexp-in-string "[\u201C\u201D]" "\"")))
@@ -924,9 +927,15 @@ after PREFIX; a kit map keeps each description in the map itself."
                           (+docs--org-escape (car row))
                           (+docs--org-escape (cdr row))))))
       ;; Aligned before writing, so the file holds what a reader sees and
-      ;; a regeneration compares like with like.
+      ;; a regeneration compares like with like. An entity counts as the
+      ;; one character the sheet draws: only the entities are drawn here,
+      ;; the rest counts as written.
       (let ((org-inhibit-startup t) (org-mode-hook nil))
         (delay-mode-hooks (org-mode)))
+      (let ((org-pretty-entities t))
+        (save-excursion
+          (goto-char (point-min))
+          (org-fontify-entities (point-max))))
       (org-table-map-tables #'org-table-align t)
       (buffer-string))))
 

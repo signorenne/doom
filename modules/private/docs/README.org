@@ -60,6 +60,12 @@ everything else is yours. The file is tracked by git, so when a table
 changed ~gr~ asks before it rewrites and saves it; called from Lisp,
 ~(+docs/cheatsheet-regenerate)~ does not ask.
 
+A =|= in a key, ~SPC w |~, would end its table cell, so the tables write
+it as Org's entity =\vert{}=, which the sheet draws as =|=: its =#+startup=
+line says =entitiespretty=, and =#+options= keeps =a_b= and =a^b= plain
+(=^:{}=). The entity is counted as the one character drawn when a table
+is aligned.
+
 Writing a new section: keep the tables small, two columns, one idea each.
 A section that needs more than about ten rows is two sections.
 

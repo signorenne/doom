@@ -1,8 +1,8 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
-#+startup: overview
+#+startup: overview entitiespretty
 #+generated: 2026-11-04 10:16
-#+options: toc:nil
+#+options: toc:nil ^:{}
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
 the mode you are in; =C-u F12= jumps to a heading instead, =C-u C-u F12=
@@ -3689,7 +3689,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC w v~         | evil-window-vsplit                |
 | ~SPC w w~         | evil-window-next                  |
 | ~SPC w x~         | evil-window-exchange              |
-| ~SPC w /~         | evil-window-set-width             |
+| ~SPC w \vert{}~         | evil-window-set-width             |
 
 ** SPC k: outside a project
 | Key     | What it does          |
