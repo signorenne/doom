@@ -455,17 +455,21 @@ to kill the buffers of what went."
     (when (equal path +sidebar--shown-root)
       (user-error "The root folder stays: trash it from a file manager"))
     (when (y-or-n-p (format "Move %s to the trash? " name))
-      (let ((delete-by-moving-to-trash t))
+      ;; Found first: once the folder is gone, nothing is in it.
+      (let ((visiting (seq-filter
+                       (lambda (buffer)
+                         (when-let* ((file (buffer-file-name buffer)))
+                           (if folder (file-in-directory-p file path) (equal file path))))
+                       (buffer-list)))
+            (delete-by-moving-to-trash t))
         (if folder
             (delete-directory path t t)
-          (delete-file path t)))
-      (dolist (buffer (buffer-list))
-        (when-let* ((file (buffer-file-name buffer)))
-          (when (and (if folder (file-in-directory-p file path) (equal file path))
-                     (y-or-n-p (format "Kill buffer %s too%s? " (buffer-name buffer)
-                                       (if (buffer-modified-p buffer)
-                                           ", its unsaved changes lost"
-                                         ""))))
+          (delete-file path t))
+        (dolist (buffer visiting)
+          (when (y-or-n-p (format "Kill buffer %s too%s? " (buffer-name buffer)
+                                  (if (buffer-modified-p buffer)
+                                      ", its unsaved changes lost"
+                                    "")))
             (with-current-buffer buffer (set-buffer-modified-p nil))
             (kill-buffer buffer))))
       (+sidebar--explorer-done "Moved %s to the trash" name))))
