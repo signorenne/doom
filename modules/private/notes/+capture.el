@@ -13,16 +13,16 @@ habit, a reading or a snippet belongs in."
   `(("t" "Todo to inbox" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
      "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n%a\n%i" :prepend t)
-    ("T" "Todo with date to inbox" entry
+    ("T" "Todo with a date" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
      "* TODO %?\nSCHEDULED: %^{Scheduled}t\n:PROPERTIES:\n:CREATED: %U\n:END:\n%a\n%i" :prepend t)
     ("i" "Idea" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
      "* IDEA %^{Idea}\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?" :prepend t)
-    ("l" "Link (clipboard URL)" entry
+    ("l" "Clipboard link" entry
      (file+headline ,(+notes--inbox-file) "Inbox")
      "* %(org-cliplink-capture)\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?" :prepend t)
-    ("r" "Reading: book or article" entry
+    ("r" "Book or article" entry
      (file+headline ,(+notes--document-path "reading") "Queue")
      "* TODO %^{Title}\n:PROPERTIES:\n:CREATED: %U\n:AUTHOR: %^{Author}\n:URL: %^{URL}\n:END:\n%?" :prepend t)
     ("c" "Code snippet" entry
@@ -33,10 +33,10 @@ habit, a reading or a snippet belongs in."
      "* TODO %^{What}  :bug:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:END:\n%a\n%i\n%?" :prepend t)
     ("P" "Project goal" plain
      (function +notes--capture-project-goal) "%?" :unnarrowed t)
-    ("pt" "Task for an active PARA project" entry
+    ("pt" "Task for a project" entry
      (function +notes--capture-project-task)
      "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n%a\n%i")
-    ("ot" "Task for an active PARA project" entry
+    ("ot" "Task for a project, as pt" entry
      (function +notes--capture-project-task)
      "* TODO %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n%a\n%i")
     ("h" "Habit" entry
@@ -48,10 +48,10 @@ habit, a reading or a snippet belongs in."
     ("a" "AI session log" entry
      (function +notes--capture-project-progress)
      "* %^{Topic}  :ai:\n:PROPERTIES:\n:CREATED: %U\n:PROJECT: %(+notes--capture-project-name)\n:AGENT: %^{Agent|claude-code|agent-shell|gptel}\n:END:\n%?")
-    ("d" "Decision for the active project" entry
+    ("d" "Project decision" entry
      (function +notes--capture-project-decision)
      "* %^{Decision}  :decision:\n:PROPERTIES:\n:ID: %(org-id-new)\n:STATUS: %^{Status|accepted|proposed}\n:DATE: %<%Y-%m-%d>\n:CREATED: %U\n:END:\nContext: %?\nDecision:\nConsequences:\nAlternatives:\n")
-    ("e" "Assignment or exam for a course" entry
+    ("e" "Assignment or exam" entry
      (function +notes--capture-course-deadline)
      "* TODO %^{What}  :%^{Kind|assignment|exam}:\nDEADLINE: %^{Due}t\n:PROPERTIES:\n:CREATED: %U\n:END:\n%?")))
 

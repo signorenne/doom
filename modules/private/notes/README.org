@@ -32,6 +32,9 @@ Everything is in ~SPC n SPC~ (~+notes/menu~), which shows how many items are
 waiting in the inbox. Its keys are the leader's: ~d~ the documents as
 under ~SPC n d~, ~c~ the captures, ~r~ roam as under ~SPC n r~, ~a~ the
 agenda views of ~SPC o a~, and ~h~ ~g~ ~G~ ~p~ ~u~ ~P~ ~B~ as on ~SPC n~ itself.
+A key ~SPC n~ gives another command is left to it: export is ~E~, ~SPC n e~
+being org-noter, and org-ql find is ~a /~, since ~q~, as a key's last,
+closes the menu.
 
 ** Documents
 The inbox and someday are at the vault's root, the project index is

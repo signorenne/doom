@@ -48,18 +48,19 @@ redraw, and building a struct per node took the whole graph each time."
   "The capture column of `+notes/menu': one entry per template of
 `+notes--capture-templates', on c and the template's own key, so a
 template added there is in the menu as well, then the two roam kinds a
-day needs, a note and a meeting.  The browser template is left out,
-org-protocol fills it; the bookmarklets entry covers it."
+day needs, a concept and a meeting.  The browser template is left out,
+org-protocol fills it, and the bookmarklets entry covers it; so is ot,
+the same as pt."
   (transient-parse-suffixes
    '+notes/menu
    (append
     (cl-loop for (key description) in (+notes--capture-templates)
-             unless (equal key "w")
+             unless (member key '("w" "ot"))
              collect (list (concat "c " key) description
                            (let ((key key))
                              (lambda () (interactive) (org-capture nil key)))))
-    '(("c n" "Note, a kind in the graph" (lambda () (interactive) (org-roam-capture nil "c")))
-      ("c m" "Meeting, in the graph" (lambda () (interactive) (org-roam-capture nil "m")))
+    '(("c n" "Concept note" (lambda () (interactive) (org-roam-capture nil "c")))
+      ("c m" "Meeting note" (lambda () (interactive) (org-roam-capture nil "m")))
       ("c w" "From the browser" +notes/protocol-bookmarklets)
       ("c SPC" "Pick a template" org-capture)))))
 
@@ -75,12 +76,14 @@ org-protocol fills it; the bookmarklets entry covers it."
             (cond ((null nodes) "missing")
                   ((zerop nodes) "empty, r f starts a note")
                   (t (format "%d notes" nodes))))))
-
 ;; The SPC n keys, laid out: d the documents, c the captures, r roam, as
 ;; on the leader; the agenda views under a, SPC o a there; and the
-;; single keys the leader has, h g G p u P B. q closes the menu, also as
-;; the last key of two, and ? then a key explains it, so nothing ends in
-;; those: org-ql find is a /, not a q.
+;; single keys the leader has, h g G p u P B. A key SPC n has for another
+;; command is not used for this one: export is E, SPC n e being org-noter.
+;; q closes the menu, also as the last key of two, and ? then a key
+;; explains it, so nothing ends in those: org-ql find is a /, not a q.
+;; Three columns to a row, so it fits beside the panels of SPC n h and in
+;; a 45 line frame.
 ;;;###autoload (autoload '+notes/menu "private/notes/autoload/menu" nil t)
 (transient-define-prefix +notes/menu ()
   "Notes and tasks: documents, capture, agenda, roam, the same keys as SPC n."
@@ -93,11 +96,10 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("d n" "Snippets"     (lambda () (interactive) (+notes/open-document "snippets")))
     ("d h" "Habits"       (lambda () (interactive) (+notes/open-document "habits")))
     ("d u" "University"   (lambda () (interactive) (+notes/open-document "university")))
-    ("d d" "Any document" +notes/open-document)
-    ("d j" "Today's daily note" org-roam-dailies-goto-today)
+    ("d d" "Pick a document" +notes/open-document)
+    ("d j" "Today's note" org-roam-dailies-goto-today)
     ("d w" "Writing mode" +notes/writing-mode)
     ("d b" "Set up the vault" +notes/bootstrap)]
-   ["Capture (c)" :class transient-column :setup-children +notes--capture-suffixes]
    ["Agenda (a)"
     ("a x" "Dashboard"      +notes/dashboard)
     ("a w" "Weekly review"  +notes/weekly-review)
@@ -106,11 +108,23 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("a i" "Inbox"          +notes/inbox)
     ("a u" "University agenda" +notes/university-agenda)
     ("a t" "Todo list"      org-todo-list)
-    ("a /" "Query (org-ql)" +notes/query)]]
-  [["Roam (r)"
-    ("r f" "Find or create node" org-roam-node-find)
-    ("r n" "Capture node"        org-roam-capture)
-    ("r /" "Search notes"        consult-org-roam-search)
+    ("a /" "org-ql find"    +notes/query)]
+   ["Keep"
+    ("h" "Notes layout"        +notes/layout)
+    ("g" "Commit the notes"    +notes/commit)
+    ("G" "Sync with the remote" +notes/sync)
+    ("H" "What changed"        +notes/log)
+    ("V" "Make a repository"   +notes/init-repo
+     :if (lambda () (not (+notes-repo-p))))
+    ("p" "Review the cards due" org-fc-review-all)
+    ("u" "Review course cards" +notes/course-review)
+    ("P" "Card dashboard"      org-fc-dashboard)
+    ("B" "The bibliography"    citar-open)]]
+  [["Capture (c)" :class transient-column :setup-children +notes--capture-suffixes]
+   ["Roam (r)"
+    ("r f" "Find node"           org-roam-node-find)
+    ("r n" "Capture to node"     org-roam-capture)
+    ("r /" "Search roam notes"   consult-org-roam-search)
     ("r B" "Backlinks"           consult-org-roam-backlinks)
     ("r t" "Notes by tag"        +notes/roam-tags)
     ("r m" "Map of a tag"        +notes/roam-map-of-content)
@@ -122,19 +136,8 @@ org-protocol fills it; the bookmarklets entry covers it."
     ("r u" "Graph in the browser" +notes/roam-ui-open)
     ("r s" "Sync database"       org-roam-db-sync)
     ("r ?" "How to work with roam" +notes/roam-guide)]
-   ["Keep"
-    ("h" "Notes layout"        +notes/layout)
-    ("g" "Commit the notes"    +notes/commit)
-    ("G" "Sync with the remote" +notes/sync)
-    ("H" "What changed"        +notes/log)
-    ("V" "Version the notes (git init)" +notes/init-repo
-     :if (lambda () (not (+notes-repo-p))))
-    ("p" "Review the cards due" org-fc-review-all)
-    ("u" "Review a course's cards" +notes/course-review)
-    ("P" "Card dashboard"      org-fc-dashboard)
-    ("B" "The bibliography"    citar-open)]
    ["Write"
     ("M" "Mind map"         org-mind-map-write)
-    ("e" "Export dispatch"  org-export-dispatch)
+    ("E" "Export dispatch"  org-export-dispatch)
     ("z" "Presentation"     org-tree-slide-mode)
     ("k" "Pomodoro"         org-pomodoro)]])

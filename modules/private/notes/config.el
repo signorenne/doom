@@ -497,7 +497,7 @@ from the spans of its block found once; the match data set the same."
        :desc "Commit the notes"       "g" #'+notes/commit
        :desc "Sync with the remote"   "G" #'+notes/sync
        :desc "Review the cards due"   "p" #'org-fc-review-all
-       :desc "Review a course's cards" "u" #'+notes/course-review
+       :desc "Review course cards"   "u" #'+notes/course-review
        :desc "The bibliography"       "B" #'citar-open
        ;; SPC n b is Doom's citar-open-notes already.
        :desc "Card dashboard"         "P" #'org-fc-dashboard
@@ -510,7 +510,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Done checking"         "d" #'langtool-check-done)
        (:prefix ("d" . "documents")
         :desc "Set up the vault"      "b" #'+notes/bootstrap
-        :desc "Choose document"       "d" #'+notes/open-document
+        :desc "Pick a document"       "d" #'+notes/open-document
         :desc "Inbox"                 "i" (cmd! (+notes/open-document "inbox"))
         :desc "Projects"              "p" (cmd! (+notes/open-document "projects"))
         :desc "Someday"               "s" (cmd! (+notes/open-document "someday"))
@@ -521,7 +521,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Writing mode"          "w" #'+notes/writing-mode
         :desc "Browser capture setup" "P" #'+notes/install-protocol-handler)
        (:prefix "r"
-        :desc "Search notes (consult)" "/" #'consult-org-roam-search
+        :desc "Search roam notes"     "/" #'consult-org-roam-search
         :desc "Backlinks"              "B" #'consult-org-roam-backlinks
         :desc "Forward links"          "L" #'consult-org-roam-forward-links
         :desc "Map of a tag"           "m" #'+notes/roam-map-of-content
@@ -543,7 +543,7 @@ from the spans of its block found once; the match data set the same."
         :desc "Next actions"          "n" #'+notes/next-actions
         :desc "Projects"              "p" #'+notes/projects
         :desc "Inbox"                 "i" #'+notes/inbox
-        :desc "University"            "u" #'+notes/university-agenda)))
+        :desc "University agenda"     "u" #'+notes/university-agenda)))
 
 ;; ESC closes the agenda as q does. Unbound in its motion state, it was
 ;; Meta: ESC then q ran M-q, which fills a paragraph.

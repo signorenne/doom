@@ -3381,7 +3381,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n c~     | Toggle last org-clock          |
 | ~SPC n d P~   | Browser capture setup          |
 | ~SPC n d b~   | Set up the vault               |
-| ~SPC n d d~   | Choose document                |
+| ~SPC n d d~   | Pick a document                |
 | ~SPC n d h~   | Habits                         |
 | ~SPC n d i~   | Inbox                          |
 | ~SPC n d n~   | Snippets                       |
@@ -3400,7 +3400,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n o~     | Active org-clock               |
 | ~SPC n p~     | Review the cards due           |
 | ~SPC n q~     | org-ql find                    |
-| ~SPC n r /~   | Search notes (consult)         |
+| ~SPC n r /~   | Search roam notes              |
 | ~SPC n r ?~   | How to work with roam          |
 | ~SPC n r B~   | Backlinks                      |
 | ~SPC n r F~   | Find ref                       |
@@ -3435,7 +3435,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC n r v~   | Review the graph               |
 | ~SPC n s~     | Search notes                   |
 | ~SPC n t~     | Todo list                      |
-| ~SPC n u~     | Review a course's cards        |
+| ~SPC n u~     | Review course cards            |
 | ~SPC n v~     | View search                    |
 | ~SPC n w c~   | Check the grammar              |
 | ~SPC n w d~   | Done checking                  |
@@ -3461,7 +3461,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o a n~ | Next actions                 |
 | ~SPC o a p~ | Projects                     |
 | ~SPC o a t~ | Todo list                    |
-| ~SPC o a u~ | University                   |
+| ~SPC o a u~ | University agenda            |
 | ~SPC o a v~ | View search                  |
 | ~SPC o a w~ | Weekly review                |
 | ~SPC o a x~ | Dashboard                    |
