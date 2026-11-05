@@ -152,7 +152,8 @@ SPEC is a name, owner/name@version, or a URL."
 
 ;;;###autoload
 (defun +pio/monitor ()
-  "Open the serial monitor.  C-c exits it."
+  "Open the serial monitor.  C-c C-c exits it: in the terminal C-c is
+a prefix, and C-c C-c sends the monitor its C-c."
   (interactive)
   (+pio--vterm "*pio monitor*" "device" "monitor"))
 
