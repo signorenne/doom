@@ -250,6 +250,12 @@ standard input waits for."
   (+rust--need-cargo)
   (+core-compile name command (+rust-root) comint))
 
+(defun +rust--run-name ()
+  "What a run's buffer is named for: run: and the member that runs, or
+the crate, as C++ names it for the program."
+  (format "run: %s" (or +rust-member
+                        (file-name-nondirectory (directory-file-name (+rust-root))))))
+
 ;;;###autoload
 (defun +rust/build ()
   "Build the project with the flags it is set to."
@@ -260,13 +266,13 @@ standard input waits for."
 (defun +rust/run ()
   "Run what the project builds, with the arguments it is set to."
   (interactive)
-  (+rust--compile "run rust" (+rust-run-command) t))
+  (+rust--compile (+rust--run-name) (+rust-run-command) t))
 
 ;;;###autoload
 (defun +rust/run-with-args (args)
   "Run the project once with ARGS, without writing them down."
   (interactive (list (read-string "Arguments: " +rust-run-args)))
-  (+rust--compile "run rust"
+  (+rust--compile (+rust--run-name)
                   (+rust--command "run" (unless (string-empty-p args)
                                           (concat "-- " args)))
                   t))

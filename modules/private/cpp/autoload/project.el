@@ -155,11 +155,20 @@ saying in this config's words why it cannot run when it cannot."
 
 ;; Autoloaded: config.el puts it around projection's commands.
 ;;;###autoload
-(defun +cpp--projection-command-a (fn &rest args)
-  "Run FN, one of projection's commands, with ARGS; its interactive form
-goes through `+cpp--projection-spec', which says why it cannot run."
-  (interactive (lambda (spec) (+cpp--projection-spec spec)))
-  (apply fn args))
+(defun +cpp--projection-command-advice (type)
+  "Advice for projection's command of TYPE, a symbol, `build' and the
+rest.  Its interactive form goes through `+cpp--projection-spec', which
+says why the command cannot run; what it compiles is named TYPE as the
+config's own commands name theirs, so F7 and SPC k b in a Rust project
+share *build*<project>.  A run is named run: and the project, as a
+program's run is, so it opens where a run does."
+  (lambda (fn &rest args)
+    (interactive (lambda (spec) (+cpp--projection-spec spec)))
+    (+core-compiling-as (if (eq type 'run)
+                            (format "run: %s" (file-name-nondirectory
+                                               (directory-file-name (+core-project-root))))
+                          (symbol-name type))
+                        (lambda () (apply fn args)))))
 
 ;;;###autoload
 (defun +cpp--compile (name command &optional comint)

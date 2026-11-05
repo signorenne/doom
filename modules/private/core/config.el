@@ -429,7 +429,8 @@ re-run starts it at the editor's priority again.")
 (set-popup-rule! "^\\*run[ :]" :side 'right :size 0.45 :select t :quit t :ttl nil)
 
 ;; A build, a test or a check this config starts is named for what it
-;; is, *build* or *clippy*, which none of Doom's popup rules knows. It
+;; is and its project, *build*<hello> or *clippy*<hello>, which none of
+;; Doom's popup rules knows; F7's, projection's, is named so too. It
 ;; goes where *compilation* goes, at the bottom, the cursor left where it
 ;; was, so ESC closes it.
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)

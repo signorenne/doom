@@ -206,13 +206,15 @@ it is written the way each one's own documentation writes it."
         (format "npm run %s" script)
       (format "%s %s" manager script))))
 
+(defun +web--dev-script ()
+  "The script that starts the project's dev server, or an error."
+  (or +web-dev-script (+web--script "dev" "start" "serve")
+      (user-error "No dev, start or serve script in package.json")))
+
 ;;;###autoload
 (defun +web-dev-command ()
   "What `SPC k r' runs: the project's dev server."
-  (let ((script (or +web-dev-script (+web--script "dev" "start" "serve"))))
-    (unless script
-      (user-error "No dev, start or serve script in package.json"))
-    (+web-run-script-command script)))
+  (+web-run-script-command (+web--dev-script)))
 
 ;;;###autoload
 (defun +web-build-command ()
@@ -244,7 +246,7 @@ does not end, and it is asked questions."
 (defun +web/dev ()
   "Start the project's dev server, and leave it running."
   (interactive)
-  (+web--compile "run dev server" (+web-dev-command) t))
+  (+web--compile (format "run: %s" (+web--dev-script)) (+web-dev-command) t))
 
 ;;;###autoload
 (defun +web/build ()
@@ -258,7 +260,7 @@ does not end, and it is asked questions."
   (interactive)
   (let ((script (+web--script "preview" "serve:build" "start")))
     (unless script (user-error "No preview script in package.json"))
-    (+web--compile "run preview" (+web-run-script-command script) t)))
+    (+web--compile (format "run: %s" script) (+web-run-script-command script) t)))
 
 ;;;###autoload
 (defun +web/test ()
@@ -272,7 +274,7 @@ does not end, and it is asked questions."
   (interactive)
   (let ((script (+web--script "test:watch" "test:unit" "test")))
     (unless script (user-error "No test script in package.json"))
-    (+web--compile "run tests" (+web-run-script-command script) t)))
+    (+web--compile (format "run: %s" script) (+web-run-script-command script) t)))
 
 ;;;###autoload
 (defun +web/lint ()
@@ -312,7 +314,7 @@ does not end, and it is asked questions."
                           (or (mapcar #'car (+web-scripts))
                               (user-error "No scripts in package.json"))
                           nil t)))
-  (+web--compile (format "run %s" script)
+  (+web--compile (format "run: %s" script)
                  (+web-run-script-command script)
                  t))
 

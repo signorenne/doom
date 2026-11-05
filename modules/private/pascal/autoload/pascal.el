@@ -233,6 +233,10 @@ With COMINT the buffer takes input, which a program reading its
 standard input waits for."
   (+core-compile name command (+pascal-root) comint))
 
+(defun +pascal--run-name ()
+  "What a run's buffer is named for: run: and the program, as C++ names it."
+  (format "run: %s" (file-name-base (+pascal--main-file))))
+
 ;;;###autoload
 (defun +pascal/build ()
   "Build the project with what it is set to."
@@ -243,14 +247,14 @@ standard input waits for."
 (defun +pascal/run ()
   "Run what the project builds, with the arguments it is set to."
   (interactive)
-  (+pascal--compile "run pascal" (+pascal-run-command) t))
+  (+pascal--compile (+pascal--run-name) (+pascal-run-command) t))
 
 ;;;###autoload
 (defun +pascal/run-with-args (args)
   "Run the program once with ARGS, without writing them down."
   (interactive (list (read-string "Arguments: " +pascal-run-args)))
   (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
-    (+pascal--compile "run pascal"
+    (+pascal--compile (+pascal--run-name)
                       (string-join (delq nil (list (shell-quote-argument program)
                                                    (unless (string-empty-p args) args)))
                                    " ")

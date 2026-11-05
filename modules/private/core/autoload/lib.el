@@ -103,17 +103,39 @@ its buffer: how its popup rules tell its windows from anything else.")
 buffer; a program's output has a rule of its own."
   (and +core--compiling (not (string-prefix-p "run" +core--compiling))))
 
+(defun +core--compile-buffer-name (name)
+  "The buffer a compilation called NAME runs in: *NAME*, and in a project
+the project's name behind it, *build*<hello>, so two projects never
+share one.  A second project of the same name has its path there."
+  (if-let* ((root (+core-project-root-or-nil)))
+      (let* ((root (file-name-as-directory (expand-file-name root)))
+             (short (format "*%s*<%s>" name (file-name-nondirectory (directory-file-name root))))
+             (taken (get-buffer short)))
+        (if (and taken
+                 (not (file-in-directory-p (buffer-local-value 'default-directory taken) root)))
+            (format "*%s*<%s>" name (abbreviate-file-name (directory-file-name root)))
+          short))
+    (format "*%s*" name)))
+
+;;;###autoload
+(defun +core-compiling-as (name fn)
+  "Call FN, and name a compilation it starts NAME as `+core-compile'
+does its own: the buffer, its popup and its finish hooks.  For a
+command that calls `compile' itself, projection's build among them."
+  (let ((+core--compiling name)
+        (compilation-buffer-name-function
+         (lambda (_mode) (+core--compile-buffer-name name))))
+    (funcall fn)))
+
 ;;;###autoload
 (defun +core-compile (name command &optional dir comint)
-  "Run shell COMMAND in a compilation buffer named *NAME* from DIR.
+  "Run shell COMMAND in a compilation buffer named for NAME from DIR,
+*NAME* and the project's name behind it, see `+core--compile-buffer-name'.
 DIR defaults to the project root.  With COMINT the buffer takes input.
 Returns the buffer, which carries NAME in `+core-compile-name'."
   (let* ((default-directory (file-name-as-directory
                              (expand-file-name (or dir (+core-project-root 'noerror)))))
-         (compilation-buffer-name-function
-          (lambda (_mode) (format "*%s*" name)))
-         (+core--compiling name)
-         (buffer (compile command comint)))
+         (buffer (+core-compiling-as name (lambda () (compile command comint)))))
     (with-current-buffer buffer
       (setq +core-compile-name name))
     ;; A program that takes input is no use without the cursor in it:
@@ -213,6 +235,10 @@ can be told from the rest.")
   "Note the time and where the output begins, for PROCESS's buffer."
   (when-let* ((buffer (process-buffer process)))
     (with-current-buffer buffer
+      ;; One named by `+core-compiling-as' carries its name from the
+      ;; start, as a buffer of `+core-compile' does.
+      (when +core--compiling
+        (setq +core-compile-name +core--compiling))
       (setq +core-compile-started (float-time))
       ;; Everything before this is compile's own: the mode line, when it
       ;; started, the command. What the program says starts here.

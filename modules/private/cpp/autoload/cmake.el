@@ -344,7 +344,7 @@ configure keeps the stale value."
          (command (+cpp--configure-command)))
     (when (y-or-n-p (format "Drop the CMake cache of %s and configure it afresh? "
                             (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
-      (+cpp--compile "cmake configure" command))))
+      (+cpp--compile "configure" command))))
 
 (defun +cpp--cmake-clean-command ()
   "Command that builds the clean target, where the kit runs."
@@ -365,7 +365,7 @@ configure keeps the stale value."
   (let ((command (concat (+cpp--cmake-clean-command) " && " (+cpp--build-command))))
     (when (y-or-n-p (format "Delete what %s built, then build it again? "
                             (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
-      (+cpp--compile "cmake rebuild" command))))
+      (+cpp--compile "rebuild" command))))
 
 ;;;###autoload
 (defun +cpp/cmake-clean ()
@@ -375,7 +375,7 @@ It deletes what the build made."
   (let ((command (+cpp--cmake-clean-command)))
     (when (y-or-n-p (format "Delete what %s built, with its clean target? "
                             (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
-      (+cpp--compile "cmake clean" command))))
+      (+cpp--compile "clean" command))))
 
 ;;;###autoload
 (defun +cpp/reconfigure-and-reindex ()
@@ -383,17 +383,17 @@ It deletes what the build made."
 The one command for \"it builds but clangd is lost\": it reconfigures
 and restarts the server, which is pointed at the kit's database."
   (interactive)
-  (add-hook 'compilation-finish-functions #'+cpp--reindex-after-configure-h)
-  (+cpp--compile "cmake configure" (+cpp--configure-command)))
+  (with-current-buffer (+cpp--compile "configure" (+cpp--configure-command))
+    ;; Local, so it goes with this run, and no other configure, F8's in
+    ;; the same buffer, restarts the server.
+    (add-hook 'compilation-finish-functions #'+cpp--reindex-after-configure-h nil t)))
 
-(defun +cpp--reindex-after-configure-h (buffer status)
-  "Relink the compilation database once BUFFER finishes with STATUS."
-  (when (equal (buffer-local-value '+core-compile-name buffer) "cmake configure")
-    (remove-hook 'compilation-finish-functions
-                 #'+cpp--reindex-after-configure-h)
-    (when (string-prefix-p "finished" status)
-      (+cpp--restart-servers)
-      (message "Configured and reindexed. %s" (or (+cpp--build-directory) "")))))
+(defun +cpp--reindex-after-configure-h (_buffer status)
+  "Relink the compilation database once the configure finishes with STATUS."
+  (remove-hook 'compilation-finish-functions #'+cpp--reindex-after-configure-h t)
+  (when (string-prefix-p "finished" status)
+    (+cpp--restart-servers)
+    (message "Configured and reindexed. %s" (or (+cpp--build-directory) ""))))
 
 
 ;;

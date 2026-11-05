@@ -62,7 +62,11 @@ A build, a test or a check opens at the bottom and leaves the cursor
 where it was; a program's output, =F6= or =SPC k r= in any language, opens
 on the right with the cursor in it, and what you type there is the
 program's input. =ESC= closes either, from it or from the source, and so
-does =q= once nothing is running in it.
+does =q= once nothing is running in it. Each buffer is named for what it
+is and for its project, in every language: =*build*<hello>=, which =F7=
+and =SPC k b= share, =*test*<hello>=, =*run: hello*<hello>=, the program
+after the colon; two projects never share one, and two of the same name
+are told apart by their path.
 
 * SPC k, the project's keys
 =SPC k= opens the keys of the project you are in, from the module that
@@ -450,8 +454,12 @@ since projectile walks the whole tree for a directory without a
 repository; ~+core-project-root-or-nil~ is the same with no fallback),
 ~+core-file-at-point~ (dired marks, the file at point, this file),
 ~+core-compile~ (a compilation buffer that carries its name in
-~+core-compile-name~), ~+core-compile-then~ (the same, then a function
+~+core-compile-name~, named for it and the project),
+~+core-compiling-as~ (the same name for a command that calls ~compile~
+itself, projection's), ~+core-compile-then~ (the same, then a function
 once it finished cleanly: a build, then its run),
+~+core-need-program~ (a tool's path, or that it is not installed and how
+to install it),
 ~+core-last-compilation-buffer~ (the build, test or run that started
 last, whoever started it), ~+core-run-in-vterm~,
 ~+core-git~ and ~+core-git-state~ (no-repo, stopped, dirty, clean),

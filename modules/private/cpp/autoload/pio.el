@@ -42,9 +42,9 @@ Signals an error unless NOERROR."
                      (when +pio-env (list "-e" +pio-env)))
              " "))
 
-(defun +pio--compile (&rest args)
-  "Run pio ARGS in a compilation buffer."
-  (+core-compile "pio" (apply #'+pio--command args) (+pio--root)))
+(defun +pio--compile (name &rest args)
+  "Run pio ARGS in a compilation buffer named for NAME, what it does."
+  (+core-compile name (apply #'+pio--command args) (+pio--root)))
 
 (defun +pio--vterm (name &rest args)
   "Run pio ARGS in a vterm buffer called NAME, so it takes input."
@@ -108,12 +108,12 @@ With prefix argument PERSIST, write it to .dir-locals.el."
 ;;;###autoload
 (defun +pio/build ()
   "Build the firmware."
-  (interactive) (+pio--compile "run"))
+  (interactive) (+pio--compile "build" "run"))
 
 ;;;###autoload
 (defun +pio/upload ()
   "Build the firmware and flash it to the board."
-  (interactive) (+pio--compile "run" "-t" "upload"))
+  (interactive) (+pio--compile "upload" "run" "-t" "upload"))
 
 ;;;###autoload
 (defun +pio/clean ()
@@ -122,22 +122,22 @@ With prefix argument PERSIST, write it to .dir-locals.el."
   (+pio--root)
   (when (y-or-n-p (format "Delete what PlatformIO built%s? "
                           (if +pio-env (format " for %s" +pio-env) "")))
-    (+pio--compile "run" "-t" "clean")))
+    (+pio--compile "clean" "run" "-t" "clean")))
 
 ;;;###autoload
 (defun +pio/test ()
   "Run the project's tests on the board."
-  (interactive) (+pio--compile "test"))
+  (interactive) (+pio--compile "test" "test"))
 
 ;;;###autoload
 (defun +pio/compiledb ()
   "Write compile_commands.json so the language server sees the flags."
-  (interactive) (+pio--compile "run" "-t" "compiledb"))
+  (interactive) (+pio--compile "compiledb" "run" "-t" "compiledb"))
 
 ;;;###autoload
 (defun +pio/update ()
   "Update this project's platforms, tools and libraries."
-  (interactive) (+pio--compile "pkg" "update"))
+  (interactive) (+pio--compile "update" "pkg" "update"))
 
 ;;;###autoload
 (defun +pio/device-list ()
@@ -145,14 +145,14 @@ With prefix argument PERSIST, write it to .dir-locals.el."
   (interactive)
   ;; It takes no environment: -e is an error there.
   (let ((+pio-env nil))
-    (+pio--compile "device" "list")))
+    (+pio--compile "devices" "device" "list")))
 
 ;;;###autoload
 (defun +pio/lib-install (spec)
   "Install library SPEC into the project.
 SPEC is a name, owner/name@version, or a URL."
   (interactive (list (read-string "Library: ")))
-  (+pio--compile "pkg" "install" "-l" spec))
+  (+pio--compile "install" "pkg" "install" "-l" spec))
 
 ;;;###autoload
 (defun +pio/monitor ()

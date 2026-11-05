@@ -275,7 +275,7 @@ where FROM runs otherwise."
 configured through projection on the way."
   (+core-dir-locals-set root '+cpp-kit (+cpp-kit-name sibling))
   (if (and (+cpp-kit-preset sibling) (not (+cpp-kit-configured sibling)))
-      (progn (+cpp--compile "cmake configure" (+cpp--configure-command))
+      (progn (+cpp--compile "configure" (+cpp--configure-command))
              (message "Kit: %s, configuring through its preset" (+cpp-kit-name sibling)))
     (message "Kit: %s; SPC k b builds it, SPC k l r restarts the server on it"
              (+cpp--kit-describe (+cpp--kit root)))))
@@ -293,22 +293,24 @@ is, when it is one; then switch to it.  Asks first."
                     (format "Configure %s (%s) in %s from %s's settings? "
                             name type dir (+cpp-kit-name from))))
     (setq +cpp--pending-kit (cons root name))
-    (add-hook 'compilation-finish-functions #'+cpp--configured-new-kit-h)
-    (+cpp--compile "cmake configure"
-                   (+cpp--new-configuration-command from dir type root planned))))
+    (with-current-buffer
+        (+cpp--compile "configure"
+                       (+cpp--new-configuration-command from dir type root planned))
+      ;; Local, so it goes with this run and no other configure.
+      (add-hook 'compilation-finish-functions #'+cpp--configured-new-kit-h nil t))))
 
-(defun +cpp--configured-new-kit-h (buffer status)
-  "Switch to the kit `+cpp--configure-type' made once BUFFER finishes with STATUS."
-  (when (equal (buffer-local-value '+core-compile-name buffer) "cmake configure")
-    (remove-hook 'compilation-finish-functions #'+cpp--configured-new-kit-h)
-    (pcase-let ((`(,root . ,name) +cpp--pending-kit))
-      (setq +cpp--pending-kit nil)
-      (if (string-prefix-p "finished" status)
-          (progn
-            (+core-dir-locals-set root '+cpp-kit name)
-            (message "Kit: %s, configured and chosen; SPC k b builds it, SPC k l r restarts the server on it"
-                     name))
-        (message "The configure of %s failed; see the buffer, SPC k K keeps the kit as it was" name)))))
+(defun +cpp--configured-new-kit-h (_buffer status)
+  "Switch to the kit `+cpp--configure-type' made once its configure
+finishes with STATUS."
+  (remove-hook 'compilation-finish-functions #'+cpp--configured-new-kit-h t)
+  (pcase-let ((`(,root . ,name) +cpp--pending-kit))
+    (setq +cpp--pending-kit nil)
+    (if (string-prefix-p "finished" status)
+        (progn
+          (+core-dir-locals-set root '+cpp-kit name)
+          (message "Kit: %s, configured and chosen; SPC k b builds it, SPC k l r restarts the server on it"
+                   name))
+      (message "The configure of %s failed; see the buffer, SPC k K keeps the kit as it was" name))))
 
 (defun +cpp--configure-type (type &optional planned)
   "Configure a new kit of build TYPE from the current kit and switch to
