@@ -97,6 +97,15 @@ reused, and they keep settings read from the file.")
       (mapc #'treesit-parser-delete (treesit-parser-list)))
     (fundamental-mode)))
 
+(defun +core--no-modeline-h ()
+  "Draw no modeline in this buffer."
+  (setq mode-line-format nil))
+
+(defun +core--dirvish-no-modeline-h ()
+  "Keep this buffer of dirvish's without a modeline once its mode is set:
+Doom's modeline is put on every buffer after the mode is set up."
+  (add-hook 'after-change-major-mode-hook #'+core--no-modeline-h 90 t))
+
 (defun +core--preview-buffer (kind)
   "KIND's preview buffer, made when there is none; past
 `+core-preview-buffers-max' the one used longest ago goes."
@@ -515,14 +524,6 @@ A GIF is drawn by Emacs, to play."
   ;; buffer once its mode is set up, turned it on again: the header's two
   ;; line window then had room for that modeline and not for the path and
   ;; the free space. dirvish gives the footer its own modeline after.
-  (defun +core--dirvish-no-modeline-h ()
-    "Keep this buffer of dirvish's without a modeline once its mode is set."
-    (add-hook 'after-change-major-mode-hook #'+core--no-modeline-h 90 t))
-
-  (defun +core--no-modeline-h ()
-    "Draw no modeline in this buffer."
-    (setq mode-line-format nil))
-
   (dolist (hook '(dirvish-misc-mode-hook dirvish-directory-view-mode-hook
                   dirvish-special-preview-mode-hook))
     (add-hook hook #'+core--dirvish-no-modeline-h))
