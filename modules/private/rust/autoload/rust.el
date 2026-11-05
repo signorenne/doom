@@ -277,10 +277,33 @@ standard input waits for."
 
 ;;;###autoload
 (defun +rust/clippy-fix ()
-  "Run clippy and apply the fixes it is sure of."
+  "Run clippy and apply the fixes it is sure of.
+The buffers of the files it changed are reloaded once it is done."
   (interactive)
-  (+rust--compile "clippy" (+rust--command "clippy" "--all-targets" "--fix"
-                                           "--allow-dirty" "--allow-staged")))
+  (let ((root (+rust-root)))
+    (+rust--revert-when-done
+     (+rust--compile "clippy" (+rust--command "clippy" "--all-targets" "--fix"
+                                              "--allow-dirty" "--allow-staged"))
+     root)))
+
+(defun +rust--revert-when-done (buffer root)
+  "Once the run in BUFFER is over, reload every buffer under ROOT whose
+file it changed, so none goes on showing the file as it was.  A buffer
+with edits of its own is left alone."
+  (with-current-buffer buffer
+    ;; Local, so it goes with this run. Whatever the status: a run that
+    ;; failed may have fixed some files before it did.
+    (add-hook 'compilation-finish-functions
+              (lambda (_buffer _status)
+                (dolist (b (buffer-list))
+                  (with-current-buffer b
+                    (when (and buffer-file-name
+                               (file-in-directory-p buffer-file-name root)
+                               (not (buffer-modified-p))
+                               (file-exists-p buffer-file-name)
+                               (not (verify-visited-file-modtime b)))
+                      (revert-buffer :ignore-auto :noconfirm :preserve-modes)))))
+              nil t)))
 
 ;;;###autoload
 (defun +rust/test-at-point ()
