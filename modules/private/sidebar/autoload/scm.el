@@ -266,12 +266,15 @@ untracked one to the trash."
               (loose (seq-remove (lambda (file) (string-suffix-p "/" file)) untracked))
               (clauses
                (delq nil
+                     ;; One file is named, as the Explorer names it.
                      (list (when tracked
-                             (format "discard the changes to %d file%s"
-                                     (length tracked) (if (cdr tracked) "s" "")))
+                             (if (cdr tracked)
+                                 (format "discard the changes to %d files" (length tracked))
+                               (format "discard the changes to %s" (car tracked))))
                            (when loose
-                             (format "move %d untracked file%s to the trash"
-                                     (length loose) (if (cdr loose) "s" "")))
+                             (if (cdr loose)
+                                 (format "move %d untracked files to the trash" (length loose))
+                               (format "move %s to the trash" (car loose))))
                            (when folders
                              (format "move the folder%s %s, and all in %s, to the trash"
                                      (if (cdr folders) "s" "") (string-join folders ", ")
