@@ -71,11 +71,20 @@ of this frame that shows code."
 With none, display-buffer takes the largest window that is not dedicated."
   (+ai--editor-window))
 
+(defun +ai--code-for (window)
+  "What WINDOW shows when it gives the chat up, as (BUFFER START POINT):
+the file it showed before, where it was, else the file visited last."
+  (or (seq-find (pcase-lambda (`(,buffer . ,_))
+                  (and (buffer-live-p buffer) (buffer-file-name buffer)))
+                (window-prev-buffers window))
+      (list (or (seq-find #'buffer-file-name (buffer-list))
+                (other-buffer (window-buffer window) t)))))
+
 (defun +ai--editor-window-or-new ()
   "The editor window of this frame, else of another frame on show, else
-a new one left of the selected window, as when the chat is full size or
-in a frame of its own.  A new one shows the file the selected window
-showed before, else the file visited last."
+a new one left of the selected window, as when the chat has a frame of
+its own.  A new one shows the file the selected window showed before,
+else the file visited last."
   (or (+ai--editor-window)
       (seq-some (lambda (frame)
                   ;; Not a child frame: a completion popup is one.
@@ -83,17 +92,13 @@ showed before, else the file visited last."
                     (with-selected-frame frame (+ai--editor-window))))
                 (visible-frame-list))
       (let* ((window (selected-window))
-             (code (or (seq-some (pcase-lambda (`(,buffer . ,_))
-                                   (and (buffer-live-p buffer) (buffer-file-name buffer) buffer))
-                                 (window-prev-buffers window))
-                       (seq-find #'buffer-file-name (buffer-list))
-                       (other-buffer (window-buffer window) t)))
+             (code (+ai--code-for window))
              ;; A side window splits into another side window.
              (new (split-window (if (window-parameter window 'window-side)
                                     (window-main-window)
                                   window)
                                 nil 'left)))
-        (set-window-buffer new code)
+        (apply #'set-window-buffer-start-and-point new code)
         new)))
 
 (defun +ai--select-window (window)
@@ -140,10 +145,18 @@ No context goes in: the caller inserts its own."
 (defun +ai/chat ()
   "Open or focus this project's chat, the region or the error at point
 in its prompt.  From the chat, go back to the editor window, opening one
-when the chat has the frame to itself."
+when the chat has a frame of its own; from the chat shown full size,
+that window shows the code again and the chat goes back to its panel."
   (interactive)
   (if (derived-mode-p 'agent-shell-mode)
-      (+ai--select-window (+ai--editor-window-or-new))
+      (let ((chat (current-buffer))
+            (window (selected-window)))
+        (if (or (window-parameter window 'window-side)
+                (eq (window-frame window) (+ai--chat-frame chat)))
+            (+ai--select-window (+ai--editor-window-or-new))
+          (apply #'set-window-buffer-start-and-point window (+ai--code-for window))
+          (display-buffer chat agent-shell-display-action)
+          (select-window window)))
     (require 'agent-shell)
     (call-interactively #'agent-shell)
     (+ai--chat-at-prompt)))
@@ -219,17 +232,24 @@ would show whatever buffer came next, under the chat's name."
 ;;;###autoload
 (defun +ai/chat-window ()
   "Show this project's chat full size, in the editor window, as VS Code's
-Open in New Tab.  \\[+ai/chat-hide] brings the code back."
+Open in New Tab.  \\[+ai/chat] brings the code back and the chat to its
+panel, \\[+ai/chat-hide] the code alone."
   (interactive)
   (let ((chat (+ai--chat-buffer-or-error)))
     ;; From a frame of its own, it moves back to the editor's frame.
     (+ai--chat-frame-close chat)
-    (let ((window (or (+ai--editor-window) (user-error "No editor window"))))
+    ;; Shown full size already, it stays in that one window.
+    (let ((window (or (seq-find (lambda (window)
+                                  (not (window-parameter window 'window-side)))
+                                (get-buffer-window-list chat))
+                      (+ai--editor-window)
+                      (user-error "No editor window"))))
       (dolist (side (get-buffer-window-list chat nil t))
         (when (window-parameter side 'window-side)
           (delete-window side)))
       (select-window window)
-      (switch-to-buffer chat nil t)
+      (unless (eq (window-buffer window) chat)
+        (switch-to-buffer chat nil t))
       (+ai--chat-at-prompt))))
 
 ;;;###autoload
