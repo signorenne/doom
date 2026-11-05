@@ -44,6 +44,10 @@ the scroll it causes is not sent back.")
 (defvar-local +git--split-static nil
   "In the right side of a commit's change: its hunks, drawn once.")
 
+(defvar-local +git--split-made nil
+  "In the right side of a commit's change: non-nil when the split made
+this buffer, magit's copy of the commit's version, so it goes with it.")
+
 (defvar +git--split-pairs nil
   "Right sides of the splits on show.")
 
@@ -218,6 +222,16 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
         (evil-normal-state)))
     buffer))
 
+(defun +git--split-blob-text (rev file)
+  "FILE's text at REV, as magit reads it. The buffer magit reads it
+into goes again, unless it was open before."
+  (let* ((buffers (buffer-list))
+         (blob (magit-find-file-noselect rev file)))
+    (prog1 (with-current-buffer blob
+             (buffer-substring-no-properties (point-min) (point-max)))
+      (unless (memq blob buffers)
+        (kill-buffer blob)))))
+
 (defun +git--split-fill (buffer file coding)
   "Put FILE's text, read in CODING, into the old version's BUFFER."
   (with-current-buffer buffer
@@ -297,11 +311,27 @@ on it; font-lock is turned on by hand, as the global mode never sees it."
   (+git--split-kill-base))
 
 (defun +git--split-end (buffer)
-  "End BUFFER's split, as a right side."
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (cond ((eq +git--live-kind 'static) (+git--split-end-static))
-            ((bound-and-true-p +git-split-mode) (+git-split-mode -1))))))
+  "End BUFFER's split, as a right side. A commit's version the split
+made goes too; with BUFFER killed, its old version goes."
+  (if (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (cond ((eq +git--live-kind 'static)
+               (+git--split-end-static)
+               (when +git--split-made
+                 (kill-buffer buffer)))
+              ((bound-and-true-p +git-split-mode) (+git-split-mode -1))))
+    ;; A commit's version has no hook of its own that ends the split as
+    ;; it dies; its old version still names it.
+    (setq +git--split-pairs (delq buffer +git--split-pairs))
+    (unless +git--split-pairs
+      (remove-hook 'window-buffer-change-functions #'+git--split-check-h))
+    (dolist (base (buffer-list))
+      (when (eq (buffer-local-value '+git--split-file base) buffer)
+        (with-current-buffer base
+          (setq +git--split-file nil))
+        (dolist (window (get-buffer-window-list base nil t))
+          (ignore-errors (delete-window window)))
+        (kill-buffer base)))))
 
 (defun +git--split-base-killed-h ()
   "End the split of an old version that is being killed."
@@ -410,6 +440,7 @@ both read-only, lined up."
                       (zerop (call-process "git" nil nil nil "cat-file" "-e"
                                            (concat parent ":" old-file)))
                       (concat parent ":" old-file)))
+         (buffers (buffer-list))
          (right (magit-find-file-noselect rev file))
          (left (generate-new-buffer (format "*base: %s (%s)*" (file-name-nondirectory file)
                                             (if parent (substring parent 0 7) "none"))))
@@ -429,8 +460,7 @@ both read-only, lined up."
                    (buffer-string)))))
     (with-current-buffer left
       (when before
-        (insert (with-current-buffer (magit-find-file-noselect parent old-file)
-                  (buffer-substring-no-properties (point-min) (point-max)))))
+        (insert (+git--split-blob-text parent old-file)))
       (let ((delay-mode-hooks t))
         (ignore-errors (funcall (buffer-local-value 'major-mode right))))
       (setq delayed-mode-hooks nil)
@@ -448,7 +478,10 @@ both read-only, lined up."
       (setq +git--split-base left
             +git--split-static hunks
             +git--live-kind 'static
-            +git--live-refine-function #'+git--split-refine)
+            +git--live-refine-function #'+git--split-refine
+            ;; One open before is yours and stays; one an earlier split
+            ;; of the same change made goes with this one.
+            +git--split-made (or +git--split-made (not (memq right buffers))))
       (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t)
       (add-hook 'window-scroll-functions #'+git--live-scrolled-h nil t)
       (+git--split-draw hunks)
