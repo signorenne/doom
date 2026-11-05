@@ -87,8 +87,10 @@ With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
     (when (or (not (file-exists-p file))
               (y-or-n-p "Command exists.  Overwrite? "))
       (with-temp-file file
-        (insert "---\ndescription: " description "\n---\n\n"
-                "<!-- $ARGUMENTS is replaced by what follows /" name " -->\n\n"
+        ;; No description, no front matter: it holds nothing else.
+        (unless (string-blank-p description)
+          (insert "---\ndescription: " (string-trim description) "\n---\n\n"))
+        (insert "<!-- $ARGUMENTS is replaced by what follows /" name " -->\n\n"
                 "Do the following for: $ARGUMENTS\n\n1. \n2. \n")))
     (find-file file)
     (message "Use it inside Claude Code as /%s <arguments>" name)))

@@ -347,6 +347,8 @@ the instruction."
          (end (copy-marker (cdr bounds)))
          (original (buffer-substring-no-properties beg end))
          (instruction (read-string "Rewrite: " nil '+ai--inline-rewrite-history)))
+    (when (string-blank-p instruction)
+      (user-error "No instruction"))
     (deactivate-mark)
     (+ai--rewrite-request (current-buffer) beg end original instruction)))
 
