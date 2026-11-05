@@ -1213,6 +1213,20 @@ taken out again with eglot's own when eglot lets the buffer go."
   (set-tree-sitter! 'sh-mode 'bash-ts-mode
     '((bash :url "https://github.com/tree-sitter/tree-sitter-bash"))))
 
+;; Org colours a source block in its own mode, set up in a hidden buffer,
+;; and a mode setting itself up there talks: the first bash block of a
+;; session logged sh-mode's three lines on its indentation, the cheat
+;; sheet's at the first F12. Nothing it says there is for anyone.
+(defun +core--quiet-src-block-a (fn &rest args)
+  "Colour a source block as FN does with ARGS, its mode's messages unsaid."
+  (let ((inhibit-message t) (message-log-max nil))
+    (apply fn args)))
+
+(advice-add 'org-src-font-lock-fontify-block :around #'+core--quiet-src-block-a)
+
+;; Nor does org-super-agenda need to say it is on, at every start.
+(setq org-super-agenda-show-message nil)
+
 ;; yasnippet reads a mode's snippets the first time the mode is used, a
 ;; file at a time: for each, Emacs asks editorconfig the file's coding,
 ;; and editorconfig looks for .editorconfig files up every directory,

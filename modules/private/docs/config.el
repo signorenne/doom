@@ -39,6 +39,15 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (set-popup-rule! "^\\*cheatsheet\\*$"
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
+;; undo-fu-session keeps a file's undo history from one session to the
+;; next, and throws it away with a line in *Messages* when the file
+;; changed outside Emacs meanwhile. git changes the sheet all the time,
+;; so the first F12 of a session said so: the sheet keeps no history
+;; across sessions.
+(after! undo-fu-session
+  (add-to-list 'undo-fu-session-incompatible-files
+               (concat "\\`" (regexp-quote (expand-file-name +docs-cheatsheet-file)) "\\'")))
+
 ;; What SPC h d C found opens at the bottom; ESC or q closes it.
 (set-popup-rule! "^\\*config check\\*$" :side 'bottom :size 0.4 :select t :quit t)
 

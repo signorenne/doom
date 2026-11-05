@@ -51,7 +51,9 @@ and every mode.
 The sheet =F12= shows is a buffer of its own, =*cheatsheet*=, that shares
 the file's text: read-only, with the keys above. The file opened to edit
 it, with =SPC f p= or any other way, is an ordinary Org buffer, which
-=F12= leaves alone.
+=F12= leaves alone. It keeps no undo history from one session to the
+next: git changes the file under Emacs, and undo-fu-session threw the
+saved history away at the first =F12=, with a line in =*Messages*=.
 
 * Maintenance
 Run ~gr~ in the sheet after changing keys or adding commands. Only the text

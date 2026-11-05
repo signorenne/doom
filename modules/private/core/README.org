@@ -43,6 +43,11 @@ The small global things:
   echo area shows it: Emacs puts the name of the function that raised it
   in front, and this config runs as source, so that was the form around
   it, =cond: Not inside a project=; other errors keep the name,
+- fewer lines in =*Messages*= that are for no one: org-super-agenda does
+  not say it is on at each start, a source block's mode set up to colour
+  it says nothing, sh-mode's three lines on indentation among them, and
+  nxml names an XML file's schema only when asked (~C-c C-s C-w~), not
+  "Using vacuous schema" at each SVG,
 - [[https://github.com/kickingvegas/casual][casual]] menus: ~SPC m SPC~ in dired, ibuffer, info, bookmarks, re-builder
   and the agenda shows what that mode can do, ~C-o~ in calc, isearch and
   re-builder, in insert state too: re-builder opens in it.
