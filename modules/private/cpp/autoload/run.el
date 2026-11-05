@@ -405,13 +405,16 @@ program and uses the same debugger."
 
 ;;;###autoload
 (defun +cpp/debug-or-continue ()
-  "Continue the running debug session, or start one."
+  "Continue the running debug session, or start one.
+While the program runs it says so: starting another session then would
+debug a second copy beside the first."
   (interactive)
   ;; Started as SPC k d is, so a Pascal, Rust or web project gets its
   ;; own debug rather than the C++ one, which asks for a program.
-  (if (+cpp--dape-stopped-p)
-      (call-interactively #'dape-continue)
-    (call-interactively #'+core/debug)))
+  (cond ((+cpp--dape-stopped-p) (call-interactively #'dape-continue))
+        ((+cpp--dape-live-p)
+         (message "The program is running: F5 continues it once it stops, S-F5 ends the session"))
+        (t (call-interactively #'+core/debug))))
 
 ;;;###autoload
 (defun +cpp/install-codelldb ()

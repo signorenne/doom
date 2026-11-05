@@ -129,6 +129,12 @@ project type, uncached, or nil when it knows no type there."
   (dape--live-connection 'stopped t))
 
 ;;;###autoload
+(defun +cpp--dape-live-p ()
+  "Non-nil while a debug session is live, stopped or running."
+  (require 'dape)
+  (dape--live-connection 'parent t))
+
+;;;###autoload
 (defun +cpp--server-process (server)
   "The process behind the eglot SERVER."
   (jsonrpc--process server))
