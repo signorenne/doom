@@ -151,6 +151,11 @@ LINE is of the new side, or of the old side with FROM-OLD."
                (setq result (+ there (if (> there-count 0)
                                          (min (- line here) (1- there-count))
                                        0))))
+              ;; Nothing on this side above its first line: the padding is
+              ;; drawn before that line, at the top of the window, so the
+              ;; line lines up with the hunk's first line on the other.
+              ((and (= line 1) (= here 1) (zerop here-count))
+               (setq result there))
               (t (setq delta (- (+ there there-count) (+ here here-count)))))))
     (max 1 (or result (+ line delta)))))
 
