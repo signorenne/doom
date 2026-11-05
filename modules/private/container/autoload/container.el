@@ -11,21 +11,44 @@
 ;;
 ;;; What is there
 
+(defvar +container--list-ttl 5
+  "Seconds one read of the container list answers for.")
+
+(defvar +container--list-cache nil
+  "(TIME . ROWS): the containers as last read, ROWS as (NAME . UP), UP
+non-nil for a running one.  A C or C++ file that opens asks two or three
+times in a moment and the idle step after it once more, and each was a
+distrobox process of its own.")
+
+(defun +container--rows ()
+  "Every container as (NAME . UP), read again once the last read is
+older than `+container--list-ttl' seconds."
+  (let ((now (float-time)))
+    (if (and +container--list-cache
+             (< (- now (car +container--list-cache)) +container--list-ttl))
+        (cdr +container--list-cache)
+      (let ((rows (with-temp-buffer
+                    (call-process +container-program nil t nil "list" "--no-color")
+                    (goto-char (point-min))
+                    (forward-line 1)    ; the header
+                    (let (rows)
+                      (while (re-search-forward
+                              "^[^|]*|[ \t]*\\([^ \t|]+\\)[ \t]*|[ \t]*\\([^|]*?\\)[ \t]*|" nil t)
+                        (push (cons (match-string 1) (string-prefix-p "Up" (match-string 2)))
+                              rows))
+                      (nreverse rows)))))
+        (setq +container--list-cache (cons now rows))
+        rows))))
+
 ;;;###autoload
 (defun +container-list (&optional all)
   "The running containers on this machine, by name; with ALL the
-stopped ones too.  Nil when distrobox is not installed."
+stopped ones too.  Nil when distrobox is not installed.  Read once in
+`+container--list-ttl' seconds at most."
   (when (executable-find +container-program)
-    (with-temp-buffer
-      (call-process +container-program nil t nil "list" "--no-color")
-      (goto-char (point-min))
-      (forward-line 1)                  ; the header
-      (let (names)
-        (while (re-search-forward
-                "^[^|]*|[ \t]*\\([^ \t|]+\\)[ \t]*|[ \t]*\\([^|]*?\\)[ \t]*|" nil t)
-          (when (or all (string-prefix-p "Up" (match-string 2)))
-            (push (match-string 1) names)))
-        (nreverse names)))))
+    (mapcar #'car (if all
+                      (+container--rows)
+                    (seq-filter #'cdr (+container--rows))))))
 
 ;;;###autoload
 (defun +container-run (container argv)
@@ -104,6 +127,8 @@ it is a fair question."
                                                 name program)
                                        (+container-has-p name program))
                                      (seq-difference (+container-list 'all) running)))
+                     ;; One of them runs now: the next list says so.
+                     (setq +container--list-cache nil)
                      (puthash key (or found 'host) +container--by-program)
                      found))))))))
 
@@ -153,6 +178,7 @@ it through the runtime."
 (defun +container-forget ()
   "Drop what was found about containers, for one started or a program
 installed since.  The library half: `+container/forget\=' is the command."
+  (setq +container--list-cache nil)
   (clrhash +container--by-program)
   (clrhash +container--homes)
   (doom-store-clear "+container"))

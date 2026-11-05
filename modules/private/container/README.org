@@ -33,6 +33,12 @@ With ~+container-may-start~ nil, as when a file opens, it starts none:
 the running ones answer, and their no is kept for as long as the same
 ones run.
 
+~+container-list~ asks distrobox once in five seconds at most
+(~+container--list-ttl~): a C or C++ file that opens asks two or three
+times in a moment and once more in the idle step after, each a process
+of its own. Starting a stopped container to look in it, and
+~+container-forget~, drop the list it keeps.
+
 ~+container-home~ asks the runtime once per container ever: a container
 keeps the home it was made with, so the answer is kept across sessions,
 in Doom's store, until ~+container-forget~.
