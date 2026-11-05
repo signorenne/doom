@@ -1705,7 +1705,7 @@ change under the cursor.
 | Key     | What it shows                         |
 |---------+---------------------------------------|
 | ~K~       | documentation at point                |
-| ~SPC c H~ | the same in a childframe              |
+| ~SPC c H~ | the same in a childframe, gone on ~ESC~ |
 | ~SPC c x~ | the list of errors                    |
 | ~]e [e~   | next, previous error                  |
 | ~SPC t o~ | the outline of the buffer, side bar   |

@@ -843,6 +843,20 @@ around it; longer, it waits until it shows.")
   (setq eldoc-box-max-pixel-width 600
         eldoc-box-max-pixel-height 500))
 
+;; ESC closes the documentation of SPC c H, which went only once the
+;; cursor moved. eldoc-box looks for that move every tenth of a second
+;; while it is up; that stops too.
+(declare-function eldoc-box--frame-visible-p "eldoc-box")
+(declare-function eldoc-box-quit-frame "eldoc-box")
+(add-hook! 'doom-escape-hook
+  (defun +ui--eldoc-box-escape-h ()
+    "Close SPC c H's documentation; non-nil when it was open."
+    (when (and (fboundp 'eldoc-box--frame-visible-p)
+               (eldoc-box--frame-visible-p))
+      (eldoc-box-quit-frame)
+      (cancel-function-timers 'eldoc-box--help-at-point-cleanup)
+      t)))
+
 ;; The glyph test (SPC t G) opens at the bottom, as the other reports
 ;; do, and ESC or q closes it.
 (set-popup-rule! "^\\*glyph-test\\*$" :side 'bottom :size 0.4 :select t :quit t)
