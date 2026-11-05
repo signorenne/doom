@@ -10,6 +10,8 @@
 
 (declare-function +ai-turn-tree "../../ai/autoload/turn")
 (declare-function +git-split-mode "split")
+(declare-function diff-hl-hunk-overlay-at "diff-hl")
+(declare-function diff-hl-search-next-hunk "diff-hl")
 (defvar +git-split-mode)
 (defvar +git-live-delay)
 (defvar +git-live-max-size)
@@ -858,9 +860,10 @@ or with what `+git/live-baseline' picked."
 commit, or the project as it was when an agent's last turn began. Kept
 for the buffer when the view is turned off and on again."
   (interactive)
+  (unless buffer-file-name
+    (user-error "This buffer has no file"))
   (let* ((root (or +git--live-root
-                   (and buffer-file-name
-                        (+git--live-toplevel (file-name-directory buffer-file-name)))
+                   (+git--live-toplevel (file-name-directory buffer-file-name))
                    (user-error "Not in a git repository")))
          (choice (completing-read
                   "Compare with: "
@@ -941,7 +944,19 @@ for the buffer when the view is turned off and on again."
 view, revert the fringe's hunk."
   (interactive)
   (if (not +git--live-kind)
-      (call-interactively #'+vc-gutter/save-and-revert-hunk)
+      (progn
+        ;; The fringe's own command fails on these with a Lisp error or
+        ;; "No further hunks found", which says nothing of why.
+        (cond ((not buffer-file-name)
+               (user-error "This buffer has no file"))
+              ((and (not (file-remote-p buffer-file-name))
+                    (not (+git--live-toplevel (file-name-directory buffer-file-name))))
+               (user-error "Not in a git repository"))
+              ((not (and (fboundp 'diff-hl-hunk-overlay-at)
+                         (or (diff-hl-hunk-overlay-at (point))
+                             (diff-hl-search-next-hunk t))))
+               (user-error "No change on this line or above it")))
+        (call-interactively #'+vc-gutter/save-and-revert-hunk))
     (barf-if-buffer-read-only)
     (if-let* ((overlay (+git--live-overlay-at-point)))
         (let ((beg (overlay-start overlay))
