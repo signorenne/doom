@@ -69,6 +69,36 @@ of this frame that shows code."
 With none, display-buffer takes the largest window that is not dedicated."
   (+ai--editor-window))
 
+(defun +ai--editor-window-or-new ()
+  "The editor window of this frame, else of another frame on show, else
+a new one left of the selected window, as when the chat is full size or
+in a frame of its own.  A new one shows the file the selected window
+showed before, else the file visited last."
+  (or (+ai--editor-window)
+      (seq-some (lambda (frame)
+                  ;; Not a child frame: a completion popup is one.
+                  (unless (or (eq frame (selected-frame)) (frame-parent frame))
+                    (with-selected-frame frame (+ai--editor-window))))
+                (visible-frame-list))
+      (let* ((window (selected-window))
+             (code (or (seq-some (pcase-lambda (`(,buffer . ,_))
+                                   (and (buffer-live-p buffer) (buffer-file-name buffer) buffer))
+                                 (window-prev-buffers window))
+                       (seq-find #'buffer-file-name (buffer-list))
+                       (other-buffer (window-buffer window) t)))
+             ;; A side window splits into another side window.
+             (new (split-window (if (window-parameter window 'window-side)
+                                    (window-main-window)
+                                  window)
+                                nil 'left)))
+        (set-window-buffer new code)
+        new)))
+
+(defun +ai--select-window (window)
+  "Select WINDOW, and its frame when that is another."
+  (select-frame-set-input-focus (window-frame window))
+  (select-window window))
+
 
 ;;
 ;;; Chat commands
@@ -107,10 +137,11 @@ No context goes in: the caller inserts its own."
 ;;;###autoload
 (defun +ai/chat ()
   "Open or focus this project's chat, the region or the error at point
-in its prompt.  From the chat, go back to the editor window."
+in its prompt.  From the chat, go back to the editor window, opening one
+when the chat has the frame to itself."
   (interactive)
   (if (derived-mode-p 'agent-shell-mode)
-      (select-window (or (+ai--editor-window) (user-error "No editor window")))
+      (+ai--select-window (+ai--editor-window-or-new))
     (require 'agent-shell)
     (call-interactively #'agent-shell)
     (+ai--chat-at-prompt)))
