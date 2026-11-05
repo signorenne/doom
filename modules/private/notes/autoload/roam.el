@@ -222,6 +222,8 @@ in the place the heading came from, so the day still reads as a story.
 Where the note goes and its tags are asked before anything changes, so
 C-g at either leaves the heading where it was."
   (interactive)
+  (unless (derived-mode-p 'org-mode) (user-error "Extract a heading of an Org note"))
+  (when (org-before-first-heading-p) (user-error "No heading here to extract"))
   (require 'org-roam)
   ;; Before anything is asked: a heading that cannot leave would leave a
   ;; note behind with no link to it.

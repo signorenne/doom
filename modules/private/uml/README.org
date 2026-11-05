@@ -54,7 +54,8 @@ PlantUML's own colours, or to the name of a PlantUML theme such as
 ="cyborg"=.
 
 None of that touches the file, and ~SPC m e~ writes what you wrote. It
-asks before it replaces a file that is there.
+asks before it replaces a file that is there, and a diagram that does
+not parse is not written: it says where PlantUML stopped.
 
 * Why there is a server
 PlantUML is a Java program. Rendering by running it costs about a second

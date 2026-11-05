@@ -3,6 +3,7 @@
 ;; A new diagram from a template, and a rendered file out of one.
 
 (declare-function +uml-render "server")
+(declare-function +uml--diagram "preview")
 
 (defvar +uml-diagram-kinds
   '(("sequence"    . "who talks to whom, in order")
@@ -63,21 +64,25 @@
 
 ;;;###autoload
 (defun +uml/export (format file)
-  "Write this diagram to FILE as FORMAT."
+  "Write this diagram, or the one the view shows, to FILE as FORMAT."
   (interactive
-   (let* ((format (intern (completing-read (format-prompt "As" "svg") '("svg" "png") nil t nil nil "svg")))
-          (default (concat (file-name-base (or (buffer-file-name) "diagram"))
-                           "." (symbol-name format))))
-     (list format (read-file-name "Write to: " nil nil nil default))))
-  (unless (derived-mode-p 'plantuml-mode)
-    (user-error "Not a PlantUML buffer"))
-  (setq file (expand-file-name file))
-  (when (and (file-exists-p file)
-             (not (y-or-n-p (format "%s exists; replace it? " (abbreviate-file-name file)))))
-    (user-error "Nothing written"))
-  (let ((data (+uml-render (buffer-substring-no-properties (point-min) (point-max))
-                           format)))
-    (with-temp-file file
-      (set-buffer-multibyte nil)
-      (insert data))
-    (message "Wrote %s" (abbreviate-file-name file))))
+   ;; Anywhere else it says so before asking anything.
+   (with-current-buffer (+uml--diagram)
+     (let* ((format (intern (completing-read (format-prompt "As" "svg") '("svg" "png") nil t nil nil "svg")))
+            (default (concat (file-name-base (or (buffer-file-name) "diagram"))
+                             "." (symbol-name format))))
+       (list format (read-file-name "Write to: " nil nil nil default)))))
+  (with-current-buffer (+uml--diagram)
+    (setq file (expand-file-name file))
+    (when (and (file-exists-p file)
+               (not (y-or-n-p (format "%s exists; replace it? " (abbreviate-file-name file)))))
+      (user-error "Nothing written"))
+    ;; A diagram that does not parse, or a server that does not answer,
+    ;; is the user's to fix, and leaves the file as it was.
+    (let ((data (condition-case err
+                    (+uml-render (buffer-substring-no-properties (point-min) (point-max)) format)
+                  (error (user-error "%s; nothing written" (error-message-string err))))))
+      (with-temp-file file
+        (set-buffer-multibyte nil)
+        (insert data))
+      (message "Wrote %s" (abbreviate-file-name file)))))

@@ -684,6 +684,8 @@ when its mode started."
   "Write every notes-query, notes-list and notes-board block of this note
 again."
   (interactive nil org-mode)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Tables are written again in an Org note"))
   (let ((count (or (+notes--blocks-refresh)
                    (user-error "Turn font-lock on first: tables are aligned by what it shows"))))
     (message "Refreshed %d block%s" count (if (= count 1) "" "s"))))
@@ -984,12 +986,16 @@ after either as its own."
                          (<= pos last)))))
               (org-element-lineage (org-element-at-point) nil t))))
 
-(defun +notes--insert-block (name params)
-  "Insert block NAME with PARAMS on the line after point, and write it."
+(defun +notes--insert-block-check ()
+  "Refuse a block where it cannot go, before anything is asked for it."
   (unless (derived-mode-p 'org-mode)
     (user-error "Blocks go in an Org note"))
   (when (+notes--in-block-p)
-    (user-error "Point is inside a block or a drawer; insert it outside"))
+    (user-error "Point is inside a block or a drawer; insert it outside")))
+
+(defun +notes--insert-block (name params)
+  "Insert block NAME with PARAMS on the line after point, and write it."
+  (+notes--insert-block-check)
   ;; Below a heading's dates and drawers: between them, the block would
   ;; part the heading from its SCHEDULED line or its ID.
   (if (save-excursion (beginning-of-line) (or (org-at-heading-p) (org-at-planning-p)))
@@ -1015,7 +1021,8 @@ after either as its own."
 (defun +notes/insert-query (query)
   "Insert a notes-query block of the headings QUERY, an Org QL string,
 finds in this note's folder."
-  (interactive (list (read-string "Query: " "todo:")))
+  (interactive (progn (+notes--insert-block-check)
+                      (list (read-string "Query: " "todo:"))))
   (when (string-blank-p query) (user-error "A query table needs a query"))
   (+notes--insert-block "notes-query"
                         (format ":from %s :query %S"
@@ -1025,7 +1032,8 @@ finds in this note's folder."
 (defun +notes/insert-list (tags)
   "Insert a notes-list block of the notes in this note's folder that carry
 every one of TAGS, a comma-separated string."
-  (interactive (list (read-string "Tags (comma-separated, may be empty): ")))
+  (interactive (progn (+notes--insert-block-check)
+                      (list (read-string "Tags (comma-separated, may be empty): "))))
   (let ((tags (split-string tags "," t "[ \t]+")))
     (+notes--insert-block "notes-list"
                           (concat ":from " (if (+notes--at-vault-root-p) "vault" "folder")

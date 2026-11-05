@@ -4361,7 +4361,8 @@ bound.
   the files change.
 
 ** UML
-- ~+uml/export~ (~SPC m e~) :: Write this diagram to FILE as FORMAT.
+- ~+uml/export~ (~SPC m e~) :: Write this diagram, or the one the view
+  shows, to FILE as FORMAT.
 - ~+uml/new-diagram~ (~SPC m n~) :: Start a new diagram of KIND called NAME,
   from the template for it.
 - ~+uml/preview-format-toggle~ (~SPC m P F~) :: Draw the preview as SVG or
