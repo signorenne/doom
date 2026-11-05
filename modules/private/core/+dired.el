@@ -527,6 +527,33 @@ A GIF is drawn by Emacs, to play."
                   dirvish-special-preview-mode-hook))
     (add-hook hook #'+core--dirvish-no-modeline-h))
 
+  ;; A directory is previewed by listing it in a batch Emacs whose output
+  ;; gathers in one buffer, " *dirvish-sh*". The sentinel finds the
+  ;; session from the buffer current when it runs, and only then shows
+  ;; the listing and kills that buffer. A sentinel runs wherever Emacs
+  ;; waits for output, as inside a timer or an emacsclient request with
+  ;; a buffer of its own current: it found no session, the pane kept the
+  ;; listing before, the output stayed, and the next listing was written
+  ;; after it, two directories stacked in the pane. It runs in the
+  ;; listing's buffer now, and the output goes either way.
+  (declare-function dirvish--run-shell-for-preview "dirvish")
+  (declare-function dirvish-shell-preview-proc-s "dirvish")
+  (declare-function dv-index "dirvish")
+  (defadvice! +core--dirvish-preview-session-a (fn dv recipe)
+    :around #'dirvish--run-shell-for-preview
+    (prog1 (funcall fn dv recipe)
+      (when-let* ((process (get-buffer-process " *dirvish-sh*")))
+        (process-put process '+core-listing (cdr (dv-index dv))))))
+
+  (defadvice! +core--dirvish-preview-sentinel-a (fn process &rest args)
+    :around #'dirvish-shell-preview-proc-s
+    (let ((listing (process-get process '+core-listing)))
+      (with-current-buffer (if (buffer-live-p listing) listing (current-buffer))
+        (apply fn process args)))
+    (let ((output (process-buffer process)))
+      (when (and (not (process-live-p process)) (buffer-live-p output))
+        (kill-buffer output))))
+
   ;; A popup closed gives the cursor to the window used last, but Emacs
   ;; passes over a dedicated one, and dirvish dedicates its listing: a
   ;; report opened from the file manager, the checksums or the
