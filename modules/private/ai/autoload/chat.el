@@ -9,6 +9,7 @@
 (defvar +ai-chat-output-lines)
 (defvar +ai-edit-functions)
 (defvar acp-logging-enabled)
+(defvar agent-shell--state)
 (defvar agent-shell-activity-group-expand-by-default)
 (defvar agent-shell-context-sources)
 (defvar agent-shell-ui--fold-toggle-state)
@@ -30,7 +31,7 @@
 (declare-function agent-shell-set-session-mode "agent-shell")
 (declare-function agent-shell-set-session-model "agent-shell")
 (declare-function agent-shell-set-session-thought-level "agent-shell")
-(declare-function agent-shell-view-traffic "agent-shell")
+(declare-function acp-traffic-buffer "acp")
 (declare-function agent-shell-project-buffers "agent-shell")
 (declare-function evil-insert-state "evil-states")
 (declare-function agent-shell-subscribe-to "agent-shell")
@@ -251,12 +252,15 @@ While folded, a new turn's calls start folded too."
 Logging is off by default and keeps nothing from before it is on, so
 this turns it on and says so."
   (interactive)
-  (let ((chat (+ai--chat-buffer-or-error)))
+  (let* ((chat (+ai--chat-buffer-or-error))
+         (client (or (map-elt (buffer-local-value 'agent-shell--state chat) :client)
+                     (user-error "%s has no agent yet" (buffer-name chat)))))
     (unless acp-logging-enabled
       (setq acp-logging-enabled t)
       (message "ACP logging is on; traffic from before now was not kept"))
-    (with-current-buffer chat
-      (call-interactively #'agent-shell-view-traffic))))
+    ;; Not agent-shell-view-traffic: it refuses an empty buffer, which
+    ;; this one is right after logging goes on. It fills as traffic comes.
+    (pop-to-buffer (acp-traffic-buffer :client client))))
 
 (defun +ai--chat-file-mention (path)
   "PATH as an @-mention; quoted when it holds a space, as agent-shell does."
