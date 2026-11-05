@@ -90,14 +90,35 @@ With FIX, a prefix argument, apply the fixes it proposes and revert."
   (unless buffer-file-name
     (user-error "This buffer is not visiting a file"))
   (+cpp--save-project-buffers)
-  (let ((kit (+cpp--kit))
-        (root (+core-project-root)))
-    (+cpp--compile "clang-tidy"
-                   (+cpp--kit-shell
-                    kit
-                    (mapconcat #'shell-quote-argument
-                               (append (list "clang-tidy" (format "-p=%s" (+cpp-kit-dir kit)))
-                                       (when fix (list "--fix"))
-                                       (list buffer-file-name))
-                               " ")
-                    root))))
+  (let* ((kit (+cpp--kit))
+         (root (+core-project-root))
+         (buffer (+cpp--compile "clang-tidy"
+                                (+cpp--kit-shell
+                                 kit
+                                 (mapconcat #'shell-quote-argument
+                                            (append (list "clang-tidy" (format "-p=%s" (+cpp-kit-dir kit)))
+                                                    (when fix (list "--fix"))
+                                                    (list buffer-file-name))
+                                            " ")
+                                 root))))
+    ;; The file, and the headers a .clang-tidy lets it fix.
+    (when fix (+cpp--revert-when-done buffer root))))
+
+(defun +cpp--revert-when-done (buffer root)
+  "Once the run in BUFFER is over, reload every buffer under ROOT whose
+file it changed, so none goes on showing the file as it was.  A buffer
+with edits of its own is left alone."
+  (with-current-buffer buffer
+    ;; Local, so it goes with this run. Whatever the status: a run that
+    ;; failed may have fixed some files before it did.
+    (add-hook 'compilation-finish-functions
+              (lambda (_buffer _status)
+                (dolist (b (buffer-list))
+                  (with-current-buffer b
+                    (when (and buffer-file-name
+                               (file-in-directory-p buffer-file-name root)
+                               (not (buffer-modified-p))
+                               (file-exists-p buffer-file-name)
+                               (not (verify-visited-file-modtime b)))
+                      (revert-buffer :ignore-auto :noconfirm :preserve-modes)))))
+              nil t)))
