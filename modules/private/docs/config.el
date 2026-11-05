@@ -33,8 +33,10 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
   (when (fboundp 'evil-normalize-keymaps)
     (evil-normalize-keymaps)))
 
-;; Opens on the right and closes with q.
-(set-popup-rule! "^cheatsheet\\.org$"
+;; The buffer F12 shows (`+docs-cheatsheet-buffer') opens on the right
+;; and closes with q or ESC; the sheet's file opened for editing is an
+;; ordinary buffer.
+(set-popup-rule! "^\\*cheatsheet\\*$"
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
 ;; The README and the check sit under SPC h d, Doom's help about itself.
@@ -58,4 +60,4 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
     (kbd "?")  #'+docs/cheatsheet-search
     (kbd "S")  #'+docs/cheatsheet-find
     (kbd "gr") #'+docs/cheatsheet-regenerate
-    (kbd "q")  #'+popup/close))
+    (kbd "q")  #'+docs/cheatsheet-close))

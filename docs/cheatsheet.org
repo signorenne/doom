@@ -8,7 +8,8 @@
 the mode you are in; =C-u F12= jumps to a heading instead, =C-u C-u F12=
 searches the text. Inside the sheet: =TAB= unfold, =s= search the headings,
 =S= the text (words in any order, matches as you type), =gr= rebuild the
-generated tables, =q= close.
+generated tables (it asks before it saves), =q= close. The sheet opened
+as a file, to edit it, is an ordinary Org buffer.
 
 * How to read this sheet
 Every section is folded. Open the one you need, read the small table, close
@@ -4708,6 +4709,8 @@ bound.
 ** Docs
 - ~+docs/cheatsheet~ (~SPC h /~) :: Open the cheat sheet beside the current
   buffer, or close it again.
+- ~+docs/cheatsheet-close~ (~q~) :: Close the cheat sheet, in its popup or
+  in any other window.
 - ~+docs/cheatsheet-find~ (~S~) :: Search the sheet's text and land on the
   line: words in any order, the matches shown as you type.
 - ~+docs/cheatsheet-regenerate~ (~g r~) :: Rebuild the key and command

@@ -16,6 +16,7 @@
 (declare-function +butler--show "butler")
 (declare-function +docs-search "cheatsheet")
 (declare-function +docs/cheatsheet "cheatsheet")
+(declare-function +docs-cheatsheet-buffer "cheatsheet")
 (declare-function gptel-request "gptel-request")
 (declare-function +butler/choices "menu")
 (declare-function +butler--section-here "menu")
@@ -266,13 +267,10 @@ line, or the README."
     (user-error "%s: I have not answered anything yet, %s" +butler-name +butler-address))
   (pcase-let ((`(,file . ,line) +butler--answer))
     (if (equal file +docs-cheatsheet-file)
-        ;; get-buffer-window of no buffer is the selected window, so
-        ;; without the check a sheet not open at all would open bare,
-        ;; without its own mode.
-        (progn (unless (when-let* ((buffer (get-file-buffer file)))
-                         (get-buffer-window buffer))
+        ;; In the buffer F12 shows, opened the way F12 opens it.
+        (progn (unless (get-buffer-window (+docs-cheatsheet-buffer))
                  (+docs/cheatsheet))
-               (pop-to-buffer (find-file-noselect file)))
+               (pop-to-buffer (+docs-cheatsheet-buffer)))
       (find-file file))
     (widen)
     (goto-char (point-min))

@@ -41,17 +41,24 @@ no private module owns, none at present.
 | ~SPC h d M~        | ~+docs/module-readme~         | open a module's README           |
 | ~s~ or ~?~         | ~+docs/cheatsheet-search~     | jump to a heading                |
 | ~S~                | ~+docs/cheatsheet-find~       | search the text, words in any order |
-| ~gr~               | ~+docs/cheatsheet-regenerate~ | rebuild the references           |
-| ~q~                | ~+popup/close~                | close the sheet                  |
+| ~gr~               | ~+docs/cheatsheet-regenerate~ | rebuild the references, after asking |
+| ~q~                | ~+docs/cheatsheet-close~      | close the sheet, wherever it is  |
 | ~SPC h d C~        | ~+docs/check-autoloads~       | is every function referred to callable |
 
 =F12= is bound globally, not under the leader, so it works in every state
 and every mode.
 
+The sheet =F12= shows is a buffer of its own, =*cheatsheet*=, that shares
+the file's text: read-only, with the keys above. The file opened to edit
+it, with =SPC f p= or any other way, is an ordinary Org buffer, which
+=F12= leaves alone.
+
 * Maintenance
 Run ~gr~ in the sheet after changing keys or adding commands. Only the text
 between the =# BEGIN GENERATED-= and =# END GENERATED-= markers is rewritten;
-everything else is yours.
+everything else is yours. The file is tracked by git, so when a table
+changed ~gr~ asks before it rewrites and saves it; called from Lisp,
+~(+docs/cheatsheet-regenerate)~ does not ask.
 
 Writing a new section: keep the tables small, two columns, one idea each.
 A section that needs more than about ten rows is two sections.

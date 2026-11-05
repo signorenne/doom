@@ -13,18 +13,41 @@
 (defvar evil-minor-mode-keymaps-alist)
 (declare-function doom-module-list "doom-lib")
 
+(defvar +docs-cheatsheet-buffer-name "*cheatsheet*"
+  "The buffer F12 shows the sheet in.")
+
+;; The sheet is read in a buffer of its own that shares the file's text:
+;; read-only, with its own keys. The file's buffer stays as it was, so
+;; the sheet opened for editing is an ordinary Org buffer, F12 or not.
+;; Autoloaded: the butler shows his sources in it.
+;;;###autoload
+(defun +docs-cheatsheet-buffer ()
+  "The buffer the cheat sheet is read in, made the first time: an
+indirect buffer of the sheet's file, read-only, in `+docs-cheatsheet-mode'."
+  (let ((base (find-file-noselect +docs-cheatsheet-file))
+        (view (get-buffer +docs-cheatsheet-buffer-name)))
+    (if (and view (eq (buffer-base-buffer view) base))
+        view
+      (when view (kill-buffer view))
+      (with-current-buffer (make-indirect-buffer base +docs-cheatsheet-buffer-name t)
+        (read-only-mode +1)
+        (+docs-cheatsheet-mode +1)
+        (current-buffer)))))
+
+(defun +docs--cheatsheet-here-p ()
+  "Non-nil in the sheet, the buffer F12 shows or the file's own."
+  (equal (buffer-file-name (or (buffer-base-buffer) (current-buffer)))
+         +docs-cheatsheet-file))
+
 ;;;###autoload
 (defun +docs/cheatsheet (&optional search)
   "Open the cheat sheet beside the current buffer, or close it again.
 It opens at the section for the current major mode.  With one prefix
 argument SEARCH, pick a heading instead; with two, search its text."
   (interactive "P")
-  (let* ((buffer (find-file-noselect +docs-cheatsheet-file))
+  (let* ((buffer (+docs-cheatsheet-buffer))
          (window (get-buffer-window buffer))
          (section (+docs-cheatsheet-section-for)))
-    (with-current-buffer buffer
-      (read-only-mode +1)
-      (+docs-cheatsheet-mode +1))
     (cond ((equal search '(16))
            (pop-to-buffer buffer)
            (+docs/cheatsheet-find))
@@ -41,6 +64,15 @@ argument SEARCH, pick a heading instead; with two, search its text."
           (t
            (pop-to-buffer buffer)
            (+docs--goto-section section)))))
+
+;;;###autoload
+(defun +docs/cheatsheet-close ()
+  "Close the cheat sheet, in its popup or in any other window.
+A window that showed another buffer before the sheet shows that again."
+  (interactive)
+  (if (and (fboundp '+popup-window-p) (+popup-window-p))
+      (+popup/close nil t)
+    (quit-window)))
 
 (defun +docs--goto-section (&optional heading)
   "Fold the sheet and show HEADING, or its start."
@@ -59,8 +91,8 @@ argument SEARCH, pick a heading instead; with two, search its text."
 (defun +docs/cheatsheet-search ()
   "Jump to a cheat sheet heading."
   (interactive)
-  (unless (equal (buffer-file-name) +docs-cheatsheet-file)
-    (pop-to-buffer (find-file-noselect +docs-cheatsheet-file)))
+  (unless (+docs--cheatsheet-here-p)
+    (pop-to-buffer (+docs-cheatsheet-buffer)))
   (if (fboundp 'consult-org-heading)
       (consult-org-heading)
     (call-interactively #'imenu))
@@ -74,8 +106,8 @@ argument SEARCH, pick a heading instead; with two, search its text."
 the matches shown as you type.  The sheet unfolds for it, since a
 folded line cannot be shown."
   (interactive)
-  (unless (equal (buffer-file-name) +docs-cheatsheet-file)
-    (pop-to-buffer (find-file-noselect +docs-cheatsheet-file)))
+  (unless (+docs--cheatsheet-here-p)
+    (pop-to-buffer (+docs-cheatsheet-buffer)))
   (when (derived-mode-p 'org-mode)
     (org-fold-show-all))
   (if (fboundp 'consult-line)
@@ -1055,15 +1087,27 @@ a finding, not something to fix behind the user's back."
     changed))
 
 ;;;###autoload
-(defun +docs/cheatsheet-regenerate ()
+(defun +docs/cheatsheet-regenerate (&optional ask)
   "Rebuild the key and command tables in the cheat sheet.
 The timestamp moves only when a table changed, so a regeneration that
-found nothing new leaves the file as it was."
-  (interactive)
+found nothing new leaves the file as it was.  The sheet is tracked by
+git, so from a key, ASK non-nil, it asks before it rewrites and saves
+it; called from Lisp, as a daemon regenerating it does, it does not."
+  (interactive (list t))
   (let ((buffer (find-file-noselect +docs-cheatsheet-file))
         (keys (+docs--leader-tables))
         (commands (+docs--commands-list))
         changed)
+    ;; Tried on a copy first: a no leaves the buffer untouched.
+    (when (and ask
+               (with-temp-buffer
+                 (insert-buffer-substring buffer)
+                 (let ((keys-changed (+docs--replace-generated "GENERATED-KEYS" keys))
+                       (commands-changed (+docs--replace-generated "GENERATED-COMMANDS" commands)))
+                   (or keys-changed commands-changed)))
+               (not (y-or-n-p (format "The tables changed: rewrite and save %s? "
+                                      (abbreviate-file-name +docs-cheatsheet-file)))))
+      (user-error "Cheat sheet left as it was"))
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
         (save-excursion
