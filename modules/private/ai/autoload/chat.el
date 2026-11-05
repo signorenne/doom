@@ -201,7 +201,11 @@ agent-shell's own switch puts it in the window you are in, the code's."
 (defun +ai--chat-frame-close-h ()
   "Close this chat's frame of its own as the chat ends: left open, it
 would show whatever buffer came next, under the chat's name."
-  (+ai--chat-frame-close (current-buffer)))
+  ;; Deleting the selected frame makes another frame's buffer current, and
+  ;; the hooks after this one, the agent's and the tools' clean-up, would
+  ;; run there and leave both running.
+  (save-current-buffer
+    (+ai--chat-frame-close (current-buffer))))
 
 ;;;###autoload
 (defun +ai/chat-hide ()
