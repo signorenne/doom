@@ -96,7 +96,10 @@ selected or lit up: the cursor is hidden, the mouse does not highlight the
 entries as it passes, and a drag selects nothing. Clicking an entry, or
 ~RET~ on it, still opens it, as its key does: Doom's menu gave the
 command the entry as a prefix argument, so the cheat sheet asked for a
-heading and a project picked went to projectile's commander.
+heading and a project picked went to projectile's commander. The entry
+of ~SPC k SPC~, what the project can do, opens what that key opens in the
+dashboard's directory, and says in a line why when it opens nothing:
+outside a project, or in a kind of project without that menu.
 
 A picture instead of the banner wants ~+dashboard-widget-banner~
 back in ~+dashboard-functions~ and ~fancy-splash-image~ pointed at

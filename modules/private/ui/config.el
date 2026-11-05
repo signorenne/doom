@@ -154,6 +154,18 @@ draws on the dashboard moves on from here, inside
                       (lambda (_button) (funcall action current-prefix-arg))))
         (setq button (next-button (button-end button)))))))
 
+;; SPC k SPC opens the menu of the project's kind, which depends on where
+;; it is pressed: the build entry opens what it opens in the dashboard's
+;; directory, and says in a line why when that is nothing.
+(defun +ui/dashboard-kit-menu ()
+  "Open what SPC k SPC opens here: what the project can do."
+  (interactive)
+  (let ((command (lookup-key doom-leader-map (kbd "k SPC"))))
+    (cond ((commandp command) (call-interactively command))
+          ((+core-project-root-or-nil)
+           (user-error "This kind of project has no menu on SPC k SPC; SPC k has its keys"))
+          (t (user-error "Not inside a project: SPC k p opens one")))))
+
 ;; The name as an ASCII banner, the greeting, then a short menu of entry
 ;; points, each showing its current key. Doom skips entries whose
 ;; command isn't defined. Our banner stands in for Doom's widget, so a
@@ -181,10 +193,10 @@ draws on the dashboard moves on from here, inside
            :icon (nerd-icons-mdicon "nf-md-robot" :face '+dashboard-menu-title)
            :action +ai/menu)
           ;; SPC k is made per project, so the key is not found by lookup.
-          ("Build kit"
+          ("What the project can do"
            :icon (nerd-icons-octicon "nf-oct-tools" :face '+dashboard-menu-title)
            :key "SPC k SPC"
-           :action +cpp/menu)
+           :action +ui/dashboard-kit-menu)
           ("Cheat sheet"
            :icon (nerd-icons-octicon "nf-oct-question" :face '+dashboard-menu-title)
            :action +docs/cheatsheet)

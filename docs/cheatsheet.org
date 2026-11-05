@@ -22,7 +22,7 @@ state in its header.
 
 | Menu      | What it drives                   |
 |-----------+----------------------------------|
-| ~SPC k SPC~ | build, run and debug the project |
+| ~SPC k SPC~ | what the project can do          |
 | ~SPC n SPC~ | notes, tasks and the agenda      |
 | ~SPC l SPC~ | AI hub                           |
 | ~SPC s SPC~ | searching and replacing          |
@@ -4093,6 +4093,8 @@ bound.
   again.
 
 ** Interface
+- ~+ui/dashboard-kit-menu~ :: Open what SPC k SPC opens here: what the
+  project can do.
 - ~+ui/glyph-test~ (~SPC t G~) :: Open a buffer that renders icons, emoji,
   symbols and operators.
 - ~+ui/insert-glyph~ (~SPC i g~) :: Insert a Nerd Font glyph chosen with
