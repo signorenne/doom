@@ -350,6 +350,14 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   (add-hook 'agent-shell-mode-hook #'+ai--chat-reload-h)
   ;; Each prompt sent snapshots the project, the git views' "agent turn".
   (add-hook 'agent-shell-mode-hook #'+ai--chat-turn-h)
+  ;; The panel holds its width through a resize of the frame and C-w =,
+  ;; as the side bar does: 54 columns of text once the frame went narrow.
+  ;; Only the panel: full size or in a frame of its own, the chat follows
+  ;; the frame, and its window splits.
+  (add-hook! 'agent-shell-mode-hook
+    (defun +ai--chat-width-h ()
+      "Hold the chat's width while its side panel shows it."
+      (add-hook 'window-buffer-change-functions #'+ai--chat-width-update nil t)))
   ;; A chat reports through ACP events, so the hook script stays quiet.
   (setq agent-shell-anthropic-claude-environment
         (agent-shell-make-environment-variables "CLAUDE_EMACS_HOOK_SKIP" "1"))
@@ -357,6 +365,14 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   ;; A diff opens in the editor window, not beside the chat. The popup
   ;; module's catch-all, if it is ever turned on (+all), would take it.
   (set-popup-rule! "^\\*agent-shell-diff" :ignore t))
+
+(defun +ai--chat-width-update (window)
+  "Fix the width of the chat in WINDOW while a side window shows it."
+  (with-current-buffer (window-buffer window)
+    (setq-local window-size-fixed
+                (and (seq-some (lambda (window) (window-parameter window 'window-side))
+                               (get-buffer-window-list nil nil t))
+                     'width))))
 
 (defadvice! +ai--chat-diff-in-editor-a (fn &rest args)
   "Show agent-shell's diff in the editor window, not beside the chat."

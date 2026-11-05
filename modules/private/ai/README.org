@@ -247,6 +247,8 @@ the tools.
   the side bar redraws on edits.
 - ~+ai-panel-width~ (72): the chat's and the terminal's side windows; 72
   columns are a readable line of prose, below 64 the terminal wraps a lot.
+  The chat's panel holds it through a resize of the frame and ~C-w =~,
+  and dragging its edge does not move it.
 - ~+ai-auto-allowed-tools~: the Emacs tools that run without asking, in
   the chat and in the terminal. Never empty.
 - ~+ai-chat-output-lines~ (100): how much of a terminal's or a build's
