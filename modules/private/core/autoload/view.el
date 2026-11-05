@@ -253,16 +253,23 @@ known."
      (natural
       (let ((fitted (min (/ (float (car fit)) (max 1 (car natural)))
                          (/ (float (cdr fit)) (max 1 (cdr natural))))))
-        (create-image data type t :width (max 1 (round (* (car natural) fitted zoom))))))
+        ;; At the width asked: create-image's default scale would widen
+        ;; it by the font's width on top, past the window.
+        (create-image data type t :scale 1
+                      :width (max 1 (round (* (car natural) fitted zoom))))))
      (t (create-image data type t
                       :max-width (round (* (car fit) zoom))
                       :max-height (round (* (cdr fit) zoom)))))))
 
 (defun +core-view--spec-size (spec)
   "The size SPEC is shown at in points, from the PNG header when it can
-be, so placing it does not decode it a second time."
+be, so placing it does not decode it a second time: a picture scaled by
+a number and sized no other way. create-image gives every other spec
+the scale `default'."
   (let ((props (cdr spec)))
     (if-let* ((scale (plist-get props :scale))
+              ((numberp scale))
+              ((not (or (plist-get props :width) (plist-get props :max-width))))
               (size (+core-view--png-size (plist-get props :data))))
         (cons (round (* (car size) scale)) (round (* (cdr size) scale)))
       (image-size spec t))))
