@@ -514,6 +514,12 @@ from the spans of its block found once; the match data set the same."
         :desc "Inbox"                 "i" #'+notes/inbox
         :desc "University"            "u" #'+notes/university-agenda)))
 
+;; ESC closes the agenda as q does. Unbound in its motion state, it was
+;; Meta: ESC then q ran M-q, which fills a paragraph.
+(map! :after org-agenda
+      :map org-agenda-mode-map
+      :m [escape] #'org-agenda-quit)
+
 ;; Org lines up the table you are in when you leave a cell, and leaves
 ;; the rest of the file as it found it. This lines up all of them.
 (map! :after org

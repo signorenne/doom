@@ -2391,7 +2391,8 @@ projects and each other, which a heading in a file cannot.
 | ~SPC n t~   | the todo list                                    |
 
 Inside the agenda: =t= change the state, =s= schedule, =d= deadline, =r=
-refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= quit.
+refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= or
+=ESC= quit.
 
 ** Structure
 | Key       | What it does                     |
