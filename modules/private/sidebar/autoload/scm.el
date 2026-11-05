@@ -287,7 +287,10 @@ untracked one to the trash."
               ;; A whole section is many files gone at once: a full answer.
               (whole (and (not selection)
                           (eq (oref (magit-current-section) type) '+sidebar-group))))
-         (when (if whole (yes-or-no-p question) (y-or-n-p question))
+         ;; Doom answers yes-or-no with y or n; here it takes a full yes.
+         (when (if whole
+                   (let ((use-short-answers nil)) (yes-or-no-p question))
+                 (y-or-n-p question))
            (dolist (file untracked)
              (move-file-to-trash (expand-file-name file)))
            (if tracked
