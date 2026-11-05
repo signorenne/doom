@@ -27,10 +27,10 @@
                 "brew install graphviz"
               "openSUSE: zypper in graphviz")))
 
-;; The language server is optional on purpose: without it the mode's own
-;; completion stays, so this is a note about what is missing rather than
-;; something broken.
+;; The language server is optional on purpose: without it the keywords,
+;; skinparams and colours PlantUML lists still complete (config.el), so
+;; this is a note about what is missing rather than something broken.
 (unless (executable-find "plantuml-lsp")
-  (warn! "No plantuml-lsp: no completion for keywords, colours or the C4 library")
+  (warn! "No plantuml-lsp: no completion for the C4 library and nothing on hover")
   (explain! "go install github.com/ptdewey/plantuml-lsp@latest, "
             "then link ~/go/bin/plantuml-lsp into ~/.local/bin"))

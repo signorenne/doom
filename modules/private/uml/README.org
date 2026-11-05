@@ -119,8 +119,9 @@ in a process of its own; without it Emacs draws it, and a large diagram
 pauses the typing. ~SPC h r d~ says what is missing.
 
 The language server is optional. It is early software, so it is looked
-for by name and everything here works without it; plantuml-mode's own
-completion stays underneath.
+for by name and everything here works without it: the keywords,
+skinparams and colours PlantUML lists still complete; the C4 library and
+hover are what it adds.
 
 * Configuration
 - ~+uml-preview-format~ (=svg=), and ~+uml-preview-theme~ (=auto=), how the
