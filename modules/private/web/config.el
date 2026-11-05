@@ -191,6 +191,11 @@ buffer's `exec-path'."
                         :label "Web"
                         :keys '+web-kit-map)
 
+;; SPC k I, the project's status, opens at the bottom as C++'s does, and
+;; closes with ESC or q.
+(set-popup-rule! "^\\*web project status\\*$"
+  :side 'bottom :size 0.4 :select t :quit t :ttl nil)
+
 
 ;;
 ;;; Debugging

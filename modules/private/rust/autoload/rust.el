@@ -13,6 +13,7 @@
 (declare-function +core-compile "lib")
 (declare-function +core-read-or-empty "lib")
 (declare-function +core-need-program "lib")
+(declare-function +core-show-report "lib")
 (defvar +rust-codelldb)
 
 (defvar +rust-cargo-timeout 10
@@ -621,22 +622,20 @@ Empty means the whole workspace."
 
 ;;;###autoload
 (defun +rust/project-status ()
-  "Say what is set up here and what is missing."
+  "Say what is set up here and what is missing.
+It opens in a popup, as every language's status does."
   (interactive)
-  (let ((lines nil))
-    (push (format "cargo:         %s" (or (executable-find "cargo") "MISSING")) lines)
-    (push (format "rust-analyzer: %s"
-                  (or (executable-find "rust-analyzer")
-                      "MISSING (rustup component add rust-analyzer)"))
-          lines)
-    (push (format "clippy:        %s"
-                  (or (executable-find "cargo-clippy")
-                      "MISSING (rustup component add clippy)"))
-          lines)
-    (push (format "rustfmt:       %s"
-                  (or (executable-find "rustfmt")
-                      "MISSING (rustup component add rustfmt)"))
-          lines)
-    (when (+rust-project-p)
-      (push (format "this project:  %s" (+rust-summary)) lines))
-    (message "%s" (string-join (nreverse lines) "\n"))))
+  (+core-show-report
+   "*rust project status*"
+   (list (format "cargo:         %s" (or (executable-find "cargo") "MISSING"))
+         (format "rust-analyzer: %s"
+                 (or (executable-find "rust-analyzer")
+                     "MISSING (rustup component add rust-analyzer)"))
+         (format "clippy:        %s"
+                 (or (executable-find "cargo-clippy")
+                     "MISSING (rustup component add clippy)"))
+         (format "rustfmt:       %s"
+                 (or (executable-find "rustfmt")
+                     "MISSING (rustup component add rustfmt)"))
+         (when (+rust-project-p)
+           (format "this project:  %s" (+rust-summary))))))

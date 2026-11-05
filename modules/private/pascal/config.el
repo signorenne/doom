@@ -191,6 +191,11 @@ macOS installer puts them in /Applications/Lazarus.")
                         :label "Pascal: Free Pascal and Lazarus"
                         :keys '+pascal-kit-map)
 
+;; SPC k I, the project's status, opens at the bottom as C++'s does, and
+;; closes with ESC or q.
+(set-popup-rule! "^\\*pascal project status\\*$"
+  :side 'bottom :size 0.4 :select t :quit t :ttl nil)
+
 
 ;;
 ;;; The server

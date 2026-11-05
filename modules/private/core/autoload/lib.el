@@ -279,6 +279,24 @@ kind, which share the mode's ancestry, are not builds."
                                 (buffer-list)))))
 
 ;;;###autoload
+(defun +core-show-report (name lines)
+  "Show LINES, strings, nil ones left out, in the read-only buffer NAME
+under the project's root in bold, and select it: a project's status,
+which every module opens the same way, a popup that ESC and q close.
+The module gives NAME its popup rule."
+  (let ((root (+core-project-root-or-nil))
+        (buffer (get-buffer-create name)))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (when root
+          (insert (propertize (abbreviate-file-name root) 'face 'bold) "\n"))
+        (insert (string-join (delq nil lines) "\n") "\n")
+        (goto-char (point-min)))
+      (special-mode))
+    (pop-to-buffer buffer)))
+
+;;;###autoload
 (defun +core-run-in-vterm (name command &optional dir)
   "Run shell COMMAND in a new vterm buffer called NAME, in DIR.
 DIR defaults to the project root.  Returns the buffer."

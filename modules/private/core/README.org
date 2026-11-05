@@ -72,8 +72,10 @@ are told apart by their path.
 =SPC k= opens the keys of the project you are in, from the module that
 knows its kind: C and C++, Pascal, Rust or the web, each with the same
 letters for the same things, =b= build, =r= run, =R= with arguments, =t=
-test, =d= debug, =m= the panel, =n= a new project. A module registers its
-map with ~+core-register-builder~.
+test, =d= debug, =m= the panel, =n= a new project, =I= the project's
+status, which opens at the bottom in every language and closes with =q=
+or =ESC= (~+core-show-report~). A module registers its map with
+~+core-register-builder~.
 
 - In a project no module knows, a Gradle or a Python one, =SPC k= has
   what projection can do with it: build, test, run, install, and the

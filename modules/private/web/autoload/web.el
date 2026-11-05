@@ -13,6 +13,7 @@
 (declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 (declare-function +core-need-program "lib")
+(declare-function +core-show-report "lib")
 
 
 ;;
@@ -456,24 +457,22 @@ where dape keeps its adapters; SPC k d uses it afterwards."
 
 ;;;###autoload
 (defun +web/project-status ()
-  "Say what is installed and what this project is."
+  "Say what is installed and what this project is.
+It opens in a popup, as every language's status does."
   (interactive)
-  (message
-   "%s"
-   (string-join
-    (delq nil
-          (list (format "node:      %s" (or (executable-find "node") "MISSING"))
-                (format "yarn:      %s" (or (executable-find "yarn") "MISSING"))
-                (format "typescript-language-server: %s"
-                        (or (executable-find "typescript-language-server") "MISSING"))
-                (format "svelteserver: %s"
-                        (or (executable-find "svelteserver") "MISSING"))
-                (format "prettier:  %s" (or (executable-find "prettier") "MISSING"))
-                (when (+web-project-p)
-                  (format "this one:  %s" (+web-summary)))
-                (when (+web-project-p)
-                  (format "installed: %s"
-                          (if (file-directory-p
-                               (expand-file-name "node_modules" (+web-root)))
-                              "yes" "no, SPC k m i")))))
-    "\n")))
+  (+core-show-report
+   "*web project status*"
+   (list (format "node:      %s" (or (executable-find "node") "MISSING"))
+         (format "yarn:      %s" (or (executable-find "yarn") "MISSING"))
+         (format "typescript-language-server: %s"
+                 (or (executable-find "typescript-language-server") "MISSING"))
+         (format "svelteserver: %s"
+                 (or (executable-find "svelteserver") "MISSING"))
+         (format "prettier:  %s" (or (executable-find "prettier") "MISSING"))
+         (when (+web-project-p)
+           (format "this one:  %s" (+web-summary)))
+         (when (+web-project-p)
+           (format "installed: %s"
+                   (if (file-directory-p
+                        (expand-file-name "node_modules" (+web-root)))
+                       "yes" "no, SPC k m i"))))))

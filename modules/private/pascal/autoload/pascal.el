@@ -12,6 +12,7 @@
 (declare-function +core-compile-then "lib")
 (declare-function +core-read-or-empty "lib")
 (declare-function +core-need-program "lib")
+(declare-function +core-show-report "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (defvar +pascal-host-os)
@@ -454,21 +455,19 @@ Empty means the one the project names, or the only one."
 
 ;;;###autoload
 (defun +pascal/project-status ()
-  "Say what is set up here and what is missing."
+  "Say what is set up here and what is missing.
+It opens in a popup, as every language's status does."
   (interactive)
-  (message
-   "%s"
-   (string-join
-    (delq nil
-          (list (format "fpc:       %s" (or (executable-find "fpc") "MISSING"))
-                (format "lazbuild:  %s" (or (executable-find "lazbuild") "MISSING"))
-                (format "pasls:     %s"
-                        (or (executable-find "pasls")
-                            "MISSING (see the module README)"))
-                (format "gdb:       %s" (or (executable-find "gdb") "MISSING"))
-                (when (+pascal-project-p)
-                  (format "this one:  %s" (+pascal-summary)))
-                (when (+pascal-project-p)
-                  (format "built:     %s"
-                          (or (+pascal-program) "nothing yet")))))
-    "\n")))
+  (+core-show-report
+   "*pascal project status*"
+   (list (format "fpc:       %s" (or (executable-find "fpc") "MISSING"))
+         (format "lazbuild:  %s" (or (executable-find "lazbuild") "MISSING"))
+         (format "pasls:     %s"
+                 (or (executable-find "pasls")
+                     "MISSING (see the module README)"))
+         (format "gdb:       %s" (or (executable-find "gdb") "MISSING"))
+         (when (+pascal-project-p)
+           (format "this one:  %s" (+pascal-summary)))
+         (when (+pascal-project-p)
+           (format "built:     %s"
+                   (or (+pascal-program) "nothing yet"))))))
