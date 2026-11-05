@@ -185,6 +185,10 @@ buffer's `exec-path'."
 ;; module's.
 (+core-register-builder 'web #'+web-project-p
                         :run #'+web/dev
+                        :run-with-args #'+web/run-with-args
+                        ;; The dev server builds what it serves, as cargo
+                        ;; run builds first: S-F6 starts it.
+                        :build-and-run #'+web/dev
                         :debug #'+web/debug
                         :panel #'+web/menu
                         :new #'+web/new-project
@@ -241,8 +245,11 @@ buffer's `exec-path'."
 (declare-function +core-kit-keymap "build")
 (defvar +web-kit-map
   (+core-kit-keymap
-   '(("m" "The panel: what is set"   #'+web/menu)
+   '(("SPC" "Kit menu: what you do"   #'+web/kit-menu)
+     ("m" "The panel: what is set"   #'+web/menu)
      ("r" "Dev server"               #'+web/dev)
+     ("R" "Run with arguments"       #'+web/run-with-args)
+     ("x" "Build, then run"          #'+core/build-and-run)
      ("b" "Build"                    #'+web/build)
      ("v" "Preview the build"        #'+web/preview)
      ("t" "Test"                     #'+web/test)

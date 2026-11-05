@@ -160,8 +160,10 @@
 (declare-function +core-kit-keymap "build")
 (defvar +rust-kit-map
   (+core-kit-keymap
-   '(("m" "The panel: what is set"   #'+rust/menu)
+   '(("SPC" "Kit menu: what you do"   #'+rust/kit-menu)
+     ("m" "The panel: what is set"   #'+rust/menu)
      ("b" "Build"                    #'+rust/build)
+     ("x" "Build, then run"          #'+core/build-and-run)
      ("r" "Run"                      #'+rust/run)
      ("R" "Run with arguments"       #'+rust/run-with-args)
      ("c" "Check, the fast one"      #'+rust/check)
@@ -177,7 +179,7 @@
      ("C" "Clean"                    #'+rust/clean)
      ("U" "Update the lock file"     #'+rust/update)
      ("y" "Profile"                  #'+rust/set-profile)
-     ("Y" "dev against release"      #'+rust/toggle-profile)
+     ("Y" "Dev against release"      #'+rust/toggle-profile)
      ("f" "Features"                 #'+rust/set-features)
      ("F" "No default features"      #'+rust/set-no-default-features)
      ("p" "Workspace member"         #'+rust/set-member)

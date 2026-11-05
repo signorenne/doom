@@ -23,7 +23,8 @@ adds the part that is this config's:
 * The keys
 =SPC k= in a cargo project opens this module's keys: the panel's, on the
 letters =SPC k= has in every project. The panel's documentation key, =d=,
-is =SPC k D=, since =SPC k d= debugs everywhere.
+is =SPC k D=, since =SPC k d= debugs everywhere. =SPC k SPC= is all of
+them in a menu, under the names which-key shows, as C++'s is.
 
 | Key       | What it does                                     |
 |-----------+--------------------------------------------------|
@@ -32,9 +33,11 @@ is =SPC k D=, since =SPC k d= debugs everywhere.
 | ~SPC k b~   | build                                            |
 | ~SPC k t~   | test                                             |
 | ~SPC k r~   | run, ~SPC k R~ with arguments asked now            |
+| ~SPC k x~   | build, then run, what ~SPC k r~ does in cargo      |
 | ~SPC k d~   | debug with codelldb                              |
 | ~SPC k i~   | =cargo install --path .=                           |
 | ~SPC k m~   | the panel: everything below, and what is set     |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name        |
 | ~SPC k n~   | a new project: bin, lib or workspace             |
 | ~SPC m k c~ | check, the fast one                              |
 | ~SPC m k l~ | clippy, ~SPC m k L~ fixing what it is sure of      |

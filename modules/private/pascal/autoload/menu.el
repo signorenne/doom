@@ -1,7 +1,8 @@
 ;;; private/pascal/autoload/menu.el -*- lexical-binding: t; -*-
 ;;
-;; The panel, on SPC k m like the others: what a build depends on and
-;; the line it would run.
+;; Two menus, as in C++. SPC k SPC is what you do: every key SPC k has
+;; in a Pascal project, with the same label. SPC k m is the panel, like
+;; the others: what a build depends on and the line it would run.
 
 (require 'transient)
 
@@ -23,6 +24,35 @@
   "Non-nil when this project is one that builds here."
   (memq (+pascal-project-kind) '(lazarus fpc)))
 
+;;;###autoload (autoload '+pascal/kit-menu "private/pascal/autoload/menu" nil t)
+(transient-define-prefix +pascal/kit-menu ()
+  "What a Pascal project can do: build, run, debug, and what it is set to."
+  [:description +pascal--menu-description
+   ["Build"
+    :if +pascal--buildable-p
+    ("b" "Build"              +pascal/build)
+    ("x" "Build, then run"    +pascal/build-and-run)
+    ("t" "Test"               +pascal/test)
+    ("C" "Clean"              +pascal/clean)]
+   ["Run"
+    :if +pascal--buildable-p
+    ("r" "Run"                +pascal/run)
+    ("R" "Run with arguments" +pascal/run-with-args)
+    ("d" "Debug"              +pascal/debug)
+    ("<f9>" "Breakpoint here" dape-breakpoint-toggle)]
+   ["Build with"
+    :if +pascal--buildable-p
+    ("y" "Build mode"         +pascal/set-build-mode)
+    ("w" "Widget set"         +pascal/set-widgetset)
+    ("T" "Target"             +pascal/set-target)
+    ("s" "Which program"      +pascal/set-main)
+    ("a" "Run arguments, kept" +pascal/set-run-args)]
+   ["Files and status"
+    ("m" "The panel: what is set" +pascal/menu)
+    ("I" "Project status"     +pascal/project-status)
+    ("v" "The project file"   +pascal/open-project-file)
+    ("n" "New project"        +core/new-project)]])
+
 ;;;###autoload (autoload '+pascal/menu "private/pascal/autoload/menu" nil t)
 (transient-define-prefix +pascal/menu ()
   "What a Pascal build depends on, and the files behind it."
@@ -36,7 +66,7 @@
      :if +pascal--buildable-p)
     ("s" "Which program"      +pascal/set-main :transient t
      :if +pascal--buildable-p)
-    ("a" "Run arguments"      +pascal/set-run-args :transient t
+    ("a" "Run arguments, kept" +pascal/set-run-args :transient t
      :if +pascal--buildable-p)]
    ["Do"
     ("b" "Build"              +pascal/build :if +pascal--buildable-p)

@@ -179,9 +179,10 @@ failing it there.
 
 * Two menus, when a key slips your mind
 - =SPC k SPC= is the menu for whatever project type you are in. It is
-  not only CMake: Cargo, Meson, Make, Gradle, Maven, npm, Python and
-  some sixty more go through the same menu, with the columns following
-  the project type.
+  not only CMake: Meson, Make, Gradle, Maven, Python and some sixty
+  more go through the same menu, with the columns following the project
+  type; a Cargo, npm or Pascal project has a menu of its own there, with
+  its own keys.
 - =SPC k m= is the CMake panel: the kit, the cache variables, the
   targets, the files.
 

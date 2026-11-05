@@ -722,8 +722,9 @@ function, so `c-ts-mode-set-style' installs them."
        ("n" "New PlatformIO project" #'+pio/new-project)))))
   "SPC k in a C or C++ project: CMake, PlatformIO, Meson or make.")
 
-;; And its menu of what a project can do, which reads Cargo, Gradle,
-;; Maven, npm and Python projects as well, in a project no module knows.
+;; And its menu of what a project can do, which reads Gradle, Maven,
+;; Python projects and the rest as well, in a project no module knows.
+;; Rust, Pascal and the web have menus of their own on SPC k SPC.
 (define-key +core-kit-project-map (kbd "SPC") (cons "What the project can do" #'+cpp/menu))
 
 ;; Qt Creator's function keys, in every buffer. F2 is gd in any language;

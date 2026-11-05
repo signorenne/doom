@@ -1996,10 +1996,12 @@ draws it, also knows Go, Zig and Java, but those modules are not enabled
 here, so nothing opens such a file in a mode it would recognise.
 
 ** Other languages
-The kit menu ~SPC k SPC~ is for any project: a =Cargo.toml=, =meson.build=,
-=build.gradle=, =pom.xml=, =package.json=, =Makefile= or =pyproject.toml=
-gives it build, run and test through projection, and the Fix, Server and
-Tools columns are the same everywhere. Rust, Python, JavaScript,
+The kit menu ~SPC k SPC~ is for any project: a =meson.build=,
+=build.gradle=, =pom.xml=, =Makefile= or =pyproject.toml= gives it build,
+run and test through projection, and the Fix, Server and Tools columns
+are the same everywhere. A =Cargo.toml=, a =package.json= or a Pascal
+project has a menu of its own there, every key its ~SPC k~ has, under
+the same names. Rust, Python, JavaScript,
 TypeScript, HTML, CSS and Pascal open in their own modes and get a server
 when one is on PATH; =doom doctor= names any that are missing with the line
 that installs it. Go, Java, Kotlin and Zig were dropped from =init.el=,
@@ -2072,8 +2074,10 @@ and C++ use: they ask what kind of project this is, so in a tree with a
 | ~F6~        | run it, with the arguments that are set           |
 | ~SPC k b~   | build, ~SPC k t~ test, ~SPC k i~ install              |
 | ~SPC k r~   | run, ~SPC k R~ with arguments asked now             |
+| ~SPC k x~   | build, then run, what ~SPC k r~ does in cargo       |
 | ~SPC k d~   | debug with codelldb                               |
 | ~SPC k m~   | the panel: what is set, and everything cargo does |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name         |
 | ~SPC k n~   | a new project: Rust, then bin, lib or workspace   |
 | ~SPC m k c~ | check, the fast one                               |
 | ~SPC m k l~ | clippy, ~SPC m k L~ fixing what it is sure of       |
@@ -2119,6 +2123,7 @@ has none.
 | ~F6~        | run it                                           |
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug with gdb       |
 | ~SPC k m~   | the panel: what is set, and everything else      |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name        |
 | ~SPC k n~   | a new project: Pascal, then console or lcl       |
 | ~SPC m k x~ | build, then run                                  |
 | ~SPC m k y~ | the Lazarus build mode, ~SPC m k w~ the widget set |
@@ -2160,9 +2165,11 @@ the docsets of the libraries its =package.json= uses.
 | Key       | What it does                                    |
 |-----------+-------------------------------------------------|
 | ~SPC k r~   | the dev server, left running and able to listen |
+| ~SPC k R~   | with arguments asked now; ~SPC k x~ as ~SPC k r~    |
 | ~SPC k b~   | build, ~SPC k t~ test                             |
 | ~SPC k d~   | debug node, or Electron's main process          |
 | ~SPC k m~   | the panel: everything the project can be told   |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name       |
 | ~SPC k n~   | a new project: Web, then its template           |
 | ~SPC m k v~ | preview what the build made                     |
 | ~SPC m k s~ | any script out of package.json                  |
@@ -3779,75 +3786,81 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k y~   | Build type                               |
 
 ** SPC k: Rust
-| Key     | What it does           |
-|---------+------------------------|
-| ~SPC k B~ | Benchmarks             |
-| ~SPC k C~ | Clean                  |
-| ~SPC k D~ | Documentation          |
-| ~SPC k F~ | No default features    |
-| ~SPC k I~ | Project status         |
-| ~SPC k L~ | Clippy, fixing         |
-| ~SPC k R~ | Run with arguments     |
-| ~SPC k T~ | Target triple          |
-| ~SPC k U~ | Update the lock file   |
-| ~SPC k Y~ | dev against release    |
-| ~SPC k a~ | Run arguments, kept    |
-| ~SPC k b~ | Build                  |
-| ~SPC k c~ | Check, the fast one    |
-| ~SPC k d~ | Debug                  |
-| ~SPC k e~ | Expand the macros      |
-| ~SPC k f~ | Features               |
-| ~SPC k i~ | Install                |
-| ~SPC k l~ | Clippy                 |
-| ~SPC k m~ | The panel: what is set |
-| ~SPC k n~ | New project            |
-| ~SPC k p~ | Workspace member       |
-| ~SPC k r~ | Run                    |
-| ~SPC k t~ | Test                   |
-| ~SPC k u~ | Test at point          |
-| ~SPC k v~ | Cargo.toml             |
-| ~SPC k y~ | Profile                |
+| Key       | What it does           |
+|-----------+------------------------|
+| ~SPC k B~   | Benchmarks             |
+| ~SPC k C~   | Clean                  |
+| ~SPC k D~   | Documentation          |
+| ~SPC k F~   | No default features    |
+| ~SPC k I~   | Project status         |
+| ~SPC k L~   | Clippy, fixing         |
+| ~SPC k R~   | Run with arguments     |
+| ~SPC k SPC~ | Kit menu: what you do  |
+| ~SPC k T~   | Target triple          |
+| ~SPC k U~   | Update the lock file   |
+| ~SPC k Y~   | Dev against release    |
+| ~SPC k a~   | Run arguments, kept    |
+| ~SPC k b~   | Build                  |
+| ~SPC k c~   | Check, the fast one    |
+| ~SPC k d~   | Debug                  |
+| ~SPC k e~   | Expand the macros      |
+| ~SPC k f~   | Features               |
+| ~SPC k i~   | Install                |
+| ~SPC k l~   | Clippy                 |
+| ~SPC k m~   | The panel: what is set |
+| ~SPC k n~   | New project            |
+| ~SPC k p~   | Workspace member       |
+| ~SPC k r~   | Run                    |
+| ~SPC k t~   | Test                   |
+| ~SPC k u~   | Test at point          |
+| ~SPC k v~   | Cargo.toml             |
+| ~SPC k x~   | Build, then run        |
+| ~SPC k y~   | Profile                |
 
 ** SPC k: Pascal: Free Pascal and Lazarus
-| Key     | What it does           |
-|---------+------------------------|
-| ~SPC k C~ | Clean                  |
-| ~SPC k I~ | Project status         |
-| ~SPC k R~ | Run with arguments     |
-| ~SPC k T~ | Target                 |
-| ~SPC k a~ | Run arguments, kept    |
-| ~SPC k b~ | Build                  |
-| ~SPC k d~ | Debug                  |
-| ~SPC k m~ | The panel: what is set |
-| ~SPC k n~ | New project            |
-| ~SPC k r~ | Run                    |
-| ~SPC k s~ | Which program          |
-| ~SPC k t~ | Test                   |
-| ~SPC k v~ | The project file       |
-| ~SPC k w~ | Widget set             |
-| ~SPC k x~ | Build, then run        |
-| ~SPC k y~ | Build mode             |
+| Key       | What it does           |
+|-----------+------------------------|
+| ~SPC k C~   | Clean                  |
+| ~SPC k I~   | Project status         |
+| ~SPC k R~   | Run with arguments     |
+| ~SPC k SPC~ | Kit menu: what you do  |
+| ~SPC k T~   | Target                 |
+| ~SPC k a~   | Run arguments, kept    |
+| ~SPC k b~   | Build                  |
+| ~SPC k d~   | Debug                  |
+| ~SPC k m~   | The panel: what is set |
+| ~SPC k n~   | New project            |
+| ~SPC k r~   | Run                    |
+| ~SPC k s~   | Which program          |
+| ~SPC k t~   | Test                   |
+| ~SPC k v~   | The project file       |
+| ~SPC k w~   | Widget set             |
+| ~SPC k x~   | Build, then run        |
+| ~SPC k y~   | Build mode             |
 
 ** SPC k: Web
-| Key     | What it does             |
-|---------+--------------------------|
-| ~SPC k I~ | Project status           |
-| ~SPC k M~ | Package manager          |
-| ~SPC k P~ | Package the Electron app |
-| ~SPC k T~ | Test, and keep watching  |
-| ~SPC k b~ | Build                    |
-| ~SPC k c~ | Types, without building  |
-| ~SPC k d~ | Debug                    |
-| ~SPC k i~ | Install                  |
-| ~SPC k l~ | Lint                     |
-| ~SPC k m~ | The panel: what is set   |
-| ~SPC k n~ | New project              |
-| ~SPC k o~ | What has moved on        |
-| ~SPC k p~ | package.json             |
-| ~SPC k r~ | Dev server               |
-| ~SPC k s~ | Any script               |
-| ~SPC k t~ | Test                     |
-| ~SPC k v~ | Preview the build        |
+| Key       | What it does             |
+|-----------+--------------------------|
+| ~SPC k I~   | Project status           |
+| ~SPC k M~   | Package manager          |
+| ~SPC k P~   | Package the Electron app |
+| ~SPC k R~   | Run with arguments       |
+| ~SPC k SPC~ | Kit menu: what you do    |
+| ~SPC k T~   | Test, and keep watching  |
+| ~SPC k b~   | Build                    |
+| ~SPC k c~   | Types, without building  |
+| ~SPC k d~   | Debug                    |
+| ~SPC k i~   | Install                  |
+| ~SPC k l~   | Lint                     |
+| ~SPC k m~   | The panel: what is set   |
+| ~SPC k n~   | New project              |
+| ~SPC k o~   | What has moved on        |
+| ~SPC k p~   | package.json             |
+| ~SPC k r~   | Dev server               |
+| ~SPC k s~   | Any script               |
+| ~SPC k t~   | Test                     |
+| ~SPC k v~   | Preview the build        |
+| ~SPC k x~   | Build, then run          |
 # END GENERATED-KEYS
 
 * Reference: this config's commands
@@ -4272,6 +4285,8 @@ bound.
 - ~+rust/doc~ (~SPC k D~) :: Build the project's documentation and open it.
 - ~+rust/expand~ (~SPC k e~) :: Show the file with its macros expanded, if
   cargo-expand is installed.
+- ~+rust/kit-menu~ (~SPC k SPC~) :: What a cargo project can do: build, run,
+  check, and the tools.
 - ~+rust/menu~ (~SPC k m~) :: What a cargo build depends on, and the files
   behind it.
 - ~+rust/new-project~ :: Start cargo project NAME of KIND in DIR, and open
@@ -4310,6 +4325,8 @@ bound.
   the trash, after asking.
 - ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, given the
   run arguments: with gdb, or lldb-dap on a Mac, '+core-os-debugger'.
+- ~+pascal/kit-menu~ (~SPC k SPC~) :: What a Pascal project can do: build,
+  run, debug, and what it is set to.
 - ~+pascal/menu~ (~SPC k m~) :: What a Pascal build depends on, and the
   files behind it.
 - ~+pascal/new-project~ :: Start Pascal project NAME of KIND in DIR, and
@@ -4344,6 +4361,8 @@ bound.
 - ~+web/install-js-debug~ :: Download js-debug, the debugger VS Code uses
   for node and Electron, where dape keeps its adapters; SPC k d uses it
   afterwards.
+- ~+web/kit-menu~ (~SPC k SPC~) :: What a node project can do: run, build,
+  test, and its dependencies.
 - ~+web/lint~ (~SPC k l~) :: Run the project's linter.
 - ~+web/menu~ (~SPC k m~) :: What this node project is built with, and what
   it can be told to do.
@@ -4357,6 +4376,8 @@ bound.
 - ~+web/project-status~ (~SPC k I~) :: Say what is installed and what this
   project is.
 - ~+web/run-script~ (~SPC k s~) :: Run any SCRIPT the manifest defines.
+- ~+web/run-with-args~ (~SPC k R~) :: Start the project's dev server once,
+  with ARGS behind its script.
 - ~+web/set-manager~ (~SPC k M~) :: Build with MANAGER from now on, kept in
   .dir-locals.el.
 - ~+web/test~ (~SPC k t~) :: Run the project's tests.

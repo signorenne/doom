@@ -29,15 +29,20 @@ part that is this config's:
 * The keys
 =SPC k= in a node project opens this module's keys: the panel's, on the
 letters =SPC k= has in every project. The panel's package manager key,
-=m=, is =SPC k M=, since =SPC k m= is the panel everywhere.
+=m=, is =SPC k M=, since =SPC k m= is the panel everywhere. =SPC k SPC=
+is all of them in a menu, under the names which-key shows. =S-F6=, and
+=SPC k x=, start the dev server, which builds what it serves, as
+=cargo run= builds first.
 
 | Key       | What it does                                   |
 |-----------+------------------------------------------------|
 | ~SPC k r~   | the dev server, left running and able to listen |
+| ~SPC k R~   | with arguments asked now; ~SPC k x~ as ~SPC k r~   |
 | ~SPC k b~   | build                                          |
 | ~SPC k t~   | test                                           |
 | ~SPC k d~   | debug node, or Electron's main process         |
 | ~SPC k m~   | the panel: everything below, and what this is  |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name      |
 | ~SPC k n~   | a new project                                  |
 | ~SPC m k r~ | the dev server, from a Svelte buffer           |
 | ~SPC m k v~ | preview what the build made                    |

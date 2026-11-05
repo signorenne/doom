@@ -38,7 +38,8 @@ The module adds:
 
 * The keys
 =SPC k= in a Pascal project opens this module's keys: the panel's, on the
-letters =SPC k= has in every project. The most used:
+letters =SPC k= has in every project, and =SPC k SPC= all of them in a
+menu, under the names which-key shows. The most used:
 
 | Key       | What it does                                  |
 |-----------+-----------------------------------------------|
@@ -47,6 +48,7 @@ letters =SPC k= has in every project. The most used:
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug             |
 | ~SPC k t~   | build the tests and run them                  |
 | ~SPC k m~   | the panel: what is set, and everything else   |
+| ~SPC k SPC~ | the menu: every key of SPC k, by its name     |
 | ~SPC k n~   | a new project: Pascal, then console or lcl    |
 | ~SPC m k x~ | build, then run                               |
 | ~SPC m k y~ | the Lazarus build mode                        |

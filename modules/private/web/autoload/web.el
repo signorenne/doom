@@ -14,6 +14,7 @@
 (declare-function +core-compile "lib")
 (declare-function +core-need-program "lib")
 (declare-function +core-show-report "lib")
+(declare-function +core-read-arguments "lib")
 
 
 ;;
@@ -248,6 +249,24 @@ does not end, and it is asked questions."
   "Start the project's dev server, and leave it running."
   (interactive)
   (+web--compile (format "run: %s" (+web--dev-script)) (+web-dev-command) t))
+
+;;;###autoload
+(defun +web/run-with-args (args)
+  "Start the project's dev server once, with ARGS behind its script.
+SPC k R, as it runs a program with arguments in the other languages."
+  (interactive
+   ;; What cannot work is said before the arguments are asked for.
+   (progn (+web--dev-script)
+          (+web--need-manager)
+          (list (+core-read-arguments nil))))
+  (let ((script (+web--dev-script)))
+    (+web--compile (format "run: %s" script)
+                   (concat (+web-run-script-command script)
+                           (cond ((string-empty-p args) "")
+                                 ;; npm hands a script what follows --.
+                                 ((equal (+web-manager) "npm") (concat " -- " args))
+                                 (t (concat " " args))))
+                   t)))
 
 ;;;###autoload
 (defun +web/build ()

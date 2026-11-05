@@ -276,7 +276,8 @@ macOS installer puts them in /Applications/Lazarus.")
 (declare-function +core-kit-keymap "build")
 (defvar +pascal-kit-map
   (+core-kit-keymap
-   '(("m" "The panel: what is set"   #'+pascal/menu)
+   '(("SPC" "Kit menu: what you do"   #'+pascal/kit-menu)
+     ("m" "The panel: what is set"   #'+pascal/menu)
      ("b" "Build"                    #'+pascal/build)
      ("x" "Build, then run"          #'+pascal/build-and-run)
      ("r" "Run"                      #'+pascal/run)

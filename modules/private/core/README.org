@@ -77,6 +77,8 @@ status, which opens at the bottom in every language and closes with =q=
 or =ESC= (~+core-show-report~). A module registers its map with
 ~+core-register-builder~.
 
+- Each module's =SPC k= has =SPC k SPC=, a menu of all its keys under
+  the names which-key shows.
 - In a project no module knows, a Gradle or a Python one, =SPC k= has
   what projection can do with it: build, test, run, install, and the
   menu of its kind on =SPC k SPC=.
