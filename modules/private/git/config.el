@@ -387,6 +387,25 @@ too large for it, which magit paints instead."
 (after! magit-tag
   (transient-replace-suffix 'magit-tag "t" '("t" "tag" +git/tag-create)))
 
+;; gptel-magit, on every magit buffer, puts its tag entries after
+;; magit-tag-create, which the line above replaced: each magit buffer
+;; then said it could not insert them. Anchored on that t, they go in.
+(defun +git--tag-anchor-a (fn prefix loc &rest args)
+  "Call FN with PREFIX, LOC and ARGS, magit-tag-create in the tag menu
+read as this module's t."
+  (apply fn prefix
+         (if (and (eq prefix 'magit-tag) (eq loc #'magit-tag-create)) "t" loc)
+         args))
+
+(defun +git--gptel-magit-install-a (fn &rest args)
+  "Call FN, gptel-magit's install, with ARGS, its tag entries anchored on t."
+  (advice-add 'transient-append-suffix :around #'+git--tag-anchor-a)
+  (unwind-protect (apply fn args)
+    (advice-remove 'transient-append-suffix #'+git--tag-anchor-a)))
+
+(when (modulep! :tools llm)
+  (advice-add 'gptel-magit-install :around #'+git--gptel-magit-install-a))
+
 
 ;;
 ;;; What is left to do, where it is
