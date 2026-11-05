@@ -24,7 +24,10 @@ into a process.
 | ~+device-copy~          | rsync a directory over, through the same ssh |
 
 The key and the port are left out of the ssh command when there is
-nothing to say: no ~-i~ without a key, no ~-p~ for 22.
+nothing to say: no ~-i~ without a key, no ~-p~ for 22. It never asks
+anything, =BatchMode=yes=: the lines run where nobody types, so without a
+key that works it fails and says so rather than wait on a password, and
+a host that does not answer fails in ten seconds, =ConnectTimeout=10=.
 
 * Configuration
 Nothing of its own. =doctor.el= says so when ssh or rsync is missing.
