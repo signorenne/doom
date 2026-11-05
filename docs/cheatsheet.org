@@ -130,7 +130,9 @@ To add a module, create =modules/private/<name>/= and add its name to the
 A frame closes with ~SPC q f~ and the daemon lives on; closing the last
 frame of a daemon leaves Emacs running, which is the point of it.
 ~SPC q q~ asks once about each unsaved file: one you do not save stays
-open, unsaved, for the next frame.
+open, unsaved, for the next frame. Closing a frame any other way, its
+window's close button too, asks nothing: an unsaved file stays open, and
+~SPC b B~ finds it.
 
 ** Open the config
 | Key       | What it opens                |

@@ -1487,48 +1487,43 @@ It advises the commands that quit, SPC q q's among them."
   (when (fboundp 'doom/delete-frame-with-prompt)
     (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)))
 
-;; A quit asks about each modified buffer itself. Closing the last frame
-;; then kills its workspace, and Doom asks about the same buffers again
-;; before it kills them, and then whether to kill each one still
-;; modified. While a quit runs, that round asks nothing and kills no
-;; buffer with unsaved work: one answered no stays open, unsaved, as it
-;; would in a daemon without workspaces, and so does one the quit did
-;; not ask about (a client started on other files asks about those only).
-(defvar +core--quitting nil
-  "Non-nil while a quit runs that has asked about the modified buffers.")
-
-(defun +core--quitting-a (fn &rest args)
-  "Call FN with ARGS as a quit, which asks about the buffers itself."
-  (let ((+core--quitting t))
-    (apply fn args)))
-
-(advice-add 'save-buffers-kill-emacs :around #'+core--quitting-a)
-(advice-add 'save-buffers-kill-terminal :around #'+core--quitting-a)
+;; Closing a frame asks nothing. Emacs closes it from
+;; `delete-frame-functions', with redisplay off, and Doom's workspaces
+;; kill the closing frame's workspace from there: a question asked then
+;; was not drawn, or was drawn where nobody looked once another frame
+;; took the focus, and Emacs waited on it with every new frame blank. So
+;; that round answers no for you: a buffer with unsaved work, a running
+;; process or a client waiting on it stays open, out of any workspace,
+;; as a daemon without workspaces keeps it. SPC b B finds it, and a quit
+;; asks about it, once: SPC q q asks before it closes anything.
+(defvar +core--kept-unsaved nil
+  "The buffers a frame closing kept because of their unsaved work.")
 
 (defun +core--keep-unsaved-h ()
   "Refuse to kill this buffer when it holds unsaved work."
-  (not (and (buffer-modified-p)
-            (or buffer-file-name buffer-offer-save))))
+  (if (and (buffer-modified-p) (or buffer-file-name buffer-offer-save))
+      (progn (push (current-buffer) +core--kept-unsaved) nil)
+    t))
 
-;; Emacs runs `delete-frame-functions' with redisplay off. Doom's
-;; workspaces kill the closing frame's workspace from there, and ask
-;; about each buffer still modified: a question never drawn, which
-;; Emacs then waited on for good, every new frame blank.
-(defun +core--frame-close-asks-a (fn &rest args)
-  "Call FN with ARGS with redisplay on, its questions drawn and
-answered by the next key.  In a quit, which has asked already, it asks
-nothing and kills no buffer holding unsaved work."
-  (let ((inhibit-redisplay nil))
-    (if (not +core--quitting)
-        (apply #'+core--answer-anywhere-a fn args)
-      (let ((save-some-buffers-default-predicate #'ignore))
-        (add-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h)
-        (unwind-protect
-            (apply #'+core--answer-anywhere-a fn args)
-          (remove-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h))))))
+(defun +core--frame-close-asks-nothing-a (fn &rest args)
+  "Call FN with ARGS, every question it would ask answered no, and keep
+each buffer it would have asked about."
+  ;; yes-or-no-p is C: with short answers it asks through y-or-n-p.
+  (let ((save-some-buffers-default-predicate #'ignore)
+        (use-short-answers t)
+        (+core--kept-unsaved nil))
+    (add-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h)
+    (unwind-protect
+        (cl-letf (((symbol-function 'y-or-n-p) #'ignore)
+                  ((symbol-function 'map-y-or-n-p) (lambda (&rest _) 0)))
+          (apply fn args))
+      (remove-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h))
+    (when-let* ((kept (seq-filter #'buffer-live-p (delete-dups +core--kept-unsaved))))
+      (message "Kept unsaved, SPC b B finds them: %s"
+               (mapconcat #'buffer-name kept ", ")))))
 
 (when (modulep! :ui workspaces)
-  (advice-add '+workspaces-delete-associated-workspace-h :around #'+core--frame-close-asks-a))
+  (advice-add '+workspaces-delete-associated-workspace-h :around #'+core--frame-close-asks-nothing-a))
 
 
 ;;
