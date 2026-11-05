@@ -72,6 +72,22 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
   "The dynamic blocks a note writes again as it is shown and saved;
 autoload/query.el writes them.")
 
+(defun +notes--refile-distinct-a (targets)
+  "TARGETS, refile's, with those that read the same told apart by their
+file's folder in the vault: a course and a project of one title."
+  (let ((seen (make-hash-table :test #'equal)))
+    (dolist (target targets)
+      (puthash (car target) (1+ (gethash (car target) seen 0)) seen))
+    (mapcar (lambda (target)
+              (if (and (> (gethash (car target) seen) 1) (nth 1 target))
+                  (cons (format "%s [%s]" (car target)
+                                (directory-file-name
+                                 (file-relative-name (file-name-directory (nth 1 target))
+                                                     org-directory)))
+                        (cdr target))
+                target))
+            targets)))
+
 (after! org
   ;; A missing vault would break the agenda, so create its tree early.
   (+notes--ensure-directories)
@@ -115,7 +131,10 @@ autoload/query.el writes them.")
         ;; a daily note, of which there is one more every day.
         org-refile-targets '((nil :maxlevel . 3)
                              (+notes--refile-files :maxlevel . 2))
-        org-refile-use-outline-path 'file
+        ;; A target starts with its file's title, not its name: every
+        ;; project and course is an index.org, and two projects' Next
+        ;; actions were one choice.
+        org-refile-use-outline-path 'title
         org-outline-path-complete-in-steps nil
         org-refile-allow-creating-parent-nodes 'confirm
         org-image-actual-width '(500)
@@ -127,6 +146,7 @@ autoload/query.el writes them.")
         org-yank-dnd-default-attach-method 'cp
         org-ellipsis " [...]")
   (add-to-list 'org-modules 'org-habit)
+  (advice-add 'org-refile-get-targets :filter-return #'+notes--refile-distinct-a)
 
   ;; The browser hands pages over through emacsclient; SPC n d P registers
   ;; the handler with the desktop. Doom loads org-protocol the first time
