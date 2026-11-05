@@ -1481,15 +1481,45 @@ It advises the commands that quit, SPC q q's among them."
   (when (fboundp 'doom/delete-frame-with-prompt)
     (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)))
 
+;; A quit asks about each modified buffer itself. Closing the last frame
+;; then kills its workspace, and Doom asks about the same buffers again
+;; before it kills them, and then whether to kill each one still
+;; modified. While a quit runs, that round asks nothing and kills no
+;; buffer with unsaved work: one answered no stays open, unsaved, as it
+;; would in a daemon without workspaces, and so does one the quit did
+;; not ask about (a client started on other files asks about those only).
+(defvar +core--quitting nil
+  "Non-nil while a quit runs that has asked about the modified buffers.")
+
+(defun +core--quitting-a (fn &rest args)
+  "Call FN with ARGS as a quit, which asks about the buffers itself."
+  (let ((+core--quitting t))
+    (apply fn args)))
+
+(advice-add 'save-buffers-kill-emacs :around #'+core--quitting-a)
+(advice-add 'save-buffers-kill-terminal :around #'+core--quitting-a)
+
+(defun +core--keep-unsaved-h ()
+  "Refuse to kill this buffer when it holds unsaved work."
+  (not (and (buffer-modified-p)
+            (or buffer-file-name buffer-offer-save))))
+
 ;; Emacs runs `delete-frame-functions' with redisplay off. Doom's
 ;; workspaces kill the closing frame's workspace from there, and ask
 ;; about each buffer still modified: a question never drawn, which
 ;; Emacs then waited on for good, every new frame blank.
 (defun +core--frame-close-asks-a (fn &rest args)
   "Call FN with ARGS with redisplay on, its questions drawn and
-answered by the next key."
+answered by the next key.  In a quit, which has asked already, it asks
+nothing and kills no buffer holding unsaved work."
   (let ((inhibit-redisplay nil))
-    (apply #'+core--answer-anywhere-a fn args)))
+    (if (not +core--quitting)
+        (apply #'+core--answer-anywhere-a fn args)
+      (let ((save-some-buffers-default-predicate #'ignore))
+        (add-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h)
+        (unwind-protect
+            (apply #'+core--answer-anywhere-a fn args)
+          (remove-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h))))))
 
 (when (modulep! :ui workspaces)
   (advice-add '+workspaces-delete-associated-workspace-h :around #'+core--frame-close-asks-a))
