@@ -98,11 +98,20 @@ that took its window away brings it back.")
 ;;;###autoload
 (defun +sidebar--redraw (insert)
   "Draw the view again with INSERT, which inserts its sections; point
-stays on the same section, and folded sections stay folded."
+stays on the same section, and folded sections stay folded. A section
+gone, staged or trashed, leaves point where it was in its list: on the
+next one, else the one before, else on the same line."
   (let* ((inhibit-read-only t)
          (section (magit-current-section))
          (ident (and section (magit-section-ident section)))
          (offset (and section (count-lines (oref section start) (line-beginning-position))))
+         (near (when-let* ((parent (and section (oref section parent)))
+                           (siblings (oref parent children)))
+                 (mapcar #'magit-section-ident
+                         (append (cdr (memq section siblings))
+                                 (reverse (seq-take-while (lambda (s) (not (eq s section)))
+                                                          siblings))))))
+         (line (line-number-at-pos))
          (window-start (let ((window (get-buffer-window (current-buffer))))
                          (and window (window-start window)))))
     (erase-buffer)
@@ -111,13 +120,16 @@ stays on the same section, and folded sections stay folded."
     (let ((magit-section-cache-visibility nil))
       (magit-section-show magit-root-section))
     (goto-char (point-min))
-    (when-let* ((ident)
-                (found (magit-get-section ident)))
-      (goto-char (oref found start))
-      (forward-line offset))
-    (when-let* ((window (get-buffer-window (current-buffer)))
-                (window-start))
-      (set-window-start window (min window-start (point-max)) t))))
+    (if-let* ((found (and ident (magit-get-section ident))))
+        (progn (goto-char (oref found start))
+               (forward-line offset))
+      (if-let* ((other (seq-some #'magit-get-section near)))
+          (goto-char (oref other start))
+        (forward-line (1- line))))
+    (when-let* ((window (get-buffer-window (current-buffer))))
+      (when window-start
+        (set-window-start window (min window-start (point-max)) t))
+      (set-window-point window (point)))))
 
 (defun +sidebar--render ()
   "Draw this side bar buffer's view now; with a status of the same root
