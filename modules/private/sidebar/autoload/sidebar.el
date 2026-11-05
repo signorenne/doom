@@ -259,17 +259,23 @@ workspace switch does not bring it back."
       (when +sidebar--dirty
         (+sidebar--render)))))
 
+(defvar +sidebar--followed nil
+  "The editor's buffer the side bar followed last.")
+
 (defun +sidebar--windows-h (frame)
-  "Follow what the editor window shows; let go of everything once no
-window shows the side bar."
+  "Follow what the editor window shows, when that changed: a window that
+only comes and goes beside it, which-key's after a prefix key, moves
+nothing. Let go of everything once no window shows the side bar."
   (when (eq frame (selected-frame))
     (if-let* ((window (+sidebar--window frame)))
         (with-current-buffer (window-buffer window)
           (+sidebar--own-window window)
           (unless (equal +sidebar--shown-root (+sidebar--root))
             (+sidebar--request))
-          (run-hook-with-args '+sidebar-editor-changed-functions
-                              (window-buffer (+sidebar--editor-window))))
+          (let ((editor (window-buffer (+sidebar--editor-window))))
+            (unless (eq editor +sidebar--followed)
+              (setq +sidebar--followed editor)
+              (run-hook-with-args '+sidebar-editor-changed-functions editor))))
       (+sidebar--hooks nil))))
 
 (defvar +sidebar-editor-changed-functions nil
@@ -327,6 +333,8 @@ the side bar is on show.")
 (defun +sidebar--hooks (on)
   "Add the side bar's hooks with ON, else take them away; the workspace
 hook stays while the side bar is wanted."
+  ;; Shown again, it follows the editor's buffer once more.
+  (setq +sidebar--followed nil)
   (if on
       (progn
         (add-hook 'window-buffer-change-functions #'+sidebar--windows-h)
