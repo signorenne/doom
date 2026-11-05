@@ -214,10 +214,9 @@ With COMINT the buffer takes input, which a program reading its
 standard input waits for."
   (+core-compile name command (+pascal-root) comint))
 
-;;;###autoload
-(defun +pascal/build ()
-  "Build the project with what it is set to."
-  (interactive)
+(defun +pascal--check-builder ()
+  "Stop with what to install when the compiler this project builds with,
+lazbuild or fpc, is not here, rather than run a build that cannot start."
   (let ((kind (+pascal-project-kind)))
     (when (eq kind 'lazarus)
       (unless (executable-find "lazbuild")
@@ -226,7 +225,13 @@ standard input waits for."
     (when (eq kind 'fpc)
       (unless (executable-find "fpc")
         (user-error "fpc is not installed: %s"
-                    (if (featurep :system 'macos) "brew install fpc" "zypper in fpc fpc-src")))))
+                    (if (featurep :system 'macos) "brew install fpc" "zypper in fpc fpc-src"))))))
+
+;;;###autoload
+(defun +pascal/build ()
+  "Build the project with what it is set to."
+  (interactive)
+  (+pascal--check-builder)
   (+pascal--compile "build" (+pascal-build-command)))
 
 ;;;###autoload
@@ -253,6 +258,7 @@ standard input waits for."
   ;; The build where builds go, the program in a run buffer of its own,
   ;; where it reads what is typed. Which binary is known once the build
   ;; is done, and `+pascal/run' picks it then.
+  (+pascal--check-builder)
   (+core-compile-then "build" (+pascal-build-command) (+pascal-root) #'+pascal/run))
 
 ;;;###autoload
