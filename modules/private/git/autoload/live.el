@@ -340,9 +340,45 @@ is empty at the line that follows it."
 (defun +git--live-delete-overlay (overlay)
   "Delete OVERLAY, the word marks and the lines above that belong to it."
   (mapc #'delete-overlay (overlay-get overlay '+git-live-words))
-  (when-let* ((above (overlay-get overlay '+git-live-above)))
-    (delete-overlay above))
+  (dolist (property '(+git-live-above +git-live-numberless))
+    (when-let* ((other (overlay-get overlay property)))
+      (delete-overlay other)))
   (delete-overlay overlay))
+
+(defun +git--live-top (overlay pos text)
+  "TEXT, whole lines, as drawn before POS for OVERLAY.
+Above the buffer's first line, Emacs would number the first row drawn,
+TEXT's, and leave the line itself blank: with absolute line numbers the
+rows of that line get none of Emacs's, TEXT's lines blanks as wide, and
+the line its 1. Elsewhere, TEXT as it is, and the first line's numbers
+are Emacs's again."
+  (when-let* ((numberless (overlay-get overlay '+git-live-numberless)))
+    ;; Gone first: Emacs measures its numbers on the window's first lines.
+    (delete-overlay numberless)
+    (overlay-put overlay '+git-live-numberless nil))
+  (if (not (and (= pos (point-min)) (eq display-line-numbers t)))
+      text
+    ;; Emacs pads a number to its width and one more column, then a
+    ;; space, in the face `line-number'.
+    (let* ((window (get-buffer-window (current-buffer) t))
+           (width (if window
+                      (with-selected-window window (line-number-display-width))
+                    (max (or display-line-numbers-width 0)
+                         (length (number-to-string (frame-height))))))
+           (blank (propertize (make-string (+ width 2) ?\s) 'face 'line-number))
+           (numberless (make-overlay (point-min) (min (1+ (point-min)) (point-max))))
+           (start 0) lines)
+      (overlay-put numberless '+git-live t)
+      (overlay-put numberless 'display-line-numbers-disable t)
+      (overlay-put overlay '+git-live-numberless numberless)
+      (while (string-match "\n" text start)
+        (push (concat blank (substring text start (match-end 0))) lines)
+        (setq start (match-end 0)))
+      (concat (apply #'concat (nreverse lines))
+              ;; An empty buffer has no line to number.
+              (and (< (point-min) (point-max))
+                   (propertize (concat (string-pad "1" (1+ width) nil t) " ")
+                               'face 'line-number))))))
 
 ;;;###autoload
 (defun +git--live-put-above (overlay pos text)
@@ -358,11 +394,12 @@ before POS when no line is above it."
             (setq above (make-overlay (1- pos) pos nil t nil))
             (overlay-put above '+git-live t)
             (overlay-put overlay '+git-live-above above))
+          (+git--live-top overlay pos nil)
           (overlay-put above 'display (concat "\n" text)))
       (when above
         (delete-overlay above)
         (overlay-put overlay '+git-live-above nil))
-      (overlay-put overlay 'before-string text))))
+      (overlay-put overlay 'before-string (+git--live-top overlay pos text)))))
 
 ;;;###autoload
 (defun +git--live-reconcile (existing specs make)

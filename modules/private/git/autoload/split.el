@@ -534,7 +534,9 @@ both read-only, lined up."
             +git--split-made (or +git--split-made (not (memq right buffers))))
       (add-hook 'window-scroll-functions #'+git--split-scrolled-h nil t)
       (add-hook 'window-scroll-functions #'+git--live-scrolled-h nil t)
-      (+git--split-draw hunks)
+      ;; Shown first: what is drawn above a first line is as wide as the
+      ;; line numbers of the window it is in.
       (+git--split-show)
+      (+git--split-draw hunks)
       (+git--live-schedule-refine))
     right))
