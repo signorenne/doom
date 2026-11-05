@@ -2966,7 +2966,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC X~   | Org Capture                  |
 | ~SPC `~   | Switch to last buffer        |
 | ~SPC a~   | Actions                      |
-| ~SPC k~   | project                      |
+| ~SPC k~   | build                        |
 | ~SPC u~   | Universal argument           |
 | ~SPC x~   | Toggle scratch buffer        |
 | ~SPC ~~   | Toggle last popup            |

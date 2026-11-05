@@ -1312,11 +1312,13 @@ environment, which direnv may have set."
   "SPC k in a project no module here knows: what projection can do with
 its sixty kinds, and the keys from outside a project.")
 
-(define-key doom-leader-map "k" '(menu-item "project" nil :filter +core--kit-map))
+(define-key doom-leader-map "k" '(menu-item "build" nil :filter +core--kit-map))
+;; Named for what it holds, build, run and debug: "project" read as
+;; Doom's SPC p beside it.
 (after! which-key
   (which-key-add-key-based-replacements
-    (concat doom-leader-key " k") "project"
-    (concat doom-leader-alt-key " k") "project"))
+    (concat doom-leader-key " k") "build"
+    (concat doom-leader-alt-key " k") "build"))
 
 ;; SPC SPC lists the project's files by how recently they were opened,
 ;; so the first, the one it opens on and previews, would be the file
