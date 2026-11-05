@@ -307,6 +307,18 @@ the side bar is on show.")
                        (+sidebar--show (or +sidebar--last-view (caar +sidebar-views))))
                      (+sidebar--request))))))
 
+(defvar dirvish-peek-categories)
+
+(defun +sidebar--no-peek-a (fn &rest args)
+  "Call FN, dirvish's preview of a file prompt, with ARGS; with no
+preview for a prompt opened from the side bar, which dirvish would draw
+in the side bar's window, dedicated to its view."
+  (if (when-let* ((from (minibuffer-selected-window)))
+        (buffer-local-value '+sidebar--view (window-buffer from)))
+      (let ((dirvish-peek-categories nil))
+        (apply fn args))
+    (apply fn args)))
+
 ;;;###autoload
 (defun +sidebar--watch-gitdir (root)
   "Watch ROOT's git dir, the index and HEAD, while the side bar shows it."
@@ -343,13 +355,15 @@ hook stays while the side bar is wanted."
         (add-hook '+ai-edit-functions #'+sidebar--changed-h)
         (add-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
         (add-hook 'first-change-hook #'+sidebar--buffers-changed-h)
-        (add-hook 'persp-activated-functions #'+sidebar--workspace-h))
+        (add-hook 'persp-activated-functions #'+sidebar--workspace-h)
+        (advice-add 'dirvish-peek-setup-h :around #'+sidebar--no-peek-a))
     (remove-hook 'window-buffer-change-functions #'+sidebar--windows-h)
     (remove-hook 'magit-post-refresh-hook #'+sidebar--changed-h)
     (remove-hook 'after-save-hook #'+sidebar--saved-h)
     (remove-hook '+ai-edit-functions #'+sidebar--changed-h)
     (remove-hook 'kill-buffer-hook #'+sidebar--buffers-changed-h)
     (remove-hook 'first-change-hook #'+sidebar--buffers-changed-h)
+    (advice-remove 'dirvish-peek-setup-h #'+sidebar--no-peek-a)
     (unless +sidebar--wanted
       (remove-hook 'persp-activated-functions #'+sidebar--workspace-h))
     (+sidebar--unwatch-gitdir)
