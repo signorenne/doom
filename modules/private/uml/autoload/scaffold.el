@@ -34,7 +34,7 @@
   "Start a new diagram of KIND called NAME, from the template for it."
   (interactive
    (let ((kind (+uml--read-kind)))
-     (list kind (read-string "Name: " nil nil "diagram"))))
+     (list kind (read-string (format-prompt "Name" "diagram") nil nil "diagram"))))
   (let ((template (file-name-concat +uml-templates-dir (concat kind ".puml"))))
     (unless (file-exists-p template)
       (user-error "No template for %s in %s" kind +uml-templates-dir))
@@ -66,6 +66,10 @@
      (list format (read-file-name "Write to: " nil nil nil default))))
   (unless (derived-mode-p 'plantuml-mode)
     (user-error "Not a PlantUML buffer"))
+  (setq file (expand-file-name file))
+  (when (and (file-exists-p file)
+             (not (y-or-n-p (format "%s exists; replace it? " (abbreviate-file-name file)))))
+    (user-error "Nothing written"))
   (let ((data (+uml-render (buffer-substring-no-properties (point-min) (point-max))
                            format)))
     (with-temp-file file

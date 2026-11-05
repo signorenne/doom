@@ -125,14 +125,18 @@ start already under way is joined, not repeated."
 ;;;###autoload
 (defun +uml-server-ensure ()
   "Start the picoweb server if it is not already up, and return its port.
-Waits for it to answer, since the first start has a JVM to load."
+Waits for it to answer, since the first start has a JVM to load, and
+says so meanwhile: the wait can take seconds, with the editor held."
   ;; One already starting in the background, for the preview: wait for
   ;; that one, whose timer says when it answers.
+  (when +uml--server-starting
+    (message "Starting PlantUML..."))
   (let ((deadline (+ (float-time) +uml-server-start-timeout)))
     (while (and +uml--server-starting (< (float-time) deadline))
       (sleep-for 0.1)))
   (unless (+uml-server-running-p)
     (let ((port (+uml--server-start)))
+      (message "Starting PlantUML...")
       ;; Wait for it to answer, rather than failing the render that asked
       ;; for it: the port stops being free once it listens. A server that
       ;; died at once (no java, say) is not waited for, since the wait

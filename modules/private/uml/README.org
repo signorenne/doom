@@ -53,7 +53,8 @@ comes back with light strokes and text. Set it to =light= to keep
 PlantUML's own colours, or to the name of a PlantUML theme such as
 ="cyborg"=.
 
-None of that touches the file, and ~SPC m e~ writes what you wrote.
+None of that touches the file, and ~SPC m e~ writes what you wrote. It
+asks before it replaces a file that is there.
 
 * Why there is a server
 PlantUML is a Java program. Rendering by running it costs about a second
@@ -65,8 +66,9 @@ So this module starts =plantuml -picoweb= on the first preview and keeps
 it. Measured here: 1.7 s for the first, then 0.03 s and 0.02 s. The
 start happens in the background, so opening the first diagram of a
 session does not freeze the editor while the JVM loads (it did, about
-3 s); the drawing appears once the server answers. An export started
-meanwhile waits for that same start.
+3 s); the drawing appears once the server answers. An export waits for
+the server, the start under way or its own, and meanwhile says
+=Starting PlantUML...=.
 
 Nothing starts it sooner: not Emacs starting, not a frame opening, not
 diagrams among the recent files. A JVM held for the whole session, a

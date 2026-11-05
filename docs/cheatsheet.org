@@ -2285,6 +2285,7 @@ dark. What ~SPC m e~ writes out is unaffected.
 A diagram that does not parse keeps the last good drawing and says what
 PlantUML complained about, so the window never goes blank while you are
 in the middle of a line; the line it names is marked as an error.
+~SPC m e~ asks before it replaces a file that is there.
 
 ** Why a server is running
 PlantUML is a Java program: rendering by running it costs about a second
