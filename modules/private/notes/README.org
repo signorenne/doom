@@ -221,6 +221,9 @@ never become nodes.
 
 Cards are headings tagged =:fc:= in the notes themselves, scheduled through
 their own properties; the review reads the cards of the whole vault. The
+card dashboard, ~SPC n P~, asks which cards, each choice said in words,
+and opens in a popup that ~q~ and =ESC= close; there ~r~ reviews them, ~n~
+and ~p~ move between its sections and ~TAB~ opens or closes one. The
 bibliography is =research/academic/references.bib= under the library,
 ~+notes-library-dir~, with the PDFs in =research/academic/papers/= there;
 nothing here creates either, and ~doom doctor~ says when the =.bib= is

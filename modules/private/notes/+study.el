@@ -86,6 +86,48 @@ and nothing here creates anything in it.")
   (add-hook 'org-fc-review-flip-mode-hook #'evil-normalize-keymaps)
   (add-hook 'org-fc-review-rate-mode-hook #'evil-normalize-keymaps))
 
+;; The card dashboard is a popup that q and ESC close, not the whole
+;; frame: org-fc shows it with `switch-to-buffer', which no popup rule
+;; reaches unless told to obey them. Its keys, the ones its first lines
+;; name, work in normal state too, where r and p did nothing and n
+;; searched.
+(set-popup-rule! "^\\*org-fc Dashboard\\*$" :side 'bottom :size 0.4 :select t :quit t :ttl nil)
+
+(defvar org-fc-dashboard-mode-map)
+(declare-function org-fc-contexts "org-fc-core")
+
+(defadvice! +notes--fc-dashboard-popup-a (fn &rest args)
+  "Show the card dashboard through its popup rule."
+  :around #'org-fc-dashboard
+  (let ((switch-to-buffer-obey-display-actions t))
+    (apply fn args)))
+
+(after! (evil org-fc-dashboard)
+  (evil-define-key* '(normal motion) org-fc-dashboard-mode-map
+    "r" #'org-fc-dashboard-review
+    "n" #'org-fc-dashboard-section-next
+    "p" #'org-fc-dashboard-section-previous
+    "q" #'quit-window
+    (kbd "TAB") #'org-fc-dashboard-section-toggle))
+
+;; The review context is asked by name, and marginalia took all for the
+;; Lisp function of that name: each is said in words instead.
+(defun +notes--fc-context-annotation (name)
+  "What the review context NAME holds, in words."
+  (pcase name
+    ("all" "  every card in the notes")
+    ("buffer" "  the cards of this buffer")
+    (_ (when-let* ((context (alist-get (intern-soft name) (org-fc-contexts))))
+         (format "  the cards of %s" (plist-get context :paths))))))
+
+(defadvice! +notes--fc-context-words-a (fn &rest args)
+  "Ask for a review context with what each holds beside it."
+  :around #'org-fc-select-context
+  (let ((completion-extra-properties
+         (list :category '+notes-fc-context
+               :annotation-function #'+notes--fc-context-annotation)))
+    (apply fn args)))
+
 ;; Transclusion: a map can show what it links to, rather than only naming it.
 ;; The text stays in its own note; in the map it is read only, and
 ;; #+transclude lines are what is saved.
