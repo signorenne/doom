@@ -391,14 +391,18 @@ a directory moves everything below it.  At most
 ;;;###autoload
 (defun +core/dired-subtree-cycle ()
   "Open the directory under the cursor one level, or shut it when it is
-open.  The directories inside stay shut.  On a file it does what TAB
-did before, and opens the file."
+open.  The directories inside stay shut.  On a file it opens the file,
+as RET does."
   (interactive nil dired-mode)
   (+core--dired-dirvish)
   (let ((file (dired-get-filename nil t)))
     (cond
-     ((or (null file) (not (file-directory-p file)))
+     ((null file)
       (dirvish-subtree-toggle))
+     ;; dirvish would read a file as a directory, which lists nothing:
+     ;; an empty line under it, and the file not opened.
+     ((not (file-directory-p file))
+      (dired-find-file))
      ((not (dirvish-subtree--expanded-p))
       (dirvish-subtree--insert)
       (message "%s open" (file-name-nondirectory (directory-file-name file))))

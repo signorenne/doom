@@ -527,8 +527,8 @@ A GIF is drawn by Emacs, to play."
       ;; whole listing, the same as gr, and never touches a file.
       :n "r"   #'revert-buffer
       ;; TAB opens the directory under the cursor, as it opens a heading
-      ;; in an Org document; S-TAB is the other half, the whole listing
-      ;; open one level or shut again.
+      ;; in an Org document, and a file as RET does; S-TAB is the other
+      ;; half, the whole listing open one level or shut again.
       :n "TAB"     #'+core/dired-subtree-cycle
       :n [tab]     #'+core/dired-subtree-cycle
       :n [backtab] #'+core/dired-fold-cycle

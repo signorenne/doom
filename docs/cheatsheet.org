@@ -872,7 +872,7 @@ or ~SPC SPC~.
 | ~j k~   | down, up; the preview follows                               |
 | ~h l~   | the parent, into the thing under point; ~^~ and ~-~ go up too   |
 | ~RET~   | open it                                                     |
-| ~TAB~   | this directory: open it one level, again shut               |
+| ~TAB~   | this directory: open one level, again shut; a file: open it |
 | ~S-TAB~ | the whole listing: open, again all the way down, again shut |
 | ~gh~    | back out of an unfolded tree                                |
 | ~gj gk~ | next, previous directory line                               |
