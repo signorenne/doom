@@ -656,11 +656,16 @@ minibuffer, not a side window or popup, not the view itself."
        (not (window-dedicated-p window))
        (not (eq (window-buffer window) (get-buffer +core-view-buffer-name)))))
 
-(defun +core-view--follow-h (&rest _)
+(defun +core-view--follow-h (&optional frame)
   "Show the view of the buffer you have moved to, or step aside when it
-has none."
+has none.  FRAME is the frame whose windows changed: only the selected
+frame's own count, not a child frame's, which a completion popup or the
+butler's bubble changes as you type, while you stay where you were."
   (let ((window (selected-window)))
-    (when (+core-view--eligible-window-p window)
+    (when (and (or (null frame)
+                   (and (eq frame (selected-frame))
+                        (not (frame-parent frame))))
+               (+core-view--eligible-window-p window))
       (let ((buffer (window-buffer window)))
         (cond
          ((and (buffer-local-value '+core-view-draw buffer)
