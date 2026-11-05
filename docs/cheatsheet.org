@@ -29,7 +29,8 @@ state in its header.
 
 =SPC= is the leader, =SPC m= the localleader for the current mode, and
 =SPC m SPC= a menu of what the mode can do: dired, ibuffer, info, bookmarks,
-re-builder, the agenda; =C-o= in calc and isearch, which have no evil state.
+re-builder, the agenda; =C-o= in calc, isearch and re-builder, where the
+keys are typed, in any evil state.
 
 On the dashboard he talks to himself: the greeting, a word of his own
 or a hint from this sheet, a new one every twenty-five seconds or so.

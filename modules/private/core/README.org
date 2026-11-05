@@ -38,7 +38,8 @@ The small global things:
   it as the XML it is,
 - Doom maintenance in a compilation buffer, with a restart prompt,
 - [[https://github.com/kickingvegas/casual][casual]] menus: ~SPC m SPC~ in dired, ibuffer, info, bookmarks, re-builder
-  and the agenda shows what that mode can do, ~C-o~ in calc and isearch.
+  and the agenda shows what that mode can do, ~C-o~ in calc, isearch and
+  re-builder, in insert state too: re-builder opens in it.
 
 * Menus
 Every transient menu closes with =q= or =ESC=, through transient's own

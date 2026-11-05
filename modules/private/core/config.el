@@ -1550,9 +1550,13 @@ each buffer it would have asked about."
 
 ;; SPC m SPC opens a transient menu listing what the current mode can
 ;; do, the way SPC k SPC, SPC g SPC and the others open a module's; C-o
-;; stays evil's jump back. calc and isearch have no evil state, so the
-;; menu sits on C-o there. dired's is bound with its other localleader
-;; keys.
+;; stays evil's jump back. isearch has no evil state and calc keeps its
+;; own keys, so the menu sits on C-o there; re-builder has it on C-o as
+;; well, since it opens in insert state, where SPC m SPC would be typed
+;; into the regexp. evil's C-o, the jump back in normal state and one
+;; normal command in insert, comes before a mode's own map, so calc's
+;; and re-builder's are bound in those states too. dired's is bound with
+;; its other localleader keys.
 (use-package! casual
   :defer t
   :init
@@ -1562,7 +1566,8 @@ each buffer it would have asked about."
         (:after bookmark   :map bookmark-bmenu-mode-map :localleader "SPC" #'casual-bookmarks-tmenu)
         (:after org-agenda :map org-agenda-mode-map     :localleader "SPC" #'casual-agenda-tmenu)
         (:after re-builder :map reb-mode-map            :localleader "SPC" #'casual-re-builder-tmenu)
-        (:after calc       :map calc-mode-map               "C-o" #'casual-calc-tmenu)
+        (:after re-builder :map reb-mode-map            :gni "C-o" #'casual-re-builder-tmenu)
+        (:after calc       :map calc-mode-map           :gn "C-o" #'casual-calc-tmenu)
         (:after isearch    :map isearch-mode-map            "C-o" #'casual-isearch-tmenu)))
 
 
