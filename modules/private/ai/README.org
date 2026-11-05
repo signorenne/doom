@@ -106,7 +106,7 @@ its permission rules; ~SPC l m u~ shows your plan's usage and limits.
 | ~SPC l t C~ | ~claude-code-ide-continue~            | continue the last conversation           |
 | ~SPC l t r~ | ~claude-code-ide-resume~              | pick an older session                    |
 | ~SPC l t t~ | ~claude-code-ide-toggle~              | show, hide the terminal                  |
-| ~SPC l t k~ | ~+ai/terminal-stop~                   | stop it, after asking                    |
+| ~SPC l t k~ | ~+ai/terminal-stop~                   | end it, after asking                     |
 | ~SPC l t p~ | ~+ai/terminal-compose~                | write a prompt in a buffer               |
 | ~SPC l t s~ | ~claude-code-ide-insert-at-mentioned~ | the selection, as an @-mention           |
 | ~SPC l t l~ | ~claude-code-ide-list-sessions~       | the running instances                    |
@@ -164,7 +164,7 @@ KRunner's on KDE):
 |------------+----------------------------------------------|
 | ~C-c C-o~    | back to the code, Claude stays open          |
 | ~C-c C-q~    | hide the window, Claude keeps running        |
-| ~C-c C-k~    | stop the session, after asking               |
+| ~C-c C-k~    | end the session, after asking                |
 | ~C-c C-e~    | write a prompt in a buffer                   |
 | ~C-c SPC~    | the leader                                   |
 | ~S-<return>~ | a newline in Claude's prompt                 |

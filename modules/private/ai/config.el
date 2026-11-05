@@ -163,12 +163,12 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
   ;; The package places its own window; keep Doom's popup manager away.
   (set-popup-rule! "^\\*claude-code\\[" :ignore t))
 
-;; Stopping a session kills its buffer, which hangs up the pty; Claude
+;; Ending a session kills its buffer, which hangs up the pty; Claude
 ;; answers a hangup by exiting with 129, and the package reports every
 ;; nonzero exit as an error. If Claude is still alive when its buffer dies,
 ;; the exit that follows is ours: keep its sentinel from announcing it.
 (defun +ai--claude-quiet-exit-h ()
-  "Silence the exit report of a Claude session stopped from Emacs."
+  "Silence the exit report of a Claude session ended from Emacs."
   (when-let* ((process (get-buffer-process (current-buffer)))
               ((process-live-p process))
               (sentinel (process-sentinel process)))
@@ -591,7 +591,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "Chat: resume a session"     "r" #'+ai/chat-resume
        :desc "Chat: switch"               "b" #'+ai/chat-switch
        :desc "Chat: hide"                 "q" #'+ai/chat-hide
-       :desc "Chat: stop"                 "k" #'+ai/chat-stop
+       :desc "Chat: end"                  "k" #'+ai/chat-stop
        :desc "Chat: interrupt"            "i" #'+ai/chat-interrupt
        :desc "Chat: mode, model, thought" "o" #'+ai/chat-options
        :desc "Chat: transcript"           "v" #'+ai/chat-transcript
@@ -614,7 +614,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
         :desc "Continue last"             "C" #'claude-code-ide-continue
         :desc "Resume a session"          "r" #'claude-code-ide-resume
         :desc "Toggle window"             "t" #'claude-code-ide-toggle
-        :desc "Stop"                      "k" #'+ai/terminal-stop
+        :desc "End"                       "k" #'+ai/terminal-stop
         :desc "Compose prompt"            "p" #'+ai/terminal-compose
         :desc "Send selection (@)"        "s" #'claude-code-ide-insert-at-mentioned
         :desc "List sessions"             "l" #'claude-code-ide-list-sessions

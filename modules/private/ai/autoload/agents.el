@@ -86,7 +86,8 @@ With prefix GLOBAL, create it in ~/.claude/commands instead of the project."
          (file (expand-file-name (concat name ".md") dir)))
     (make-directory dir t)
     (when (or (not (file-exists-p file))
-              (y-or-n-p "Command exists.  Overwrite? "))
+              (y-or-n-p (format "/%s exists (%s).  Overwrite it? "
+                                name (abbreviate-file-name file))))
       (with-temp-file file
         ;; No description, no front matter: it holds nothing else.
         (unless (string-blank-p description)

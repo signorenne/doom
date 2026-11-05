@@ -456,9 +456,12 @@ terminal, a key that elsewhere only drops a draft."
                                 (buffer-name buffer)
                               (claude-code-ide--session-display-name session))))
       (if (buffer-live-p buffer)
-          ;; From the terminal itself, the package stops that one; no
-          ;; prefix argument, or it would ask which once more.
-          (let ((current-prefix-arg nil))
+          ;; From the terminal itself, the package ends that one; no
+          ;; prefix argument, or it would ask which once more. Quiet, as
+          ;; a chat ends: its "Stopping" names the act another way.
+          (let ((current-prefix-arg nil)
+                (inhibit-message t)
+                (message-log-max nil))
             (with-current-buffer buffer
               (claude-code-ide-stop)))
         (claude-code-ide--cleanup-session session)))))

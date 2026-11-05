@@ -2704,7 +2704,7 @@ prompt buffer writes to the one it was opened from.
 | ~SPC l t s~ | send the selection                |
 | ~SPC l t t~ | show, hide the window             |
 | ~SPC l t l~ | list the sessions                 |
-| ~SPC l t k~ | stop it, after asking             |
+| ~SPC l t k~ | end it, after asking              |
 | ~SPC l t m~ | the package's menu                |
 | ~SPC l t T~ | plain claude, no Emacs bridge     |
 | ~SPC l t o~ | choose the model                  |
@@ -2733,7 +2733,7 @@ takes it for KRunner.
 |------------+---------------------------------------|
 | ~C-c C-o~    | back to the code, Claude stays open   |
 | ~C-c C-q~    | hide the window, Claude keeps running |
-| ~C-c C-k~    | stop the session, after asking        |
+| ~C-c C-k~    | end the session, after asking         |
 | ~C-c C-e~    | write a prompt in a buffer            |
 | ~C-c SPC~    | the leader, so ~C-c SPC l t t~ toggles  |
 | ~S-<return>~ | a newline in Claude's prompt          |
@@ -3324,7 +3324,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC l g m~ | Menu, model, tools           |
 | ~SPC l i~   | Chat: interrupt              |
 | ~SPC l j~   | Go to what needs you         |
-| ~SPC l k~   | Chat: stop                   |
+| ~SPC l k~   | Chat: end                    |
 | ~SPC l l~   | Chat: open or focus          |
 | ~SPC l m c~ | CLAUDE.md (project)          |
 | ~SPC l m d~ | claude doctor                |
@@ -3345,7 +3345,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC l t T~ | Plain terminal               |
 | ~SPC l t c~ | Focus or start               |
 | ~SPC l t e~ | Toggle the elisp tool        |
-| ~SPC l t k~ | Stop                         |
+| ~SPC l t k~ | End                          |
 | ~SPC l t l~ | List sessions                |
 | ~SPC l t m~ | IDE package menu             |
 | ~SPC l t n~ | New instance                 |
