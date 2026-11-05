@@ -11,7 +11,7 @@
 
 ;; Opened from a command, from the file manager or SPC f f, music and
 ;; video play rather than open as bytes. From the file manager the
-;; player shows beside it, as a buffer change there ends its layout.
+;; player shows below it, as a buffer change there ends its layout.
 (defadvice! +media--play-instead-a (fn filename &rest args)
   "Play FILENAME when it is music or a video and a command opens it."
   :around #'find-file
@@ -20,6 +20,12 @@
            (file-regular-p filename))
       (+media/play-file (expand-file-name filename) (derived-mode-p 'dired-mode))
     (apply fn filename args)))
+
+;; The player opens at the bottom and q closes it. ESC closes it from
+;; inside only: it stays up while you work beside it. Its buffer is kept,
+;; since killing it stops mpv, and shown from the file manager it leaves
+;; the cursor there.
+(set-popup-rule! "^\\*Player\\*$" :side 'bottom :size 0.35 :quit 'current :ttl nil)
 
 ;;;###autoload
 (defun +media/queue-marked ()

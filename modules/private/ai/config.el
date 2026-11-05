@@ -499,6 +499,13 @@ such as Ollama, else the claude CLI with its own sign-in.")
 (set-popup-rule! "^\\*ai-rewrite\\*" :side 'bottom :size 0.3 :select nil :quit t)
 (set-popup-rule! "^\\*ai-answer\\*" :side 'bottom :size 0.3 :select t :quit t)
 
+;; What claude mcp says opens the same way, the cursor left where it was;
+;; ESC or q closes it. Kept: the command may still be writing to it. The
+;; terminals of the claude, cloud, agent and doctor commands are no
+;; popups: Claude's screen reads ESC and q itself, so they keep the
+;; window they open in, as the bridge's terminals do.
+(set-popup-rule! "^\\*claude mcp\\*$" :side 'bottom :size 0.3 :select nil :quit t :ttl nil)
+
 ;; M-g in a commit buffer writes the message. gptel-magit-install binds M-g
 ;; and M-r again on every magit-mode-hook, so its commands are remapped too;
 ;; a commit started from a shell never runs that hook, so M-g is bound here.

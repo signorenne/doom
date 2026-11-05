@@ -39,6 +39,9 @@ A mode is a major mode, or a minor mode that is on in the buffer.")
 (set-popup-rule! "^\\*cheatsheet\\*$"
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
+;; What SPC h d C found opens at the bottom; ESC or q closes it.
+(set-popup-rule! "^\\*config check\\*$" :side 'bottom :size 0.4 :select t :quit t)
+
 ;; The README and the check sit under SPC h d, Doom's help about itself.
 ;; SPC h is also Emacs's help map, so on SPC h M and SPC h C they would
 ;; take C-h M and C-h C as well.

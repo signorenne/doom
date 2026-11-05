@@ -382,6 +382,11 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 
 (set-popup-rule! "^\\*pio monitor"
   :side 'bottom :size 0.35 :quit nil :ttl nil :select t)
+
+;; The project's report opens at the bottom and closes with ESC or q.
+;; Kept when closed: the tool versions arrive after it opens.
+(set-popup-rule! "^\\*cpp project status\\*$"
+  :side 'bottom :size 0.4 :select t :quit t :ttl nil)
 ;; The keys that cannot go through projection, which are run, debug,
 ;; the panel and a new project, are dispatched by kind, so they mean the
 ;; same thing in a Rust or a Pascal buffer. cpp is the fallback for

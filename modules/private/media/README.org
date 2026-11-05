@@ -8,8 +8,9 @@ cover, artist and album, where it is and how long it lasts, the volume,
 and the queue; its keys are mpv's own where Emacs leaves them free.
 
 Opening music or a video plays it: =RET= on it in the file manager, or
-=SPC f f=; from the file manager the player shows beside the listing,
-which keeps its layout. A remote file, or one that does not exist yet,
+=SPC f f=; from the file manager the player shows below the listing,
+which keeps its layout and the cursor. The player opens at the bottom of
+the frame; =ESC= in it hides it, =ESC= elsewhere leaves it up. A remote file, or one that does not exist yet,
 opens as a file. =SPC m p= in the file manager adds the marked files, or
 a folder with everything under it (hidden files and folders left out),
 to the queue. Killing the player's

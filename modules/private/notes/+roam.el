@@ -232,6 +232,12 @@ day is written under.")
                                        "#+source: ${ref}\n\n"))
            :unnarrowed t :empty-lines-before 1))))
 
+;; The list of notes to fix (SPC n r v) and the browser's bookmarklets
+;; open at the bottom and close with ESC or q. The list is kept while you
+;; work through it.
+(set-popup-rule! "^\\*roam review\\*$" :side 'bottom :size 0.4 :select t :quit t :ttl nil)
+(set-popup-rule! "^\\*org-protocol bookmarklets\\*$" :side 'bottom :size 0.4 :select t :quit t)
+
 (use-package! consult-org-roam
   :after org-roam
   :config

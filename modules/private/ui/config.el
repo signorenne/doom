@@ -816,6 +816,10 @@ around it; longer, it waits until it shows.")
   (setq eldoc-box-max-pixel-width 600
         eldoc-box-max-pixel-height 500))
 
+;; The glyph test (SPC t G) opens at the bottom, as the other reports
+;; do, and ESC or q closes it.
+(set-popup-rule! "^\\*glyph-test\\*$" :side 'bottom :size 0.4 :select t :quit t)
+
 
 ;;
 ;;; Keybindings

@@ -434,6 +434,11 @@ re-run starts it at the editor's priority again.")
 ;; was, so ESC closes it.
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
 
+;; What the pause watch wrote down (SPC h D) opens at the bottom and
+;; closes with ESC or q. The buffer is kept: it is the only copy of the
+;; log.
+(set-popup-rule! "^\\*Latency\\*$" :side 'bottom :size 0.35 :select t :quit t :ttl nil)
+
 ;; A reload sets every popup rule again, Doom's and this config's, in
 ;; front of the copy already there, so each reload adds a copy of every
 ;; rule for each buffer shown to be matched against. Doom's own cleanup
