@@ -488,6 +488,20 @@ re-run starts it at the editor's priority again.")
     (when (buffer-live-p buffer)
       (funcall fn buffer))))
 
+;; An error a command signals is logged in *Messages* after the name of
+;; the function that signalled it. This config runs as source, so for a
+;; user-error, a message for the user, that name was the form around it,
+;; "cond: Not inside a project", and from compiled code the command's.
+;; A user-error is logged as the echo area shows it; any other error
+;; keeps the name, which helps find it.
+(defun +core--user-error-unnamed-a (fn data context signal)
+  "Report DATA as FN does, naming SIGNAL only when DATA is no user-error."
+  (funcall fn data context
+           (unless (memq 'user-error (get (car-safe data) 'error-conditions))
+             signal)))
+
+(add-function :around command-error-function #'+core--user-error-unnamed-a)
+
 ;; The Emacs server lets emacsclient reach this session (Claude Code hooks,
 ;; org-protocol, $EDITOR). Daemons already run one. The usual Emacs is
 ;; the daemon that `+core/install-daemon' starts at login. A GUI Emacs

@@ -37,6 +37,10 @@ The small global things:
   the size written into the file is the size drawn, and ~C-c C-c~ edits
   it as the XML it is,
 - Doom maintenance in a compilation buffer, with a restart prompt,
+- a message a key gives you, a user-error, logged in =*Messages*= as the
+  echo area shows it: Emacs puts the name of the function that raised it
+  in front, and this config runs as source, so that was the form around
+  it, =cond: Not inside a project=; other errors keep the name,
 - [[https://github.com/kickingvegas/casual][casual]] menus: ~SPC m SPC~ in dired, ibuffer, info, bookmarks, re-builder
   and the agenda shows what that mode can do, ~C-o~ in calc, isearch and
   re-builder, in insert state too: re-builder opens in it.
