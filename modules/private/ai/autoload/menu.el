@@ -9,6 +9,7 @@
 (defvar gptel-backend)
 (defvar transient--original-buffer)
 (declare-function +ai--chat-buffer "chat")
+(declare-function agent-shell--permission-pending-p "agent-shell")
 (declare-function agent-shell-get-mode-name "agent-shell")
 (declare-function agent-shell-get-model-name "agent-shell")
 (declare-function gptel-backend-key "gptel-request")
@@ -23,7 +24,10 @@
       (with-current-buffer chat
         (let ((mode (ignore-errors (agent-shell-get-mode-name agent-shell--state)))
               (model (ignore-errors (agent-shell-get-model-name agent-shell--state))))
-          (concat (cond ((eq (nth 1 (assq chat (bound-and-true-p +ai--attention))) 'permission)
+          ;; The status holds only what came out of sight; a permission
+          ;; asked in view waits as well.
+          (concat (cond ((or (eq (nth 1 (assq chat (bound-and-true-p +ai--attention))) 'permission)
+                             (agent-shell--permission-pending-p :shell-buffer chat))
                          (propertize "waiting for permission" 'face 'warning))
                         ((shell-maker-busy) "busy")
                         (t "running"))

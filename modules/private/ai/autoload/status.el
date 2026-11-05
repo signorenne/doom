@@ -9,6 +9,7 @@
 (defvar +ai-notify)
 (defvar agent-shell--state)
 (defvar agent-shell-display-action)
+(declare-function agent-shell--permission-pending-p "agent-shell")
 (declare-function agent-shell-jump-to-latest-permission-button-row "agent-shell")
 (declare-function agent-shell-subscribe-to "agent-shell")
 (declare-function +ai--terminal-buffer "claude")
@@ -17,6 +18,9 @@
 
 (defvar +ai--attention nil
   "Buffers that need you, as (BUFFER KIND TIME); KIND is permission or done.")
+
+(defvar-local +ai--chat-permission-time nil
+  "When this chat last asked for a permission, seen or not.")
 
 (defun +ai--frame-focused-p (frame)
   "Non-nil when FRAME has the keyboard, or cannot tell, as a terminal
@@ -113,6 +117,9 @@ the entry clears."
                                      '(:agent-config :mode-line-name))
                      "Agent"))
           (project (+ai--status-project buffer)))
+      (when (eq kind 'permission)
+        (with-current-buffer buffer
+          (setq +ai--chat-permission-time (float-time))))
       (when kind
         (+ai--attention-record
          buffer kind agent
@@ -140,19 +147,41 @@ PORT, its connection to Emacs, tells which when the project runs several."
      (format "%s: %s" (file-name-nondirectory (directory-file-name dir))
              (if (eq kind 'permission) "needs you" "finished")))))
 
+(defun +ai--attention-all ()
+  "What needs you, as `+ai--attention' has it, and every chat whose
+permission waits: one that asked while you looked at it, or that you
+have seen since, is no longer in the status."
+  (let ((chats (and (featurep 'agent-shell)
+                    (seq-filter
+                     (lambda (buffer)
+                       (and (provided-mode-derived-p
+                             (buffer-local-value 'major-mode buffer) 'agent-shell-mode)
+                            (agent-shell--permission-pending-p :shell-buffer buffer)))
+                     (buffer-list)))))
+    (append (seq-remove (lambda (entry) (memq (car entry) chats)) +ai--attention)
+            (mapcar (lambda (chat)
+                      (list chat 'permission
+                            (or (buffer-local-value '+ai--chat-permission-time chat)
+                                (float-time))))
+                    chats))))
+
 ;;;###autoload
 (defun +ai/attend ()
   "Go to the chat or terminal that needs you, the one waiting longest.
 On a chat, to its permission button in normal state, where y, n and !
 answer."
   (interactive)
-  (let* ((entry (car (sort (copy-sequence +ai--attention)
+  (let* ((entry (car (sort (+ai--attention-all)
                            (lambda (a b) (< (nth 2 a) (nth 2 b))))))
          (buffer (car entry)))
     (unless entry
       (user-error "Nothing needs you"))
-    (cond ((get-buffer-window buffer)
-           (select-window (get-buffer-window buffer)))
+    ;; A window on any frame: a chat in a frame of its own is gone to
+    ;; there, not shown again in this one.
+    (cond ((get-buffer-window buffer 0)
+           (let ((window (get-buffer-window buffer 0)))
+             (select-frame-set-input-focus (window-frame window))
+             (select-window window)))
           ((with-current-buffer buffer (derived-mode-p 'agent-shell-mode))
            (pop-to-buffer buffer agent-shell-display-action))
           (t (with-current-buffer buffer (claude-code-ide-switch-to-buffer))))
