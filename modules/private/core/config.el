@@ -1622,6 +1622,27 @@ the first of ARGS."
 ;;
 ;;; Keybindings
 
+;; Doom binds forge's commands under SPC g whether forge is there or
+;; not, and it is only with magit's +forge: each such key failed with a
+;; raw error, and the sheet listed them. Without forge they go.
+(unless (modulep! :tools magit +forge)
+  (cl-labels ((forge-keys (map)
+                (let (keys)
+                  (map-keymap
+                   (lambda (event def)
+                     (let ((command (if (and (consp def) (stringp (car def))) (cdr def) def)))
+                       (cond ((keymapp command)
+                              (forge-keys command))
+                             ((and (symbolp command)
+                                   (string-prefix-p "forge-" (symbol-name command)))
+                              (push event keys)))))
+                   map)
+                  (dolist (event keys)
+                    (define-key map (vector event) nil t)))))
+    (when-let* ((git (lookup-key doom-leader-map "g"))
+                ((keymapp git)))
+      (forge-keys git))))
+
 (map! :leader
       (:prefix "t"
        :desc "Corfu auto-complete" "a" #'+corfu/toggle-auto-complete

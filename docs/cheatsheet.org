@@ -3136,7 +3136,6 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 ** SPC g: git
 | Key       | What it does            |
 |-----------+-------------------------|
-| ~SPC g '~   | Forge dispatch          |
 | ~SPC g .~   | Magit file dispatch     |
 | ~SPC g /~   | Magit dispatch          |
 | ~SPC g B~   | Magit blame             |
@@ -3158,31 +3157,18 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC g c b~ | Branch                  |
 | ~SPC g c c~ | Commit                  |
 | ~SPC g c f~ | Fixup                   |
-| ~SPC g c i~ | Issue                   |
-| ~SPC g c p~ | Pull request            |
 | ~SPC g c r~ | Initialize repo         |
 | ~SPC g e~   | Source Control side bar |
 | ~SPC g f c~ | Find commit             |
 | ~SPC g f f~ | Find file               |
 | ~SPC g f g~ | Find gitconfig file     |
-| ~SPC g f i~ | Find issue              |
-| ~SPC g f p~ | Find pull request       |
 | ~SPC g g~   | Magit status            |
 | ~SPC g h~   | History menu            |
-| ~SPC g l i~ | List issues             |
-| ~SPC g l n~ | List notifications      |
-| ~SPC g l p~ | List pull requests      |
 | ~SPC g l r~ | List repositories       |
 | ~SPC g l s~ | List submodules         |
 | ~SPC g n~   | Branches menu           |
-| ~SPC g o I~ | Browse issues           |
-| ~SPC g o P~ | Browse pull requests    |
-| ~SPC g o c~ | Browse commit           |
 | ~SPC g o h~ | Browse homepage         |
-| ~SPC g o i~ | Browse an issue         |
 | ~SPC g o o~ | Browse file or region   |
-| ~SPC g o p~ | Browse a pull request   |
-| ~SPC g o r~ | Browse remote           |
 | ~SPC g p~   | Show the change here    |
 | ~SPC g r~   | Revert hunk at point    |
 | ~SPC g s~   | Stage hunk at point     |
