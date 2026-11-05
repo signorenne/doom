@@ -2,6 +2,7 @@
 
 (defvar +notes-documents)
 (defvar +notes-knowledge-directories)
+(defvar +notes-knowledge-dir)
 (declare-function org-id-new "org-id")
 (declare-function org-roam-db-sync "org-roam-db")
 (declare-function +notes-repo-p "git")
@@ -13,9 +14,12 @@
 ;;;###autoload
 (defun +notes--ensure-directories ()
   "Create the vault, `org-directory', and the folders of
-`+notes-knowledge-directories' in `org-roam-directory', the same folder."
+`+notes-knowledge-directories' in `+notes-knowledge-dir', the same folder."
+  ;; The graph's root as set, not `org-roam-directory': a daily note's
+  ;; capture binds that to the dailies' folder, and the whole tree was
+  ;; made again inside capture/journal/.
   (let ((root (expand-file-name org-directory))
-        (graph (expand-file-name org-roam-directory)))
+        (graph (expand-file-name +notes-knowledge-dir)))
     (make-directory root t)
     (make-directory graph t)
     (dolist (dir +notes-knowledge-directories)
