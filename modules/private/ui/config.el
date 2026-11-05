@@ -139,6 +139,21 @@ draws on the dashboard moves on from here, inside
 `+ui-banner-font' when the dashboard is built, so another name is a
 `setq' and nothing has to be redrawn by hand.")
 
+;; Doom's menu hands each entry's command the button pressed as its
+;; prefix argument, so every entry ran as after C-u: the cheat sheet
+;; asked for a heading, a project picked went to projectile's commander.
+;; Each runs as its key does, with the prefix typed before RET if any.
+(defun +ui-dashboard-shortmenu ()
+  "Doom's menu of entry points, each running its command as its key does."
+  (let ((start (point)))
+    (+dashboard-widget-shortmenu)
+    (let ((end (point)) (button (next-button start)))
+      (while (and button (< (button-start button) end))
+        (let ((action (button-get button 'action)))
+          (button-put button 'action
+                      (lambda (_button) (funcall action current-prefix-arg))))
+        (setq button (next-button (button-end button)))))))
+
 ;; The name as an ASCII banner, the greeting, then a short menu of entry
 ;; points, each showing its current key. Doom skips entries whose
 ;; command isn't defined. Our banner stands in for Doom's widget, so a
@@ -148,7 +163,7 @@ draws on the dashboard moves on from here, inside
 (when (modulep! :ui dashboard)
   (setq +dashboard-functions '(+ui-dashboard-banner
                                +ui-dashboard-greeting ; a module's, else the date
-                               +dashboard-widget-shortmenu)
+                               +ui-dashboard-shortmenu)
         +dashboard-menu-sections
         '(("Recently opened files"
            :icon (nerd-icons-faicon "nf-fa-file_text" :face '+dashboard-menu-title)

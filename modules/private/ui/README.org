@@ -94,7 +94,9 @@ taller than its window; Doom's habit of pulling the cursor back to the menu
 after every command is set aside for scrolling commands. Nothing on it gets
 selected or lit up: the cursor is hidden, the mouse does not highlight the
 entries as it passes, and a drag selects nothing. Clicking an entry, or
-~RET~ on it, still opens it.
+~RET~ on it, still opens it, as its key does: Doom's menu gave the
+command the entry as a prefix argument, so the cheat sheet asked for a
+heading and a project picked went to projectile's commander.
 
 A picture instead of the banner wants ~+dashboard-widget-banner~
 back in ~+dashboard-functions~ and ~fancy-splash-image~ pointed at
