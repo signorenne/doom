@@ -105,7 +105,9 @@ when it is empty."
                              (+git--hunk-old-text hunk)))
                      (+git--live-spans hunks t))
              (pcase-lambda (`(,beg ,end ,old ,new ,_text))
-               (+git--split-overlay beg end '+git-live-removed (max 0 (- new old)))))))))
+               (+git--split-overlay beg end '+git-live-removed (max 0 (- new old))))))))
+  ;; The hunks above may have moved what lines up with the window's top.
+  (+git--split-align))
 
 (defun +git--split-refine (overlay)
   "Mark the changed words of OVERLAY's hunk on both sides."
@@ -159,37 +161,62 @@ LINE is of the new side, or of the old side with FROM-OLD."
               (t (setq delta (- (+ there there-count) (+ here here-count)))))))
     (max 1 (or result (+ line delta)))))
 
+(defvar +git--split-quiet nil
+  "Non-nil while the split puts a buffer in a window itself: the scroll
+that makes is not sent to the other side.")
+
+(defun +git--split-scroll-to (window line)
+  "Start WINDOW, one side of a split, at LINE of its buffer; the scroll
+this makes is not sent back."
+  (with-current-buffer (window-buffer window)
+    (let ((pos (save-excursion
+                 (save-restriction
+                   (widen)
+                   (goto-char (point-min))
+                   (forward-line (1- line))
+                   (point)))))
+      (unless (= pos (window-start window))
+        (setq +git--split-expect pos)
+        (set-window-start window pos)
+        ;; A point left behind out of sight would pull the window back
+        ;; to it the moment it is selected; one in the scroll margin
+        ;; would scroll it at the next redisplay, as Emacs keeps it out.
+        (let* ((lines (window-body-height window))
+               (margin (min scroll-margin (/ (1- lines) 2)
+                            (floor (* lines maximum-scroll-margin))))
+               (point (window-point window))
+               (top (save-excursion (goto-char pos) (forward-line margin) (point)))
+               (half (save-excursion (goto-char pos) (forward-line (/ lines 2)) (point))))
+          (unless (and (>= point top) (< point half))
+            (set-window-point window top)))))))
+
 (defun +git--split-scrolled-h (window start)
   "Scroll the other side's window to the line WINDOW's START lines up with."
-  (if (eql start +git--split-expect)
-      (setq +git--split-expect nil)
+  (cond
+   (+git--split-quiet)
+   ((eql start +git--split-expect)
+    (setq +git--split-expect nil))
+   (t
     (let* ((right (or +git--split-file (current-buffer)))
            (other (if +git--split-file +git--split-file +git--split-base))
            (other-window (and (buffer-live-p other)
                               (get-buffer-window other (window-frame window)))))
       (when other-window
-        (let ((target (+git--split-map (line-number-at-pos start t)
-                                       (with-current-buffer right (+git--split-hunks))
-                                       (and +git--split-file t))))
-          (with-current-buffer other
-            (let ((pos (save-excursion
-                         (save-restriction
-                           (widen)
-                           (goto-char (point-min))
-                           (forward-line (1- target))
-                           (point)))))
-              (unless (= pos (window-start other-window))
-                (setq +git--split-expect pos)
-                (set-window-start other-window pos)
-                ;; A point left behind out of sight would pull the window
-                ;; back to it the moment it is selected.
-                (let ((point (window-point other-window))
-                      (half (save-excursion
-                              (goto-char pos)
-                              (forward-line (/ (window-body-height other-window) 2))
-                              (point))))
-                  (unless (and (>= point pos) (< point half))
-                    (set-window-point other-window pos)))))))))))
+        (+git--split-scroll-to other-window
+                               (+git--split-map (line-number-at-pos start t)
+                                                (with-current-buffer right (+git--split-hunks))
+                                                (and +git--split-file t))))))))
+
+(defun +git--split-align ()
+  "Line the old version's window up with this right side's window, which
+stays where it is."
+  (when-let* ((base +git--split-base)
+              ((buffer-live-p base))
+              (window (get-buffer-window (current-buffer)))
+              (base-window (get-buffer-window base (window-frame window))))
+    (+git--split-scroll-to base-window
+                           (+git--split-map (line-number-at-pos (window-start window) t)
+                                            (+git--split-hunks) nil))))
 
 
 ;;
@@ -277,14 +304,17 @@ into goes again, unless it was open before."
       (overlay-put overlay '+git-live-refined nil))))
 
 (defun +git--split-show ()
-  "Put the old version in a window to the left of this buffer's."
+  "Put the old version in a window to the left of this buffer's, lined
+up with it; this buffer's window stays where it is."
   (let* ((right (or (get-buffer-window (current-buffer)) (selected-window)))
          (left (split-window right nil 'left)))
-    (set-window-buffer left +git--split-base)
+    ;; The old version comes in at its top, which is no scroll to follow.
+    (let ((+git--split-quiet t))
+      (set-window-buffer left +git--split-base))
     (set-window-dedicated-p left t)
-    (set-window-start left (with-current-buffer +git--split-base (point-min)))
     (cl-pushnew (current-buffer) +git--split-pairs)
-    (add-hook 'window-buffer-change-functions #'+git--split-check-h)))
+    (add-hook 'window-buffer-change-functions #'+git--split-check-h)
+    (+git--split-align)))
 
 
 ;;
