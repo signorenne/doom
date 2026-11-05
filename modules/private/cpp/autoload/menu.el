@@ -30,12 +30,11 @@
 (defvar projection-build-jobs)
 
 ;; A transient refuses a suffix that is neither defined nor autoloaded,
-;; and eglot's commands are neither until a server has started, nor
-;; dape's breakpoint toggle until dape ran; the menu opens from any
-;; buffer.
+;; and eglot's commands are neither until a server has started; the
+;; menu opens from any buffer. dape's breakpoint toggle is autoloaded
+;; with F9, in config.el.
 (autoload 'eglot-rename "eglot" nil t)
 (autoload 'eglot-inlay-hints-mode "eglot" nil t)
-(autoload 'dape-breakpoint-toggle "dape" nil t)
 
 
 ;;

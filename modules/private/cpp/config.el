@@ -722,7 +722,9 @@ function, so `c-ts-mode-set-style' installs them."
 ;; S-F2 asks any language's server, and F4 says so in a file that has
 ;; no header. F6, S-F6 and SPC k R go by the project's language, as
 ;; SPC k r does, so a Pascal or Rust project runs its own way rather
-;; than as C++.
+;; than as C++. dape does not autoload its toggle, so F9 does: in a
+;; fresh session the key was no command until a menu had loaded one.
+(autoload 'dape-breakpoint-toggle "dape" nil t)
 (map! :g "<f2>"  #'+lookup/definition
       :g "<S-f2>" #'+cpp/find-declaration
       :g "<f4>"  #'+cpp/header-or-source
