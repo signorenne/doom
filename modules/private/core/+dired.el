@@ -152,7 +152,8 @@ when it got to the end."
               (error (setq stage 'mode) nil))))
       ;; A mode stopped half set up is no mode to keep.
       (when (and (not done) (eq stage 'mode)) (+core--preview-plain))
-      (setq buffer-read-only t truncate-lines t)
+      ;; No modeline, as dirvish's own previews have none.
+      (setq buffer-read-only t truncate-lines t mode-line-format nil)
       done)))
 
 (defun +core--preview-finish (buffer file)
@@ -479,7 +480,8 @@ A GIF is drawn by Emacs, to play."
               (file-error (insert (error-message-string err))))
             (goto-char (point-min))
             (setq buffer-read-only t
-                  truncate-lines t)))
+                  truncate-lines t
+                  mode-line-format nil)))
         (if (with-current-buffer buffer
               (search-forward "\0" (min (point-max) 8192) t))
             `(info . ,(format "Binary, %s" (file-size-human-readable (or size 0))))
@@ -507,6 +509,23 @@ A GIF is drawn by Emacs, to play."
         (when (and (file-exists-p made) (file-newer-than-file-p file made))
           (delete-file made)))
       cache))
+
+  ;; dirvish's own buffers, the header, the footer and the previews, have
+  ;; modes that turn the modeline off, and Doom's modeline, put on every
+  ;; buffer once its mode is set up, turned it on again: the header's two
+  ;; line window then had room for that modeline and not for the path and
+  ;; the free space. dirvish gives the footer its own modeline after.
+  (defun +core--dirvish-no-modeline-h ()
+    "Keep this buffer of dirvish's without a modeline once its mode is set."
+    (add-hook 'after-change-major-mode-hook #'+core--no-modeline-h 90 t))
+
+  (defun +core--no-modeline-h ()
+    "Draw no modeline in this buffer."
+    (setq mode-line-format nil))
+
+  (dolist (hook '(dirvish-misc-mode-hook dirvish-directory-view-mode-hook
+                  dirvish-special-preview-mode-hook))
+    (add-hook hook #'+core--dirvish-no-modeline-h))
 
   ;; A popup closed gives the cursor to the window used last, but Emacs
   ;; passes over a dedicated one, and dirvish dedicates its listing: a

@@ -150,7 +150,10 @@ files in. The copy menu ~SPC f k~
 has both of these too, plus the file's whole text.
 
 The file manager is dirvish, opened with the preview pane by ~SPC o -~
-and ~SPC f d~ (~F~ hides it). Images, video frames and audio details are
+and ~SPC f d~ (~F~ hides it). Its header line is the path and the free
+space, its footer the sort and the count; the header and the preview
+draw no modeline, which Doom's modeline would otherwise put on every
+buffer, taking the header's place. Images, video frames and audio details are
 made with ImageMagick, ffmpeg and ffprobe, which this machine has; with
 =vipsthumbnail= installed (package =vips-tools=) images use that, SVG
 among them. A picture is shown from a thumbnail within 1000 by 1000,
