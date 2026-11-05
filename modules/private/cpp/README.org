@@ -35,7 +35,9 @@ project; C and C++ get the most, the rest get the same menu:
 - [[https://github.com/svaante/dape][dape]] debugs through gdb. CMake executables are offered by name, anything
   else asks for the program.
 - The style gates you run before finishing: clang-format over the tracked
-  files, clang-tidy over the project or one file.
+  files, clang-tidy over the project or one file. The buffers of the
+  files they rewrite are reloaded when they end; one with edits not
+  saved is left as it is.
 - Project templates that already carry the style, see below.
 
 * The kit

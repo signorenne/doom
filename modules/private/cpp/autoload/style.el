@@ -39,7 +39,8 @@ Uses the project's .clang-format, or LLVM style when there is none."
 
 ;;;###autoload
 (defun +cpp/format-project ()
-  "Run clang-format over every tracked C and C++ file in the project."
+  "Run clang-format over every tracked C and C++ file in the project.
+The buffers of the files it changed are reloaded once it is done."
   (interactive)
   (unless (executable-find "clang-format")
     (user-error "clang-format is not installed"))
@@ -52,35 +53,40 @@ Uses the project's .clang-format, or LLVM style when there is none."
     (when (y-or-n-p (format "Format %d file(s) in %s? "
                             (length files)
                             (abbreviate-file-name root)))
-      (+cpp--compile "clang-format"
-                     (mapconcat #'shell-quote-argument
-                                (append (list "clang-format" "-i") files)
-                                " ")))))
+      (+cpp--revert-when-done
+       (+cpp--compile "clang-format"
+                      (mapconcat #'shell-quote-argument
+                                 (append (list "clang-format" "-i") files)
+                                 " "))
+       root))))
 
 ;;;###autoload
 (defun +cpp/tidy-project ()
   "Run clang-tidy over the project through run-clang-tidy, where the kit
 runs, on the kit's compilation database.  With a prefix argument, apply
-the fixes clang-tidy proposes."
+the fixes clang-tidy proposes, and reload the buffers of the files they
+changed once it is done."
   (interactive)
   (let* ((root (+core-project-root))
          (kit (+cpp--kit root))
-         (dir (+cpp-kit-dir kit)))
+         (dir (+cpp-kit-dir kit))
+         (fix current-prefix-arg))
     (unless (+cpp--compile-commands-file kit root)
       (user-error "No compile_commands.json in %s, configure first with SPC k c"
                   dir))
-    (+cpp--compile "clang-tidy"
-                   (+cpp--kit-shell
-                    kit
-                    (mapconcat #'shell-quote-argument
-                               (append (list "run-clang-tidy" "-p" dir "-quiet")
-                                       (when current-prefix-arg (list "-fix"))
-                                       (list +cpp-tidy-file-filter))
-                               " ")
-                    ;; From the root, which the kit's directory is
-                    ;; relative to; from the buffer's own directory a
-                    ;; container finds no database.
-                    root))))
+    (let ((buffer (+cpp--compile "clang-tidy"
+                                 (+cpp--kit-shell
+                                  kit
+                                  (mapconcat #'shell-quote-argument
+                                             (append (list "run-clang-tidy" "-p" dir "-quiet")
+                                                     (when fix (list "-fix"))
+                                                     (list +cpp-tidy-file-filter))
+                                             " ")
+                                  ;; From the root, which the kit's directory is
+                                  ;; relative to; from the buffer's own directory a
+                                  ;; container finds no database.
+                                  root))))
+      (when fix (+cpp--revert-when-done buffer root)))))
 
 ;;;###autoload
 (defun +cpp/tidy-file (&optional fix)
