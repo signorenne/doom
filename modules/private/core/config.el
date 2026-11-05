@@ -1518,6 +1518,22 @@ It advises the commands that quit, SPC q q's among them."
 (advice-add 'save-buffers-kill-terminal :around #'+core--answer-anywhere-a)
 (advice-add 'doom/delete-frame-with-prompt :around #'+core--answer-anywhere-a)
 
+;; Quitting asks about each unsaved file, then Emacs asks whether to
+;; quit with modified buffers, which those answers settled: a file left
+;; unsaved was answered no. That second question is answered yes; the
+;; one about running processes still comes.
+(defun +core--quit-asks-once-a (fn &rest args)
+  "Call FN with ARGS, Emacs's question about the modified buffers left
+answered yes: the quit has asked about each of them."
+  (let ((ask (symbol-function 'yes-or-no-p)))
+    (cl-letf (((symbol-function 'yes-or-no-p)
+               (lambda (prompt)
+                 (or (string-prefix-p "Modified buffers exist" prompt)
+                     (funcall ask prompt)))))
+      (apply fn args))))
+
+(advice-add 'save-buffers-kill-emacs :around #'+core--quit-asks-once-a)
+
 ;; Closing a frame asks nothing. Emacs closes it from
 ;; `delete-frame-functions', with redisplay off, and Doom's workspaces
 ;; kill the closing frame's workspace from there: a question asked then
