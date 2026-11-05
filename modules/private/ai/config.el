@@ -592,7 +592,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "Rewrite region"             "e" #'+ai/inline-rewrite
        :desc "Explain"                    "x" #'+ai/inline-explain
        :desc "Ask"                        "a" #'+ai/inline-ask
-       (:prefix ("t" . "Claude terminal")
+       (:prefix ("t" . "claude terminal")
         :desc "Focus or start"            "c" #'+ai/terminal
         :desc "New instance"              "n" #'claude-code-ide
         :desc "Continue last"             "C" #'claude-code-ide-continue

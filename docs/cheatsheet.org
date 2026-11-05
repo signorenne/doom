@@ -24,7 +24,7 @@ state in its header.
 |-----------+----------------------------------|
 | ~SPC k SPC~ | build, run and debug the project |
 | ~SPC n SPC~ | notes, tasks and the agenda      |
-| ~SPC l SPC~ | AI agents                        |
+| ~SPC l SPC~ | AI hub                           |
 | ~SPC s SPC~ | searching and replacing          |
 
 =SPC= is the leader, =SPC m= the localleader for the current mode, and

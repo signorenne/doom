@@ -80,7 +80,7 @@ agents' files, on the keys they have after SPC l."
     ("l" "Open or focus"         +ai/chat)
     ("n" "New, C-u any agent"    +ai/chat-new)
     ("r" "Resume a session"      +ai/chat-resume)
-    ("b" "Switch chat"           +ai/chat-switch)
+    ("b" "Switch"                +ai/chat-switch)
     ("h" "Hide"                  +ai/chat-hide)
     ("k" "Stop"                  +ai/chat-stop)
     ("i" "Interrupt"             +ai/chat-interrupt)
@@ -90,11 +90,11 @@ agents' files, on the keys they have after SPC l."
     ("W" "Own frame"             +ai/chat-frame)
     ("z" "Fold tool calls"       +ai/chat-focus)]
    ["Context"
-    ("s" "Send region"           agent-shell-send-region)
-    ("f" "Send file"             agent-shell-send-file)
-    ("@" "Mention file, lines"   +ai/chat-mention)
-    ("O" "Terminal output"       +ai/chat-send-output)
-    ("c" "Compose prompt"        agent-shell-prompt-compose)]
+    ("s" "Send region to chat"   agent-shell-send-region)
+    ("f" "Send file to chat"     agent-shell-send-file)
+    ("@" "Mention file and lines" +ai/chat-mention)
+    ("O" "Terminal output to chat" +ai/chat-send-output)
+    ("c" "Compose a chat prompt" agent-shell-prompt-compose)]
    ["Session"
     ("v" "Transcript"            +ai/chat-transcript)]
    ["Inline"
@@ -115,13 +115,13 @@ agents' files, on the keys they have after SPC l."
     ("tm" "IDE package menu"     claude-code-ide-menu)
     ("tT" "Plain terminal"       +ai/claude-terminal)
     ("to" "Set model"            +ai/set-claude-model)
-    ("te" "Toggle elisp tool"    +ai/toggle-execute-code)
+    ("te" "Toggle the elisp tool" +ai/toggle-execute-code)
     ("tw" "In a new worktree"    +ai/terminal-worktree)]
    ["Remote"
-    ("dr" "Remote Control"       +ai/terminal-remote)
-    ("dw" "Cloud session here"   +ai/terminal-teleport)
+    ("dr" "Terminal with Remote Control" +ai/terminal-remote)
+    ("dw" "Open a cloud session here" +ai/terminal-teleport)
     ("dc" "Task to the cloud"    +ai/cloud-task)
-    ("db" "Background task"      +ai/agent-dispatch)
+    ("db" "Task to a background agent" +ai/agent-dispatch)
     ("da" "Background agents"    +ai/agents)
     ("dt" "Attach to an agent"   +ai/agent-attach)]
    ["gptel"
@@ -130,14 +130,14 @@ agents' files, on the keys they have after SPC l."
     ("g+" "Add to context"       gptel-add)
     ("gf" "Add file to context"  gptel-add-file)]
    ["Manage"
-    ("mc" "CLAUDE.md"            +ai/open-claude-md)
-    ("ms" "~/.claude/settings"   +ai/open-claude-settings)
+    ("mc" "CLAUDE.md (project)"  +ai/open-claude-md)
+    ("ms" "Claude settings.json" +ai/open-claude-settings)
     ("mn" "New slash command"    +ai/new-slash-command)
     ("mh" "Install Emacs hooks"  +ai/install-claude-hooks)
-    ("ml" "Log session (org)"    +ai/log-session)
+    ("ml" "Log session to org"   +ai/log-session)
     ("md" "claude doctor"        +ai/claude-doctor)
     ("mp" "claude mcp list"      +ai/claude-mcp-list)
-    ("mm" "MCP, hooks, rules"    +ai/claude-config)
+    ("mm" "MCP, hooks, permissions" +ai/claude-config)
     ("mu" "Usage and limits"     +ai/claude-usage)]
    ["Diagnostics"
     ("mt" "Chat's ACP traffic"   +ai/chat-traffic)
