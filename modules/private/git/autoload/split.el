@@ -189,7 +189,14 @@ LINE is of the new side, or of the old side with FROM-OLD."
 (define-minor-mode +git-split-base-mode
   "The old version beside a file: read-only, q to close the split."
   :lighter nil
-  :keymap +git-split-base-mode-map)
+  :keymap +git-split-base-mode-map
+  ;; Its mode's hooks do not run, so it gets by hand what they would
+  ;; give a file: Doom's line numbers and modeline, as on the other side.
+  (when +git-split-base-mode
+    (when (derived-mode-p 'prog-mode 'text-mode 'conf-mode)
+      (display-line-numbers-mode 1))
+    (when (fboundp '+modeline-mode)
+      (+modeline-mode 1))))
 
 (defun +git--split-make-base (name mode)
   "A read-only buffer named NAME for an old version in major MODE.
