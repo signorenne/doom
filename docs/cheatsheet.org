@@ -1245,7 +1245,7 @@ want the original back by hand.
 | ~gr~          | refresh (~gz~ too); ~gR~ every magit buffer               |
 | ~yy ys yb~    | copy the line, the value under point, the revision    |
 | ~`~           | the process log: every git command run and its output |
-| ~q~           | bury the buffer; ~Q~ closes every magit buffer          |
+| ~q~ ~ESC~       | bury the buffer; ~Q~ closes every magit buffer          |
 | ~?~           | every command, as a menu                              |
 
 ** Staging and discarding

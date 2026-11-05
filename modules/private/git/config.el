@@ -379,6 +379,12 @@ too large for it, which magit paints instead."
     (when (fboundp command)
       (advice-add command :around #'doom-set-jump-a))))
 
+;; ESC closes the status buffer as q does, and as it closes a popup or a
+;; magit menu; evil's own ESC does nothing in normal state.
+(map! :after magit
+      :map magit-status-mode-map
+      :n [escape] #'+magit/quit)
+
 ;; t in a magit buffer is this module's tag menu: a tag on the
 ;; commit under the cursor, any commit by its message, a branch's head or
 ;; HEAD. magit's own menu, still behind its dispatch, tags the same way.
