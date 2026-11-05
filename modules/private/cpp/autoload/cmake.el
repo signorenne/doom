@@ -408,7 +408,10 @@ has its tools there, not on the host's PATH."
   "What the status says of a tool that exited with CODE, nil when it
 did not start, having printed OUTPUT."
   (if (memq code '(nil 127))
-      (format "not installed %s" (+cpp-kit-where kit))
+      ;; Asked on the host unless the kit has a container.
+      (format "not installed %s" (if (+cpp-kit-container kit)
+                                     (+cpp-kit-where kit)
+                                   "on the host"))
     (let ((lines (split-string output "\n" t)))
       ;; Some tools print their name first and the version underneath.
       (concat (or (seq-find (lambda (line) (string-match-p "[0-9]+\\.[0-9]+" line))

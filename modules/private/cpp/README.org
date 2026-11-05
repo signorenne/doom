@@ -69,7 +69,9 @@ configuration when its directory is configured, the newest configured
 kit whatever wrote it, a preset or a plain directory, else Qt Creator's
 active configuration all the same (a fresh checkout), else the first
 preset, and last a plain =build= on the host. =SPC k ?= says which one
-and why; both menus show it in their header. A directory whose cache
+and why; both menus show it in their header, which starts no container
+to draw itself: a kit whose compiler is in a stopped one shows as in no
+running container until a command starts it. A directory whose cache
 was written for another path, the project moved since, is stale: CMake
 would refuse it, so it is not a kit; =SPC k ?= names it, =SPC k K= picks
 it and =SPC k m F= configures it fresh.

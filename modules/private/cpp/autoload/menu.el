@@ -25,6 +25,7 @@
 (defvar +cpp-lsp-server)
 (declare-function +cpp/debug "run")
 (defvar +pio-env)
+(defvar +container-may-start)
 (declare-function eglot-current-server "eglot")
 (declare-function gdb "gdb-mi")
 (defvar projection-build-jobs)
@@ -52,8 +53,11 @@ types %s   target %s   server %s"
           (bound-and-true-p +cpp-lsp-server)))
 
 (defun +cpp--menu-description ()
-  "Header for `+cpp/menu': the project, its type, and what a build uses."
-  (let* ((root (+core-project-root 'noerror))
+  "Header for `+cpp/menu': the project, its type, and what a build uses.
+Drawn at every redraw, so it starts no container: a kit whose compiler
+is in a stopped one is said to be so, and found by the command run."
+  (let* ((+container-may-start nil)
+         (root (+core-project-root 'noerror))
          (kind (+cpp--project-kind)))
     (concat
      (format "%s  [%s]"
@@ -68,9 +72,11 @@ types %s   target %s   server %s"
 
 (defun +cpp--cmake-menu-description ()
   "Header for `+cpp/cmake-menu': what a build uses, and the settings
-behind it: the generator, the jobs, the overrides, the run line."
+behind it: the generator, the jobs, the overrides, the run line.  It
+starts no container, as `+cpp--menu-description' does not."
   (require 'projection)
-  (let* ((root (+core-project-root 'noerror))
+  (let* ((+container-may-start nil)
+         (root (+core-project-root 'noerror))
          (configured (+cpp--configured-p))
          (overrides (length (+cpp--cache-overrides)))
          (run-target (+cpp--setting '+cpp-run-target))

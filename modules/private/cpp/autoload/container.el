@@ -15,9 +15,16 @@
 (declare-function +container-single-quoted "container")
 (declare-function +container-double-quoted "container")
 (declare-function +container-forget "container")
+(declare-function +container-list "container")
+(defvar +container-may-start)
 
 ;;
 ;;; The SDK a kit belongs to
+
+(defun +cpp--container-may-start-p ()
+  "Non-nil unless a stopped container is not to be started now; the
+container module, which says so, may not be enabled."
+  (or (not (boundp '+container-may-start)) +container-may-start))
 
 (defvar +cpp--env-scripts (make-hash-table :test #'equal)
   "(CONTAINER . SDK-ROOT) to the environment script found there.")
@@ -34,28 +41,37 @@
 (defun +cpp--env-script-for (container path)
   "The environment-setup script of the SDK that PATH is in, on CONTAINER
 or the host.  Yocto SDKs, which Qt Creator kits for embedded targets use,
-keep one next to their sysroots; it is what the toolchain file reads."
+keep one next to their sysroots; it is what the toolchain file reads.
+A stopped CONTAINER is not entered while `+container-may-start' is nil,
+which would start it: nil then, and asked again the next time."
   (when-let* ((sdk (+cpp--sdk-root path)))
     (let* ((key (cons container sdk))
            (hit (gethash key +cpp--env-scripts 'unknown)))
       (if (not (eq hit 'unknown))
           hit
-        (let ((script
-               (if container
-                   ;; Entering the container is slow, so its answer is
-                   ;; kept across sessions; `+cpp/forget-kits' asks again.
-                   (or (doom-store-get key "+cpp")
-                       (when-let* (((fboundp '+container-run))
-                                   (found (+container-run
-                                           container
-                                           (list "sh" "-c"
-                                                 (format "ls -d %s/environment-setup-* 2>/dev/null | head -1"
-                                                         (shell-quote-argument sdk)))))
-                                   ((string-prefix-p "/" found)))
-                         (doom-store-put key found nil "+cpp")
-                         found))
-                 (car (file-expand-wildcards (concat sdk "/environment-setup-*"))))))
-          (puthash key script +cpp--env-scripts)
+        (let* ((skip (and container
+                          (not (+cpp--container-may-start-p))
+                          (not (member container (+container-list)))))
+               (script
+                (cond
+                 (skip nil)
+                 (container
+                  ;; Entering the container is slow, so its answer is
+                  ;; kept across sessions; `+cpp/forget-kits' asks again.
+                  (or (doom-store-get key "+cpp")
+                      (when-let* (((fboundp '+container-run))
+                                  (found (+container-run
+                                          container
+                                          (list "sh" "-c"
+                                                (format "ls -d %s/environment-setup-* 2>/dev/null | head -1"
+                                                        (shell-quote-argument sdk)))))
+                                  ((string-prefix-p "/" found)))
+                        (doom-store-put key found nil "+cpp")
+                        found)))
+                 (t (car (file-expand-wildcards (concat sdk "/environment-setup-*")))))))
+          ;; Kept unless the container was left unentered.
+          (unless skip
+            (puthash key script +cpp--env-scripts))
           script)))))
 
 ;; Autoloaded: called from `+cpp/forget-kits' in kit.el.

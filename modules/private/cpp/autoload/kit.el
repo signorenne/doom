@@ -73,10 +73,11 @@
 
 ;;;###autoload
 (defun +cpp-kit-where (kit)
-  "Where KIT's commands run, in words."
-  (if-let* ((container (+cpp-kit-container kit)))
-      (format "in %s" container)
-    "on the host"))
+  "Where KIT's commands run, in words.  A kit located while no container
+may start, whose compiler the host lacks, is in none that runs."
+  (cond ((+cpp-kit-container kit) (format "in %s" (+cpp-kit-container kit)))
+        ((+cpp--kit-compiler-elsewhere-p kit) "in no running container")
+        (t "on the host")))
 
 
 ;;
@@ -371,6 +372,12 @@ seem to be the host's, and nothing is to run for it on the host."
   (when-let* ((program (or (+cpp-kit-compiler kit) (+cpp-kit-toolchain kit))))
     (not (file-exists-p program))))
 
+(defun +cpp--kit-compiler-elsewhere-p (kit)
+  "Non-nil when KIT's compiler, or its toolchain file, is neither a file
+here nor a program on the host's PATH: g++ named bare is the host's."
+  (when-let* ((program (or (+cpp-kit-compiler kit) (+cpp-kit-toolchain kit))))
+    (not (or (file-exists-p program) (executable-find program)))))
+
 
 ;;
 ;;; All the kits of a project, and the one in use
@@ -479,10 +486,12 @@ a plain build directory on the host."
         (let ((kit (+cpp--kit-locate (+cpp--choose-kit root))))
           ;; Located while no container may be started, as a file opens,
           ;; a compiler in a stopped container is missed. That answer is
-          ;; not kept, or the next build would run on the host.
+          ;; not kept, or the next build would run on the host. One the
+          ;; host has is kept: no container is asked about it.
           (unless (and (boundp '+container-may-start)
                        (not +container-may-start)
-                       (not (+cpp-kit-container kit)))
+                       (not (+cpp-kit-container kit))
+                       (+cpp--kit-compiler-elsewhere-p kit))
             (puthash root (cons stamp kit) +cpp--kit-cache))
           kit)))))
 
