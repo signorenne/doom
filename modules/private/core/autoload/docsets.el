@@ -4,7 +4,9 @@
 ;; docsets, with nothing done by hand: the first file of a language
 ;; opened starts a background download of the docsets Doom names for it
 ;; (`set-docsets!'), bin/install-docset trying each mirror. The C and
-;; C++ docsets are large, so each is downloaded only once.
+;; C++ docsets are large, so each is downloaded only once. A few names
+;; Doom gives are older than Kapeli's feeds, which no longer have them:
+;; each buffer gets the feed's name, the one its docset unpacks as.
 
 (defvar dash-docs-docsets)
 (declare-function doom-profile-data-dir "doom-lib")
@@ -18,10 +20,10 @@ C++, is large and no project here uses it.")
 
 (defvar +core-docsets-npm
   '(("AngularJS" . "angular") ("AngularTS" . "@angular/core")
-    ("Backbone" . "backbone") ("BackboneJS" . "backbone")
+    ("BackboneJS" . "backbone")
     ("Bootstrap" . "bootstrap") ("D3JS" . "d3") ("EmberJS" . "ember-source")
-    ("Express" . "express") ("ExtJS" . "@sencha/ext") ("JQuery" . "jquery")
-    ("JQuery_Mobile" . "jquery-mobile") ("JQuery_UI" . "jquery-ui")
+    ("Express" . "express") ("ExtJS" . "@sencha/ext") ("jQuery" . "jquery")
+    ("jQuery Mobile" . "jquery-mobile") ("jQuery UI" . "jquery-ui")
     ("KnockoutJS" . "knockout") ("Lo-Dash" . "lodash")
     ("MarionetteJS" . "backbone.marionette") ("MomentJS" . "moment")
     ("PrototypeJS" . "prototypejs") ("React" . "react")
@@ -29,6 +31,26 @@ C++, is large and no project here uses it.")
     ("UnderscoreJS" . "underscore") ("VueJS" . "vue") ("ZeptoJS" . "zepto"))
   "Library docsets Doom names for every JavaScript file, each installed
 only where the project's package.json uses its package.")
+
+(defvar +core-docsets-renamed
+  '(("Python 3" . "Python") ("JQuery" . "jQuery")
+    ("JQuery_Mobile" . "jQuery Mobile") ("JQuery_UI" . "jQuery UI")
+    ("Backbone" . "BackboneJS"))
+  "Docsets Doom names by a name Kapeli's feeds no longer have, each with
+the name the feed has now, which is also the docset it unpacks as.")
+
+;;;###autoload
+(defun +core--docsets-rename-h ()
+  "Name this buffer's docsets as their feeds do, for SPC s k and the
+installer alike.  After the mode's hooks, where Doom names them."
+  (when (and (local-variable-p 'dash-docs-docsets)
+             (seq-some (lambda (name) (assoc name +core-docsets-renamed))
+                       dash-docs-docsets))
+    (setq-local dash-docs-docsets
+                (delete-dups
+                 (mapcar (lambda (name)
+                           (or (cdr (assoc name +core-docsets-renamed)) name))
+                         dash-docs-docsets)))))
 
 (defun +core--docsets-npm-used (names)
   "NAMES without the library docsets this project's package.json does not

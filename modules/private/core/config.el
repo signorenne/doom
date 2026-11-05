@@ -1015,6 +1015,7 @@ MANAGED-MODES on its way already."
 ;; SPC s k searches Doom's Dash docsets offline; the first file of a
 ;; language opened installs its docsets in the background.
 (add-hook 'find-file-hook #'+core--docsets-h 90)
+(add-hook 'after-change-major-mode-hook #'+core--docsets-rename-h)
 
 ;; At rest on a name the echo area shows the declaration the hover
 ;; carries, return type, name and parameters, coloured as code, rather
