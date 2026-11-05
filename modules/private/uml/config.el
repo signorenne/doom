@@ -121,9 +121,9 @@ The file is never touched by this, and neither is what `SPC m e' writes.")
       :desc "Preview, beside the text" "p" #'+core/view-toggle
       (:prefix ("P" . "preview")
        :desc "Draw it again now"    "r" #'+core/view-refresh
-       :desc "Follow my typing"     "f" #'+core/view-follow-toggle
+       :desc "Follow my typing, or not" "f" #'+core/view-follow-toggle
        :desc "Open it with every diagram, or not" "O" #'+core/view-on-open-toggle
-       :desc "PNG or SVG"           "F" #'+uml/preview-format-toggle)
+       :desc "Draw as PNG or SVG"   "F" #'+uml/preview-format-toggle)
       :desc "New diagram"           "n" #'+uml/new-diagram
       :desc "Export to a file"      "e" #'+uml/export
       (:prefix ("s" . "server")

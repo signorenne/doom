@@ -33,8 +33,8 @@ closes it, and it stays closed for that diagram until ~SPC m p~.
 | ~SPC m p~   | the preview, on or off                |
 | ~SPC m P O~ | open it with every diagram, or not    |
 | ~SPC m P r~ | draw it again now                     |
-| ~SPC m P f~ | follow my typing, or wait to be asked |
-| ~SPC m P F~ | draw as PNG instead of SVG            |
+| ~SPC m P f~ | follow my typing, or not              |
+| ~SPC m P F~ | draw as PNG or SVG                    |
 | ~SPC m e~   | write the diagram to a file           |
 
 A diagram that does not parse leaves the last good drawing in place and
