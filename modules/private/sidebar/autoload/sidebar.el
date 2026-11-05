@@ -578,6 +578,11 @@ send every folding command of magit's through `+sidebar/fold'."
                  +sidebar--fold-commands))
   (dolist (command +sidebar--fold-remaps)
     (define-key map (vector 'remap command) #'+sidebar/fold))
+  ;; A click selects no text: evil's down-mouse-1 starts a selection,
+  ;; which the redrawing the click makes leaves active, in visual state.
+  (evil-define-key* 'normal map
+    [down-mouse-1] #'ignore
+    [drag-mouse-1] #'ignore)
   (evil-define-key* 'normal map
     "gj" #'magit-section-forward-sibling
     "gk" #'magit-section-backward-sibling
