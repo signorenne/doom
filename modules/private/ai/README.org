@@ -181,7 +181,8 @@ the answer can come while you work on; ~C-x p~ goes to it. There ~y~ or
 ~C-c C-c~ accepts in one undo step, ~n~ or ~C-c C-k~ rejects, ~e~ opens
 ediff, ~r~ asks again with more to the instruction. An answer opens below; ~C-c C-c~ there takes the question and
 the answer into the chat's prompt. In a commit buffer ~M-g~ writes the
-message from the staged diff.
+message from the staged diff, asking first when one is there; one you
+write while it comes stays, and the new one goes to the kill ring.
 
 The keys before this layout, and where they went:
 

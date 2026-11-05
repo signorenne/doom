@@ -2804,7 +2804,9 @@ Quick work on the code, through gptel with a key, else the claude CLI.
 The rewrite's diff opens below without taking the cursor; ~C-x p~ goes to
 it. There ~y~ accepts, ~n~ rejects, ~e~ opens ediff, ~r~ asks again with
 more. In an answer ~C-c C-c~ takes it to the chat. In a commit
-buffer ~M-g~ writes the message from the staged diff.
+buffer ~M-g~ writes the message from the staged diff, asking first when
+one is there; one you write while it comes stays, and the new one goes
+to the kill ring.
 
 ** gptel
 For a chat with the API and its context.

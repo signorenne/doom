@@ -566,18 +566,29 @@ A request writes only while its TOKEN is the one here.")
     (when (zerop (apply #'call-process "git" nil t nil args))
       (buffer-string))))
 
-(defun +ai--commit-message-put (message)
-  "Put MESSAGE above the first comment line, asking before replacing text."
+(defun +ai--commit-message-end ()
+  "The end of the message written so far: the first comment line."
   (save-excursion
     (goto-char (point-min))
-    (let* ((comment (concat "^" (regexp-quote (string-trim (or comment-start "#")))))
-           (end (if (re-search-forward comment nil t) (match-beginning 0) (point-max)))
-           (old (buffer-substring-no-properties (point-min) end)))
-      (when (or (string-empty-p (string-trim old))
-                (y-or-n-p "Replace the message written here? "))
+    (if (re-search-forward (concat "^" (regexp-quote (string-trim (or comment-start "#"))))
+                           nil t)
+        (match-beginning 0)
+      (point-max))))
+
+(defun +ai--commit-message-put (message old)
+  "Put MESSAGE above the first comment line, in place of OLD, the text
+there when it was asked for, and return non-nil.  Text written since
+stays and MESSAGE goes to the kill ring: the answer comes while you may
+be typing, where a question would take your next key."
+  (let ((end (+ai--commit-message-end))
+        (text (string-trim (+ai--inline-unfence message))))
+    (if (not (equal (buffer-substring-no-properties (point-min) end) old))
+        (progn (kill-new text) nil)
+      (save-excursion
         (delete-region (point-min) end)
         (goto-char (point-min))
-        (insert (string-trim (+ai--inline-unfence message)) "\n\n")))))
+        (insert text "\n\n"))
+      t)))
 
 ;;;###autoload
 (defun +ai/inline-commit-message ()
@@ -587,9 +598,14 @@ A request writes only while its TOKEN is the one here.")
     (if (and (eq backend 'gptel) (fboundp 'gptel-magit-generate-message))
         (call-interactively #'gptel-magit-generate-message)
       (let ((diff (+ai--inline-git "diff" "--cached"))
-            (subjects (+ai--inline-git "log" "-15" "--format=%s")))
+            (subjects (+ai--inline-git "log" "-15" "--format=%s"))
+            (old (buffer-substring-no-properties (point-min) (+ai--commit-message-end))))
         (when (string-empty-p (string-trim (or diff "")))
           (user-error "Nothing staged"))
+        ;; Asked now, as you press the key, never when the answer comes.
+        (unless (or (string-empty-p (string-trim old))
+                    (y-or-n-p "Replace the message written here? "))
+          (user-error "The message stays"))
         (message "Writing a commit message...")
         (+ai--inline-start
          (concat "Write a commit message for this staged diff. Follow the style "
@@ -598,7 +614,7 @@ A request writes only while its TOKEN is the one here.")
          "You write git commit messages. Reply with the message only: no fences, no commentary."
          #'ignore
          (lambda (answer error)
-           (if error
-               (message "%s" error)
-             (+ai--commit-message-put answer)
-             (message "Commit message written"))))))))
+           (cond (error (message "%s" error))
+                 ((+ai--commit-message-put answer old)
+                  (message "Commit message written"))
+                 (t (message "You wrote here meanwhile; the message written is in the kill ring")))))))))
