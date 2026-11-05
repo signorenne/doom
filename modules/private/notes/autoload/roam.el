@@ -605,30 +605,38 @@ those notes."
   ;; with an authored collection never writes into it.
   (expand-file-name (format "resources/collections/tags/%s.org" tag) org-roam-directory))
 
-(defun +notes--roam-map-links (tag)
-  "The link list for the map of TAG."
-  (let ((nodes (+notes--roam-nodes-tagged tag)))
-    (if (null nodes)
-        "Nothing is tagged this way yet.\n"
-      (mapconcat (lambda (node)
-                   (format "- [[id:%s][%s]]\n"
-                           (org-roam-node-id node)
-                           (org-roam-node-title node)))
-                 nodes ""))))
+(defun +notes--roam-map-links (nodes)
+  "The link list for a map of NODES."
+  (if (null nodes)
+      "Nothing is tagged this way yet.\n"
+    (mapconcat (lambda (node)
+                 (format "- [[id:%s][%s]]\n"
+                         (org-roam-node-id node)
+                         (org-roam-node-title node)))
+               nodes "")))
+
+(defvar +notes--roam-map-showing)
 
 ;;;###autoload
 (defun +notes/roam-map-of-content (tag)
   "Write a map of the notes tagged TAG, then open it.
 The map is a roam note of its own, so it shows in the graph and can be
 linked like any other.  Only the list between the markers is rewritten, so
-whatever you write around it stays."
+whatever you write around it stays.  A tag no note carries makes a new
+map only when you say so."
   (interactive (progn
                  ;; Before the tags are read: the list comes from org-roam.
                  (require 'org-roam)
                  (list (completing-read "Map the notes tagged: " (+notes--roam-tags)))))
   (require 'org-roam)
-  (let ((file (+notes--roam-map-file tag))
-        (links (+notes--roam-map-links tag)))
+  (let* ((file (+notes--roam-map-file tag))
+         (nodes (+notes--roam-nodes-tagged tag))
+         (links (+notes--roam-map-links nodes)))
+    ;; A tag no note carries is a typo more often than a subject to come.
+    ;; Headings may carry it, but a map lists only whole notes.
+    (when (and (null nodes) (not (file-exists-p file))
+               (not (y-or-n-p (format "A map of %s would list nothing; make it anyway? " tag))))
+      (user-error "No map made"))
     (make-directory (file-name-directory file) t)
     (with-current-buffer (find-file-noselect file)
       (if (zerop (buffer-size))
@@ -653,9 +661,10 @@ whatever you write around it stays."
             (goto-char (point-max))
             (insert (format "\n* Notes\n# BEGIN MAP\n%s# END MAP\n" links)))))
       (save-buffer)
-      (pop-to-buffer (current-buffer)))
-    (message "Map of %s: %d note(s). SPC n r m rebuilds it"
-             tag (length (+notes--roam-nodes-tagged tag)))))
+      ;; A popup, by the rule in +roam.el.
+      (let ((+notes--roam-map-showing t))
+        (pop-to-buffer (current-buffer))))
+    (message "Map of %s: %d note(s). SPC n r m rebuilds it" tag (length nodes))))
 
 
 ;;

@@ -103,10 +103,11 @@ from elsewhere. This is the move you will make most, so make it once now.
 ** Step 6, build the map
 Press =SPC n r m=. It asks =Map the notes tagged:=. Type =ble=, =RET=.
 
-A note opens, =resources/collections/tags/ble.org=, listing every note
-tagged =ble=. Above the =# BEGIN MAP= line, write the sentence you would
-tell someone else: =Start with GAP, then GATT; the rest is detail until
-you need throughput=. Save with =SPC f s=.
+A note opens on the right, =resources/collections/tags/ble.org=, listing
+every note tagged =ble=. Above the =# BEGIN MAP= line, write the sentence
+you would tell someone else: =Start with GAP, then GATT; the rest is
+detail until you need throughput=. Save with =SPC f s=; =ESC= closes it.
+A tag no note carries yet, a typo say, asks before it makes an empty map.
 
 Run =SPC n r m ble= again next week; your sentence stays, the list grows.
 

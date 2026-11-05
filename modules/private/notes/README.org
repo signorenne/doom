@@ -238,7 +238,9 @@ knows the notes the other machine wrote.
 Maps live in =resources/collections/tags/=. A map is a note of its own, so
 it shows in the graph; only the list between =# BEGIN MAP= and =# END MAP=
 is regenerated. Authored subject indexes and collections are other files
-and are never regenerated.
+and are never regenerated. ~SPC n r m~ opens the map in a popup on the
+right, which =ESC= closes; a tag no note carries asks before it makes an
+empty map.
 
 ** In an org buffer
 | Key       | What it does                                               |

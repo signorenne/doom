@@ -208,6 +208,19 @@ day is written under.")
 ;; file, when it is named for the old title, and the links that say it.
 (add-hook 'org-roam-find-file-hook #'+notes--rename-on-save-setup-h)
 
+;; The map SPC n r m writes opens in a popup on the right, as the cheat
+;; sheet does, rather than splitting the frame, and ESC closes it. Only
+;; then: a map reached by a link opens as any note does.
+(defvar +notes--roam-map-showing nil
+  "Non-nil while `+notes/roam-map-of-content' shows the map it wrote.")
+
+(defun +notes--roam-map-popup-p (&rest _)
+  "Non-nil while the map SPC n r m wrote is being shown."
+  +notes--roam-map-showing)
+
+(set-popup-rule! #'+notes--roam-map-popup-p
+  :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
+
 ;; What org-protocol://roam-ref captures with: one note per page, found
 ;; again by URL.
 (after! org-roam-protocol
