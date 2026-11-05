@@ -54,7 +54,7 @@ letters =SPC k= has in every project. The most used:
 | ~SPC m k s~ | which program, when the project holds several |
 | ~SPC m k C~ | clean: lib and bin to the trash, after asking |
 | ~SPC m k I~ | what is installed, and what this project is   |
-| ~SPC m k v~ | open the .lpi, .lpr or .dproj                 |
+| ~SPC m k v~ | open the .lpi, .lpr or .dpr                   |
 
 * Starting a project
 ~SPC k n~, from anywhere, then Pascal, then =console= or =lcl=.

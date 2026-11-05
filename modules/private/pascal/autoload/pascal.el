@@ -331,7 +331,7 @@ lldb-dap on a Mac, `+core-os-debugger'."
 
 ;;;###autoload
 (defun +pascal/open-project-file ()
-  "Open the .lpi, .lpr or .dproj this project is built from."
+  "Open the .lpi, .lpr or .dpr this project is built from."
   (interactive)
   (find-file (+pascal--main-file)))
 
