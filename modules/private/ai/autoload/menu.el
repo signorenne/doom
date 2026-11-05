@@ -76,7 +76,7 @@ agents' files, on the keys they have after SPC l."
     ("l" "Open or focus"         +ai/chat)
     ("n" "New, C-u any agent"    +ai/chat-new)
     ("r" "Resume a session"      +ai/chat-resume)
-    ("b" "Switch chat"           agent-shell-switch-buffer)
+    ("b" "Switch chat"           +ai/chat-switch)
     ("h" "Hide"                  +ai/chat-hide)
     ("k" "Stop"                  +ai/chat-stop)
     ("i" "Interrupt"             +ai/chat-interrupt)

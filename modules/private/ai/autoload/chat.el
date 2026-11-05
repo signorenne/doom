@@ -12,6 +12,7 @@
 (defvar agent-shell--state)
 (defvar agent-shell-activity-group-expand-by-default)
 (defvar agent-shell-context-sources)
+(defvar agent-shell-display-action)
 (defvar agent-shell-ui--fold-toggle-state)
 (defvar agent-shell-mcp-servers)
 (defvar agent-shell-preferred-agent-config)
@@ -22,6 +23,7 @@
 (declare-function +ai--tools-name-taken "claude")
 (declare-function agent-shell "agent-shell")
 (declare-function agent-shell--prompt-input-start "agent-shell-prompt")
+(declare-function agent-shell--read-shell-buffer "agent-shell")
 (declare-function agent-shell-cwd "agent-shell-project")
 (declare-function agent-shell-insert "agent-shell")
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui")
@@ -170,6 +172,17 @@ choose the agent, the usual one first."
   (let ((agent-shell-session-strategy 'prompt))
     (agent-shell '(4)))
   (+ai--chat-at-prompt))
+
+;;;###autoload
+(defun +ai/chat-switch ()
+  "Show another chat, picked by name, in the chat's side window.
+agent-shell's own switch puts it in the window you are in, the code's."
+  (interactive)
+  (require 'agent-shell)
+  (let ((chat (agent-shell--read-shell-buffer :prompt "Switch to chat: ")))
+    (+ai--select-window (or (get-buffer-window chat t)
+                            (display-buffer chat agent-shell-display-action)))
+    (+ai--chat-at-prompt)))
 
 (defun +ai--chat-frame (chat)
   "The frame of its own CHAT has, from \\[+ai/chat-frame], or nil."

@@ -311,8 +311,8 @@ repository or directory ROOT; FILES nil means anything under ROOT.")
 
 (use-package! agent-shell
   :defer t
-  ;; SPC l s, f, b and the hub's keys; the package autoloads none of them.
-  :commands (agent-shell-send-region agent-shell-send-file agent-shell-switch-buffer)
+  ;; SPC l s, f and the hub's keys; the package autoloads neither.
+  :commands (agent-shell-send-region agent-shell-send-file)
   :init
   ;; Signs in with the CLI's own account. For a key instead, set
   ;; `agent-shell-anthropic-authentication' with :api-key. C-u SPC l n
@@ -563,7 +563,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
        :desc "Chat: open or focus"        "l" #'+ai/chat
        :desc "Chat: new, C-u any agent"   "n" #'+ai/chat-new
        :desc "Chat: resume a session"     "r" #'+ai/chat-resume
-       :desc "Chat: switch"               "b" #'agent-shell-switch-buffer
+       :desc "Chat: switch"               "b" #'+ai/chat-switch
        :desc "Chat: hide"                 "q" #'+ai/chat-hide
        :desc "Chat: stop"                 "k" #'+ai/chat-stop
        :desc "Chat: interrupt"            "i" #'+ai/chat-interrupt

@@ -4620,6 +4620,8 @@ bound.
 - ~+ai/chat-set-thought-level~ :: Choose the thought level of this project's
   chat, from any buffer.
 - ~+ai/chat-stop~ (~SPC l k~) :: End this project's chat, after asking.
+- ~+ai/chat-switch~ (~SPC l b~) :: Show another chat, picked by name, in the
+  chat's side window.
 - ~+ai/chat-traffic~ (~SPC l m t~) :: Show the ACP traffic of this project's
   chat, from any buffer.
 - ~+ai/chat-transcript~ (~SPC l v~) :: Open the transcript of this project's

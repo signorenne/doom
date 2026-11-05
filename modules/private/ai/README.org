@@ -82,7 +82,7 @@ its permission rules; ~SPC l m u~ shows your plan's usage and limits.
 | ~SPC l l~   | ~+ai/chat~                            | open or focus the chat; from it, back    |
 | ~SPC l n~   | ~+ai/chat-new~                        | a new chat, ~C-u~ another agent            |
 | ~SPC l r~   | ~+ai/chat-resume~                     | a chat that lists the earlier ones       |
-| ~SPC l b~   | ~agent-shell-switch-buffer~           | another chat                             |
+| ~SPC l b~   | ~+ai/chat-switch~                     | another chat, in the side panel          |
 | ~SPC l q~   | ~+ai/chat-hide~                       | hide the panel, the chat runs on         |
 | ~SPC l k~   | ~+ai/chat-stop~                       | end the chat                             |
 | ~SPC l i~   | ~+ai/chat-interrupt~                  | interrupt it, from any buffer            |
