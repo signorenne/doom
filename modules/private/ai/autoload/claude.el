@@ -364,10 +364,9 @@ BUFFER's.  A root outside your home is refused, as for every tool."
 The CLI's aliases always name the latest model of each family; a full
 model name can still be typed."
   (interactive
-   (list (completing-read
-          "Claude model (empty for the default): "
-          '("fable" "opus" "sonnet" "haiku")
-          nil nil (or +ai-claude-model ""))))
+   (list (+core-read-or-empty "Claude model" "for the CLI's default"
+                              '("fable" "opus" "sonnet" "haiku")
+                              +ai-claude-model)))
   (setq +ai-claude-model (unless (string-empty-p model) model))
   (+ai--apply-claude-model)
   (message "Claude model: %s, from the next session on"
