@@ -588,6 +588,11 @@ the window, or the workspace round it."
       (:prefix "t"
        :desc "Who and when, on this line" "B" #'+git-blame-line-mode))
 
+;; Doom names a prefix along with its first key, and the first of its
+;; SPC g l is a gist one under a :when: which-key said "+prefix" there.
+(after! which-key
+  (which-key-add-keymap-based-replacements doom-leader-map "g l" "list"))
+
 ;; The view's own hunks, which follow its baseline; without a view the
 ;; same keys step through the fringe's, as Doom has them.
 (map! :map (+git-live-mode-map +git-split-mode-map)
