@@ -82,9 +82,14 @@ macOS installer puts them in /Applications/Lazarus.")
 ;; their own face, in place of opascal's rules. Registered for the mode,
 ;; not set in its hook: prog-mode's minor modes run first and make
 ;; font-lock read opascal's defaults before any opascal-mode-hook.
+;; A reload registers them again, so the copy from the load before is
+;; taken out first, or each reload would add one more for every buffer
+;; to apply.
 (after! opascal
   (font-lock-remove-keywords 'opascal-mode opascal-font-lock-keywords)
-  (font-lock-add-keywords 'opascal-mode (+pascal-font-lock-keywords)))
+  (let ((keywords (+pascal-font-lock-keywords)))
+    (font-lock-remove-keywords 'opascal-mode keywords)
+    (font-lock-add-keywords 'opascal-mode keywords)))
 
 ;; And begin and end matched the way ( and ) are.
 (add-hook! 'opascal-mode-hook
@@ -219,10 +224,12 @@ macOS installer puts them in /Applications/Lazarus.")
     (when +pascal-fpc-src-dir (setenv "FPCDIR" +pascal-fpc-src-dir))
     (when +pascal-lazarus-dir (setenv "LAZARUSDIR" +pascal-lazarus-dir))
     (when-let* ((fpc (executable-find "fpc"))) (setenv "PP" fpc))
+    ;; In place of the entry a load before this one wrote, so a reload
+    ;; neither adds a second one nor leaves the old values in front.
     (setq-default
      eglot-workspace-configuration
      (append
-      (bound-and-true-p eglot-workspace-configuration)
+      (assq-delete-all :pasls (copy-sequence (default-value 'eglot-workspace-configuration)))
       `((:pasls . (:fpcDir ,(or +pascal-fpc-src-dir "")
                    :pp ,(or (executable-find "fpc") "")
                    :lazarusDir ,(or +pascal-lazarus-dir "")))))))

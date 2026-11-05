@@ -434,6 +434,13 @@ re-run starts it at the editor's priority again.")
 ;; was, so ESC closes it.
 (set-popup-rule! #'+core--compile-popup-p :vslot -2 :size 0.3 :select nil :quit t :ttl nil)
 
+;; A reload sets every popup rule again, Doom's and this config's, in
+;; front of the copy already there, so each reload adds a copy of every
+;; rule for each buffer shown to be matched against. Doom's own cleanup
+;; keeps the newest copy of each.
+(when (modulep! :ui popup)
+  (add-hook 'doom-after-reload-hook #'+popup-cleanup-rules-h))
+
 ;; Emacs 31 warns of site files without a lexical-binding cookie. Those
 ;; are the distribution's, load before this config and are not ours to
 ;; fix, so their warnings are dropped.

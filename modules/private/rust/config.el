@@ -68,11 +68,14 @@
 
 ;; rust-analyzer does the work clippy would, on every save, and answers
 ;; with the same diagnostics: one process instead of two, and no wait
-;; after a save. The rest is what makes a large crate bearable.
+;; after a save. The rest is what makes a large crate bearable. It
+;; replaces the entry a load before this one wrote: a reload adds no
+;; second one.
 (after! eglot
   (setq-default eglot-workspace-configuration
                 (append
-                 (bound-and-true-p eglot-workspace-configuration)
+                 (assq-delete-all :rust-analyzer
+                                  (copy-sequence (default-value 'eglot-workspace-configuration)))
                  '((:rust-analyzer
                     . (:check (:command "clippy"
                                :extraArgs ["--all-targets"])
