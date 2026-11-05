@@ -16,7 +16,9 @@ adds the part that is this config's:
 - debugging with codelldb, which prints Rust's enums and strings as the
   language writes them, where gdb prints their insides,
 - rust-analyzer told to run clippy on save, so the lints and the
-  diagnostics are one process and one wait instead of two.
+  diagnostics are one process and one wait instead of two. It is the
+  only checker: Emacs 31's own, which before rust-analyzer connects
+  compiled the buffer into a =rust_out= in the project, is off.
 
 * The keys
 =SPC k= in a cargo project opens this module's keys: the panel's, on the

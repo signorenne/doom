@@ -85,6 +85,17 @@
                        :inlayHints (:closingBraceHints (:enable :json-false))
                        :completion (:callable (:snippets "fill_arguments"))))))))
 
+;; And the only one. Emacs 31's rust-ts-mode checks a buffer no server
+;; manages, before rust-analyzer connects or without it, with
+;; `clippy-driver -', which compiles it into a rust_out beside the file:
+;; 4.5 MB in the project, untracked, for git add -A to commit.
+(defun +rust--no-ts-flymake-h ()
+  "Leave the checking of this buffer to rust-analyzer."
+  (remove-hook 'flymake-diagnostic-functions 'rust-ts-flymake t))
+
+(dolist (mode +rust-modes)
+  (add-hook (intern (format "%s-hook" mode)) #'+rust--no-ts-flymake-h))
+
 
 ;;
 ;;; Formatting
