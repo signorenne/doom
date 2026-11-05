@@ -364,9 +364,15 @@ an integration test or an example, which is a crate of its own."
 
 ;;;###autoload
 (defun +rust/clean ()
-  "Remove what the build made."
+  "Remove what the build made, after asking.
+cargo clean deletes the target directory."
   (interactive)
-  (+rust--compile "clean" (+rust--command "clean")))
+  (let ((command (+rust--command "clean"))
+        (target (or (alist-get 'target_directory (+rust--metadata))
+                    (expand-file-name "target" (+rust-root)))))
+    (when (y-or-n-p (format "Delete %s with cargo clean? "
+                            (abbreviate-file-name (file-name-as-directory target))))
+      (+rust--compile "clean" command))))
 
 ;;;###autoload
 (defun +rust/update ()

@@ -1882,6 +1882,8 @@ whose dependency says a CMake older than 3.5: ~-D~,
 ~z~ is the usual repair for "it builds but clangd is lost"; ~F~ is for a
 changed compiler, generator or Qt, when a plain configure keeps the
 stale value, and for a directory configured before the project moved.
+~C~, ~W~ and ~F~ ask first, since each deletes what a build or a
+configure made; ~n~ or ~C-g~ leaves it all as it was.
 
 ** CMake panel: files and status
 | Key | What it shows                                                           |
@@ -4104,15 +4106,16 @@ bound.
   succeeded.
 - ~+cpp/build-type~ (~SPC k y~) :: Build as TYPE from now on: Debug,
   Release, RelWithDebInfo or MinSizeRel.
-- ~+cpp/cmake-clean~ :: Build the clean target.
+- ~+cpp/cmake-clean~ :: Build the clean target, after asking.
 - ~+cpp/cmake-clear-variable~ :: Drop the override on cache variable NAME.
 - ~+cpp/cmake-configure-fresh~ :: Configure from scratch, dropping the
-  existing CMake cache.
+  existing CMake cache, after asking.
 - ~+cpp/cmake-list-variables~ :: Show the cache variables this project
   overrides.
 - ~+cpp/cmake-menu~ :: The settings a CMake build depends on, and the files
   behind them.
-- ~+cpp/cmake-rebuild~ :: Clean the build directory, then build it again.
+- ~+cpp/cmake-rebuild~ :: Clean the build directory, then build it again,
+  after asking.
 - ~+cpp/cmake-set-variable~ :: Set cache variable NAME to VALUE for the next
   configure.
 - ~+cpp/debug~ (~SPC m d~) :: Debug the project's executable where the kit
@@ -4229,7 +4232,7 @@ bound.
 ** PlatformIO
 - ~+pio/boards~ (~SPC k p B~) :: Look up a BOARD and insert or copy its id.
 - ~+pio/build~ (~SPC k p b~) :: Build the firmware.
-- ~+pio/clean~ (~SPC k p c~) :: Delete the build output.
+- ~+pio/clean~ (~SPC k p c~) :: Delete the build output, after asking.
 - ~+pio/compiledb~ (~SPC k p i~) :: Write compile_commands.json so the
   language server sees the flags.
 - ~+pio/debug~ (~SPC k p d~) :: Debug the firmware with gdb, through
@@ -4256,7 +4259,7 @@ bound.
   to.
 - ~+rust/check~ (~SPC k c~) :: Check the project without building it, which
   is the fast one.
-- ~+rust/clean~ (~SPC k C~) :: Remove what the build made.
+- ~+rust/clean~ (~SPC k C~) :: Remove what the build made, after asking.
 - ~+rust/clippy~ (~SPC k l~) :: Run clippy over the project.
 - ~+rust/clippy-fix~ (~SPC k L~) :: Run clippy and apply the fixes it is
   sure of.

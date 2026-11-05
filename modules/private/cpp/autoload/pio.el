@@ -117,8 +117,12 @@ With prefix argument PERSIST, write it to .dir-locals.el."
 
 ;;;###autoload
 (defun +pio/clean ()
-  "Delete the build output."
-  (interactive) (+pio--compile "run" "-t" "clean"))
+  "Delete the build output, after asking."
+  (interactive)
+  (+pio--root)
+  (when (y-or-n-p (format "Delete what PlatformIO built%s? "
+                          (if +pio-env (format " for %s" +pio-env) "")))
+    (+pio--compile "run" "-t" "clean")))
 
 ;;;###autoload
 (defun +pio/test ()

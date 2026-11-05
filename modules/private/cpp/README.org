@@ -248,7 +248,8 @@ cache variables you have overridden.
 The CMake flags are the keys: =-D= sets a cache variable, =-U= clears one,
 =-j= the jobs, =-v= verbose, =-L= the log level; =-l= lists the variables
 set. Running, testing and debugging are on the leader and in =SPC k SPC=,
-not here.
+not here. =C=, =W= and =F= ask before they delete what a build or a
+configure made, as =SPC k p c= does before PlatformIO's clean.
 
 - a *preset* comes from =CMakePresets.json= and brings its own build
   directory, build type and cache variables; each preset is a kit.

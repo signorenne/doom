@@ -335,13 +335,16 @@ command too, which writes only itself."
 
 ;;;###autoload
 (defun +cpp/cmake-configure-fresh ()
-  "Configure from scratch, dropping the existing CMake cache.
+  "Configure from scratch, dropping the existing CMake cache, after asking.
 Use it after changing compiler, generator or preset, when a plain
 configure keeps the stale value."
   (interactive)
-  (let ((projection-cmake-configure-options
-         (cons "--fresh" projection-cmake-configure-options)))
-    (+cpp--compile "cmake configure" (+cpp--configure-command))))
+  (let* ((projection-cmake-configure-options
+          (cons "--fresh" projection-cmake-configure-options))
+         (command (+cpp--configure-command)))
+    (when (y-or-n-p (format "Drop the CMake cache of %s and configure it afresh? "
+                            (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
+      (+cpp--compile "cmake configure" command))))
 
 (defun +cpp--cmake-clean-command ()
   "Command that builds the clean target, where the kit runs."
@@ -357,16 +360,22 @@ configure keeps the stale value."
 
 ;;;###autoload
 (defun +cpp/cmake-rebuild ()
-  "Clean the build directory, then build it again."
+  "Clean the build directory, then build it again, after asking."
   (interactive)
-  (+cpp--compile "cmake rebuild"
-                 (concat (+cpp--cmake-clean-command) " && " (+cpp--build-command))))
+  (let ((command (concat (+cpp--cmake-clean-command) " && " (+cpp--build-command))))
+    (when (y-or-n-p (format "Delete what %s built, then build it again? "
+                            (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
+      (+cpp--compile "cmake rebuild" command))))
 
 ;;;###autoload
 (defun +cpp/cmake-clean ()
-  "Build the clean target."
+  "Build the clean target, after asking.
+It deletes what the build made."
   (interactive)
-  (+cpp--compile "cmake clean" (+cpp--cmake-clean-command)))
+  (let ((command (+cpp--cmake-clean-command)))
+    (when (y-or-n-p (format "Delete what %s built, with its clean target? "
+                            (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
+      (+cpp--compile "cmake clean" command))))
 
 ;;;###autoload
 (defun +cpp/reconfigure-and-reindex ()
