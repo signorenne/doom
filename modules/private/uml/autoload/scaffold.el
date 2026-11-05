@@ -65,7 +65,7 @@
 (defun +uml/export (format file)
   "Write this diagram to FILE as FORMAT."
   (interactive
-   (let* ((format (intern (completing-read "As: " '("svg" "png") nil t nil nil "svg")))
+   (let* ((format (intern (completing-read (format-prompt "As" "svg") '("svg" "png") nil t nil nil "svg")))
           (default (concat (file-name-base (or (buffer-file-name) "diagram"))
                            "." (symbol-name format))))
      (list format (read-file-name "Write to: " nil nil nil default))))

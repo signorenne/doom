@@ -77,7 +77,8 @@ down in the first place."
   "Commit the notes with MESSAGE, or a timestamp when none is given."
   (interactive
    (list (and (eq (+notes--state) 'dirty)
-              (read-string "Message: " (+notes--message)))))
+              (let ((default (+notes--message)))
+                (read-string (format-prompt "Message" default) nil nil default)))))
   (when (and message (string-blank-p message))
     (user-error "A commit needs a message; nothing staged"))
   (pcase (+notes--state)

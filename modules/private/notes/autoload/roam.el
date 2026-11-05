@@ -208,6 +208,10 @@ including those with no TODOs."
 (declare-function org-roam-promote-entire-buffer "org-roam-node")
 (declare-function org-roam-db-update-file "org-roam-db")
 (defvar org-roam-db-update-on-save)
+;; Special, so the prompt's separator and hint below are crm's own, bound
+;; before crm is loaded too.
+(defvar crm-separator)
+(defvar crm-prompt)
 
 ;;;###autoload
 (defun +notes/roam-extract ()
@@ -231,7 +235,10 @@ C-g at either leaves the heading where it was."
          (_ (when (file-exists-p file)
               (user-error "%s exists already; give the heading another title"
                           (file-relative-name file org-roam-directory))))
-         (tags (let ((crm-separator "[ \t]*:[ \t]*"))
+         ;; One hint of the separator, Doom's [CRM:]: Emacs's own said it
+         ;; again before it.
+         (tags (let ((crm-separator "[ \t]*:[ \t]*")
+                     (crm-prompt "%p"))
                  (completing-read-multiple "Tag: " (org-roam-tag-completions))))
          (source (current-buffer))
          (start (point-marker))
@@ -467,7 +474,8 @@ priority and tags kept, and the file is saved.  A file named for the old
 title, plain or after a YYYYMMDD- date, is renamed for the new one; any
 other name, a daily note's or a project's index.org, stays.  Every id:
 link described by exactly the old title then reads the new one."
-  (interactive (list (read-string "New title: " (org-roam-node-title (+notes--rename-node)))))
+  (interactive (let ((old (org-roam-node-title (+notes--rename-node))))
+                 (list (read-string (format-prompt "New title" old) nil nil old))))
   (let* ((node (+notes--rename-node))
          (old (org-roam-node-title node))
          (new (string-trim title)))
