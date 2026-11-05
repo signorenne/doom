@@ -78,7 +78,10 @@ habit, a reading or a snippet belongs in."
 
 (after! org
   ;; Extend Doom's set. The private keys are removed first, so a reload
-  ;; adds nothing twice.
+  ;; adds nothing twice. So are Doom's pn, pc, on and oc: they write a
+  ;; notes.org or a changelog.org into the code's repository, or a
+  ;; heading named for it into the project index, and a repository is
+  ;; not a project by itself here.
   ;;
   ;; Through `org-capture-upgrade-templates', which is what the option's
   ;; own :set does: a plain `setq' skips it, and an old-format template
@@ -88,6 +91,6 @@ habit, a reading or a snippet belongs in."
           (org-capture-upgrade-templates
            (append mine
                    (seq-remove (lambda (tpl)
-                                 (or (member (car tpl) '("t" "n" "j"))
+                                 (or (member (car tpl) '("t" "n" "j" "pn" "pc" "on" "oc"))
                                      (assoc (car tpl) mine)))
                                org-capture-templates))))))
