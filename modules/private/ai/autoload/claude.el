@@ -17,9 +17,9 @@
 (declare-function +ai--fenced "chat")
 (declare-function claude-code-ide "claude-code-ide")
 (declare-function claude-code-ide--get-working-directory "claude-code-ide")
+(declare-function claude-code-ide--display-buffer-in-side-window "claude-code-ide")
 (declare-function claude-code-ide--session-display-name "claude-code-ide")
 (declare-function claude-code-ide-stop "claude-code-ide")
-(declare-function claude-code-ide-switch-to-buffer "claude-code-ide")
 (declare-function claude-code-ide-mcp--active-sessions "claude-code-ide-mcp")
 (declare-function claude-code-ide-mcp-session-buffer "claude-code-ide-mcp")
 (declare-function claude-code-ide-mcp-session-client "claude-code-ide-mcp")
@@ -431,8 +431,12 @@ it is one of them, else the one used last."
 `claude-code-ide' alone always starts another instance."
   (interactive)
   (require 'claude-code-ide)
-  (if (+ai--terminal-buffer)
-      (claude-code-ide-switch-to-buffer)
+  (if-let* ((terminal (+ai--terminal-buffer)))
+      ;; This one, not the package's pick: that can be a terminal whose
+      ;; Claude died and whose cleanup has not run yet.
+      (when-let* ((window (or (get-buffer-window terminal)
+                              (claude-code-ide--display-buffer-in-side-window terminal))))
+        (select-window window))
     (claude-code-ide)))
 
 ;;;###autoload
