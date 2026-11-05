@@ -76,8 +76,13 @@ it and =SPC k m F= configures it fresh.
 
 The kit owns the preset: a preset kit passes =--preset= to configure
 beside its directory, build and test take the directory only, and
-projection is told which preset that is, so nothing asks. There is no
-separate "set preset": the kit list offers every preset.
+projection is told which preset that is, so nothing asks. Nor is a
+compiler asked for: projection's own kits, VS Code's list of compilers,
+are left out, so every configure, a key's or the one in the background,
+passes the same compiler: the one the kit's preset, Qt Creator
+configuration or cache names, else CMake's own choice; a kit in a
+container gets none of the host's. There is no separate "set preset":
+the kit list offers every preset.
 
 Build types are siblings: =SPC k y= picks Debug, Release, RelWithDebInfo
 or MinSizeRel and switches to the kit of that type in the current kit's
@@ -280,7 +285,7 @@ none of its own (2026-10-23). A database with neither is read as it is.
 
 A CMake project never configured here is configured once, in the
 background, as its first file opens: by its first preset or into
-=build/=, with no compiler kit asked for. Not one whose kit runs in a
+=build/=, asking nothing. Not one whose kit runs in a
 container or with an SDK's environment, which would start the one or
 source the other behind your back, nor one whose compiler is not on the
 host, and not again in a session after a configure fails; =SPC k c=

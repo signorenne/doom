@@ -22,7 +22,6 @@
 (declare-function +core-project-root-or-nil "lib")
 (defvar +cpp-modes)
 (defvar +container-may-start)
-(defvar projection-cmake-kit)
 
 (defvar +cpp-compdb-places
   '("compile_commands.json" "build/compile_commands.json"
@@ -158,12 +157,10 @@ so a configure that fails is not tried at every file."
     (push root +cpp--configure-tried)
     (let* ((default-directory root)
            (name (file-name-nondirectory (directory-file-name root)))
-           ;; Asked nothing: projection would have a compiler kit picked
-           ;; from VS Code's list. Any other question stops the configure
-           ;; with a message, since opening a file should not prompt.
+           ;; Asked nothing: a question stops the configure with a
+           ;; message, since opening a file should not prompt.
            (command (condition-case err
-                        (let ((projection-cmake-kit 'silent)
-                              (inhibit-interaction t))
+                        (let ((inhibit-interaction t))
                           (+cpp--configure-command))
                       (error (message "cmake: %s not configured in the background: %s; SPC k c configures it"
                                       name (error-message-string err))

@@ -302,7 +302,12 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
         projection-cmake-configure-options
         '("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
         projection-cmake-ctest-options '("--output-on-failure")
-        projection-build-jobs (doom-system-cpus))
+        projection-build-jobs (doom-system-cpus)
+        ;; The kit is this config's, read from the project. projection's
+        ;; own kits are VS Code's list of compilers: it asked for one at
+        ;; the first configure and passed it beside the kit's, into a
+        ;; container as well.
+        projection-cmake-kit 'disable)
 
   ;; PlatformIO projects build, upload and test through pio.
   (defvar projection-project-type-platformio
