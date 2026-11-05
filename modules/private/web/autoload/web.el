@@ -9,8 +9,10 @@
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
 (declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
+(declare-function +core-need-program "lib")
 
 
 ;;
@@ -48,9 +50,13 @@ from elsewhere wants.")
 
 ;;;###autoload
 (defun +web-root ()
-  "The node project's root, or an error."
+  "The node project's root, or an error: outside a project that it is
+not inside one, else that this one is not node's.  A folder with no
+version control is a project when it has the files."
   (let ((root (+core-project-root 'noerror)))
     (unless (+web-project-p root)
+      (unless (+core-project-root-or-nil)
+        (user-error "Not inside a project"))
       (user-error "No package.json here: this is not a node project"))
     (file-name-as-directory (expand-file-name root))))
 
@@ -171,9 +177,23 @@ says, else yarn."
           (alist-get 'scripts (+web-manifest root))))
 
 (defun +web--script (&rest names)
-  "The first of NAMES the project defines, or nil."
+  "The first of NAMES the project defines, or nil; an error outside a
+node project, before a command says the script is missing."
+  (+web-root)
   (let ((scripts (+web-scripts)))
     (seq-find (lambda (name) (assoc name scripts)) names)))
+
+(defun +web--need-manager ()
+  "This project's package manager, or an error that it is not installed
+and how to install it."
+  (let ((manager (+web-manager)))
+    (+core-need-program
+     manager
+     (pcase manager
+       ("yarn" (if (featurep :system 'macos) "brew install yarn" "zypper in yarn"))
+       ("npm" (if (featurep :system 'macos) "brew install node" "zypper in nodejs22"))
+       (_ (format "npm i -g --prefix ~/.local %s" manager))))
+    manager))
 
 ;;;###autoload
 (defun +web-run-script-command (script)
@@ -181,7 +201,7 @@ says, else yarn."
 npm wants `run' before a script that is not one of its own; yarn, pnpm
 and bun take the name directly, and all of them take `run' as well, so
 it is written the way each one's own documentation writes it."
-  (let ((manager (+web-manager)))
+  (let ((manager (+web--need-manager)))
     (if (equal manager "npm")
         (format "npm run %s" script)
       (format "%s %s" manager script))))
@@ -276,13 +296,13 @@ does not end, and it is asked questions."
 (defun +web/install ()
   "Install what the manifest asks for."
   (interactive)
-  (+web--compile "install" (format "%s install" (+web-manager))))
+  (+web--compile "install" (format "%s install" (+web--need-manager))))
 
 ;;;###autoload
 (defun +web/outdated ()
   "Say which dependencies have moved on."
   (interactive)
-  (+web--compile "outdated" (format "%s outdated" (+web-manager))))
+  (+web--compile "outdated" (format "%s outdated" (+web--need-manager))))
 
 ;;;###autoload
 (defun +web/run-script (script)
@@ -349,7 +369,7 @@ certificate is set up, and the template's CI workflow signs it."
 (defun +web--exec-command (bin)
   "The command line that runs BIN from the project's node_modules with
 this project's manager."
-  (pcase (+web-manager)
+  (pcase (+web--need-manager)
     ("npm" (format "npx %s" bin))
     ("pnpm" (format "pnpm exec %s" bin))
     ("bun" (format "bunx %s" bin))
@@ -364,14 +384,28 @@ this project's manager."
   (require 'dape)
   ;; dape takes the configuration itself, not its name: given
   ;; (node-project :cwd ...) it reads every key as a value and starts
-  ;; nothing.
+  ;; nothing. What is missing is said before the program is asked for.
   (let ((root (+web-root)))
+    (+core-need-program "node" (if (featurep :system 'macos) "brew install node" "zypper in nodejs22"))
+    (unless (file-exists-p (file-name-concat dape-adapter-dir "js-debug" "src" "dapDebugServer.js"))
+      (user-error "js-debug is not installed: M-x +web/install-js-debug"))
     (dape (if (+web-electron-p)
               (dape--config-eval 'electron-main
                                  (list :cwd root
                                        :runtimeExecutable
                                        (expand-file-name "node_modules/.bin/electron" root)))
             (dape--config-eval 'node-project (list :cwd root))))))
+
+;;;###autoload
+(defun +web--read-program (&rest _)
+  "Ask which file node is to debug; the manifest's main is the default."
+  (let* ((root (+web-root))
+         (main (alist-get 'main (+web-manifest root)))
+         (default (and (stringp main) (expand-file-name main root))))
+    (expand-file-name
+     (read-file-name (format-prompt "Program to debug"
+                                    (and default (file-relative-name default root)))
+                     root default t))))
 
 ;;;###autoload
 (defun +web/install-js-debug ()

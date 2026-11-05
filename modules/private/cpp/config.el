@@ -353,6 +353,12 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
                                   (memq (oref type name) '(cmake platformio)))
                                 projection-project-types))))
 
+  ;; Outside a project, or in one whose kind has no such command, they
+  ;; say so in the config's words, before anything is asked.
+  (dolist (type '(configure build test run install package))
+    (advice-add (intern (format "projection-commands-%s-project" type))
+                :around #'+cpp--projection-command-a))
+
   ;; projection writes its file API query into `projection-cmake-build-directory'
   ;; before a configure, which without the kit in place creates an empty
   ;; build/. `+cpp--configure-command' writes it into the kit's directory

@@ -8,9 +8,12 @@
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (declare-function +core-project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
 (declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 (declare-function +core-read-or-empty "lib")
+(declare-function +core-need-program "lib")
+(defvar +rust-codelldb)
 
 (defvar +rust-cargo-timeout 10
   "Seconds to wait on `cargo metadata' before giving up on it.")
@@ -68,9 +71,13 @@ name of a profile the project defines.  Kept in .dir-locals.el.")
 
 ;;;###autoload
 (defun +rust-root ()
-  "The cargo project's root, or an error."
+  "The cargo project's root, or an error: outside a project that it is
+not inside one, else that this one is not cargo's.  A folder with no
+version control is a project when it has the files."
   (let ((root (+core-project-root 'noerror)))
     (unless (+rust-project-p root)
+      (unless (+core-project-root-or-nil)
+        (user-error "Not inside a project"))
       (user-error "No Cargo.toml here: this is not a cargo project"))
     (file-name-as-directory (expand-file-name root))))
 
@@ -185,8 +192,16 @@ features.  Each of them stopped at the flag it does not take."
      (list "-p" +rust-member))
    (when +rust-target (list "--target" +rust-target))))
 
+(defun +rust--need-cargo ()
+  "Say that cargo is not installed, and how to install it, when it is not."
+  (+core-need-program "cargo" (if (featurep :system 'macos)
+                                  "brew install rustup, then rustup default stable"
+                                "zypper in rustup, then rustup default stable")))
+
 (defun +rust--command (subcommand &rest extra)
-  "The cargo command line for SUBCOMMAND with the project's flags."
+  "The cargo command line for SUBCOMMAND with the project's flags, once
+cargo is known to be there: F7 and the panel's header ask for it too."
+  (+rust--need-cargo)
   (string-join (append (list "cargo" subcommand) (+rust-flags subcommand)
                        (delq nil extra))
                " "))
@@ -232,6 +247,7 @@ features.  Each of them stopped at the flag it does not take."
   "Run COMMAND in a compilation buffer called NAME, from the root.
 With COMINT the buffer takes input, which a program reading its
 standard input waits for."
+  (+rust--need-cargo)
   (+core-compile name command (+rust-root) comint))
 
 ;;;###autoload
@@ -436,6 +452,12 @@ answer is asked of cargo rather than guessed."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
+  (+rust-root)
+  ;; Before the binary is asked for, which may ask which one, and which
+  ;; is cargo's to say.
+  (+rust--need-cargo)
+  (unless (file-executable-p +rust-codelldb)
+    (user-error "codelldb is not installed: M-x +cpp/install-codelldb"))
   (require 'dape)
   (let ((program (+rust--debug-program)))
     ;; dape takes the configuration itself, not its name: given

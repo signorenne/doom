@@ -126,6 +126,41 @@ buffers of the project pick the value up at once."
 ;;
 ;;; Running a command
 
+;; F7, F8 and the build keys of any project are projection's commands,
+;; which said "No project found relative to" a directory outside one,
+;; and showed their own raw error in a project of a kind without such a
+;; command, F8 in a Rust one. They say it the way the config's own
+;; commands do, before anything is asked.
+(defconst +cpp--projection-verbs
+  '(("configure" . "configured") ("build" . "built") ("test" . "tested")
+    ("run" . "run") ("install" . "installed") ("package" . "packaged"))
+  "projection's command types, and what a project that has none of one
+cannot be.")
+
+(defun +cpp--projection-spec (spec)
+  "Evaluate SPEC, the interactive form of one of projection's commands,
+saying in this config's words why it cannot run when it cannot."
+  (unless (project-current)
+    (user-error "Not inside a project"))
+  (condition-case err
+      (advice-eval-interactive-spec spec)
+    (projection-command-error
+     ;; The type is the last word of projection's message.
+     (let* ((said (format "%s" (cadr err)))
+            (verb (and (string-match "command: \\([a-z-]+\\)\\'" said)
+                       (cdr (assoc (match-string 1 said) +cpp--projection-verbs)))))
+       (user-error (if verb
+                       (format "This kind of project cannot be %s" verb)
+                     "This kind of project has no such command"))))))
+
+;; Autoloaded: config.el puts it around projection's commands.
+;;;###autoload
+(defun +cpp--projection-command-a (fn &rest args)
+  "Run FN, one of projection's commands, with ARGS; its interactive form
+goes through `+cpp--projection-spec', which says why it cannot run."
+  (interactive (lambda (spec) (+cpp--projection-spec spec)))
+  (apply fn args))
+
 ;;;###autoload
 (defun +cpp--compile (name command &optional comint)
   "Run shell COMMAND in the compilation buffer *NAME* from the project root.

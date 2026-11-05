@@ -6,10 +6,12 @@
 ;; from it.
 
 (declare-function +core-project-root "lib")
+(declare-function +core-project-root-or-nil "lib")
 (declare-function +core-project-setting-set "lib")
 (declare-function +core-compile "lib")
 (declare-function +core-compile-then "lib")
 (declare-function +core-read-or-empty "lib")
+(declare-function +core-need-program "lib")
 (declare-function dape "dape")
 (declare-function dape--config-eval "dape")
 (defvar +pascal-host-os)
@@ -103,10 +105,14 @@ Free Pascal's to build."
 
 ;;;###autoload
 (defun +pascal-root ()
-  "The Pascal project's root, or an error."
+  "The Pascal project's root, or an error: outside a project that it is
+not inside one, else that this one is not Pascal's.  A folder with no
+version control is a project when it has the files."
   (let ((root (+core-project-root 'noerror)))
     (unless (+pascal-project-p root)
-      (user-error "No Pascal project here"))
+      (unless (+core-project-root-or-nil)
+        (user-error "Not inside a project"))
+      (user-error "No .lpi, .lpr or program here: this is not a Pascal project"))
     (file-name-as-directory (expand-file-name root))))
 
 (defun +pascal--main-file ()
@@ -158,9 +164,23 @@ sources, and -Fu says where the project\='s own units are."
        (list (concat "-P" (car parts))
              (concat "-T" (or (cadr parts) +pascal-host-os)))))))
 
+(defun +pascal--check-builder ()
+  "Stop with what to install when the compiler this project builds with,
+lazbuild or fpc, is not here, rather than run a build that cannot start."
+  (pcase (+pascal-project-kind)
+    ('lazarus (+core-need-program "lazbuild" (if (featurep :system 'macos)
+                                                 "brew install --cask lazarus"
+                                               "zypper in lazarus")))
+    ('fpc (+core-need-program "fpc" (if (featurep :system 'macos)
+                                        "brew install fpc"
+                                      "zypper in fpc fpc-src")))))
+
 ;;;###autoload
 (defun +pascal-build-command ()
-  "What `SPC k b' runs in a Pascal project."
+  "What `SPC k b' runs in a Pascal project, once its compiler is known to
+be there: F7 and the panel's header ask for it too."
+  (+pascal-root)
+  (+pascal--check-builder)
   (pcase (+pascal-project-kind)
     ('lazarus
      (string-join (append '("lazbuild") (+pascal--lazbuild-args)
@@ -174,8 +194,7 @@ sources, and -Fu says where the project\='s own units are."
                                   (list (shell-quote-argument (+pascal--main-file))))
                           " ")))
     ('delphi
-     (user-error "Delphi projects are read here, not built: build it in the IDE"))
-    (_ (user-error "No Pascal project here"))))
+     (user-error "This kind of project cannot be built: a Delphi project is built in the IDE"))))
 
 ;;;###autoload
 (defun +pascal--program-candidates ()
@@ -214,24 +233,10 @@ With COMINT the buffer takes input, which a program reading its
 standard input waits for."
   (+core-compile name command (+pascal-root) comint))
 
-(defun +pascal--check-builder ()
-  "Stop with what to install when the compiler this project builds with,
-lazbuild or fpc, is not here, rather than run a build that cannot start."
-  (let ((kind (+pascal-project-kind)))
-    (when (eq kind 'lazarus)
-      (unless (executable-find "lazbuild")
-        (user-error "lazbuild is not installed: %s"
-                    (if (featurep :system 'macos) "brew install --cask lazarus" "zypper in lazarus"))))
-    (when (eq kind 'fpc)
-      (unless (executable-find "fpc")
-        (user-error "fpc is not installed: %s"
-                    (if (featurep :system 'macos) "brew install fpc" "zypper in fpc fpc-src"))))))
-
 ;;;###autoload
 (defun +pascal/build ()
   "Build the project with what it is set to."
   (interactive)
-  (+pascal--check-builder)
   (+pascal--compile "build" (+pascal-build-command)))
 
 ;;;###autoload
@@ -258,7 +263,6 @@ lazbuild or fpc, is not here, rather than run a build that cannot start."
   ;; The build where builds go, the program in a run buffer of its own,
   ;; where it reads what is typed. Which binary is known once the build
   ;; is done, and `+pascal/run' picks it then.
-  (+pascal--check-builder)
   (+core-compile-then "build" (+pascal-build-command) (+pascal-root) #'+pascal/run))
 
 ;;;###autoload
@@ -273,7 +277,8 @@ lazbuild or fpc, is not here, rather than run a build that cannot start."
 They are built with the program's own flags, so the units the build
 already compiled into lib/ are not compiled again."
   (unless (eq (+pascal-project-kind) 'fpc)
-    (user-error "SPC k t builds a Free Pascal project's tests; build a Lazarus one's in the IDE"))
+    (user-error "This kind of project cannot be tested: its tests are built in the IDE"))
+  (+pascal--check-builder)
   (let ((tests (or (+pascal-tests-file)
                    (user-error "No tests here: SPC k t builds tests/tests.lpr"))))
     (concat "mkdir -p bin lib && "
@@ -315,25 +320,31 @@ lldb-dap on a Mac, `+core-os-debugger'."
   (interactive)
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
-  (require 'dape)
-  (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
-    ;; dape takes the configuration itself, not its name: given
-    ;; (gdb-pascal :program ...) it reads every key as a value and
-    ;; starts nothing.
-    (dape (dape--config-eval
-           'gdb-pascal
-           (append (let ((debugger (+core-os-debugger)))
-                     ;; The program's body is PASCALMAIN; main is the
-                     ;; RTL's start, where lldb would stop instead. The
-                     ;; first of a key in these options is the one kept.
-                     (if (equal (plist-get debugger :type) "lldb-dap")
+  (+pascal-root)
+  (let ((debugger (+core-os-debugger)))
+    ;; With neither gdb nor lldb-dap, dape said it could not "locate".
+    (when (equal (plist-get debugger 'command) "gdb")
+      (+core-need-program "gdb" (if (featurep :system 'macos)
+                                    "xcode-select --install, or brew install llvm"
+                                  "zypper in gdb")))
+    (require 'dape)
+    (let ((program (or (+pascal-program) (user-error "Nothing built yet: F7 first"))))
+      ;; dape takes the configuration itself, not its name: given
+      ;; (gdb-pascal :program ...) it reads every key as a value and
+      ;; starts nothing.
+      (dape (dape--config-eval
+             'gdb-pascal
+             (append (if (equal (plist-get debugger :type) "lldb-dap")
+                         ;; The program's body is PASCALMAIN; main is the
+                         ;; RTL's start, where lldb would stop instead. The
+                         ;; first of a key in these options is the one kept.
                          (append '(:preRunCommands ["breakpoint set --name PASCALMAIN --one-shot true"])
                                  debugger)
-                       debugger))
-                   (list :program program
-                         :cwd (+pascal-root)
-                         :args (vconcat (split-string-shell-command
-                                         (or +pascal-run-args "")))))))))
+                       debugger)
+                     (list :program program
+                           :cwd (+pascal-root)
+                           :args (vconcat (split-string-shell-command
+                                           (or +pascal-run-args ""))))))))))
 
 ;;;###autoload
 (defun +pascal/open-project-file ()

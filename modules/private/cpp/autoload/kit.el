@@ -28,6 +28,7 @@
 (declare-function projection-cache-clear-all "projection-core-cache")
 (declare-function +core-dir-locals-read "lib")
 (declare-function +core-dir-locals-set "lib")
+(declare-function +core-need-program "lib")
 (declare-function +cpp--cache-override-args "cmake")
 (declare-function +cpp--preset-binary-dir "cmake")
 (declare-function +cpp--preset-cache-variable "cmake")
@@ -749,12 +750,20 @@ which a multi-config generator needs to know the configuration."
       (concat command " --config " (shell-quote-argument config))
     command))
 
+(defun +cpp--need-cmake (kit)
+  "Say that cmake is not installed, and how to install it, when KIT runs
+on the host and it is not there.  A kit in a container or an SDK's
+environment has its own."
+  (unless (or (+cpp-kit-container kit) (+cpp-kit-env-script kit) (+cpp-kit-env kit))
+    (+core-need-program "cmake" (if (featurep :system 'macos) "brew install cmake" "zypper in cmake"))))
+
 (defun +cpp--kit-command (generator &rest args)
   "The shell command GENERATOR makes, called with ARGS, for the kit in use.
 Run from the project root, whatever buffer asked."
   (require 'projection)
   (let ((kit (+cpp--kit))
         (root (+core-project-root)))
+    (+cpp--need-cmake kit)
     (+cpp--kit-shell kit
                      (+cpp--with-config (+cpp--with-kit kit (apply generator args))
                                         (+cpp--kit-config kit))
@@ -771,6 +780,7 @@ neither, and a toolchain file among them is what picks the SDK."
   (require 'projection)
   (let ((kit (+cpp--kit))
         (root (+core-project-root)))
+    (+cpp--need-cmake kit)
     (+cpp--with-kit kit
       (+cpp--projection-write-file-api-query))
     (if (and (not (+cpp-kit-configured kit))

@@ -217,7 +217,7 @@ buffer's `exec-path'."
                  `(node-project
                    ,@adapter
                    :cwd "."
-                   :program (lambda () (read-file-name "Run: " nil nil t))))
+                   :program +web--read-program))
     (add-to-list 'dape-configs
                  `(electron-main
                    ,@adapter

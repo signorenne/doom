@@ -59,7 +59,11 @@ answers only when none of them claims it."
     (plist-get (cddr (or owner fallback)) what)))
 
 (defun +core--build-call (what missing)
-  "Call the command registered for WHAT, or say MISSING."
+  "Call the command registered for WHAT, or say MISSING.  Outside a
+project it says so first, before the command asks anything: in no
+version control root and in no folder a module knows by its files."
+  (unless (or (+core-project-root-or-nil) (+core--kit-owner))
+    (user-error "Not inside a project"))
   (if-let* ((command (+core--builder what)))
       (call-interactively command)
     (user-error "%s" missing)))
@@ -155,27 +159,27 @@ and going to one."
 (defun +core/run ()
   "Run what this project builds, however this kind of project is run."
   (interactive)
-  (+core--build-call :run "Nothing here knows how to run this project"))
+  (+core--build-call :run "This kind of project cannot be run"))
 
 ;;;###autoload
 (defun +core/run-with-args ()
   "Run what this project builds once, with arguments asked for."
   (interactive)
   (+core--build-call :run-with-args
-                     "Nothing here knows how to run this project with arguments"))
+                     "This kind of project cannot be run with arguments"))
 
 ;;;###autoload
 (defun +core/build-and-run ()
   "Build this project, then run it when the build worked."
   (interactive)
   (+core--build-call :build-and-run
-                     "Nothing here knows how to build and run this project"))
+                     "This kind of project cannot be built and run"))
 
 ;;;###autoload
 (defun +core/debug ()
   "Debug what this project builds."
   (interactive)
-  (+core--build-call :debug "Nothing here knows how to debug this project"))
+  (+core--build-call :debug "This kind of project cannot be debugged"))
 
 ;;;###autoload
 (defun +core/build-panel ()

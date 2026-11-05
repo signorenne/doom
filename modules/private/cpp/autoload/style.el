@@ -7,10 +7,28 @@
 (declare-function +cpp-kit-dir "kit")
 (declare-function clang-format-buffer "clang-format")
 (declare-function clang-format-region "clang-format")
+(declare-function +core-need-program "lib")
+(declare-function +cpp-kit-container "kit")
+(declare-function +cpp-kit-env-script "kit")
+(declare-function +cpp-kit-env "kit")
 
 
 ;;
 ;;; Style gates
+
+(defun +cpp--need-clang (program kit)
+  "Say that PROGRAM, one of the clang tools, is not installed, and how to
+install it, when KIT runs on the host and it is not there.  A kit in a
+container or an SDK's environment has its own, which only a command run
+there can tell."
+  (unless (and kit (or (+cpp-kit-container kit) (+cpp-kit-env-script kit) (+cpp-kit-env kit)))
+    (+core-need-program program (if (featurep :system 'macos)
+                                    (if (equal program "clang-format")
+                                        "brew install clang-format"
+                                      "brew install llvm")
+                                  (if (equal program "run-clang-tidy")
+                                      "zypper in clang-tools"
+                                    "zypper in clang")))))
 
 (defvar +cpp-tidy-file-filter
   "^(?!.*/build/).*/(src|include|modules|tests|examples)/"
@@ -23,6 +41,7 @@ dependencies; this keeps them out of the report.")
   "Run clang-format on the buffer, or on BEG to END.
 Uses the project's .clang-format, or LLVM style when there is none."
   (interactive (when (use-region-p) (list (region-beginning) (region-end))))
+  (+cpp--need-clang "clang-format" nil)
   (require 'clang-format)
   (if (and beg end)
       (clang-format-region beg end)
@@ -42,8 +61,7 @@ Uses the project's .clang-format, or LLVM style when there is none."
   "Run clang-format over every tracked C and C++ file in the project.
 The buffers of the files it changed are reloaded once it is done."
   (interactive)
-  (unless (executable-find "clang-format")
-    (user-error "clang-format is not installed"))
+  (+cpp--need-clang "clang-format" nil)
   (let* ((root (+core-project-root))
          (files (+cpp--git-sources root))
          (default-directory root))
@@ -71,6 +89,7 @@ changed once it is done."
          (kit (+cpp--kit root))
          (dir (+cpp-kit-dir kit))
          (fix current-prefix-arg))
+    (+cpp--need-clang "run-clang-tidy" kit)
     (unless (+cpp--compile-commands-file kit root)
       (user-error "No compile_commands.json in %s, configure first with SPC k c"
                   dir))
@@ -95,6 +114,7 @@ With FIX, a prefix argument, apply the fixes it proposes and revert."
   (interactive "P")
   (unless buffer-file-name
     (user-error "This buffer is not visiting a file"))
+  (+cpp--need-clang "clang-tidy" (+cpp--kit))
   (+cpp--save-project-buffers)
   (let* ((kit (+cpp--kit))
          (root (+core-project-root))

@@ -1913,9 +1913,13 @@ the compilation database is and the versions of the tools.
 | ~F11~  | step into, ~S-F11~ out     |
 
 ~F2~, ~F4~ to ~F9~ work wherever you are: outside C and C++ ~F2~ is ~gd~,
-and ~F4~ says the file has no header. ~F10~, ~F11~, ~S-F11~ and ~S-F5~
-belong to a running debug session and do nothing outside one, where ~F10~
-opens the menu bar and ~F11~ makes the frame full screen.
+and ~F4~ says the file has no header. Where a key does not apply it says
+why in one line before it asks or runs anything, the same words in every
+language: "Not inside a project", "This kind of project cannot be
+configured", "cargo is not installed: " and how to install it. ~F10~,
+~F11~, ~S-F11~ and ~S-F5~ belong to a running debug session and do
+nothing outside one, where ~F10~ opens the menu bar and ~F11~ makes the
+frame full screen.
 
 ** The same from the leader
 | Key     | What it does                                                            |

@@ -63,6 +63,14 @@ The answer is remembered a moment, see `+core-project-root-memo-seconds'."
         (user-error "Not inside a project"))))
 
 ;;;###autoload
+(defun +core-need-program (program hint)
+  "PROGRAM's path, or a `user-error' that it is not installed and HINT,
+how to install it: the one wording for a missing tool, said before a
+command asks or runs anything."
+  (or (executable-find program)
+      (user-error "%s is not installed: %s" program hint)))
+
+;;;###autoload
 (defun +core-file-at-point (&optional marked)
   "The file this buffer is about: at point in dired, else the visited file.
 With MARKED, a list instead: the marked files in dired, else the file at

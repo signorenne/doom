@@ -16,6 +16,7 @@
 (declare-function +cpp-kit-abs-dir "kit")
 (declare-function +cpp--kit-compiler-missing-p "kit")
 (declare-function +cpp--kit-shell "container")
+(declare-function +core-need-program "lib")
 (declare-function dape-continue "dape")
 (declare-function gdb "gdb-mi")
 (declare-function projection-commands-run-project "projection-commands")
@@ -314,13 +315,19 @@ which for PlatformIO means upload."
       ;; It takes the project and the command, which only its
       ;; interactive form works out.
       (when (and args (not (string-empty-p args)))
-        (user-error "Only a CMake project's programs are given arguments here"))
+        (user-error "This kind of project cannot be run with arguments"))
       (call-interactively #'projection-commands-run-project))))
 
 ;;;###autoload
 (defun +cpp/run-with-args (args)
   "Run a project executable with ARGS."
-  (interactive (list (read-string "Program arguments: ")))
+  (interactive
+   (progn
+     ;; Said before the arguments are asked for.
+     (+core-project-root)
+     (unless (+cpp--kind-p 'cmake)
+       (user-error "This kind of project cannot be run with arguments"))
+     (list (read-string "Program arguments: "))))
   (+cpp/run args))
 
 ;;;###autoload
@@ -373,6 +380,14 @@ machine's debugger, `+core-os-debugger', lldb-dap on a Mac."
           :stopAtBeginningOfMainSubprogram t)
       (+core-os-debugger))))
 
+(defun +cpp--need-debugger (debugger)
+  "Say that gdb is not installed, and how to install it, when DEBUGGER,
+the head of a dape config, runs gdb on the host and it is not there."
+  (when (equal (plist-get debugger 'command) "gdb")
+    (+core-need-program "gdb" (if (featurep :system 'macos)
+                                  "xcode-select --install, or brew install llvm"
+                                "zypper in gdb"))))
+
 ;;;###autoload
 (cl-defun +cpp/debug ()
   "Debug the project's executable where the kit runs.
@@ -385,18 +400,22 @@ program and uses the same debugger."
   (+cpp--save-project-buffers)
   (let* ((root (+core-project-root))
          (kit (and (+cpp--kind-p 'cmake) (+cpp--kit root)))
-         (exe (cond (kit (+cpp--pick-executable kit))
+         (debugger (+cpp--debugger kit))
+         ;; A missing gdb is said before the program is asked for.
+         (exe (cond (kit (+cpp--need-debugger debugger)
+                         (+cpp--pick-executable kit))
                     ((derived-mode-p 'rust-mode 'rust-ts-mode 'rustic-mode)
                      ;; dape's codelldb-rust config knows target/debug/<crate>.
                      (cl-return-from +cpp/debug
                        (dape (+cpp--dape-config 'codelldb-rust))))
-                    (t (+cpp--read-program))))
+                    (t (+cpp--need-debugger debugger)
+                       (+cpp--read-program))))
          (active (and kit (+qtcreator-active root)))
          (args (or (+cpp--setting '+cpp-run-args) (plist-get active :run-args) ""))
          (cwd (let ((qtc (plist-get active :run-dir)))
                 (if (and qtc (file-directory-p qtc)) qtc (file-name-directory exe))))
          (config `(modes ,+cpp-modes
-                   ,@(+cpp--debugger kit)
+                   ,@debugger
                    :request "launch"
                    :program ,exe
                    :cwd ,cwd

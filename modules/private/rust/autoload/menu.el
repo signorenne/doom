@@ -16,8 +16,8 @@
           "  "
           (propertize (+rust-summary) 'face 'font-lock-doc-face)
           "\n"
-          (propertize (condition-case nil (+rust-build-command)
-                        (error "no project here"))
+          (propertize (condition-case err (+rust-build-command)
+                        (error (error-message-string err)))
                       'face 'font-lock-comment-face)))
 
 ;;;###autoload (autoload '+rust/menu "private/rust/autoload/menu" nil t)

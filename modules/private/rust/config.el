@@ -18,6 +18,10 @@
 (defvar +rust-modes '(rust-mode rust-ts-mode rustic-mode)
   "The modes a Rust file opens in, whichever of them is in charge.")
 
+(defvar +rust-codelldb
+  (expand-file-name "debug-adapters/codelldb/extension/adapter/codelldb" doom-user-dir)
+  "Where `+cpp/install-codelldb' puts codelldb, which SPC k d debugs with.")
+
 (declare-function +core-register-builder "build")
 (declare-function projection-type "projection-types")
 
@@ -132,9 +136,7 @@
                            ;; The command is a path whether it is there or not.
                            (unless (file-executable-p (dape-config-get config 'command))
                              (user-error "codelldb is not installed: M-x +cpp/install-codelldb")))
-                 command ,(expand-file-name
-                           "debug-adapters/codelldb/extension/adapter/codelldb"
-                           doom-user-dir)
+                 command ,+rust-codelldb
                  command-args ("--port" :autoport)
                  port :autoport
                  :type "lldb"

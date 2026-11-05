@@ -105,8 +105,10 @@ another and =F8= configures that one.
 | =F2=   | go to the definition     |
 | =F4=   | switch header and source |
 
-=F2= and =F4= to =F9= work wherever you are. =F10=, =F11= and =S-F5=
-belong to a running session and do nothing outside one.
+=F2= and =F4= to =F9= work wherever you are, and where one does not
+apply, outside a project or with its tool not installed, it says why in
+one line before anything runs. =F10=, =F11= and =S-F5= belong to a
+running session and do nothing outside one.
 
 A program that takes arguments is run with =SPC k R=, which asks for
 them; =SPC k m a= writes them down for the project so =F6= passes them

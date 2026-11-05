@@ -243,10 +243,14 @@ have neither."
   (let ((file (expand-file-name
                (or buffer-file-name
                    (user-error "No file here, so no header or source to switch to")))))
-    (if (seq-some (lambda (rule) (string-match-p (car rule) file)) find-sibling-rules)
-        (find-sibling-file file)
-      (user-error "No header or source for %s: F4 switches between the two in C and C++"
-                  (file-name-nondirectory file)))))
+    (cond ((not (seq-some (lambda (rule) (string-match-p (car rule) file)) find-sibling-rules))
+           (user-error "No header or source for %s: F4 switches between the two in C and C++"
+                       (file-name-nondirectory file)))
+          ;; Emacs's own words for it were "Couldn't find any sibling files".
+          ((not (find-sibling-file-search file))
+           (user-error "No header or source for %s: none of that name beside it"
+                       (file-name-nondirectory file)))
+          (t (find-sibling-file file)))))
 
 
 (defvar qml-ts-mode-indent-offset)
