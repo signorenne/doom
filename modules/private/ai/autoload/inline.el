@@ -287,7 +287,8 @@ original text, the rewrite and the instruction.")
            (+ai--rewrite-show source beg end original instruction answer))))
       ;; Made after the start, which may cancel a request and its overlay.
       (setq +ai--inline-overlay (make-overlay beg end nil nil t))
-      (overlay-put +ai--inline-overlay 'face '+ai-inline-pending))))
+      (overlay-put +ai--inline-overlay 'face '+ai-inline-pending)
+      (message "Rewriting the region..."))))
 
 (defun +ai--rewrite-show (source beg end original instruction answer)
   "Show ANSWER against ORIGINAL as a diff to accept or reject."
