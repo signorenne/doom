@@ -1286,6 +1286,21 @@ taken out again with eglot's own when eglot lets the buffer go."
         [backspace] reset
         "DEL" reset))
 
+;; Text modes offer words from a plain word list, /usr/share/dict/words
+;; or another of ispell's places for one. On a machine without one the
+;; first word typed failed with an error, and Doom then turned the word
+;; completion off for the session. It offers words only where there is a
+;; list, and says nothing where there is none.
+(defvar ispell-complete-word-dict)
+(defvar ispell-alternate-dictionary)
+(defun +core--ispell-word-list-p (&rest _)
+  "Non-nil when ispell has a plain word list to complete words from."
+  (require 'ispell)
+  (when-let* ((list (or ispell-complete-word-dict ispell-alternate-dictionary)))
+    (file-readable-p list)))
+
+(advice-add 'ispell-completion-at-point :before-while #'+core--ispell-word-list-p)
+
 ;; What the candidate under the cursor means, beside the list. Doom turns
 ;; the popup on and binds nothing for it: M-d asks for it at once, and
 ;; M-n and M-p read a long one. By itself it comes 0.3 s after the list

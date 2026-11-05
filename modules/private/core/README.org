@@ -413,6 +413,9 @@ files section has the detail.
 - ~+core-transparency-alpha~, 85 by default.
 - ~corfu-auto~ is on, 0.15 s after two characters, ~corfu-preselect~ is
   ~first~ so ~RET~ takes the candidate; ~SPC t a~ makes it manual, ~C-SPC~.
+  In text it offers words from a plain word list, =/usr/share/dict/words=
+  or wherever ~ispell-alternate-dictionary~ says, only where there is one:
+  without, the first word typed was an error.
 - ~+core-notes-dir~ (=~/org/=, set for this machine in =init.el=) and
   ~+core-projects-dir~ (=~/projects/=): where the notes and the projects
   live; the notes module and the C++ scaffolds read them.
