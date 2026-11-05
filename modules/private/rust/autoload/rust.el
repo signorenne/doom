@@ -194,6 +194,8 @@ features.  Each of them stopped at the flag it does not take."
      (list "-p" +rust-member))
    (when +rust-target (list "--target" +rust-target))))
 
+;; Autoloaded: scaffold.el asks before a new project's questions.
+;;;###autoload
 (defun +rust--need-cargo ()
   "Say that cargo is not installed, and how to install it, when it is not."
   (+core-need-program "cargo" (if (featurep :system 'macos)

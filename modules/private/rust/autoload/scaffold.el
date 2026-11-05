@@ -7,6 +7,7 @@
 (declare-function +core-copy-template "scaffold")
 (declare-function +core-read-new-project "scaffold")
 (declare-function +core-leave-dirvish "dired")
+(declare-function +rust--need-cargo "rust")
 (defvar +rust-templates-dir)
 
 (defun +rust--cargo (dir &rest args)
@@ -128,13 +129,12 @@ written twice is a manifest cargo refuses."
 KIND is \"bin\" for a program, \"lib\" for a library, \"workspace\" for
 several crates together."
   (interactive
-   (cons (completing-read (format-prompt "Kind" "bin") (+rust-project-kinds) nil t nil nil "bin")
-         (+core-read-new-project)))
-  (unless (executable-find "cargo")
-    (user-error "cargo is not installed: %s, then rustup default stable"
-                (if (featurep :system 'macos)
-                    "brew install rustup with $(brew --prefix rustup)/bin on PATH"
-                  "zypper in rustup")))
+   (progn
+     ;; Said before the questions, not after them.
+     (+rust--need-cargo)
+     (cons (completing-read (format-prompt "Kind" "bin") (+rust-project-kinds) nil t nil nil "bin")
+           (+core-read-new-project))))
+  (+rust--need-cargo)
   (when (and (file-exists-p dir) (directory-files dir nil "^[^.]"))
     (unless (y-or-n-p (format "%s is not empty.  Continue? " dir))
       (user-error "Aborted")))

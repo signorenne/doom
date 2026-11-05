@@ -10,6 +10,7 @@
 (declare-function +core-copy-template "scaffold")
 (declare-function +core-read-new-project "scaffold")
 (declare-function +core-leave-dirvish "dired")
+(declare-function +core-need-program "lib")
 (declare-function +web-root "web")
 (defvar +web-templates-dir)
 
@@ -152,6 +153,10 @@ generator writes the adapter call into vite.config.ts."
      ("package:linux" . "yarn build && electron-builder --linux")
      ("package:win" . "yarn build && electron-builder --win"))))
 
+(defun +web--need-node ()
+  "Say that node is not installed, and how to install it, when it is not."
+  (+core-need-program "node" (if (featurep :system 'macos) "brew install node" "zypper in nodejs22")))
+
 ;;;###autoload
 (defun +web/new-project (kind dir name)
   "Start node project NAME of KIND in DIR, and open it.
@@ -159,10 +164,12 @@ KIND is one of `+web-project-kinds': a SvelteKit application, the same
 wrapped as an Electron desktop application, a library, a static page,
 or a TypeScript program for node."
   (interactive
-   (cons (completing-read (format-prompt "Kind" "sveltekit") (+web-project-kinds) nil t nil nil "sveltekit")
-         (+core-read-new-project)))
-  (unless (executable-find "node")
-    (user-error "node is not installed"))
+   (progn
+     ;; Said before the questions, not after them.
+     (+web--need-node)
+     (cons (completing-read (format-prompt "Kind" "sveltekit") (+web-project-kinds) nil t nil nil "sveltekit")
+           (+core-read-new-project))))
+  (+web--need-node)
   (when (and (file-exists-p dir) (directory-files dir nil "^[^.]"))
     (unless (y-or-n-p (format "%s is not empty.  Continue? " dir))
       (user-error "Aborted")))
