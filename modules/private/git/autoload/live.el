@@ -865,13 +865,24 @@ for the buffer when the view is turned off and on again."
   (let* ((root (or +git--live-root
                    (+git--live-toplevel (file-name-directory buffer-file-name))
                    (user-error "Not in a git repository")))
+         ;; A commit picked before is a choice of its own, so RET keeps it.
+         (picked (pcase +git-live-baseline
+                   (`(commit . ,hash) (substring hash 0 (min 7 (length hash))))))
+         (current (pcase +git-live-baseline
+                    ('index "Index") ('head "HEAD") ('agent "Agent's turn") (_ picked)))
+         (choices (append '("Index" "HEAD") (and picked (list picked)) '("Commit...")
+                          (and (fboundp '+ai-turn-tree) '("Agent's turn"))))
          (choice (completing-read
-                  "Compare with: "
-                  (append '("Index" "HEAD" "Commit...")
-                          (and (fboundp '+ai-turn-tree) '("Agent's turn")))
-                  nil t))
+                  (format-prompt "Compare with" current)
+                  (lambda (string pred action)
+                    (if (eq action 'metadata)
+                        '(metadata (display-sort-function . identity)
+                                   (cycle-sort-function . identity))
+                      (complete-with-action action choices string pred)))
+                  nil t nil nil current))
          (baseline
           (pcase choice
+            ((pred (equal picked)) +git-live-baseline)
             ("Index" 'index)
             ("HEAD" 'head)
             ("Commit..."

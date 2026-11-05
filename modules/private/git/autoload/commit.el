@@ -95,7 +95,8 @@ branch and tag names. A hash not listed is taken as typed."
                                               "HEAD"))
                            (magit-list-refnames nil t))))
          (choice (completing-read
-                  (format "%s (a commit, a branch or a tag): " prompt)
+                  (format-prompt "%s (a commit, a branch or a tag)"
+                                 (car (split-string (or (car choices) ""))) prompt)
                   (lambda (string pred action)
                     (if (eq action 'metadata)
                         '(metadata (display-sort-function . identity)
