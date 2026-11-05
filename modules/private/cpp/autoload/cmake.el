@@ -191,7 +191,12 @@ it."
           (qts (and (equal choice "CMAKE_PREFIX_PATH") (+cpp--qt-prefixes))))
      (list choice
            (cond ((equal type "BOOL")
-                  (completing-read (format "%s: " choice) '("ON" "OFF") nil t))
+                  ;; ON and OFF are the whole list, so the value now is
+                  ;; said in the prompt; the other branches start from it.
+                  (completing-read (if (string-empty-p current)
+                                       (format "%s: " choice)
+                                     (format "%s (now %s): " choice current))
+                                   '("ON" "OFF") nil t))
                  (qts (completing-read (format "%s (a Qt, or any prefix): " choice)
                                        qts nil nil current))
                  (t (read-string (format "%s = " choice) current))))))
