@@ -530,25 +530,46 @@ its name, its folder dimmed, the letter at the right edge."
     ("z r" . magit-section-show-level-4-all) ("z m" . magit-section-show-level-1-all)
     ("z 1" . magit-section-show-level-1-all) ("z 2" . magit-section-show-level-2-all)
     ("z 3" . magit-section-show-level-3-all) ("z 4" . magit-section-show-level-4-all))
-  "The magit-section command each folding key of the side bar runs.")
+  "The magit-section command each folding key of the side bar runs, in
+normal state, through `+sidebar/fold'.")
+
+(defvar +sidebar--fold-remaps
+  '(magit-section-toggle magit-section-cycle magit-section-cycle-global
+    magit-section-show magit-section-hide magit-section-toggle-children
+    magit-section-show-children magit-section-hide-children
+    magit-section-show-headings
+    magit-section-show-level-1 magit-section-show-level-2
+    magit-section-show-level-3 magit-section-show-level-4
+    magit-section-show-level-1-all magit-section-show-level-2-all
+    magit-section-show-level-3-all magit-section-show-level-4-all
+    magit-mouse-toggle-section)
+  "magit's folding commands. In the side bar each runs through
+`+sidebar/fold', whatever reaches it: a key, C-<tab>, a click on a
+heading or in the fringe.")
 
 ;;;###autoload
 (defun +sidebar/fold ()
   "Fold or unfold as the key pressed does in magit, then watch exactly the
-folders now on show."
+folders now on show.  It runs in place of each of magit's folding
+commands, whichever key or click asked for one."
   (interactive)
-  (when-let* ((command (cdr (assoc (key-description (this-command-keys-vector))
-                                   +sidebar--fold-commands))))
-    (call-interactively command))
+  ;; The command the key or click is bound to, before the remapping that
+  ;; brought it here. Not looked up from the keys: in normal state here
+  ;; those of z o come in as z alone.
+  (when (memq this-original-command +sidebar--fold-remaps)
+    (call-interactively this-original-command))
   (when (eq +sidebar--view 'explorer)
     (+sidebar--sync-watches)))
 
 ;;;###autoload
 (defun +sidebar--bind-common (map)
-  "Bind the keys every view shares in MAP, for evil's normal state."
+  "Bind the keys every view shares in MAP, for evil's normal state, and
+send every folding command of magit's through `+sidebar/fold'."
   (apply #'evil-define-key* 'normal map
-         (mapcan (lambda (entry) (list (kbd (car entry)) #'+sidebar/fold))
+         (mapcan (lambda (entry) (list (kbd (car entry)) (cdr entry)))
                  +sidebar--fold-commands))
+  (dolist (command +sidebar--fold-remaps)
+    (define-key map (vector 'remap command) #'+sidebar/fold))
   (evil-define-key* 'normal map
     "gj" #'magit-section-forward-sibling
     "gk" #'magit-section-backward-sibling
