@@ -588,7 +588,7 @@ such as Ollama, else the claude CLI with its own sign-in.")
         :desc "Continue last"             "C" #'claude-code-ide-continue
         :desc "Resume a session"          "r" #'claude-code-ide-resume
         :desc "Toggle window"             "t" #'claude-code-ide-toggle
-        :desc "Stop"                      "k" #'claude-code-ide-stop
+        :desc "Stop"                      "k" #'+ai/terminal-stop
         :desc "Compose prompt"            "p" #'+ai/terminal-compose
         :desc "Send selection (@)"        "s" #'claude-code-ide-insert-at-mentioned
         :desc "List sessions"             "l" #'claude-code-ide-list-sessions

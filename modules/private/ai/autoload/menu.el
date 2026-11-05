@@ -108,7 +108,7 @@ agents' files, on the keys they have after SPC l."
     ("tC" "Continue last"        claude-code-ide-continue)
     ("tr" "Resume a session"     claude-code-ide-resume)
     ("tt" "Toggle window"        claude-code-ide-toggle)
-    ("tk" "Stop"                 claude-code-ide-stop)
+    ("tk" "Stop"                 +ai/terminal-stop)
     ("tp" "Compose prompt"       +ai/terminal-compose)
     ("ts" "Send selection (@)"   claude-code-ide-insert-at-mentioned)
     ("tl" "List sessions"        claude-code-ide-list-sessions)

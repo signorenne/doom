@@ -2704,7 +2704,7 @@ prompt buffer writes to the one it was opened from.
 | ~SPC l t s~ | send the selection                |
 | ~SPC l t t~ | show, hide the window             |
 | ~SPC l t l~ | list the sessions                 |
-| ~SPC l t k~ | stop it                           |
+| ~SPC l t k~ | stop it, after asking             |
 | ~SPC l t m~ | the package's menu                |
 | ~SPC l t T~ | plain claude, no Emacs bridge     |
 | ~SPC l t o~ | choose the model                  |
@@ -4705,8 +4705,8 @@ bound.
 - ~+ai/terminal-remote~ (~SPC l d r~) :: Start a Claude terminal for this
   project with Remote Control, so the session can be driven from claude.ai
   or the Claude app as well.
-- ~+ai/terminal-stop~ (~C-c C-k~) :: End this Claude terminal's session,
-  after asking.
+- ~+ai/terminal-stop~ (~SPC l t k~) :: End a Claude terminal of this
+  project, after asking.
 - ~+ai/terminal-teleport~ (~SPC l d w~) :: Open one of your cloud sessions
   here, in a Claude terminal: the CLI lists them to pick from.
 - ~+ai/terminal-worktree~ (~SPC l t w~) :: Start a Claude terminal in a new

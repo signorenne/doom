@@ -16,7 +16,9 @@
 (defvar compilation-ask-about-save)
 (declare-function +ai--fenced "chat")
 (declare-function claude-code-ide "claude-code-ide")
+(declare-function claude-code-ide--cleanup-session "claude-code-ide")
 (declare-function claude-code-ide--get-working-directory "claude-code-ide")
+(declare-function claude-code-ide--resolve-session "claude-code-ide")
 (declare-function claude-code-ide--display-buffer-in-side-window "claude-code-ide")
 (declare-function claude-code-ide--session-display-name "claude-code-ide")
 (declare-function claude-code-ide-stop "claude-code-ide")
@@ -440,13 +442,26 @@ it is one of them, else the one used last."
 
 ;;;###autoload
 (defun +ai/terminal-stop ()
-  "End this Claude terminal's session, after asking.
-C-c C-k there, a key that elsewhere only drops a draft."
+  "End a Claude terminal of this project, after asking.
+In a terminal, that one; else the only one, the only one in view, or
+the one you pick, as `claude-code-ide-stop' chooses.  C-c C-k in the
+terminal, a key that elsewhere only drops a draft."
   (interactive)
-  (unless (bound-and-true-p claude-code-ide--session)
-    (user-error "Not in a Claude terminal"))
-  (when (y-or-n-p (format "End %s? " (buffer-name)))
-    (claude-code-ide-stop)))
+  (require 'claude-code-ide)
+  (let* ((session (or (claude-code-ide--resolve-session 'prompt "End Claude terminal: ")
+                      (user-error "No Claude terminal runs for this project")))
+         (buffer (claude-code-ide-mcp-session-buffer session)))
+    (when (y-or-n-p (format "End %s? "
+                            (if (buffer-live-p buffer)
+                                (buffer-name buffer)
+                              (claude-code-ide--session-display-name session))))
+      (if (buffer-live-p buffer)
+          ;; From the terminal itself, the package stops that one; no
+          ;; prefix argument, or it would ask which once more.
+          (let ((current-prefix-arg nil))
+            (with-current-buffer buffer
+              (claude-code-ide-stop)))
+        (claude-code-ide--cleanup-session session)))))
 
 (defun +ai--terminal-start-with (flags)
   "Start another Claude terminal for this project, its CLI given FLAGS too."

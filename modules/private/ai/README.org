@@ -106,7 +106,7 @@ its permission rules; ~SPC l m u~ shows your plan's usage and limits.
 | ~SPC l t C~ | ~claude-code-ide-continue~            | continue the last conversation           |
 | ~SPC l t r~ | ~claude-code-ide-resume~              | pick an older session                    |
 | ~SPC l t t~ | ~claude-code-ide-toggle~              | show, hide the terminal                  |
-| ~SPC l t k~ | ~claude-code-ide-stop~                | stop it                                  |
+| ~SPC l t k~ | ~+ai/terminal-stop~                   | stop it, after asking                    |
 | ~SPC l t p~ | ~+ai/terminal-compose~                | write a prompt in a buffer               |
 | ~SPC l t s~ | ~claude-code-ide-insert-at-mentioned~ | the selection, as an @-mention           |
 | ~SPC l t l~ | ~claude-code-ide-list-sessions~       | the running instances                    |
