@@ -35,9 +35,18 @@
   "File to the picture shown for it, or `none'.")
 
 (defconst +media--watched
-  '(pause duration time-pos volume mute metadata media-title playlist
+  '(pause duration volume mute metadata media-title playlist
     playlist-pos loop-file loop-playlist path)
-  "The properties the player shows.")
+  "The properties the player shows, watched while mpv runs, under the
+ids from 1.")
+
+(defconst +media--time-pos-id 100
+  "The id mpv's position, time-pos, is watched under.  mpv says where it
+is many times a second, and each time wakes Emacs, so it is watched only
+while the player is on screen; see `+media--follow-time-h'.")
+
+(defvar +media--timing nil
+  "Non-nil while mpv is asked for the position.")
 
 (defun +media--socket ()
   "The socket this Emacs and its mpv talk over, in a folder of its own so
@@ -73,14 +82,39 @@ no one else can take the name first."
           (when (equal (alist-get 'event event) "property-change")
             (setf (alist-get (intern (alist-get 'name event)) +media--state)
                   (alist-get 'data event))
+            ;; A frame closed with the player in it changes no window's
+            ;; buffer; the next position is what tells.
+            (when (equal (alist-get 'name event) "time-pos")
+              (+media--follow-time-h))
             (+media--render-soon)))))))
+
+(defun +media--shown-p ()
+  "Non-nil when a window shows the player."
+  (get-buffer-window +media-player-buffer-name t))
+
+(defun +media--follow-time-h (&rest _)
+  "Have mpv say where it is while the player is on screen, and stop it
+once nothing shows the player, so a hidden player does not wake Emacs
+many times a second.  On `window-buffer-change-functions'."
+  (when (process-live-p +media--connection)
+    (let ((shown (and (+media--shown-p) t)))
+      (unless (eq shown +media--timing)
+        (setq +media--timing shown)
+        (process-send-string
+         +media--connection
+         (concat (json-serialize
+                  `((command . ,(if shown
+                                    (vector "observe_property" +media--time-pos-id "time-pos")
+                                  (vector "unobserve_property" +media--time-pos-id)))))
+                 "\n"))))))
 
 (defun +media--connect ()
   "Connect to mpv's socket, watch the properties, send what waited."
   (setq +media--connection
         (make-network-process :name "mpv-ipc" :family 'local :noquery t
                               :service (+media--socket) :coding 'utf-8
-                              :filter #'+media--filter))
+                              :filter #'+media--filter)
+        +media--timing nil)
   (seq-do-indexed (lambda (name i)
                     (process-send-string
                      +media--connection
@@ -88,6 +122,10 @@ no one else can take the name first."
                               `((command . ["observe_property" ,(1+ i) ,(symbol-name name)])))
                              "\n")))
                   +media--watched)
+  ;; mpv answers a new watch with the value it has, so the position is
+  ;; right again as soon as the player shows.
+  (+media--follow-time-h)
+  (add-hook 'window-buffer-change-functions #'+media--follow-time-h)
   (dolist (line +media--pending)
     (process-send-string +media--connection line))
   (setq +media--pending nil))
@@ -249,12 +287,13 @@ with APPEND."
 (defun +media--quit ()
   "Stop mpv with the player's buffer."
   (+media--stop-waiting)
+  (remove-hook 'window-buffer-change-functions #'+media--follow-time-h)
   (dolist (process (list +media--connection +media--process))
     (when (processp process) (delete-process process)))
   (when +media--socket-dir
     (ignore-errors (delete-directory +media--socket-dir t)))
   (setq +media--process nil +media--connection nil +media--state nil
-        +media--pending nil +media--socket-dir nil))
+        +media--pending nil +media--socket-dir nil +media--timing nil))
 
 (defun +media--time (seconds)
   "SECONDS as m:ss, or h:mm:ss."
@@ -378,7 +417,7 @@ many times a second."
     (setq +media--render-timer
           (run-at-time 0.4 nil (lambda ()
                                  (setq +media--render-timer nil)
-                                 (when (get-buffer-window +media-player-buffer-name t)
+                                 (when (+media--shown-p)
                                    (+media--render)))))))
 
 ;;;###autoload

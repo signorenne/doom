@@ -13,7 +13,9 @@ which keeps its layout. A remote file, or one that does not exist yet,
 opens as a file. =SPC m p= in the file manager adds the marked files, or
 a folder with everything under it (hidden files and folders left out),
 to the queue. Killing the player's
-buffer stops mpv; hiding it (=q=) leaves the music playing.
+buffer stops mpv; hiding it (=q=) leaves the music playing. mpv says
+where it is many times a second, so it is asked only while a window
+shows the player: hidden, the player does not wake Emacs.
 
 The cover is a =cover.jpg=, =folder.jpg= or =front.jpg= beside the file,
 else the picture inside it, taken out once by ffmpeg and kept.
