@@ -428,11 +428,17 @@ reads no line suffix in a mention.  Focus stays here."
     (format "%s%s\n%s\n%s\n" fence (or language "") (string-trim-right text "\n+") fence)))
 
 (defun +ai--output-buffer-p (buffer)
-  "Non-nil when BUFFER is a terminal or a build whose output can be sent."
+  "Non-nil when BUFFER is a terminal, or a build or a run, whose output
+can be sent.  A build or a run is one `+core-last-compilation-buffer'
+would take: grep's results and Emacs's own compile logs are
+compilation buffers too."
   (with-current-buffer buffer
-    (and (derived-mode-p 'vterm-mode 'eshell-mode 'shell-mode 'term-mode
-                         'compilation-mode 'comint-mode)
-         (not (derived-mode-p 'agent-shell-mode)))))
+    (and (not (derived-mode-p 'agent-shell-mode))
+         (or (derived-mode-p 'vterm-mode 'eshell-mode 'shell-mode 'term-mode
+                             'comint-mode)
+             (and (bound-and-true-p +core-compile-started)
+                  (or (eq major-mode 'compilation-mode)
+                      (bound-and-true-p compilation-shell-minor-mode)))))))
 
 ;;;###autoload
 (defun +ai/chat-send-output (buffer)
@@ -447,7 +453,9 @@ name; focus stays here.  As VS Code's @terminal."
                          (t (car buffers)))))
      (unless buffers
        (user-error "No terminal or build to take output from"))
-     (list (get-buffer (completing-read "Output of: " (mapcar #'buffer-name buffers)
+     (list (get-buffer (completing-read (format-prompt "Output of"
+                                                       (and default (buffer-name default)))
+                                        (mapcar #'buffer-name buffers)
                                         nil t nil nil (and default (buffer-name default)))))))
   (let* ((text (with-current-buffer buffer
                  (save-excursion

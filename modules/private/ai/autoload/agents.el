@@ -231,7 +231,8 @@ you), project (.mcp.json, shared) or user (every project)."
   (interactive
    (list (read-string "Server name: ")
          (read-string "URL, or the command and its arguments: ")
-         (completing-read "Scope: " '("local" "project" "user") nil t nil nil "local")))
+         (completing-read (format-prompt "Scope" "local")
+                          '("local" "project" "user") nil t nil nil "local")))
   (when (or (string-empty-p name) (string-empty-p target))
     (user-error "A name and a URL or a command are needed"))
   (apply #'+ai--claude-mcp "add" "--scope" scope
