@@ -4460,7 +4460,7 @@ bound.
   point; its buffers follow it.
 - ~+sidebar/explorer-save~ (~s~) :: Save the buffer of the Open editors
   entry at point.
-- ~+sidebar/fold~ (~TAB~) :: Fold or unfold as the key pressed does in
+- ~+sidebar/fold~ (~<tab>~) :: Fold or unfold as the key pressed does in
   magit, then watch exactly the folders now on show.
 - ~+sidebar/next-view~ (~L~) :: Show the side bar's next view.
 - ~+sidebar/outline~ (~SPC t o~) :: Show the Explorer with Outline open and
