@@ -41,8 +41,8 @@ is =SPC k D=, since =SPC k d= debugs everywhere.
 | ~SPC m k d~ | build the documentation and open it              |
 | ~SPC m k v~ | open Cargo.toml                                  |
 
-Doom's own localleader keys are still there: ~SPC m b~ builds, ~SPC m r~
-runs, ~SPC m t a~ tests, ~SPC m f~ formats, through rustic.
+Doom's own localleader keys are still there: ~SPC m b b~ builds,
+~SPC m b r~ runs, ~SPC m t a~ tests, ~SPC m b f~ formats, through rustic.
 
 * The panel
 ~SPC k m~ shows one line of what a build depends on and the command line
