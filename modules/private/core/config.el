@@ -806,6 +806,15 @@ time a file is written encrypted."
 (after! eglot
   (add-to-list 'eglot-ignored-server-capabilities :documentOnTypeFormattingProvider))
 
+;; A server may ask to be told of changes in folders outside the
+;; project, and Python's ask for every folder of the system's libraries:
+;; eglot walked six thousand of them, froze Emacs for two seconds,
+;; stopped at its limit of watches, and basedpyright, refused, exited.
+;; Only the project is watched; a server learns of a change outside it,
+;; an install, when it starts again.
+(after! eglot
+  (setq eglot-watch-files-outside-project-root nil))
+
 ;; eglot finds each position a server sends by counting lines from the
 ;; top of the buffer, so a list of them, diagnostics or symbols, costs
 ;; the square of the file's length. Counted from the last one found, a
