@@ -743,6 +743,34 @@ pause again for the one after."
 ;; is made when the timer fires, the other modules' steps in it.
 (run-with-idle-timer 1 nil #'+core--warm-up-start)
 
+;; Doom asks gpg for every key under your name, the ones a .gpg file is
+;; encrypted to, the moment epa loads, and magit loads epa while Emacs
+;; waits after starting: gpg took ten seconds to answer here, and Emacs
+;; answered nothing meanwhile. The question waits for the first file
+;; written encrypted, and gets Doom's answer then.
+(setq-default epa-file-encrypt-to '+core-ask-gpg)
+
+(defun +core--encrypt-to-a (&rest _)
+  "Find the keys to encrypt to as Doom would have at start, the first
+time a file is written encrypted."
+  (when (eq (default-value 'epa-file-encrypt-to) '+core-ask-gpg)
+    (setq-default
+     epa-file-encrypt-to
+     (or (unless (string-empty-p user-full-name)
+           (when-let* ((context (ignore-errors (epg-make-context))))
+             (cl-loop for key in (epg-list-keys context user-full-name 'public)
+                      for subkey = (car (epg-key-sub-key-list key))
+                      if (not (memq 'disabled (epg-sub-key-capability subkey)))
+                      if (< (or (epg-sub-key-expiration-time subkey) 0)
+                            (time-to-seconds))
+                      collect (epg-sub-key-fingerprint subkey))))
+         user-mail-address)))
+  ;; Doom's own advice may have copied the stand-in into the buffer.
+  (when (eq epa-file-encrypt-to '+core-ask-gpg)
+    (setq-local epa-file-encrypt-to (default-value 'epa-file-encrypt-to))))
+
+(advice-add 'epa-file-write-region :before #'+core--encrypt-to-a)
+
 
 ;; A big log opens quickly in fundamental mode, as Doom arranges for big
 ;; files, so the "really open?" question waits for files past 64 MB.
