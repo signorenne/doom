@@ -96,53 +96,53 @@ A project with no version control is known by its files, so a Pascal
 folder made without =git init= still has the Pascal keys.
 
 * Keybindings
-| Key         | Command                     | What it does                      |
-|-------------+-----------------------------+-----------------------------------|
-| ~SPC h r s~   | ~+core/doom-sync~             | sync, then offer a restart        |
-| ~SPC h r d~   | ~+core/doom-doctor~           | run doom doctor                   |
-| ~SPC h r u~   | ~+core/doom-upgrade~          | update Doom, pinned packages stay |
-| ~SPC t a~     | ~+corfu/toggle-auto-complete~ | as-you-type completion on and off |
-| ~SPC t S~     | ~subword-mode~                | move inside camelCase words       |
-| ~SPC t T~     | ~+core/toggle-transparency~   | frame opacity, ~SPC u N~ sets it    |
-| ~SPC f x~     | ~+core/open-externally~       | open the file in its desktop app  |
-| ~SPC f n~     | ~+core/yank-file-name~        | copy the file name                |
-| ~SPC f N~     | ~+core/yank-file-directory~   | copy its directory                |
-| ~SPC f a~     | ~+core/yank-file-path~        | copy its absolute path            |
-| ~SPC f L~     | ~+core/yank-file-line~        | copy path:line, region aware      |
-| ~SPC f k~     | ~+core/copy-menu~             | every copy, with its value shown  |
-| ~SPC f t~     | ~+core/trash~                 | the trash, newest first           |
-| ~SPC o -~     | ~+core/dirvish-here~          | the file manager on this file's directory, preview pane on |
-| ~SPC f d~     | ~+core/dirvish-directory~     | the same on a directory asked for |
-| ~SPC s F~     | ~+core/find-any-file~         | a project file, ignored ones too  |
-| ~SPC p t~     | ~+core/project-todos~         | find TODO and friends             |
-| ~SPC m SPC~   | ~casual-*-tmenu~              | menu for the current mode         |
-| ~SPC m f~     | ~+core/dired-search~          | find files under here, by words   |
-| ~SPC m n~     | ~+core/dired-create~          | a new file, or directory with /   |
-| ~SPC m m~     | ~dirvish-move~                | move the marked files here        |
-| ~M-y~ (dired) | ~dirvish-yank-menu~           | copy, move, link the marked here  |
-| ~yc~ (dired)  | ~+core/files-to-clipboard~    | the files, to another app         |
-| ~yv~ (dired)  | ~+core/files-from-clipboard~  | files from another app, here      |
-| ~yd~ (dired)  | ~+core/dired-duplicate~       | a copy beside the original        |
-| ~yt~ (dired)  | ~+core/copy-file-contents~    | the file's text, to the kill ring |
-| ~SPC m t~     | ~+core/restore-from-trash~    | put back, from the trash listing  |
-| ~SPC m s~     | ~dired-do-symlink~            | symlink here, ~S~ relative, ~r~ rsync |
-| ~SPC m 2~     | ~+core/dirvish-other-pane~    | a second listing beside this one  |
-| ~SPC m o~     | ~+core/dired-open-marked~     | open every marked file            |
-| ~SPC m b~     | ~+core/quick-access-add~      | this directory in the b menu, ~B~ drops one |
-| ~TAB~ (dired) | ~+core/dired-subtree-cycle~   | this directory: open one level, or shut; a file: open it |
-| ~S-TAB~ (dired) | ~+core/dired-fold-cycle~    | the whole listing: open, open all the way down, shut |
-| ~b /~ (dired) | quick access                | the root of the filesystem        |
-| ~SPC p >~     | ~+core/find-file-in-other-project~ | choose another project, then a file in it |
-| ~SPC s f~     | ~consult-fd~                  | a file by name, here and below, ~SPC f l~ too |
-| ~zM~ ~zR~       | ~+fold/close-all~ ~+fold/open-all~ | close, open every fold        |
-| ~M-d~ (corfu) | ~corfu-popupinfo-toggle~      | what the candidate means, ~M-n~ ~M-p~ read it |
-| ~f~ (image)   | ~+core/image-fit~             | fill the window, ~1~ the true size  |
-| ~n~ ~p~ (image) | ~image-next-file~           | the next and previous picture     |
-| ~RET~ (image) | ~+core/image-play-toggle~     | a moving picture plays or pauses, ~,~ ~.~ a frame |
-| ~SPC m SPC~ (SVG) | ~+core/view-menu~         | the view's menu: zoom, background, outline, export |
-| ~SPC m e~ (SVG) | ~+core/svg-export~          | the drawing as a PNG, its width asked |
-| ~+~ ~-~ (view)  | ~+core/view-zoom-in~        | zoom the picture, ~f~ fits, ~1~ its own size, ~h j k l~ pan |
-| ~b~ (view)    | ~+core/view-background~       | an SVG over the checkerboard, light, dark |
+| Key             | Command                          | What it does                                               |
+|-----------------+----------------------------------+------------------------------------------------------------|
+| ~SPC h r s~       | ~+core/doom-sync~                  | sync, then offer a restart                                 |
+| ~SPC h r d~       | ~+core/doom-doctor~                | run doom doctor                                            |
+| ~SPC h r u~       | ~+core/doom-upgrade~               | update Doom, pinned packages stay                          |
+| ~SPC t a~         | ~+corfu/toggle-auto-complete~      | as-you-type completion on and off                          |
+| ~SPC t S~         | ~subword-mode~                     | move inside camelCase words                                |
+| ~SPC t T~         | ~+core/toggle-transparency~        | frame opacity, ~SPC u N~ sets it                             |
+| ~SPC f x~         | ~+core/open-externally~            | open the file in its desktop app                           |
+| ~SPC f n~         | ~+core/yank-file-name~             | copy the file name                                         |
+| ~SPC f N~         | ~+core/yank-file-directory~        | copy its directory                                         |
+| ~SPC f a~         | ~+core/yank-file-path~             | copy its absolute path                                     |
+| ~SPC f L~         | ~+core/yank-file-line~             | copy path:line, region aware                               |
+| ~SPC f k~         | ~+core/copy-menu~                  | every copy, with its value shown                           |
+| ~SPC f t~         | ~+core/trash~                      | the trash, newest first                                    |
+| ~SPC o -~         | ~+core/dirvish-here~               | the file manager on this file's directory, preview pane on |
+| ~SPC f d~         | ~+core/dirvish-directory~          | the same on a directory asked for                          |
+| ~SPC s F~         | ~+core/find-any-file~              | a project file, ignored ones too                           |
+| ~SPC p t~         | ~+core/project-todos~              | find TODO and friends                                      |
+| ~SPC m SPC~       | ~casual-*-tmenu~                   | menu for the current mode                                  |
+| ~SPC m f~ (dired) | ~+core/dired-search~               | find files under here, by words                            |
+| ~SPC m n~ (dired) | ~+core/dired-create~               | a new file, or directory with /                            |
+| ~SPC m m~ (dired) | ~dirvish-move~                     | move the marked files here                                 |
+| ~M-y~ (dired)     | ~dirvish-yank-menu~                | copy, move, link the marked here                           |
+| ~yc~ (dired)      | ~+core/files-to-clipboard~         | the files, to another app                                  |
+| ~yv~ (dired)      | ~+core/files-from-clipboard~       | files from another app, here                               |
+| ~yd~ (dired)      | ~+core/dired-duplicate~            | a copy beside the original                                 |
+| ~yt~ (dired)      | ~+core/copy-file-contents~         | the file's text, to the kill ring                          |
+| ~SPC m t~ (dired) | ~+core/restore-from-trash~         | put back, from the trash listing                           |
+| ~SPC m s~ (dired) | ~dired-do-symlink~                 | symlink here, ~S~ relative, ~r~ rsync                          |
+| ~SPC m 2~ (dired) | ~+core/dirvish-other-pane~         | a second listing beside this one                           |
+| ~SPC m o~ (dired) | ~+core/dired-open-marked~          | open every marked file                                     |
+| ~SPC m b~ (dired) | ~+core/quick-access-add~           | this directory in the b menu, ~B~ drops one                  |
+| ~TAB~ (dired)     | ~+core/dired-subtree-cycle~        | this directory: open one level, or shut; a file: open it   |
+| ~S-TAB~ (dired)   | ~+core/dired-fold-cycle~           | the whole listing: open, open all the way down, shut       |
+| ~b /~ (dired)     | quick access                     | the root of the filesystem                                 |
+| ~SPC p >~         | ~+core/find-file-in-other-project~ | choose another project, then a file in it                  |
+| ~SPC s f~         | ~consult-fd~                       | a file by name, here and below, ~SPC f l~ too                |
+| ~zM~ ~zR~           | ~+fold/close-all~ ~+fold/open-all~   | close, open every fold                                     |
+| ~M-d~ (corfu)     | ~corfu-popupinfo-toggle~           | what the candidate means, ~M-n~ ~M-p~ read it                  |
+| ~f~ (image)       | ~+core/image-fit~                  | fill the window, ~1~ the true size                           |
+| ~n~ ~p~ (image)     | ~image-next-file~                  | the next and previous picture                              |
+| ~RET~ (image)     | ~+core/image-play-toggle~          | a moving picture plays or pauses, ~,~ ~.~ a frame              |
+| ~SPC m SPC~ (SVG) | ~+core/view-menu~                  | the view's menu: zoom, background, outline, export         |
+| ~SPC m e~ (SVG)   | ~+core/svg-export~                 | the drawing as a PNG, its width asked                      |
+| ~+~ ~-~ (view)      | ~+core/view-zoom-in~               | zoom the picture, ~f~ fits, ~1~ its own size, ~h j k l~ pan      |
+| ~b~ (view)        | ~+core/view-background~            | an SVG over the checkerboard, light, dark                  |
 
 The copy menu also copies the region as a fenced code block with the
 path:line on top, the symbol under the cursor, and the forge link.
