@@ -101,16 +101,20 @@ the one wanted.  Nil and it is worked out from the kit.")
 
 (defvar +cpp-clangd-args
   (list "--background-index"
-        ;; Index at low priority: a fresh project is indexed in the
-        ;; background without the editor or the build feeling it.
-        "--background-index-priority=low"
+        ;; Index on idle CPUs, with few workers (-j below). A laptop's
+        ;; cores share one power budget, so every busy one slows the core
+        ;; Emacs runs on, whatever its priority: with a worker per CPU a
+        ;; scroll cost three times its idle cost while a project indexed;
+        ;; with two, twice, the index barely slower and an open file's
+        ;; diagnostics sooner.
+        "--background-index-priority=background"
         "--clang-tidy"
         "--header-insertion=iwyu"
         "--completion-style=detailed"
         "--function-arg-placeholders=0"
         "--pch-storage=memory"
         "--log=error"
-        (format "-j=%d" (doom-system-cpus))
+        (format "-j=%d" (max 2 (/ (doom-system-cpus) 6)))
         ;; Compilers clangd may run to learn their include paths: PlatformIO's
         ;; cross compilers, and any SDK under /opt laid out the Yocto way,
         ;; sysroots/<host>/usr/bin/<triple>/<compiler>, which is what Qt
