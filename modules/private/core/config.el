@@ -826,6 +826,29 @@ time a file is written encrypted."
         ;; made the line taller and pushed the lines below down.
         eglot-code-action-indications '(left-fringe)))
 
+;; The mark is a bulb, as other IDEs draw it, centred across the
+;; fringe's 8 pixels and, by the blank row on top, on the line's digits;
+;; eglot's own is a bolt leaning to one side. It takes eglot's name, so
+;; eglot draws it. Guarded: under a new name this one would go unused.
+(after! eglot
+  (if (fringe-bitmap-p 'eglot--fringe-action)
+      (define-fringe-bitmap 'eglot--fringe-action
+        [#b00000000
+         #b00111100
+         #b01111110
+         #b01111110
+         #b01111110
+         #b01111110
+         #b00111100
+         #b00011000
+         #b00000000
+         #b00111100
+         #b00000000
+         #b00111100
+         #b00011000]
+        nil nil 'center)
+    (warn "eglot--fringe-action is gone; the fix mark keeps eglot's look")))
+
 ;; eglot answers imenu from the server: every symbol of the file, asked
 ;; for again after each edit by the header line's breadcrumbs, which
 ;; freezes a large file at every pause. The mode's own index,
