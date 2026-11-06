@@ -4208,6 +4208,8 @@ bound.
   project's packages go, asked the first time and kept in .dir-locals.el.
 - ~+cpp/previous-problem~ (~SPC k E~) :: Go to the previous problem in the
   buffer and show it; round at the start.
+- ~+cpp/project-info~ :: This project's status: this module's for a C or C++
+  project, the build tool's for any other.
 - ~+cpp/project-status~ (~SPC k I~) :: Report how this project is set up and
   what is missing.
 - ~+cpp/quickfix~ (~SPC k .~) :: Apply the server's quick fix for the
