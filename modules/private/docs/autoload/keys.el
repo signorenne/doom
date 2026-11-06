@@ -14,6 +14,9 @@
 
 (defvar transient-detect-key-conflicts)
 (defvar transient--layout)
+(defvar recentf-list)
+(defvar save-place-alist)
+(declare-function recentf-expand-file-name "recentf")
 (declare-function transient-setup "transient")
 (declare-function transient-quit-all "transient")
 
@@ -360,6 +363,30 @@ key of evil's would look unbound.  Those maps are put aside here."
         (overriding-local-map nil))
     (+docs--bound-in-1 sequence context)))
 
+(defun +docs--in-dired (fn)
+  "Call FN in a listing in normal state and return what it returns, nil
+when dired cannot list.  A directory of its own: dired hands back the
+buffer already listing a directory, and killing it would close the
+user's.  Doom counts a directory listed among the recent files and
+save-place keeps the cursor's place in it, and a check run from the
+session would leave both behind for the next one: they are taken out."
+  (let* ((dir (make-temp-file "docs-keys" t))
+         (name (file-name-as-directory dir))
+         (buffer (ignore-errors (dired-noselect dir))))
+    (unwind-protect
+        (and buffer (with-current-buffer buffer
+                      (when (fboundp 'evil-normal-state) (evil-normal-state))
+                      (funcall fn)))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (when (boundp 'recentf-list)
+        (setq recentf-list (delete (if (fboundp 'recentf-expand-file-name)
+                                       (recentf-expand-file-name name)
+                                     name)
+                                   recentf-list)))
+      (when (boundp 'save-place-alist)
+        (setq save-place-alist (assoc-delete-all name save-place-alist)))
+      (delete-directory dir))))
+
 (defun +docs--bound-in-1 (sequence context)
   "Non-nil when SEQUENCE is bound in CONTEXT, the maps already put aside."
   (cl-flet ((in-map (map) (when (keymapp map)
@@ -377,16 +404,7 @@ key of evil's would look unbound.  Those maps are put aside here."
       ;; when there is no map to check the rest against.
       ('dape (or (in-buffer)
                  (if (boundp 'dape-active-mode-map) (in-map dape-active-mode-map) t)))
-      ;; A directory of its own: dired hands back the buffer already
-      ;; listing a directory, and killing it would close the user's.
-      ('dired (let* ((dir (make-temp-file "docs-keys" t))
-                     (buffer (ignore-errors (dired-noselect dir))))
-                (unwind-protect
-                    (and buffer (with-current-buffer buffer
-                                  (when (fboundp 'evil-normal-state) (evil-normal-state))
-                                  (in-buffer)))
-                  (when (buffer-live-p buffer) (kill-buffer buffer))
-                  (delete-directory dir))))
+      ('dired (+docs--in-dired #'in-buffer))
       ('org (with-temp-buffer (org-mode)
                               (when (fboundp 'evil-normal-state) (evil-normal-state))
                               (in-buffer)))
