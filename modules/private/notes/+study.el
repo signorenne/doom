@@ -95,6 +95,9 @@ and nothing here creates anything in it.")
 
 (defvar org-fc-dashboard-mode-map)
 (declare-function org-fc-contexts "org-fc-core")
+(declare-function org-fc-dashboard-section-next "org-fc-dashboard")
+(declare-function org-fc-dashboard-section-previous "org-fc-dashboard")
+(declare-function org-fc-dashboard-section-toggle "org-fc-dashboard")
 
 (defadvice! +notes--fc-dashboard-popup-a (fn &rest args)
   "Show the card dashboard through its popup rule."
