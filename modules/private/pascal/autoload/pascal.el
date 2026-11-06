@@ -329,9 +329,9 @@ lldb-dap on a Mac, `+core-os-debugger'."
   (unless (fboundp 'dape)
     (user-error "dape is not here to debug with"))
   (+pascal-root)
-  (let ((debugger (+core-os-debugger)))
+  (let ((adapter (+core-os-debugger)))
     ;; With neither gdb nor lldb-dap, dape said it could not "locate".
-    (when (equal (plist-get debugger 'command) "gdb")
+    (when (equal (plist-get adapter 'command) "gdb")
       (+core-need-program "gdb" (if (featurep :system 'macos)
                                     "xcode-select --install, or brew install llvm"
                                   "zypper in gdb")))
@@ -342,13 +342,13 @@ lldb-dap on a Mac, `+core-os-debugger'."
       ;; starts nothing.
       (dape (dape--config-eval
              'gdb-pascal
-             (append (if (equal (plist-get debugger :type) "lldb-dap")
+             (append (if (equal (plist-get adapter :type) "lldb-dap")
                          ;; The program's body is PASCALMAIN; main is the
                          ;; RTL's start, where lldb would stop instead. The
                          ;; first of a key in these options is the one kept.
                          (append '(:preRunCommands ["breakpoint set --name PASCALMAIN --one-shot true"])
-                                 debugger)
-                       debugger)
+                                 adapter)
+                       adapter)
                      (list :program program
                            :cwd (+pascal-root)
                            :args (vconcat (split-string-shell-command
