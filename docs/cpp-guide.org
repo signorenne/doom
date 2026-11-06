@@ -170,7 +170,7 @@ slower than it looks.
 |-----------+---------------------------------------------|
 | =SPC k f=   | clang-format this buffer                    |
 | =SPC k g F= | clang-format every tracked file             |
-| =SPC k g p= | clang-tidy the whole project, ~C-u~ applies the fixes |
+| =SPC k g p= | clang-tidy the project, ~SPC u~: with fixes   |
 
 Then build once under =asan= and once under =ci=: =SPC k K= picks the
 preset. The =asan= preset is where the memory mistakes surface, and =ci=
