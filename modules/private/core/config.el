@@ -1597,10 +1597,11 @@ answered yes when the quit asked about each of them."
 
 (defun +core--keep-unsaved-h ()
   "Refuse to kill this buffer when it holds unsaved work: its file's, or
-the file's it shares the text of, as an unfinished capture does."
+an unfinished capture's.  Another buffer sharing a file's text loses
+nothing when killed, the file's own buffer being kept."
   (if (and (buffer-modified-p)
            (or buffer-file-name buffer-offer-save
-               (and (buffer-base-buffer) (buffer-file-name (buffer-base-buffer)))))
+               (bound-and-true-p org-capture-mode)))
       (progn (push (current-buffer) +core--kept-unsaved) nil)
     t))
 
