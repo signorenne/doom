@@ -18,6 +18,7 @@
 (declare-function org-roam-db-query "org-roam-db")
 (declare-function +notes--agenda-files-refresh-h "roam")
 (declare-function +notes--roam-db-ready "roam-db")
+(declare-function +notes--roam-db-building "roam-db")
 
 ;;
 ;;; What a block reads
@@ -572,19 +573,22 @@ give the same cells changes nothing, so the buffer stays as it was."
            (end (when-let* ((pos (+notes--block-end))) (copy-marker pos t))))
       ;; As Org leaves a block it cannot read.
       (when (and end (listp params))
-        (let* ((content (save-excursion (goto-char beg) (+notes--block-content name params)))
-               (text (+notes--block-text name content indent)))
-          (unless (equal (+notes--block-cells (buffer-substring-no-properties beg end))
-                         (+notes--block-cells text))
-            (goto-char beg)
-            (delete-region beg end)
-            (insert text "\n")
-            (when (consp content)
+        ;; While the database is first built, a list would say so in
+        ;; place of its table: the table it has stays until it is done.
+        (unless (and (equal name "notes-list") (+notes--roam-db-building))
+          (let* ((content (save-excursion (goto-char beg) (+notes--block-content name params)))
+                 (text (+notes--block-text name content indent)))
+            (unless (equal (+notes--block-cells (buffer-substring-no-properties beg end))
+                           (+notes--block-cells text))
               (goto-char beg)
-              (org-table-align)))
-          (goto-char end)
-          (forward-line 1)
-          t)))))
+              (delete-region beg end)
+              (insert text "\n")
+              (when (consp content)
+                (goto-char beg)
+                (org-table-align)))))
+        (goto-char end)
+        (forward-line 1)
+        t))))
 
 (defun +notes--blocks-refresh ()
   "Write this note's blocks again; return how many there are, or nil

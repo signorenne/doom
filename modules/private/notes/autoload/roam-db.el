@@ -5,18 +5,22 @@
 ;; this one's org-roam settings and rules, into a copy that then takes
 ;; the database's place; the files this Emacs wrote into the database
 ;; meanwhile go into the copy first, so no update is lost and the two
-;; never write one file. The node list the finder shows is kept until
-;; the database changes.
+;; never write one file. Any Emacs with a connection to the old file
+;; opens the new one at its next query. The node list the finder shows
+;; is kept until the database changes.
 ;;
 ;; The background Emacs loads this file with nothing of Doom around it:
 ;; plain Emacs Lisp only.
 
 (require 'cl-lib)
+(require 'seq)
 (require 'subr-x)
 
 (defvar org-roam-directory)
 (defvar org-roam-db-location)
+(defvar org-roam-db-version)
 (defvar org-roam-db-gc-threshold)
+(defvar emacsql--transaction-level)
 (defvar org-roam-node-display-template)
 (defvar org-roam-node-default-sort)
 (defvar org-link-parameters)
@@ -29,6 +33,11 @@
 (declare-function org-roam-db-query "org-roam-db")
 (declare-function org-roam-db-sync "org-roam-db")
 (declare-function org-roam-db--close "org-roam-db")
+(declare-function org-roam-db--close-all "org-roam-db")
+(declare-function org-roam-db--get-connection "org-roam-db")
+(declare-function emacsql "emacsql")
+(declare-function emacsql-live-p "emacsql")
+(declare-function emacsql-close "emacsql")
 (declare-function org-roam-db-update-file "org-roam-db")
 (declare-function org-roam-db-clear-file "org-roam-db")
 (declare-function org-roam-file-p "org-roam")
@@ -78,7 +87,8 @@ link of a type it does not know as another kind of link.")
   "The build running now, a plist: :process, :db the copy it writes,
 :settings what it reads, :target the database the copy replaces,
 :directory the graph, :first when there was no database to read
-meanwhile, :force, :loud, :start, :round, :summary.")
+meanwhile, :force, :loud, :start, :round, :summary, :timer and :timeout
+for a build that gets stuck, :stuck once it was stopped.")
 
 (defvar +notes--roam-build-next nil
   "A build asked for while one ran, to start once it ends: (FORCE . LOUD).")
@@ -92,7 +102,23 @@ write into the copy before it takes the database's place.")
 failed, or failed-first for a first build.")
 
 (defvar +notes--roam-build-buffer "*roam build*"
-  "What the background Emacs says; kept when the build fails.")
+  "What the background Emacs says while it runs.")
+
+(defvar +notes--roam-build-log "*roam build log*"
+  "What it said, kept when it failed or could not read a note.")
+
+(defvar +notes-roam-build-timeout 1800
+  "Seconds a build may run before it is stopped as stuck.")
+
+(defvar +notes--roam-startup-timer nil
+  "The timer that starts the session's sync.")
+
+(defconst +notes--roam-db-incomplete 1
+  "The application_id of a database this Emacs made itself: it holds only
+the notes saved since, until a build replaces it.")
+
+(defvar +notes--roam-db-inodes (make-hash-table :test #'eq :weakness 'key)
+  "For each open connection, the inode of the database file it opened.")
 
 (defun +notes--roam-build-clean (target)
   "Delete what a build of TARGET left a day ago or more: an Emacs that
@@ -142,7 +168,16 @@ FILES, which this Emacs wrote meanwhile."
                        "--batch" "-Q" "-l" ,(plist-get +notes--roam-build :settings)
                        "-l" ,(file-name-sans-extension +notes--roam-db-file)
                        "-f" "+notes--roam-build-batch" ,@files)
-            :sentinel #'+notes--roam-build-sentinel)))))
+            :sentinel #'+notes--roam-build-sentinel)))
+    ;; Anything that asks fails there rather than wait for ever.
+    (process-send-eof (plist-get +notes--roam-build :process))))
+
+(defun +notes--roam-build-stuck (build)
+  "Stop BUILD if it still runs, in whichever round: it is stuck."
+  (when (and (eq build +notes--roam-build)
+             (process-live-p (plist-get build :process)))
+    (plist-put build :stuck t)
+    (delete-process (plist-get build :process))))
 
 (defun +notes--roam-build-begin (force loud)
   "Start a build: FORCE builds the database anew, LOUD says so."
@@ -150,14 +185,20 @@ FILES, which this Emacs wrote meanwhile."
   ;; is the session's sync.
   (advice-remove 'org-roam-db-query '+org-roam-try-init-db-a)
   (let* ((target (expand-file-name org-roam-db-location))
-         ;; With no file in it, the database is not the vault yet: the
-         ;; lists wait for the build rather than show it. Opening an old
-         ;; one, org-roam asks for a sync again: it follows this one.
-         (first (let ((+notes--roam-build '(:opening t)))
-                  (zerop (or (ignore-errors
-                               (caar (org-roam-db-query [:select (funcall count) :from files])))
-                             0))))
-         (settings (progn (+notes--roam-build-clean target)
+         ;; With no file in it, or only those saved since this Emacs
+         ;; made it, the database is not the vault yet: the lists wait
+         ;; for the build rather than show it. Opening an old one,
+         ;; org-roam asks for a sync again: this one is that sync. A
+         ;; missing one is not made here, which takes most of 0.1 s.
+         (first (or (not (file-exists-p target))
+                    (let ((+notes--roam-build '(:opening t)))
+                      (condition-case nil
+                          (or (zerop (caar (org-roam-db-query [:select (funcall count) :from files])))
+                              (eql (caar (org-roam-db-query "PRAGMA application_id"))
+                                   +notes--roam-db-incomplete))
+                        (error t)))))
+         (settings (progn (make-directory (file-name-directory target) t)
+                          (+notes--roam-build-clean target)
                           (make-temp-file (concat target ".build-") nil ".el")))
          (db (concat (file-name-sans-extension settings) ".db")))
     (clrhash +notes--roam-build-touched)
@@ -176,6 +217,10 @@ FILES, which this Emacs wrote meanwhile."
               (copy-file (concat target "-journal") (concat db "-journal") t)))
           (+notes--roam-build-write-settings settings db)
           (+notes--roam-build-run nil)
+          (setq +notes--roam-build
+                (plist-put (plist-put +notes--roam-build :timeout +notes-roam-build-timeout)
+                           :timer (run-at-time +notes-roam-build-timeout nil
+                                               #'+notes--roam-build-stuck +notes--roam-build)))
           (cond (first (message "Building the roam database in the background; the note lists wait for it"))
                 (loud (message "%s the roam database in the background..."
                                (if force "Rebuilding" "Syncing")))))
@@ -185,16 +230,21 @@ FILES, which this Emacs wrote meanwhile."
 (defun +notes--roam-db-sync (&optional force loud)
   "Sync the roam database in a background Emacs; FORCE builds it anew.
 LOUD says when it starts and ends, as a first build always does.  One
-asked for while a build runs follows it; a quiet one is that build."
+asked for while a build runs follows it; a quiet one is that build, and
+so is a FORCE one when that build makes the database anew already."
   (require 'org-roam)
-  (if (null +notes--roam-build)
-      (+notes--roam-build-begin force loud)
-    (when (or force loud)
-      (setq +notes--roam-build-next
-            (cons (or force (car +notes--roam-build-next))
-                  (or loud (cdr +notes--roam-build-next))))
-      (when loud
-        (message "A roam database sync is running; another follows it")))))
+  (let* ((build +notes--roam-build)
+         (anew (or (plist-get build :first) (plist-get build :force)))
+         (force (and force (not anew))))
+    (cond ((null build) (+notes--roam-build-begin force loud))
+          ;; Asked for while the build starts: that build is the one.
+          ((plist-get build :opening))
+          ((or force loud)
+           (setq +notes--roam-build-next
+                 (cons (or force (car +notes--roam-build-next))
+                       (or loud (cdr +notes--roam-build-next))))
+           (when loud
+             (message "A roam database sync is running; another follows it"))))))
 
 (defun +notes--roam-build-summary ()
   "What the background Emacs said it did, a plist, or nil."
@@ -211,19 +261,24 @@ asked for while a build runs follows it; a quiet one is that build."
 
 (defun +notes--roam-build-error ()
   "The background Emacs's last error line, or how it ended."
-  (with-current-buffer +notes--roam-build-buffer
-    (save-excursion
-      (goto-char (point-max))
-      (if (re-search-backward "^.*\\(?:[Ee]rror\\|[Ff]ailed\\|denied\\|[Nn]o such\\|[Cc]annot\\).*$" nil t)
-          (match-string-no-properties 0)
-        (let ((process (plist-get +notes--roam-build :process)))
-          (format "it ended with %s %s" (process-status process)
-                  (process-exit-status process)))))))
+  (if (plist-get +notes--roam-build :stuck)
+      (format "it still ran after %d s and was stopped" (plist-get +notes--roam-build :timeout))
+    (with-current-buffer +notes--roam-build-buffer
+      (save-excursion
+        (goto-char (point-max))
+        (if (re-search-backward "^.*\\(?:[Ee]rror\\|[Ff]ailed\\|denied\\|[Nn]o such\\|[Cc]annot\\).*$" nil t)
+            (match-string-no-properties 0)
+          (let ((process (plist-get +notes--roam-build :process)))
+            (format "it ended with %s %s" (process-status process)
+                    (process-exit-status process))))))))
 
 (defun +notes--roam-build-cleanup (&optional keep-log)
-  "End the build: its process, its files and, unless KEEP-LOG, what it said."
+  "End the build: its process, its files and what it said, kept under
+the log's name with KEEP-LOG, where the next build does not write."
   (when-let* ((build +notes--roam-build))
     (setq +notes--roam-build nil)
+    (when (timerp (plist-get build :timer))
+      (cancel-timer (plist-get build :timer)))
     (let ((process (plist-get build :process)))
       (when (process-live-p process)
         (delete-process process)))
@@ -231,9 +286,13 @@ asked for while a build runs follows it; a quiet one is that build."
                         (concat (plist-get build :db) "-journal")))
       (when (file-exists-p file)
         (delete-file file)))
-    (unless keep-log
-      (when-let* ((buffer (get-buffer +notes--roam-build-buffer)))
-        (kill-buffer buffer)))))
+    (when-let* ((buffer (get-buffer +notes--roam-build-buffer)))
+      (if (not keep-log)
+          (kill-buffer buffer)
+        (when-let* ((old (get-buffer +notes--roam-build-log)))
+          (kill-buffer old))
+        (with-current-buffer buffer
+          (rename-buffer +notes--roam-build-log))))))
 
 (defun +notes--roam-build-follow ()
   "Start the build asked for while the last one ran."
@@ -247,7 +306,7 @@ asked for while a build runs follows it; a quiet one is that build."
     (+notes--roam-build-cleanup 'keep-log)
     (setq +notes--roam-build-result (if first 'failed-first 'failed))
     (message "The roam database could not be %s: %s; see the buffer %s"
-             (if first "built" "synced") why +notes--roam-build-buffer)
+             (if first "built" "synced") why +notes--roam-build-log)
     (+notes--roam-build-follow)))
 
 (defun +notes--roam-build-finish (swap)
@@ -257,16 +316,16 @@ asked for while a build runs follows it; a quiet one is that build."
          (failed (+notes--roam-build-failed-files))
          (seconds (round (- (float-time) (plist-get build :start)))))
     (when swap
-      ;; The connection reads the old file even once it is replaced.
-      (let ((org-roam-directory (plist-get build :directory)))
-        (org-roam-db--close))
+      ;; A connection reads the old file even once it is replaced, and
+      ;; org-roam keeps one per graph directory, a daily's capture too.
+      (org-roam-db--close-all)
       (rename-file (plist-get build :db) (plist-get build :target) t))
     (+notes--roam-build-cleanup (> failed 0))
     (setq +notes--roam-build-result 'done
           +notes--roam-count nil)
     (let ((unread (if (> failed 0)
                       (format "; %d note%s could not be read, see the buffer %s"
-                              failed (if (= failed 1) "" "s") +notes--roam-build-buffer)
+                              failed (if (= failed 1) "" "s") +notes--roam-build-log)
                     "")))
       (cond ((or (plist-get build :first) (plist-get build :force))
              (message "Roam database %s: %d notes, in %d s%s"
@@ -323,14 +382,52 @@ copy that replaces it."
               (file (or file (buffer-file-name (buffer-base-buffer)))))
     (puthash (expand-file-name file) t +notes--roam-build-touched)))
 
+(defun +notes--roam-db-discard-outdated ()
+  "Delete the database when org-roam has just opened it and found it of an
+older schema, which is when it asks for a forced sync; non-nil then.
+Left in place, it would fail every query until the build replaced it."
+  (when-let* ((conn (org-roam-db--get-connection))
+              ((emacsql-live-p conn))
+              ((< (or (caar (emacsql conn "PRAGMA user_version")) 0) org-roam-db-version)))
+    (emacsql-close conn)
+    (delete-file org-roam-db-location)
+    t))
+
 (defun +notes--roam-db-sync-a (fn &optional force loud)
   "Sync in a background Emacs, not in this one; FORCE builds the database
 anew.  As a command, say when it starts and ends.  A batch Emacs syncs
 as org-roam does, FN."
   (interactive (list current-prefix-arg t))
-  (if noninteractive
-      (funcall fn force)
-    (+notes--roam-db-sync force loud)))
+  (cond (noninteractive (funcall fn force))
+        ;; A database of an older schema goes; a first build makes it.
+        ((and force (+notes--roam-db-discard-outdated))
+         (+notes--roam-db-sync nil loud))
+        (t (+notes--roam-db-sync force loud))))
+
+(defun +notes--roam-db-follow-a (fn)
+  "The connection FN opens, opened again when its database file was
+replaced since, by another Emacs's build or by hand: a connection reads
+the file it opened even once that is gone.  What this Emacs wrote there
+meanwhile is not in the new one, so a sync follows.  A database made
+here is marked incomplete: until a build replaces it, it holds only the
+notes saved since."
+  (let* ((conn (org-roam-db--get-connection))
+         (opened (and conn (gethash conn +notes--roam-db-inodes)))
+         (inode (file-attribute-inode-number (file-attributes org-roam-db-location)))
+         (replaced (and opened (not (equal opened inode))
+                        (zerop emacsql--transaction-level)
+                        (emacsql-live-p conn))))
+    (when replaced
+      (emacsql-close conn))
+    (setq conn (funcall fn))
+    (unless (gethash conn +notes--roam-db-inodes)
+      (unless inode
+        (emacsql conn (format "PRAGMA application_id = %d" +notes--roam-db-incomplete)))
+      (puthash conn (file-attribute-inode-number (file-attributes org-roam-db-location))
+               +notes--roam-db-inodes))
+    (when replaced
+      (run-at-time 0 nil #'+notes--roam-db-sync))
+    conn))
 
 (defun +notes--roam-db-startup-h ()
   "Sync the database once a session, in the background."
@@ -362,7 +459,7 @@ Starts the session's sync if nothing has yet."
                 state))
   (when (eq +notes--roam-build-result 'failed-first)
     (user-error "The roam database could not be built, see the buffer %s; SPC n r s tries again"
-                +notes--roam-build-buffer)))
+                +notes--roam-build-log)))
 
 ;;
 ;;; The node list
@@ -407,6 +504,7 @@ full syncs in a background Emacs, starting with the session's, the
 node list kept, the lists waiting for a first build."
   (+notes--roam-db-rules)
   (advice-remove 'org-roam-db-query '+org-roam-try-init-db-a)
+  (advice-add 'org-roam-db :around #'+notes--roam-db-follow-a)
   (advice-add 'org-roam-db-sync :around #'+notes--roam-db-sync-a)
   (advice-add 'org-roam-db-update-file :before #'+notes--roam-build-touch-a)
   (advice-add 'org-roam-db-clear-file :before #'+notes--roam-build-touch-a)
@@ -414,7 +512,12 @@ node list kept, the lists waiting for a first build."
   (advice-add 'org-roam-node-list :before #'+notes--roam-db-ready)
   (advice-add 'org-roam-ref-read--completions :before #'+notes--roam-db-ready)
   (add-hook 'kill-emacs-hook #'+notes--roam-build-cleanup)
-  (run-with-idle-timer 1 nil #'+notes--roam-db-startup-h))
+  ;; Once: a reload of the config sets this up again.
+  (when (timerp +notes--roam-startup-timer)
+    (cancel-timer +notes--roam-startup-timer))
+  (unless (or +notes--roam-build +notes--roam-build-result)
+    (setq +notes--roam-startup-timer
+          (run-with-idle-timer 1 nil #'+notes--roam-db-startup-h))))
 
 ;;
 ;;; In the background Emacs
@@ -446,13 +549,16 @@ command line names, then say what changed.  For `emacs --batch'."
     (+notes--roam-db-rules)
     (let ((before (+notes--roam-build-hashes))
           (changed 0) (removed 0)
-          ;; The vault's files are plain and local: no handler of a
-          ;; remote, compressed or encrypted file has anything to do.
-          ;; Asked about every name, they took half of a first build,
-          ;; most in org-roam's search of the load path for org-ref at
-          ;; every note.
-          (file-name-handler-alist (and (file-remote-p org-roam-directory)
-                                        file-name-handler-alist)))
+          ;; The vault is local: no handler of a remote or compressed
+          ;; file has anything to do, only that of an encrypted note,
+          ;; which org-roam lists too. Asked about every name, they took
+          ;; half of a first build, most in org-roam's search of the load
+          ;; path for org-ref at every note.
+          (file-name-handler-alist
+           (if (file-remote-p org-roam-directory)
+               file-name-handler-alist
+             (seq-filter (lambda (entry) (memq (cdr entry) '(epa-file-handler age-file-handler)))
+                         file-name-handler-alist))))
       (if (null files)
           (org-roam-db-sync)
         (dolist (file files)

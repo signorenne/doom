@@ -230,17 +230,21 @@ session, a second after org-roam loads, for what changed while Emacs
 was not running; on ~SPC n r s~ (~SPC u SPC n r s~ builds it anew); after
 ~SPC n G~ pulls. It writes a copy of the database, which then takes its
 place; a note saved meanwhile is written into the copy first, so no
-save is lost and the two Emacs never write one file. A save still
-updates its own note at once, 85 to 105 ms for most notes of a 1593
-note vault, about half of it the disk. On a copy of that vault the
-first build held Emacs 85 to 173 s and the session's sync 2.2 to 2.4 s;
-now neither holds it at all, the first build taking 30 s in the
-background and the sync 3. Until a first build is done, the finder, the
-tags, the starred notes, a map, the review, a live list and the menu say
-it is being built and how far, rather than show a vault with no notes;
-renaming waits for it, and a title changed meanwhile renames at the
-first save after it. When a build fails, the database stays as it was
-and the message names the buffer =*roam build*=. The finder and every
+save is lost and the two Emacs never write one file. Another Emacs on
+the same database opens the new file at its next query and syncs what
+it saved meanwhile. A save still updates its own note at once, 85 to
+105 ms for most notes of a 1593 note vault, about half of it the disk.
+On a copy of that vault the first build held Emacs 85 to 173 s and the
+session's sync 2.2 to 2.4 s; now neither holds it at all, the first
+build taking 30 s in the background and the sync 3. Until a first
+build is done, the finder, the tags, the starred notes, a map, the
+review and the menu say it is being built and how far, rather than show
+a vault with no notes, and a live list keeps the table it has; a
+database Emacs made itself counts as not built until a build replaces
+it. Renaming waits for it, and a title changed meanwhile renames at the
+first save after it. When a build fails, or runs for half an hour
+(~+notes-roam-build-timeout~), the database stays as it was and the
+message names the buffer =*roam build log*=. The finder and every
 command that lists nodes the same way build the list once, 680 ms
 there, and keep it until the database changes: 1 ms from the second
 time.
@@ -582,7 +586,8 @@ and its colours are the same.
   looks for LaTeX.
 - ~+notes-roam-build-variables~, what the background build of the
   database takes from this Emacs: a variable that changes what a note
-  writes into the database belongs there.
+  writes into the database belongs there; ~+notes-roam-build-timeout~
+  (1800), the seconds after which a build is stopped as stuck.
 - The files: =config.el= (documents, the workflow block, the commit
   timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
   (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=

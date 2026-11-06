@@ -5,6 +5,7 @@
 (defvar +notes-knowledge-dir)
 (declare-function org-id-new "org-id")
 (declare-function org-roam-db-update-file "org-roam-db")
+(declare-function org-roam-file-p "org-roam")
 (declare-function +notes-repo-p "git")
 (declare-function +notes/init-repo "git")
 (defvar +notes-templates-dir)
@@ -83,7 +84,10 @@ repository when it is not one yet.  Run again, it changes nothing."
     ;; The rest of the vault is the session's sync's, in the background.
     (require 'org-roam)
     (dolist (file created)
-      (org-roam-db-update-file file))
+      ;; By its true name, as org-roam lists the graph's files.
+      (let ((file (file-truename file)))
+        (when (org-roam-file-p file)
+          (org-roam-db-update-file file))))
     (message "%s ready%s%s. SPC n SPC opens the notes menu"
              (abbreviate-file-name org-directory)
              (if created
