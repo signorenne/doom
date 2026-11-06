@@ -132,10 +132,26 @@ Org's font lock tells case apart, and #+BEGIN_WARNING is a callout too."
     (unless (assoc key org-structure-template-alist)
       (add-to-list 'org-structure-template-alist (cons key kind) t))))
 
+;; org-appear shows a link's target and the markers around emphasis in
+;; insert state, where they are edited, not wherever the cursor passes:
+;; there the rest of the line moved right by what had been hidden.
 (after! org-appear
-  (setq org-appear-autolinks t
+  (setq org-appear-trigger 'manual
+        org-appear-autolinks t
         org-appear-autoentities t
         org-appear-autosubmarkers t))
+
+(add-hook! 'org-appear-mode-hook
+  (defun +notes--appear-in-insert-h ()
+    "Let org-appear show what point is on only in insert state."
+    (if org-appear-mode
+        (progn
+          (add-hook 'evil-insert-state-entry-hook #'org-appear-manual-start nil t)
+          (add-hook 'evil-insert-state-exit-hook #'org-appear-manual-stop nil t)
+          (when (and (fboundp 'evil-insert-state-p) (evil-insert-state-p))
+            (org-appear-manual-start)))
+      (remove-hook 'evil-insert-state-entry-hook #'org-appear-manual-start t)
+      (remove-hook 'evil-insert-state-exit-hook #'org-appear-manual-stop t))))
 
 
 ;; org-mind-map defines an export backend when it loads and requires only

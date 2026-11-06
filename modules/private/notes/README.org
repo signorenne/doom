@@ -303,6 +303,9 @@ the note's file, =signal_integrity.pdf=, and for the tree after it,
 =signal_integrity-How_it_works.pdf=. git ignores =.cache/= and the graph
 leaves it out: a map is drawn again whenever it is wanted.
 
+A link shows its target, and emphasis its markers, in insert state, where
+they are edited; moving in normal state leaves the line as it is drawn.
+
 * Work and study
 Courses, case studies and a project's design work are notes of the graph
 like any other, with live tables in them that say what is open.
