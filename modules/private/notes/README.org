@@ -91,6 +91,10 @@ A project file with no tasks yet is still a refile target. Archives under
 =archives/= stay in the graph, so they can be found and linked, but leave
 the dashboard, project capture and refile; a paused task keeps its state.
 
+A refile target starts with its file's title, =Alpha outcome/Next
+actions=; two that read the same, a course and a project of one title,
+say their folder after it.
+
 Every project and course, the project index and University are an
 =index.org=: each opens as a buffer named for its folder,
 =alpha_outcome/index.org=, its tasks show in the agenda under its title,

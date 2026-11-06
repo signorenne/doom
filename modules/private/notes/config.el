@@ -72,21 +72,35 @@ notes that hold a task are added on top; see `+notes--agenda-files-refresh-h'.")
   "The dynamic blocks a note writes again as it is shown and saved;
 autoload/query.el writes them.")
 
-(defun +notes--refile-distinct-a (targets)
-  "TARGETS, refile's, with those that read the same told apart by their
-file's folder in the vault: a course and a project of one title."
+(defun +notes--refile-distinct (targets name)
+  "TARGETS with those that read the same named apart by NAME, a function
+of one that returns what to add."
   (let ((seen (make-hash-table :test #'equal)))
     (dolist (target targets)
       (puthash (car target) (1+ (gethash (car target) seen 0)) seen))
     (mapcar (lambda (target)
               (if (and (> (gethash (car target) seen) 1) (nth 1 target))
-                  (cons (format "%s [%s]" (car target)
-                                (directory-file-name
-                                 (file-relative-name (file-name-directory (nth 1 target))
-                                                     org-directory)))
+                  (cons (format "%s [%s]" (car target) (funcall name target))
                         (cdr target))
                 target))
             targets)))
+
+(defun +notes--refile-distinct-a (targets)
+  "TARGETS, refile's, each one apart: those that read the same are told
+apart by their file's folder in the vault, a course and a project of one
+title, and two headings of one file by their line."
+  (+notes--refile-distinct
+   (+notes--refile-distinct
+    targets
+    (lambda (target)
+      (directory-file-name
+       (file-relative-name (file-name-directory (nth 1 target)) org-directory))))
+   (lambda (target)
+     (if-let* ((buffer (find-buffer-visiting (nth 1 target)))
+               ((nth 3 target)))
+         (format "line %d" (with-current-buffer buffer
+                             (org-with-wide-buffer (line-number-at-pos (nth 3 target)))))
+       "again"))))
 
 (after! org
   ;; A missing vault would break the agenda, so create its tree early.
