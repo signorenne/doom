@@ -1622,7 +1622,9 @@ the first of ARGS."
     (unwind-protect
         (cl-letf (((symbol-function 'y-or-n-p) #'ignore)
                   ((symbol-function 'map-y-or-n-p) (lambda (&rest _) 0)))
-          (if (frame-live-p frame)
+          ;; Only a frame with a workspace of its own: a child frame
+          ;; closing, a completion popup's, is left unselected.
+          (if (and (frame-live-p frame) (frame-parameter frame 'workspace))
               (with-selected-frame frame (apply fn args))
             (apply fn args)))
       (remove-hook 'kill-buffer-query-functions #'+core--keep-unsaved-h))
