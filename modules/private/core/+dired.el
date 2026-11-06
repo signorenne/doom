@@ -8,6 +8,7 @@
 
 (declare-function dirvish-yank--get-srcs "dirvish-yank")
 (declare-function +core--image-header-size "images")
+(declare-function +popup--delete-window "popup")
 
 ;; The mouse: a file dragged out of the listing lands in Dolphin, a
 ;; browser's upload box or a chat, and a right click is a menu of what
