@@ -29,9 +29,12 @@
 The config's own, in themes/: made for long reading, measured for it.")
 
 (setq doom-theme (if (featurep :system 'macos) +config-themes (car +config-themes))
-      doom-font (font-spec :family "JetBrains Mono" :size 15)
-      doom-variable-pitch-font (font-spec :family "DejaVu Sans" :size 16)
-      doom-big-font (font-spec :family "JetBrains Mono" :size 24) ; SPC t b
+      ;; Off a Mac the sizes are points, so they follow the screen's
+      ;; scale: an X11 Emacs on a scaled Wayland desktop draws pixels one
+      ;; for one, and 15 pixels at 96 DPI are 11.25 points.
+      doom-font (font-spec :family "JetBrains Mono" :size (if (featurep :system 'macos) 15 11.25))
+      doom-variable-pitch-font (font-spec :family "DejaVu Sans" :size (if (featurep :system 'macos) 16 12.0))
+      doom-big-font (font-spec :family "JetBrains Mono" :size (if (featurep :system 'macos) 24 18.0)) ; SPC t b
       ;; Doom draws icons, symbols and emoji from these two; a Mac's
       ;; emoji are Apple's own.
       doom-symbol-font (font-spec :family "Symbols Nerd Font Mono")
