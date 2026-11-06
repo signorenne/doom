@@ -117,7 +117,7 @@ it.
 | ~SPC t m~ | ~+ui/minimap~             | the minimap on the right           |
 | ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
 | ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
-| ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation in a popup, ~ESC~ closes it |
+| ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation popup, ~ESC~ closes   |
 | ~SPC h '~ | ~doom/describe-char~      | which font draws the character     |
 
 ~]e~ and ~[e~ are ~next-error~, which walks whatever buffer last reported
