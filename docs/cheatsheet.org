@@ -4127,6 +4127,8 @@ bound.
   succeeded.
 - ~+cpp/build-type~ (~SPC k y~) :: Build as TYPE from now on: Debug,
   Release, RelWithDebInfo or MinSizeRel.
+- ~+cpp/check~ :: Check this file, errors only: its compile command, with
+  -fsyntax-only.
 - ~+cpp/cmake-clean~ :: Build the clean target, after asking.
 - ~+cpp/cmake-clear-variable~ :: Drop the override on cache variable NAME.
 - ~+cpp/cmake-configure-fresh~ :: Configure from scratch, dropping the
