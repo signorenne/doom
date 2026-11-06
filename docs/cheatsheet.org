@@ -4461,7 +4461,7 @@ bound.
   point; its buffers follow it.
 - ~+sidebar/explorer-save~ (~s~) :: Save the buffer of the Open editors
   entry at point.
-- ~+sidebar/fold~ (~<tab>~) :: Fold or unfold as the key pressed does in
+- ~+sidebar/fold~ (~TAB~) :: Fold or unfold as the key pressed does in
   magit, then watch exactly the folders now on show.
 - ~+sidebar/next-view~ (~L~) :: Show the side bar's next view.
 - ~+sidebar/outline~ (~SPC t o~) :: Show the Explorer with Outline open and
@@ -4634,7 +4634,7 @@ bound.
 - ~+ai/claude-config~ (~SPC l m m~) :: Claude Code's MCP servers, hooks,
   permission rules and usage, as VS Code's dialogs show them.
 - ~+ai/claude-doctor~ (~SPC l m d~) :: Run 'claude doctor' in a vterm.
-- ~+ai/claude-guard~ (~x~) :: Leave Claude's screen alone and say how to
+- ~+ai/claude-guard~ (~c~) :: Leave Claude's screen alone and say how to
   type to Claude.
 - ~+ai/claude-hooks~ :: Open Claude's hooks; with PROJECT (C-u), the
   project's.
@@ -4647,13 +4647,13 @@ bound.
   knows about, connecting to each.
 - ~+ai/claude-mcp-remove~ :: Take SERVER, (NAME SCOPE), away from Claude
   Code, after asking.
-- ~+ai/claude-paste~ (~P~) :: Paste the top of the kill ring into Claude,
+- ~+ai/claude-paste~ (~p~) :: Paste the top of the kill ring into Claude,
   then type to Claude.
 - ~+ai/claude-permissions~ :: Open Claude's permission rules; with PROJECT
   (C-u), the project's.
 - ~+ai/claude-terminal~ (~SPC l t T~) :: Run claude in a terminal, without
   the Emacs bridge.
-- ~+ai/claude-type~ (~O~) :: Type to Claude again: emacs state, point back
+- ~+ai/claude-type~ (~a~) :: Type to Claude again: emacs state, point back
   on Claude's cursor.
 - ~+ai/claude-usage~ (~SPC l m u~) :: Show your plan's usage and limits, as
   VS Code's Account & usage: /usage in this project's chat, which costs

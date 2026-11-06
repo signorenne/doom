@@ -993,17 +993,24 @@ so dired's and C++'s keys are found from anywhere."
         ;; The answers are ranked: the localleader form first, since a
         ;; reader finds it from the mode they are in, then the shortest,
         ;; so TAB wins over <tab>.
-        (when-let* ((keys (delq nil
-                                (cl-loop for map in (+docs--keymaps maps)
-                                         collect (where-is-internal
-                                                  command (list map) t))))
-                    (best (car (sort (mapcar #'describe keys)
+        ;; Every key of each map, not its first: which evil maps exist
+        ;; depends on what the session has loaded, and the first key of
+        ;; one of them is TAB in one run and <tab> in the next. Equal
+        ;; lengths go alphabetically, the lower case first, so a run
+        ;; always picks the same, and a for A.
+        (when-let* ((keys (cl-loop for map in (+docs--keymaps maps)
+                                   append (where-is-internal command (list map))))
+                    (best (car (sort (delete-dups (mapcar #'describe keys))
                                      (lambda (a b)
                                        (let ((la (string-prefix-p "SPC " a))
                                              (lb (string-prefix-p "SPC " b)))
                                          (cond ((and la (not lb)) t)
                                                ((and lb (not la)) nil)
-                                               (t (< (length a) (length b))))))))))
+                                               ((/= (length a) (length b))
+                                                (< (length a) (length b)))
+                                               ((not (string= (downcase a) (downcase b)))
+                                                (string< (downcase a) (downcase b)))
+                                               (t (string< b a)))))))))
           best)
         (when-let* ((key (where-is-internal command nil t)))
           (describe key)))))
