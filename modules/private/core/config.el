@@ -1089,11 +1089,12 @@ MANAGED-MODES on its way already."
   (add-hook 'eglot-connect-hook #'+core--lsp-started-h)
   (advice-add 'eglot--on-shutdown :after #'+core--lsp-started-h))
 
-;; The echo area takes up to three lines for what is under the cursor.
-;; One line cuts most diagnostics worth reading; three holds nearly all
-;; of them and still does not grow into a page. K or SPC c H open the
-;; whole text when even that is not enough.
-(setq eldoc-echo-area-use-multiline-p 3)
+;; What is under the cursor takes one line of the echo area, cut at its
+;; width. Three lines, wrapping into six, grew the echo area, and the
+;; window above shrank and scrolled when the cursor was near its bottom:
+;; the text moved at each rest on a name. K or SPC c H open the whole
+;; text, and a diagnostic is also at the end of its line.
+(setq eldoc-echo-area-use-multiline-p nil)
 
 ;; What is under the cursor shows after a quarter second at rest, not
 ;; half. The work it asks of the server comes in short pieces, so a key
