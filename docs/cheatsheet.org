@@ -4327,6 +4327,7 @@ bound.
 - ~+pascal/build~ (~SPC k b~) :: Build the project with what it is set to.
 - ~+pascal/build-and-run~ (~SPC k x~) :: Build, and run it when the build
   worked.
+- ~+pascal/check~ :: Check the program without linking it, with fpc -s.
 - ~+pascal/clean~ (~SPC k C~) :: Move what the build made, lib/ and bin/, to
   the trash, after asking.
 - ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, given the

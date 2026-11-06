@@ -161,10 +161,20 @@ sources, and -Fu says where the project\='s own units are."
    ;; beside the program file. -vb puts the full path in each message,
    ;; so the build buffer can open a file under src/.
    '("-Mobjfpc" "-Sh" "-gw3" "-vb" "-FEbin" "-FUlib" "-Fusrc" "-Fu." "-Fisrc")
-   (when +pascal-target
-     (let ((parts (split-string +pascal-target "-")))
-       (list (concat "-P" (car parts))
-             (concat "-T" (or (cadr parts) +pascal-host-os)))))))
+   (+pascal--fpc-target-args)))
+
+(defun +pascal--fpc-target-args ()
+  "fpc's -P and -T for the target this project is set to, or nil."
+  (when +pascal-target
+    (let ((parts (split-string +pascal-target "-")))
+      (list (concat "-P" (car parts))
+            (concat "-T" (or (cadr parts) +pascal-host-os))))))
+
+(defun +pascal--need-fpc ()
+  "Stop with how to install fpc when it is not here."
+  (+core-need-program "fpc" (if (featurep :system 'macos)
+                                "brew install fpc"
+                              "zypper in fpc fpc-src")))
 
 (defun +pascal--check-builder ()
   "Stop with what to install when the compiler this project builds with,
@@ -173,9 +183,7 @@ lazbuild or fpc, is not here, rather than run a build that cannot start."
     ('lazarus (+core-need-program "lazbuild" (if (featurep :system 'macos)
                                                  "brew install --cask lazarus"
                                                "zypper in lazarus")))
-    ('fpc (+core-need-program "fpc" (if (featurep :system 'macos)
-                                        "brew install fpc"
-                                      "zypper in fpc fpc-src")))))
+    ('fpc (+pascal--need-fpc))))
 
 ;;;###autoload
 (defun +pascal-build-command ()
@@ -197,6 +205,103 @@ be there: F7 and the panel's header ask for it too."
                           " ")))
     ('delphi
      (user-error "This kind of project cannot be built: a Delphi project is built in the IDE"))))
+
+
+;;
+;;; The command a check is
+
+(defun +pascal--check-dir ()
+  "Where a check writes what fpc makes: a directory of Doom's cache for
+this project, so lib/ and bin/ stay the build's, and the next check
+compiles only the units that changed."
+  (expand-file-name (concat "pascal-check/" (md5 (directory-file-name (+pascal-root))) "/")
+                    doom-cache-dir))
+
+(defun +pascal--lazarus-files ()
+  "(LPI . PROGRAM) of this Lazarus project: its .lpi, and the main file
+the .lpi names first among its units, which is what fpc compiles."
+  (let* ((main (+pascal--main-file))
+         (lpi (if (string-suffix-p ".lpi" main t)
+                  main
+                (let ((beside (concat (file-name-sans-extension main) ".lpi")))
+                  (if (file-exists-p beside)
+                      beside
+                    (car (+pascal--files (+pascal-root) "\\.lpi\\'"))))))
+         (program (if (string-suffix-p ".lpi" main t)
+                      (with-temp-buffer
+                        (insert-file-contents lpi)
+                        (and (re-search-forward "<Units[ \t>]" nil t)
+                             (re-search-forward "<Filename Value=\"\\([^\"]+\\)\"" nil t)
+                             (expand-file-name (match-string 1) (file-name-directory lpi))))
+                    main)))
+    (unless (and program (file-exists-p program))
+      (user-error "%s names no main file to check" (file-name-nondirectory lpi)))
+    (cons lpi program)))
+
+(defun +pascal--lazarus-paths (lpi)
+  "What lazbuild says project LPI is compiled with, for the build mode,
+widget set and target this project is set to: (UNITS INCLUDES WIDGETSET
+NAMESPACES), the paths of the project and of the packages it needs."
+  (with-temp-buffer
+    (let* ((status (call-process-shell-command
+                    (string-join (append '("lazbuild") (+pascal--lazbuild-args)
+                                         (list (shell-quote-argument
+                                                "--get-expand-text=$(ProjUnitPath)|$(ProjIncPath)|$(LCLWidgetType)|$(ProjNamespaces)")
+                                               (shell-quote-argument lpi)))
+                                 " ")
+                    nil '(t nil)))
+           ;; The answer is the last line; a first run says before it
+           ;; that it copied the settings.
+           (said (car (last (split-string (buffer-string) "\n" t))))
+           (parts (and said (split-string said "|"))))
+      (unless (and (eql status 0) (= (length parts) 4))
+        (user-error "lazbuild could not say the paths of %s: %s"
+                    (file-name-nondirectory lpi) (or said "no answer")))
+      (list (split-string (nth 0 parts) ";" t)
+            (split-string (nth 1 parts) ";" t)
+            (nth 2 parts)
+            (split-string (nth 3 parts) ";" t)))))
+
+(defun +pascal--lazarus-check-args (lpi)
+  "fpc's flags for a check of Lazarus project LPI: the syntax options
+Lazarus gives a new project, the LCL's defines when it needs the LCL,
+and the paths lazbuild says it has."
+  (pcase-let ((`(,units ,includes ,widgetset ,namespaces) (+pascal--lazarus-paths lpi)))
+    (append '("-MObjFPC" "-Scghi" "-vb")
+            (when (with-temp-buffer
+                    (insert-file-contents lpi)
+                    (re-search-forward "<PackageName Value=\"LCL\"" nil t))
+              (list "-dLCL" (concat "-dLCL" widgetset)))
+            (mapcar (lambda (dir) (concat "-Fu" dir)) units)
+            (mapcar (lambda (dir) (concat "-Fi" dir)) includes)
+            (mapcar (lambda (name) (concat "-FN" name)) namespaces)
+            (+pascal--fpc-target-args))))
+
+(defun +pascal-check-command ()
+  "What `SPC k c' runs in a Pascal project: fpc -s of the program, which
+compiles it and every unit it uses and stops before the assembler and
+the linker.  What it writes goes to Doom's cache, not lib/ or bin/.  A
+Lazarus project is checked through its main file, with its paths."
+  (+pascal-root)
+  (let ((kind (+pascal-project-kind))
+        (out (+pascal--check-dir)))
+    (when (eq kind 'delphi)
+      (user-error "This kind of project cannot be checked: a Delphi project is built in the IDE"))
+    (+pascal--check-builder)
+    (+pascal--need-fpc)
+    (pcase-let ((`(,flags . ,program)
+                 (if (eq kind 'lazarus)
+                     (let ((files (+pascal--lazarus-files)))
+                       (cons (+pascal--lazarus-check-args (car files)) (cdr files)))
+                   (cons (seq-remove (lambda (arg) (or (string-prefix-p "-FE" arg)
+                                                       (string-prefix-p "-FU" arg)))
+                                     (+pascal--fpc-args))
+                         (+pascal--main-file)))))
+      (concat "mkdir -p " (shell-quote-argument out) " && "
+              (mapconcat #'shell-quote-argument
+                         (append '("fpc" "-s") flags
+                                 (list (concat "-FE" out) (concat "-FU" out) program))
+                         " ")))))
 
 ;;;###autoload
 (defun +pascal--program-candidates ()
@@ -244,6 +349,12 @@ standard input waits for."
   "Build the project with what it is set to."
   (interactive)
   (+pascal--compile "build" (+pascal-build-command)))
+
+;;;###autoload
+(defun +pascal/check ()
+  "Check the program without linking it, with fpc -s."
+  (interactive)
+  (+pascal--compile "check" (+pascal-check-command)))
 
 ;;;###autoload
 (defun +pascal/run ()
