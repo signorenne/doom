@@ -818,10 +818,13 @@ time a file is written encrypted."
   ;; not half, so its diagnostics follow sooner.
   (setq eglot-send-changes-idle-time 0.25)
   (setq eglot-sync-connect nil
-        ;; The server's "a fix is available here" is a mark in the margin,
-        ;; as in every other IDE, not a line of text in the echo area,
-        ;; which would grow at every search hit and read like a prompt.
-        eglot-code-action-indications '(margin)))
+        ;; The server's "a fix is available here" is a mark in the left
+        ;; fringe, as in every other IDE, not a line of text in the echo
+        ;; area, which would grow at every search hit and read like a
+        ;; prompt. Not in the margin: that is no column wide, so the mark
+        ;; never showed, and its glyph, from a taller symbol font, still
+        ;; made the line taller and pushed the lines below down.
+        eglot-code-action-indications '(left-fringe)))
 
 ;; eglot answers imenu from the server: every symbol of the file, asked
 ;; for again after each edit by the header line's breadcrumbs, which

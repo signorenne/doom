@@ -20,7 +20,8 @@
   outline in the side bar on ~SPC t o~ (the sidebar module); in the modeline, the line out of how
   many the buffer has, the column out of how many the line has, and how
   far through the buffer you are as a percentage, =228/1009:7/42  23%=, so
-  the fringe is left to the git gutter and the diagnostics; the minimap on
+  the fringe is left to the git gutter, the diagnostics and the server's
+  fix mark; the minimap on
   the right on ~SPC t m~, a copy of the buffer in a tiny font with the
   part on screen and the cursor's line marked at every move, the text
   taken again once the typing pauses, and a click in it goes there; a held

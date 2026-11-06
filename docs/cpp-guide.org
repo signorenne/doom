@@ -161,6 +161,10 @@ Problems and fixes are all in one place:
 | =SPC k .=   | fix the one at point, the server's quickfix       |
 | =SPC k g t= | clang-tidy this file, =SPC k g T= applies its fixes |
 
+A lightning in the left fringe marks the line when the server has an
+action for what the cursor is on: =SPC k .= applies its fix, =SPC c a=
+lists them all.
+
 =SPC k a= puts the assembly of the file beside it, live, compiled with
 the flags the compilation database recorded. =SPC k A= disassembles just
 the function at point. Useful more often than it sounds, when a loop is
