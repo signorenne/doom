@@ -100,6 +100,13 @@ starts no container, as `+cpp--menu-description' does not."
 ;;
 ;;; SPC k SPC: what you do
 
+(defun +cpp/project-info ()
+  "This project's status: this module's for a C or C++ project, the
+build tool's for any other.  One command, so the menu's I is bound once."
+  (interactive)
+  (call-interactively (if (+cpp-project-p) #'+cpp/project-status
+                        #'projection-show-project-info)))
+
 ;;;###autoload (autoload '+cpp/menu "private/cpp/autoload/menu" nil t)
 (transient-define-prefix +cpp/menu ()
   "What the project can do: build, run, fix, and the tools."
@@ -139,8 +146,7 @@ starts no container, as `+cpp--menu-description' does not."
     ("m" "CMake panel: what you set" +cpp/cmake-menu)]
    ["Project"
     :if (lambda () (not (+cpp--kind-p 'cmake)))
-    ("I" "Project status"     +cpp/project-status :if +cpp-project-p)
-    ("I" "Project info"       projection-show-project-info :if-not +cpp-project-p)
+    ("I" "Project status"     +cpp/project-info)
     ("O" "Set the project type" projection-set-primary-project-type)
     ("Z" "Reset the cache"    projection-cache-clear)]]
   [["Fix"
