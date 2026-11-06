@@ -48,7 +48,7 @@ says the best answer and offers the rest in a numbered menu, ~1~ to ~5~,
 to choose between, ~c~ there asking Claude instead; and he puts it to
 Claude, through gptel or, with no API key set up, through the Claude
 Code command line, when the words do not settle it or when asked with
-~SPC u~ first; ~A~
+~C-u~ in his menu; ~A~
 asks Claude outright, for a hard question or one the sheet cannot
 answer at all, since Claude keeps to the docs only where the question
 is about this configuration; and ~r~
@@ -1835,7 +1835,7 @@ every build passes as =--config=.
 ** Packaging and scripts
 | Key     | What it does                                                       |
 |---------+--------------------------------------------------------------------|
-| ~SPC k P~ | build the packaging target: =fdc.hpkg=, =package=, ~C-u~ to pick another |
+| ~SPC k P~ | build the packaging target: =fdc.hpkg=, =package=; ~SPC u~ picks another |
 | ~SPC k o~ | copy the newest package out, where this project's packages go      |
 | ~SPC k S~ | run a script of the project: =scripts/deployment.sh=, =build_arm.sh=   |
 | ~SPC k B~ | any target, =fdc.hpkglite= and =fdc.debug.hpkg= among them             |

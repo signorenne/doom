@@ -35,18 +35,19 @@ is listed under its own name. ~+docs-cheatsheet-sections~ holds the modes
 no private module owns, none at present.
 
 * Keybindings
-| Key                | Command                       | What it does                     |
-|--------------------+-------------------------------+----------------------------------|
-| ~F12~ or ~SPC h /~ | ~+docs/cheatsheet~            | open or close it; ~C-u~ picks a heading, ~C-u C-u~ searches the text |
-| ~SPC h d M~        | ~+docs/module-readme~         | open a module's README           |
-| ~s~ or ~?~         | ~+docs/cheatsheet-search~     | jump to a heading                |
-| ~S~                | ~+docs/cheatsheet-find~       | search the text, words in any order |
-| ~gr~               | ~+docs/cheatsheet-regenerate~ | rebuild the references, after asking |
-| ~q~                | ~+docs/cheatsheet-close~      | close the sheet, wherever it is  |
-| ~SPC h d C~        | ~+docs/check-autoloads~       | is every function referred to callable |
+| Key            | Command                     | What it does                           |
+|----------------+-----------------------------+----------------------------------------|
+| ~F12~ or ~SPC h /~ | ~+docs/cheatsheet~            | open or close it                       |
+| ~SPC h d M~      | ~+docs/module-readme~         | open a module's README                 |
+| ~s~ or ~?~         | ~+docs/cheatsheet-search~     | jump to a heading                      |
+| ~S~              | ~+docs/cheatsheet-find~       | search the text, words in any order    |
+| ~gr~             | ~+docs/cheatsheet-regenerate~ | rebuild the references, after asking   |
+| ~q~              | ~+docs/cheatsheet-close~      | close the sheet, wherever it is        |
+| ~SPC h d C~      | ~+docs/check-autoloads~       | is every function referred to callable |
 
 =F12= is bound globally, not under the leader, so it works in every state
-and every mode.
+and every mode. With ~SPC u~ before it, it asks for a heading; with ~SPC u
+SPC u~, it searches the text.
 
 The sheet =F12= shows is a buffer of its own, =*cheatsheet*=, that shares
 the file's text: read-only, with the keys above. The file opened to edit
