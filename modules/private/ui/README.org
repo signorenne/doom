@@ -108,16 +108,16 @@ it.
 * Keybindings
 | Key     | Command                 | What it does                       |
 |---------+-------------------------+------------------------------------|
-| ~SPC i g~ | ~+ui/insert-glyph~        | insert an icon, ~C-u~ keeps its face |
+| ~SPC i g~ | ~+ui/insert-glyph~        | insert an icon (~SPC u~: with face)  |
 | ~SPC i G~ | ~+ui/insert-glyph-form~   | insert the elisp form for an icon  |
 | ~SPC i e~ | ~emoji-search~            | insert an emoji by name            |
 | ~SPC i u~ | ~insert-char~             | insert any character by name       |
 | ~SPC t G~ | ~+ui/glyph-test~          | see whether the fonts render       |
-| ~SPC t h~ | ~+ui-where-mode~          | the header line saying where you are |
+| ~SPC t h~ | ~+ui-where-mode~          | a header line saying where you are |
 | ~SPC t m~ | ~+ui/minimap~             | the minimap on the right           |
 | ~SPC t i~ | ~indent-bars-mode~        | indent guides, off until asked     |
 | ~SPC t b~ | ~doom-big-font-mode~      | bigger font, for presenting        |
-| ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation popup, ~ESC~ closes   |
+| ~SPC c H~ | ~eldoc-box-help-at-point~ | documentation popup, ~ESC~ closes    |
 | ~SPC h '~ | ~doom/describe-char~      | which font draws the character     |
 
 ~]e~ and ~[e~ are ~next-error~, which walks whatever buffer last reported
