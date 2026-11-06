@@ -5,8 +5,8 @@
 #+options: toc:nil ^:{}
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
-the mode you are in; =C-u F12= jumps to a heading instead, =C-u C-u F12=
-searches the text. Inside the sheet: =TAB= unfold, =s= search the headings,
+the mode you are in; =SPC u F12= jumps to a heading instead, =SPC u SPC u
+F12= searches the text. Inside the sheet: =TAB= unfold, =s= search the headings,
 =S= the text (words in any order, matches as you type), =gr= rebuild the
 generated tables (it asks before it saves), =q= close. The sheet opened
 as a file, to edit it, is an ordinary Org buffer.
@@ -48,7 +48,7 @@ says the best answer and offers the rest in a numbered menu, ~1~ to ~5~,
 to choose between, ~c~ there asking Claude instead; and he puts it to
 Claude, through gptel or, with no API key set up, through the Claude
 Code command line, when the words do not settle it or when asked with
-~C-u~; ~A~
+~SPC u~ first; ~A~
 asks Claude outright, for a hard question or one the sheet cannot
 answer at all, since Claude keeps to the docs only where the question
 is about this configuration; and ~r~
@@ -538,7 +538,7 @@ buffer, edit that buffer as text, and ~C-c C-c~ writes every file back.
 
 ~SPC c h~ and ~SPC c T~ open a tree you can walk: ~TAB~ opens a branch, and
 each side is asked of the server as you go, so a call hierarchy of a
-large tree costs only the branches you look at. ~C-u~ before either asks
+large tree costs only the branches you look at. ~SPC u~ before either asks
 which way to look rather than both.
 
 ~F2~ is ~gd~ and ~F4~ the header, as in Qt Creator. When there is more
@@ -948,7 +948,7 @@ cursor when nothing is marked.
 |---------+---------------------------------------------|
 | ~p~       | paste the marked files here (a copy)        |
 | ~SPC m m~ | move the marked files here                  |
-| ~C-u p~   | paste them somewhere else, asked            |
+| ~SPC u p~ | paste them somewhere else, asked            |
 | ~M-y~     | the paste menu: copy, move, links, relative |
 | ~C~       | copy to a directory you name                |
 | ~R~       | rename, or move to a directory you name     |
