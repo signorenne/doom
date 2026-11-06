@@ -611,7 +611,8 @@ waits after starting.")
 
 (defvar +core-warm-up-functions '(+core--warm-up-mode)
   "Called one at a time, each at a pause, once `+core-warm-up-features'
-are loaded: each with every mode of `+core--recent-file-modes' in turn.")
+are loaded: each with every mode of `+core--recent-file-modes', then of
+`+core-warm-up-files', in turn.")
 
 (defvar +core-warm-up-modes 6
   "How many modes of the recent files are set up ahead.")
@@ -639,6 +640,26 @@ sit over the dashboard.")
 file itself, its name and the files beside it, and with no file fails;
 the modes it picks are set up for their own files.")
 
+(defvar +core-warm-up-files
+  '("a.cpp" "a.c" "CMakeLists.txt" "a.qml" "a.py" "a.rs" "a.pas" "a.ts" "a.tsx"
+    "a.js" "a.css" "a.html" "a.json" "a.yaml" "a.toml" "a.sh" "a.md" "a.puml")
+  "Files of the languages this config sets up, by name: their modes are
+set up ahead after those of the recent files, so the first file of one
+in a session opens without loading its mode and compiling its queries,
+half a second of a frozen screen each.")
+
+(defun +core--file-mode (file)
+  "The mode FILE opens in, by its name alone; nil for one the warm-up
+leaves out."
+  (when-let* ((mode (assoc-default file auto-mode-alist #'string-match))
+              (mode (major-mode-remap (if (consp mode) (car mode) mode)))
+              ((symbolp mode))
+              ;; A picture's or an archive's mode is nothing without
+              ;; the file to show.
+              ((not (memq mode (cons 'fundamental-mode +core-large-file-excluded-modes))))
+              ((not (memq mode +core-warm-up-skip-modes))))
+    mode))
+
 (defun +core--recent-file-modes ()
   "The modes of the latest recent files, `+core-warm-up-modes' at most:
 the one most of them open in first, the latest first among equals."
@@ -649,19 +670,23 @@ the one most of them open in first, the latest first among equals."
       ;; Remote names are passed over by their shape: asking Emacs
       ;; whether one is remote loads TRAMP.
       (unless (string-match-p "\\`/[^/:]+:" file)
-        (when-let* ((mode (assoc-default file auto-mode-alist #'string-match))
-                    (mode (major-mode-remap (if (consp mode) (car mode) mode)))
-                    ((symbolp mode))
-                    ;; A picture's or an archive's mode is nothing without
-                    ;; the file to show.
-                    ((not (memq mode (cons 'fundamental-mode +core-large-file-excluded-modes))))
-                    ((not (memq mode +core-warm-up-skip-modes))))
+        (when-let* ((mode (+core--file-mode file)))
           (push mode modes))))
     (setq modes (nreverse modes))
     (seq-take (sort (seq-uniq modes)
                     :key (lambda (mode) (- (seq-count (lambda (m) (eq m mode)) modes)))
                     :lessp #'<)
               +core-warm-up-modes)))
+
+(defvar +core--warm-up-done nil
+  "(FUNCTION . MODE) pairs the warm-up has run.")
+
+(defun +core--warm-up-once (fn mode)
+  "Call FN with MODE, unless the warm-up did already.  Counted once it
+returns: a key that stops it midway leaves it to be taken again."
+  (unless (member (cons fn mode) +core--warm-up-done)
+    (funcall fn mode)
+    (push (cons fn mode) +core--warm-up-done)))
 
 (defun +core--warm-up-mode (mode)
   "Set MODE up once in a buffer no one sees: its library loads, its
@@ -703,8 +728,16 @@ pause again for the one after."
                                ;; a key in between cannot expand it twice.
                                (setq steps (append (list '(done))
                                                    (mapcar (lambda (m) (cons 'warm (cons what m))) mode)
+                                                   (mapcar (lambda (f) (cons 'warm-file (cons what f)))
+                                                           +core-warm-up-files)
                                                    (cdr steps))))
-                              ('warm (funcall (car what) (cdr what)))
+                              ('warm (+core--warm-up-once (car what) (cdr what)))
+                              ;; A file's mode is found in its own step:
+                              ;; finding it loads the mode, and all of
+                              ;; them at once held Emacs for seconds.
+                              ('warm-file
+                               (when-let* ((m (+core--file-mode (cdr what))))
+                                 (+core--warm-up-once (car what) m)))
                               ;; One function of the hook a step, taken off
                               ;; it once it has run, so a key in the middle
                               ;; leaves it for Doom to run again; the step
