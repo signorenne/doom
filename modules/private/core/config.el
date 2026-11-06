@@ -19,7 +19,7 @@
   '(:groups (("core" "Core" (dired dirvish image-mode)
               dired-mode-map dirvish-mode-map image-mode-map))
     :sections ((dired-mode . "Dired, the file manager")
-               (image-mode . "Looking at a picture")))
+               (image-mode . "Images")))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
 ;; Install tree-sitter grammars on first use instead of asking.
