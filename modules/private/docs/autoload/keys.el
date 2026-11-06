@@ -7,9 +7,10 @@
 ;; read for what transient would silently move, and each suffix's key
 ;; looked up in the map the menu is built with, where q as the last of
 ;; two keys quits too. Every SPC key the docs mention is looked up, so
-;; a changed key cannot stay in the docs, and the leader is read for one
-;; of our commands on two keys and for a Doom key rebound by mistake.
-;; `+docs/check-keys' runs it all from a session.
+;; a changed key cannot stay in the docs, a README row that names its
+;; command must run it where the row says, and the leader is read for
+;; one of our commands on two keys and for a Doom key rebound by
+;; mistake. `+docs/check-keys' runs it all from a session.
 
 (require 'transient)
 
@@ -20,6 +21,7 @@
 (defvar transient-sticky-map)
 (defvar recentf-list)
 (defvar save-place-alist)
+(defvar image-mode-map)
 (declare-function recentf-expand-file-name "recentf")
 (declare-function transient-setup "transient")
 (declare-function transient-quit-all "transient")
@@ -344,14 +346,21 @@ a list of sentences with the file and line.  Nil when all is well."
 ;;;###autoload
 (defun +docs/check-keys ()
   "Check that every private menu holds up, the leader has no double and
-no unmeant shadow, and every documented key is bound, the leader's and
-the rest; see `+docs-menu-problems', `+docs-leader-problems',
-`+docs-key-problems' and `+docs-binding-problems'."
+no unmeant shadow, every documented key is bound, the leader's and the
+rest, and runs the command its README row names; see
+`+docs-menu-problems', `+docs-leader-problems', `+docs-key-problems',
+`+docs-binding-problems' and `+docs-row-problems'."
   (interactive)
   (let ((problems (append (+docs-menu-problems) (+docs-leader-problems)
-                          (+docs-key-problems) (+docs-binding-problems))))
+                          (+docs-key-problems) (+docs-binding-problems)
+                          (+docs-row-problems)))
+        (unplaced (length (+docs-row-unplaced))))
     (if (null problems)
-        (message "Every menu sets up clean and every documented key is bound")
+        (message "Every menu sets up clean and every documented key is bound%s"
+                 (if (zerop unplaced)
+                     ""
+                   (format "; %d README row(s) name no mode, (+docs-row-unplaced) lists them"
+                           unplaced)))
       (message "%d problem(s):\n%s" (length problems)
                (mapconcat (lambda (p) (concat "  " p)) problems "\n")))))
 
@@ -602,3 +611,258 @@ lookup follows."
                         (string-trim (concat section ", " subsection) nil ", "))
                 problems))))
     (nreverse problems)))
+
+
+;;
+;;; The keys a README names the command of
+
+;; A README's key table has a Command column: the row says what the key
+;; runs, not only that it is bound, and a key that runs something else
+;; in its mode is the quiet mistake, evil-snipe's s over a viewer's own
+;; s, evil-collection's RET over the image viewer's. Each such row is
+;; looked up in a buffer of the mode the docs give it, in normal state
+;; unless they name another. A row says its mode after its key, "f
+;; (image)"; else its description starts "in the file manager:"; else
+;; the line above its table reads "In the player:". A leader key that
+;; says none is the leader's anywhere; any other key that says none is
+;; not judged, and is listed as such, since guessing its mode would
+;; judge it against a mode the docs never meant.
+
+(defconst +docs-row-modes
+  '(("\\`\\(?:dired\\|the file manager\\)\\'" . dired)
+    ("\\`magit\\'" . (magit-status-mode))
+    ("\\`the commit buffer\\'" . (text-mode git-commit-mode))
+    ("\\`image\\'" . (+docs--image-mode))
+    ("\\`SVG\\'" . (nxml-mode))
+    ("\\`view\\'" . (special-mode +core-view-panel-mode +core-view-image-mode))
+    ("\\`\\(?:the \\)?sheet\\'" . (org-mode read-only-mode +docs-cheatsheet-mode))
+    ("\\`anywhere\\'" . (fundamental-mode))
+    ("\\`corfu\\'" . (:map corfu-map)))
+  "The modes a README row can name, by the words it uses, and how a
+buffer of each is made: `dired' a listing of an empty directory, a list
+of modes turned on in order in a buffer of its own, or (:map MAP) for a
+popup no buffer shows, its keys looked up in MAP.")
+
+(defun +docs--image-mode ()
+  "Make this buffer an image viewer's as far as its keys go.  The check
+runs in a daemon without a frame, where `image-mode' refuses to start,
+so its map and hooks are set up the way it sets them up, without a
+picture to show."
+  (require 'image-mode)
+  (kill-all-local-variables)
+  (setq major-mode 'image-mode mode-name "Image")
+  (use-local-map image-mode-map)
+  (run-mode-hooks 'image-mode-hook))
+
+(defun +docs--marked (text)
+  "The ~marked~ or =marked= parts of TEXT, in order."
+  (let ((start 0) out)
+    (while (string-match "[~=]\\([^~=]+\\)[~=]" text start)
+      (push (match-string 1 text) out)
+      (setq start (match-end 0)))
+    (nreverse out)))
+
+(defun +docs--row-state (text)
+  "The evil state TEXT names, \"insert state\", or nil."
+  (and text
+       (string-match "\\b\\(normal\\|insert\\|visual\\|motion\\|emacs\\) state\\b" text)
+       (intern (match-string 1 text))))
+
+(defun +docs--row-pairs (keys commands)
+  "(KEY . COMMAND) for a row whose key cell names KEYS, a list of
+alternatives each a list of keys, and whose command cell names
+COMMANDS.  As many commands as keys go in order, zM and zR to
+close-all and open-all; one command goes to each alternative's first
+key, both s and ? in \"s or ?\", but only n in \"n p\", the p beside it
+being the other way the description names.  Nil when they cannot be
+paired."
+  (let ((flat (apply #'append keys)))
+    (cond ((and (cdr commands) (= (length commands) (length flat)))
+           (cl-mapcar #'cons flat commands))
+          ((null (cdr commands))
+           (mapcar (lambda (alternative) (cons (car alternative) (car commands)))
+                   keys)))))
+
+(defun +docs--command-rows ()
+  "Every row of a key table with a Command column in the sheet, above
+its generated part, and the private READMEs, as plists: :file, :line,
+:key, :command, :mode the words naming its mode or nil, :state."
+  (let ((files (cons +docs-cheatsheet-file
+                     (directory-files-recursively
+                      (file-name-concat doom-user-dir "modules/private") "README\\.org\\'")))
+        rows)
+    (dolist (file files)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (goto-char (point-min))
+        (let (column intro (prev ""))
+          (while (not (eobp))
+            (let ((line (buffer-substring-no-properties (line-beginning-position)
+                                                        (line-end-position))))
+              (cond
+               ((string-prefix-p "* Reference" line) (goto-char (point-max)))
+               ((string-prefix-p "|" line)
+                (let ((cells (mapcar #'string-trim
+                                     (split-string (string-trim line "|" "|[ \t]*") "|"))))
+                  (cond
+                   ;; A table's first line, its header: is there a
+                   ;; Command column beside the Key one?
+                   ((not (string-prefix-p "|" prev))
+                    (setq column (and (equal (car cells) "Key")
+                                      (seq-position cells "Command"))))
+                   ((string-prefix-p "|-" line))
+                   ((and column (nth column cells))
+                    (dolist (row (+docs--command-row cells column intro))
+                      (push (append (list :file (file-relative-name file doom-user-dir)
+                                          :line (line-number-at-pos))
+                                    row)
+                            rows))))))
+               ((not (string-blank-p line)) (setq intro line column nil)))
+              (setq prev line))
+            (forward-line 1)))))
+    (nreverse rows)))
+
+(defun +docs--command-row (cells column intro)
+  "The keys one table row names with their commands, as plists: CELLS
+the row's cells, COLUMN where its command is, INTRO the line above the
+table.  None for a range, \"1 .. 5\", or a command cell that is not all
+commands, \"quick access\" or a pattern such as casual-*-tmenu."
+  (let* ((cell (car cells))
+         (command-cell (nth column cells))
+         (description (nth (1+ column) cells))
+         (mark (and (string-match "(\\([^()]+\\))[ \t]*\\'" cell)
+                    (match-string 1 cell)))
+         ;; "(dired, insert state)": the mode is dired.
+         (mark-mode (and mark (replace-regexp-in-string
+                               ",? *\\b[a-z]+ state\\b" "" mark)))
+         (said (and description
+                    (string-match "\\`in \\([^:,;]+\\)[:,]" description)
+                    (match-string 1 description)))
+         (heard (and intro (string-match "\\`In \\([^:,]+\\).*:\\'" intro)
+                     (match-string 1 intro)))
+         (keys (and (not (string-match-p "\\.\\." cell))
+                    (delq nil (mapcar #'+docs--marked (split-string cell " or " t)))))
+         (commands (+docs--marked command-cell)))
+    (when (and keys commands
+               (not (string-search "*" command-cell))
+               (string-blank-p (replace-regexp-in-string "[~=][^~=]+[~=]" "" command-cell)))
+      (mapcar (pcase-lambda (`(,key . ,command))
+                (list :key key :command (intern command)
+                      :mode (or (and mark-mode (not (string-blank-p mark-mode)) mark-mode)
+                                said heard)
+                      :state (or (+docs--row-state mark) (+docs--row-state description)
+                                 (+docs--row-state intro) 'normal)))
+              (+docs--row-pairs keys commands)))))
+
+(defun +docs--row-context (row)
+  "Where ROW's key is looked up, a context of `+docs-row-modes', or a
+sentence saying why that cannot be told."
+  (let ((mode (plist-get row :mode)) (key (plist-get row :key)))
+    (cond
+     (mode (or (cdr (seq-find (lambda (rule) (string-match-p (car rule) mode))
+                              +docs-row-modes))
+               (format "names a mode the check does not know, %S" mode)))
+     ((string-match-p "\\`SPC m\\( \\|\\'\\)" key) "the localleader, in no mode the row names")
+     ((string-match-p "\\`SPC k\\( \\|\\'\\)" key) "SPC k, for no kind of project the row names")
+     ((string-prefix-p "SPC " key) (cdr (assoc "\\`anywhere\\'" +docs-row-modes)))
+     (t "names no mode"))))
+
+(defun +docs--key-runs-here (sequence)
+  "The command a press of SEQUENCE runs in this buffer, nil when none.
+A window system sends RET as <return> and TAB as <tab>, which Emacs
+reads as RET and TAB only when nothing binds them as they come, so a
+map that binds <return> wins over one that binds RET.  The maps a menu
+set up earlier leaves over the keyboard are put aside."
+  (let* ((overriding-terminal-local-map nil)
+         (overriding-local-map nil)
+         (sent (vconcat (mapcar (lambda (event)
+                                  (pcase event
+                                    (?\r 'return) (?\t 'tab) (?\e 'escape)
+                                    (?\d 'backspace) ('S-tab 'backtab) (_ event)))
+                                sequence)))
+         (def (and (not (equal sent sequence)) (key-binding sent))))
+    (when (or (null def) (numberp def))
+      (setq def (key-binding sequence)))
+    (and def (not (numberp def)) def)))
+
+(defun +docs--rows-in (context state rows)
+  "What each of ROWS runs in a buffer of CONTEXT in evil STATE, as a list
+of (ROW . COMMAND), or a message when no such buffer can be made."
+  (cl-flet ((runs ()
+              (when (fboundp 'evil-change-state) (evil-change-state state))
+              (mapcar (lambda (row)
+                        (cons row (+docs--key-runs-here
+                                   (+docs--key-sequence (plist-get row :key)))))
+                      rows)))
+    (condition-case err
+        (pcase context
+          ('dired (+docs--in-dired #'runs))
+          (`(:map ,map)
+           (unless (boundp map) (error "%s is not loaded" map))
+           (mapcar (lambda (row)
+                     (cons row (let ((def (lookup-key (symbol-value map)
+                                                      (+docs--key-sequence
+                                                       (plist-get row :key)))))
+                                 (and (not (numberp def)) def))))
+                   rows))
+          (_ (with-temp-buffer
+               (dolist (mode context) (funcall mode))
+               (runs))))
+      (error (error-message-string err)))))
+
+(defun +docs--placed-rows ()
+  "The README rows that name their command, split by where they are
+looked up: (PLACED . UNPLACED), PLACED an alist from (CONTEXT . STATE)
+to its rows, UNPLACED a list of (ROW . WHY)."
+  (let (placed unplaced)
+    (dolist (row (+docs--command-rows))
+      (let ((context (+docs--row-context row)))
+        (cond ((stringp context) (push (cons row context) unplaced))
+              ((null (+docs--key-sequence (plist-get row :key))))
+              (t (push row (alist-get (cons context (plist-get row :state)) placed
+                                      nil nil #'equal))))))
+    (cons (nreverse placed) (nreverse unplaced))))
+
+;; Autoloaded: bin/check-config.el calls it.
+;;;###autoload
+(defun +docs-row-problems ()
+  "Every README row that names a command its key does not run, looked
+up in a buffer of the row's mode, as a list of sentences with the file
+and line.  Nil when all is well.  A row whose mode the docs do not say
+is not judged; `+docs-row-unplaced' lists those."
+  (+docs--warm-keymaps)
+  (let (problems)
+    (pcase-dolist (`((,context . ,state) . ,rows) (car (+docs--placed-rows)))
+      (let ((runs (+docs--rows-in context state (reverse rows))))
+        (if (stringp runs)
+            (dolist (row rows)
+              (push (cons row (format "no buffer of %S: %s" context runs)) problems))
+          (pcase-dolist (`(,row . ,command) runs)
+            (unless (eq command (plist-get row :command))
+              (push (cons row (format "runs %s, not %s, in %s, %s state"
+                                      (+docs--command-name command) (plist-get row :command)
+                                      (or (plist-get row :mode) "any buffer")
+                                      (plist-get row :state)))
+                    problems))))))
+    ;; In the order of the docs, which the grouping by mode has mixed.
+    (mapcar (pcase-lambda (`(,row . ,what))
+              (format "%s:%d: %s %s" (plist-get row :file) (plist-get row :line)
+                      (plist-get row :key) what))
+            (sort problems
+                  (lambda (a b)
+                    (let ((a (car a)) (b (car b)))
+                      (if (equal (plist-get a :file) (plist-get b :file))
+                          (< (plist-get a :line) (plist-get b :line))
+                        (string< (plist-get a :file) (plist-get b :file)))))))))
+
+;; Autoloaded: bin/check-config.el calls it.
+;;;###autoload
+(defun +docs-row-unplaced ()
+  "Every README row that names a command but not the mode its key runs
+it in, as a list of sentences with the file and line: what
+`+docs-row-problems' cannot judge until the row says, (dired) after
+the key or \"in magit:\" before the description."
+  (mapcar (pcase-lambda (`(,row . ,why))
+            (format "%s:%d: %s: %s" (plist-get row :file) (plist-get row :line)
+                    (plist-get row :key) why))
+          (cdr (+docs--placed-rows))))

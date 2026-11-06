@@ -4774,10 +4774,10 @@ bound.
 - ~+docs/check-autoloads~ (~SPC h d C~) :: Check that every function the
   config refers to is callable now.
 - ~+docs/check-keys~ :: Check that every private menu holds up, the leader
-  has no double and no unmeant shadow, and every documented key is bound,
-  the leader's and the rest; see '+docs-menu-problems',
-  '+docs-leader-problems', '+docs-key-problems' and
-  '+docs-binding-problems'.
+  has no double and no unmeant shadow, every documented key is bound, the
+  leader's and the rest, and runs the command its README row names; see
+  '+docs-menu-problems', '+docs-leader-problems', '+docs-key-problems',
+  '+docs-binding-problems' and '+docs-row-problems'.
 - ~+docs/module-readme~ (~SPC h d M~) :: Open the README of the private
   MODULE.
 

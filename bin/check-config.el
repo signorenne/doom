@@ -4,8 +4,9 @@
 ;; warnings, the load warnings, the errors in *Messages*, the repeating
 ;; timers, whether every function the config refers to is callable,
 ;; whether every private menu sets up and each of its keys reaches its
-;; suffix, whether every documented key is bound, and what grows when
-;; the config is reloaded twice.
+;; suffix, whether every documented key is bound and a README row's key
+;; runs the command the row names, and what grows when the config is
+;; reloaded twice.
 
 (require 'bytecomp)
 
@@ -158,6 +159,24 @@ symbol; the library is loaded so the advice is in place to look at."
   "Signal that PROMPT was asked, rather than wait for an answer."
   (error "check-config: the daemon was asked %S" prompt))
 
+(defun check-config--row-keys ()
+  "The report's lines on the README rows that name the command of a
+key: the rows whose key runs another command in the row's mode, then
+how many rows name no mode and so were not judged.  The rows are
+counted, not listed: `+docs-row-unplaced' lists them."
+  (if (not (fboundp '+docs-row-problems))
+      "no +docs-row-problems, the docs module is off\n"
+    (let ((problems (+docs-row-problems))
+          (unplaced (length (+docs-row-unplaced))))
+      (concat (if problems
+                  (format "%d problem(s)\n%s" (length problems)
+                          (mapconcat (lambda (p) (concat "  " p "\n")) problems ""))
+                "each runs its command where its row says\n")
+              (if (zerop unplaced)
+                  ""
+                (format "  %d row(s) say no mode and are not judged: (+docs-row-unplaced)\n"
+                        unplaced))))))
+
 (defun check-config--run (out log)
   "Compile into OUT and write the report to LOG."
   (dolist (fn check-config--questions)
@@ -244,6 +263,8 @@ symbol; the library is loaded so the advice is in place to look at."
                       "every menu sets up clean, the leader holds up, every documented key is bound"))
                 "no +docs/check-keys, the docs module is off")
               "\n")
+      (insert "\nthe keys a README row names the command of, in the row's mode: "
+              (check-config--row-keys))
       (insert "\nadvice against what it advises: ")
       (let ((problems (check-config--advice-problems)))
         (insert (if problems
