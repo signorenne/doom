@@ -139,7 +139,8 @@ starts no container, as `+cpp--menu-description' does not."
     ("m" "CMake panel: what you set" +cpp/cmake-menu)]
    ["Project"
     :if (lambda () (not (+cpp--kind-p 'cmake)))
-    ("I" "Project info"       projection-show-project-info)
+    ("I" "Project status"     +cpp/project-status :if +cpp-project-p)
+    ("I" "Project info"       projection-show-project-info :if-not +cpp-project-p)
     ("O" "Set the project type" projection-set-primary-project-type)
     ("Z" "Reset the cache"    projection-cache-clear)]]
   [["Fix"
