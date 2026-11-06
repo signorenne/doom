@@ -6,6 +6,7 @@
 (declare-function consult-line "consult")
 (declare-function org-fold-show-all "org-fold")
 (declare-function org-fontify-entities "org")
+(defvar org-pretty-entities)
 (declare-function which-key--get-bindings "which-key")
 (declare-function evil-get-auxiliary-keymap "evil-core")
 
@@ -938,7 +939,8 @@ after PREFIX; a kit map keeps each description in the map itself."
       (let ((org-pretty-entities t))
         (save-excursion
           (goto-char (point-min))
-          (org-fontify-entities (point-max))))
+          ;; It draws one entity a call, as font-lock calls it.
+          (while (org-fontify-entities (point-max)))))
       (org-table-map-tables #'org-table-align t)
       (buffer-string))))
 
