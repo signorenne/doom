@@ -359,7 +359,7 @@ after asking."
   (interactive)
   (let* ((root (+core-project-root))
          (src (or (+cpp--compile-commands-file)
-                  (user-error "No compile_commands.json yet, configure first with SPC k c")))
+                  (user-error "No compile_commands.json yet, configure first with SPC k k")))
          (dest (expand-file-name "compile_commands.json" root)))
     (cond ((string= src dest)
            (message "The database is in the root already"))

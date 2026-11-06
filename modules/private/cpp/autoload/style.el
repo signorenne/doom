@@ -91,7 +91,7 @@ changed once it is done."
          (fix current-prefix-arg))
     (+cpp--need-clang "run-clang-tidy" kit)
     (unless (+cpp--compile-commands-file kit root)
-      (user-error "No compile_commands.json in %s, configure first with SPC k c"
+      (user-error "No compile_commands.json in %s, configure first with SPC k k"
                   dir))
     (let ((buffer (+cpp--compile "clang-tidy"
                                  (+cpp--kit-shell

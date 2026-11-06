@@ -241,7 +241,7 @@ cache variables you have overridden.
 |                     | =-l= list the ones set, =-L= log level,            |
 |                     | =-j= jobs, =-v= verbose, =s= default target,         |
 |                     | =A= run target, =a= run arguments                  |
-| Configure and build | =c= configure, =F= configure fresh (drops the      |
+| Configure and build | =k= configure, =F= configure fresh (drops the      |
 |                     | cache), =z= configure, reindex and restart the   |
 |                     | server, =b= build, =C= clean, =W= rebuild            |
 | Files and status    | =I= project status, =v c= CMakeCache.txt,          |
@@ -298,7 +298,7 @@ background, as its first file opens: by its first preset or into
 =build/=, asking nothing. Not one whose kit runs in a
 container or with an SDK's environment, which would start the one or
 source the other behind your back, nor one whose compiler is not on the
-host, and not again in a session after a configure fails; =SPC k c=
+host, and not again in a session after a configure fails; =SPC k k=
 configures it where you can see why.
 
 A project that has no database at all, qmake or a hand written Makefile,
@@ -326,6 +326,21 @@ arguments, where the compilation database is and whether the root link
 exists, which server is running, and the versions of clangd, cmake, gdb
 and clang-tidy. =z= is the usual repair: it configures, relinks
 =compile_commands.json= and restarts the server.
+
+* Checking a file
+=SPC k c= checks the file you are in, errors only, without building
+anything: its own compile command from the kit's
+=compile_commands.json=, with =-fsyntax-only= and =-w= and no output file,
+run where the kit's builds run, in its container or with its SDK's
+environment. The errors land in =*check*<project>= like a build's, and
+=RET= or =next-error= there goes to each. A header has no command of
+its own, so it is checked with the command of a source that includes
+it, one of the same name first, as clangd reads it, and a header
+nothing includes says so. A file the database does not list says so
+too, and that =SPC k k= configures, which writes it again; in a Makefile
+project the database is =bear -- make='s.
+Warnings are left out, the ones =-Werror= turns into errors too: the
+build shows those.
 
 * Test files
 A file of doctest, Catch2 or GoogleTest cases opens in tree-sitter's
@@ -379,7 +394,8 @@ the kit, the types of its family, the default target, the server.
 | Key       | What it does                                                                                               |
 |-----------+------------------------------------------------------------------------------------------------------------|
 | ~SPC k SPC~ | the menu; ~SPC k m~ the CMake panel                                                                          |
-| ~SPC k c~   | configure, ~b~ build, ~r~ run, ~d~ debug; Doom's ~SPC c C~ recompiles, ~SPC d d~ picks a debug configuration          |
+| ~SPC k k~   | configure, ~b~ build, ~r~ run, ~d~ debug; Doom's ~SPC c C~ recompiles, ~SPC d d~ picks a debug configuration         |
+| ~SPC k c~   | check this file, errors only, with its compile command where the kit runs; ~C~ cleans, after asking          |
 | ~SPC k t~   | the ctest suite, ~T~ only the test at point, ~u~ a test executable whole                                       |
 | ~SPC k B~   | build any target, ~s~ sets the default one, ~i~ installs, ~P~ packages, ~o~ copies the package out, ~S~ runs a script, ~U~ deploys to the device |
 | ~SPC k K~   | pick a kit (a preset, a directory, a Qt Creator configuration), ~y~ the build type, ~Y~ the family, ~?~ which one and why |
@@ -400,7 +416,7 @@ The panel, =SPC k m=: ~K~ ~y~ ~Y~ ~Z~ for the kit (pick, type, family,
 forget); ~-D~ ~-U~ ~-l~ to set, clear and list the cache variables
 (=CMAKE_PREFIX_PATH= offers the Qts found), ~-L~ ~-j~ ~-v~ for the log level,
 the jobs and verbosity; ~s~ ~A~ ~a~ for the default target, the run target and
-its arguments; ~c~ ~F~ ~z~ ~b~ ~C~ ~W~ to configure (plain, fresh, with a
+its arguments; ~k~ ~F~ ~z~ ~b~ ~C~ ~W~ to configure (plain, fresh, with a
 reindex), build, clean, rebuild; ~I~ ~v c~ ~v p~ ~v j~ ~v d~ ~w~ for the status
 and the files behind it, ~G~ generates the presets. A setter keeps the panel open, so the header
 shows what it did. In either menu ~q~ closes it and ~?~ then a key

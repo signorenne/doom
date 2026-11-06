@@ -4,8 +4,8 @@
 ;; with `+core-register-builder' and the first whose test answers takes
 ;; the project: F6, F5 and the rest mean the same thing in a Rust buffer
 ;; as in a C++ one, and SPC k opens that module's own keys, the same
-;; letters for the same things, b build, r run, t test, d debug, m the
-;; panel, n a new project.
+;; letters for the same things, b build, c check, k configure, C clean,
+;; r run, t test, d debug, m the panel, n a new project.
 
 (declare-function +core-project-root "lib")
 (declare-function +core-project-root-or-nil "lib")
@@ -18,18 +18,18 @@
 Each entry is (NAME TEST . PLIST).  TEST is called with no arguments,
 in the project root, and answers non-nil when that module owns the
 project.  PLIST holds a command under any of :run, :run-with-args,
-:build-and-run, :debug, :panel and :new, :label, what SPC k n calls its
-projects, :keys, the symbol of the keymap SPC k opens in its projects,
-and :fallback when the module answers for whatever nothing else
-claimed.  cpp does, since a directory with a Makefile and a binary in it
-is its business as much as a CMake tree is; its own keys it shows only
-where its TEST says the project is its kind.")
+:build-and-run, :check, :debug, :panel and :new, :label, what SPC k n
+calls its projects, :keys, the symbol of the keymap SPC k opens in its
+projects, and :fallback when the module answers for whatever nothing
+else claimed.  cpp does, since a directory with a Makefile and a binary
+in it is its business as much as a CMake tree is; its own keys it shows
+only where its TEST says the project is its kind.")
 
 ;;;###autoload
 (defun +core-register-builder (name test &rest plist)
   "Say that module NAME runs, debugs, shows or starts a project TEST claims.
-PLIST takes :run, :run-with-args, :build-and-run, :debug, :panel, :new,
-:label, :keys and :fallback; see
+PLIST takes :run, :run-with-args, :build-and-run, :check, :debug, :panel,
+:new, :label, :keys and :fallback; see
 `+core-builders'.  Registering again under the same NAME replaces the
 entry, so a reload does not stack them."
   (setq +core-builders
@@ -174,6 +174,12 @@ and going to one."
   (interactive)
   (+core--build-call :build-and-run
                      "This kind of project cannot be built and run"))
+
+;;;###autoload
+(defun +core/check ()
+  "Check this project without building it, however its kind is checked."
+  (interactive)
+  (+core--build-call :check "This kind of project cannot be checked"))
 
 ;;;###autoload
 (defun +core/debug ()

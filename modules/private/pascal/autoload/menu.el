@@ -32,6 +32,7 @@
     :if +pascal--buildable-p
     ("b" "Build"              +pascal/build)
     ("x" "Build, then run"    +pascal/build-and-run)
+    ("c" "Check, without linking" +pascal/check)
     ("t" "Test"               +pascal/test)
     ("C" "Clean"              +pascal/clean)]
    ["Run"
@@ -71,6 +72,7 @@
    ["Do"
     ("b" "Build"              +pascal/build :if +pascal--buildable-p)
     ("x" "Build, then run"    +pascal/build-and-run :if +pascal--buildable-p)
+    ("c" "Check, without linking" +pascal/check :if +pascal--buildable-p)
     ("r" "Run"                +pascal/run :if +pascal--buildable-p)
     ("R" "Run with arguments" +pascal/run-with-args :if +pascal--buildable-p)
     ("d" "Debug"              +pascal/debug :if +pascal--buildable-p)

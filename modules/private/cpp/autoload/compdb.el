@@ -162,7 +162,7 @@ so a configure that fails is not tried at every file."
            (command (condition-case err
                         (let ((inhibit-interaction t))
                           (+cpp--configure-command))
-                      (error (message "cmake: %s not configured in the background: %s; SPC k c configures it"
+                      (error (message "cmake: %s not configured in the background: %s; SPC k k configures it"
                                       name (error-message-string err))
                              nil))))
       (when command
@@ -182,7 +182,7 @@ so a configure that fails is not tried at every file."
                         ;; Still the opening of a file: no container starts.
                         (let ((+container-may-start nil))
                           (+cpp--compdb-update root 'restart)))
-               (message "cmake: the background configure of %s failed; SPC k c runs it where you can see why"
+               (message "cmake: the background configure of %s failed; SPC k k runs it where you can see why"
                         name)))))))))
 
 ;; Autoloaded: called from `find-file-hook' in config.el.

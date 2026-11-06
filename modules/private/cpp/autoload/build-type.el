@@ -428,7 +428,7 @@ toolchain file, which is a tool set by itself."
       (unless (equal (+cpp--kit-type wanted) type)
         (message "Kit: %s; the family has no %s yet, SPC k y makes one" (+cpp-kit-name wanted) type)))
      ((null source)
-      (user-error "%s has no configured kit to take a tool set from; build one there once, in Qt Creator or with SPC k c on it"
+      (user-error "%s has no configured kit to take a tool set from; build one there once, in Qt Creator or with SPC k k on it"
                   family))
      (t (+cpp--configure-new root source (+cpp-kit-name wanted) (+cpp-kit-dir wanted)
                              (or (+cpp--kit-type wanted) "Debug") wanted)))))

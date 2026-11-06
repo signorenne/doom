@@ -121,7 +121,8 @@ nothing takes the window with it. A window that stayed is closed with
 =q= or =ESC= once you have read it.
 
 The same things are on the leader when your hands are already there:
-=SPC k c= configure, =SPC k b= build, =SPC k r= run, =SPC k d= debug.
+=SPC k k= configure, =SPC k b= build, =SPC k r= run, =SPC k d= debug.
+=SPC k c= checks the file you are in, errors only, building nothing.
 
 While writing, four abbreviations expand with =TAB= and carry the house
 style with them: =doxy= a Doxygen block, =tc= a doctest case, =sc= a
@@ -212,7 +213,7 @@ half the file in red for no reason.
 | =SPC k K=   | pick another kit, preset or configuration           |
 | =SPC k y=   | build type: Debug, Release, RelWithDebInfo, MinSize |
 | =SPC k Y=   | switch family, the SDK kit against the PC kit       |
-| =F8=        | configure, =SPC k c=                                  |
+| =F8=        | configure, =SPC k k=                                  |
 | =F7=        | build, =SPC k b=; =SPC k B= any target                  |
 | =F6=        | run, =SPC k r=                                        |
 | =F5=        | debug or continue, =SPC k d=; =S-F5= stops              |
@@ -220,6 +221,7 @@ half the file in red for no reason.
 | =F10= =F11=   | step over, step into; =S-F11= out                     |
 | =F2= =F4=     | definition, header and source                       |
 | =SPC k T=   | the test at point, =SPC k t= the suite                |
+| =SPC k c=   | check this file, errors only; =SPC k C= clean         |
 | =SPC k e=   | next problem, =SPC k E= previous, =SPC k .= fix it      |
 | =SPC k f=   | format this buffer, =SPC k g F= the project           |
 | =SPC k g t= | tidy this file, =SPC k g p= the project               |

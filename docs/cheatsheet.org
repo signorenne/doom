@@ -1764,7 +1764,7 @@ The [[file:../modules/private/cpp/README.org][cpp README]] explains how the piec
 | ~SPC k m~   | the CMake panel: what you set, the kit, the cache, the targets, the files |
 
 One rule: a key means the same thing on the leader, in the menu and
-in the panel, ~b~ builds and ~K~ picks the kit wherever you press it.
+in the panel: ~b~ builds, ~k~ configures, ~K~ picks the kit, wherever.
 Both headers show the state, the kit and how it was chosen, the types
 of its family, the default target, the server, so you see what you are
 about to act on; the panel adds the generator, the jobs, the overrides
@@ -1778,7 +1778,7 @@ change. In either, ~q~ closes it and ~?~ then a key explains the key.
 | ~SPC k K~ | pick another: a preset, a directory, a Qt Creator configuration built or not |
 | ~SPC k y~ | build Debug, Release, RelWithDebInfo, MinSizeRel, Profile from now on        |
 | ~SPC k Y~ | switch the family, the SDK kit against the PC kit, same type                 |
-| ~SPC k c~ | configure it, ~SPC k b~ build it, ~SPC k t~ test it                              |
+| ~SPC k k~ | configure it, ~SPC k b~ build it, ~SPC k t~ test it                              |
 | ~SPC k B~ | build any target, the packaging ones included                                |
 | ~SPC k r~ | run the executable, ~SPC k d~ debug it                                         |
 | ~SPC k R~ | run it with arguments, asked now; ~SPC k m a~ keeps them for the project       |
@@ -1874,12 +1874,12 @@ directory, build type and cache variables, so =dev= and =release= never
 overwrite each other. Variables you set with ~-D~ are kept in the
 project's =.dir-locals.el= and passed to every configure. An old project
 whose dependency says a CMake older than 3.5: ~-D~,
-=CMAKE_POLICY_VERSION_MINIMUM= =3.5=, then ~c~.
+=CMAKE_POLICY_VERSION_MINIMUM= =3.5=, then ~k~.
 
 ** CMake panel: configure and build
 | Key | What it does                                        |
 |-----+-----------------------------------------------------|
-| ~c~   | configure, ~F~ configure fresh with the cache dropped |
+| ~k~   | configure, ~F~ configure fresh with the cache dropped |
 | ~z~   | configure, relink the index and restart the server  |
 | ~b~   | build, ~C~ clean, ~W~ clean and build                   |
 
@@ -1928,7 +1928,7 @@ frame full screen.
 ** The same from the leader
 | Key     | What it does                                                            |
 |---------+-------------------------------------------------------------------------|
-| ~SPC k c~ | configure, ~b~ build, ~r~ run; Doom's ~SPC c C~ recompiles                    |
+| ~SPC k k~ | configure, ~b~ build, ~C~ clean, ~r~ run; Doom's ~SPC c C~ recompiles           |
 | ~SPC k R~ | run with arguments, asked now; ~SPC k x~ builds first, then runs          |
 | ~SPC k t~ | test, ~T~ only the test at point, ~u~ a test executable whole               |
 | ~SPC k d~ | debug; Doom's ~SPC d d~ picks a debug configuration                       |
@@ -1971,6 +1971,7 @@ it was built here.
 ** Problems, and fixing them
 | Key       | What it does                                          |
 |-----------+-------------------------------------------------------|
+| ~SPC k c~   | check this file, errors only, building nothing        |
 | ~SPC k e~   | the next problem in the buffer, ~SPC k E~ the previous  |
 | ~SPC c x~   | every problem, pick one to jump to                    |
 | ~SPC k .~   | fix the one at point, the server's quickfix           |
@@ -2077,6 +2078,7 @@ and C++ use: they ask what kind of project this is, so in a tree with a
 | ~F7~        | build, with the profile and features that are set |
 | ~F6~        | run it, with the arguments that are set           |
 | ~SPC k b~   | build, ~SPC k t~ test, ~SPC k i~ install              |
+| ~SPC k c~   | check, the fast one, ~SPC k C~ clean                |
 | ~SPC k r~   | run, ~SPC k R~ with arguments asked now             |
 | ~SPC k x~   | build, then run, what ~SPC k r~ does in cargo       |
 | ~SPC k d~   | debug with codelldb                               |
@@ -2126,6 +2128,7 @@ has none.
 | ~F7~        | build: lazbuild for a =.lpi=, fpc for a =.lpr=       |
 | ~F6~        | run it                                           |
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug with gdb       |
+| ~SPC k c~   | check, without linking: fpc -s of the program    |
 | ~SPC k m~   | the panel: what is set, and everything else      |
 | ~SPC k SPC~ | the menu: every key of SPC k, by its name        |
 | ~SPC k n~   | a new project: Pascal, then console or lcl       |
@@ -2171,6 +2174,7 @@ the docsets of the libraries its =package.json= uses.
 | ~SPC k r~   | the dev server, left running and able to listen |
 | ~SPC k R~   | with arguments asked now; ~SPC k x~ as ~SPC k r~    |
 | ~SPC k b~   | build, ~SPC k t~ test                             |
+| ~SPC k c~   | the types, without building                     |
 | ~SPC k d~   | debug node, or Electron's main process          |
 | ~SPC k m~   | the panel: everything the project can be told   |
 | ~SPC k SPC~ | the menu: every key of SPC k, by its name       |
@@ -2919,7 +2923,7 @@ Boxes instead of glyphs mean one of the two is missing.
 | Symptom                         | What to try                                |
 |---------------------------------+--------------------------------------------|
 | the server does not start       | ~SPC k l r~, then ~SPC k I~                    |
-| no completion, no diagnostics   | ~SPC k c~, then ~SPC k l l~                    |
+| no completion, no diagnostics   | ~SPC k k~, then ~SPC k l l~                    |
 | embedded headers not found      | ~SPC k p i~                                  |
 | Qt types not found, no database | ~SPC k l c~, then ~SPC k l r~                  |
 | the SDK is in a distrobox       | ~SPC k ?~ shows the kit found; ~SPC k K~ picks |
@@ -3714,10 +3718,11 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k P~   | Package                 |
 | ~SPC k SPC~ | What the project can do |
 | ~SPC k b~   | Build                   |
-| ~SPC k c~   | Configure               |
+| ~SPC k c~   | Check                   |
 | ~SPC k f~   | A file in any project   |
 | ~SPC k g~   | Clone a repository      |
 | ~SPC k i~   | Install                 |
+| ~SPC k k~   | Configure               |
 | ~SPC k n~   | New project             |
 | ~SPC k o~   | The projects folder     |
 | ~SPC k p~   | Open a project          |
@@ -3731,6 +3736,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k ?~   | Which kit, and why                       |
 | ~SPC k A~   | Disassemble at point                     |
 | ~SPC k B~   | Build a target                           |
+| ~SPC k C~   | Clean                                    |
 | ~SPC k D~   | Debug on the device                      |
 | ~SPC k E~   | Previous problem                         |
 | ~SPC k G~   | Generate the presets                     |
@@ -3747,7 +3753,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k Y~   | Kit family                               |
 | ~SPC k a~   | Assembly, live                           |
 | ~SPC k b~   | Build                                    |
-| ~SPC k c~   | Configure                                |
+| ~SPC k c~   | Check this file, errors only             |
 | ~SPC k d~   | Debug                                    |
 | ~SPC k e~   | Next problem                             |
 | ~SPC k f~   | clang-format this buffer                 |
@@ -3757,6 +3763,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k g t~ | clang-tidy this file                     |
 | ~SPC k i~   | Install                                  |
 | ~SPC k j~   | Attach to a gdb server                   |
+| ~SPC k k~   | Configure                                |
 | ~SPC k l b~ | Run the kit in a container               |
 | ~SPC k l c~ | Write .clangd                            |
 | ~SPC k l e~ | The server's log                         |
@@ -3831,6 +3838,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC k T~   | Target                 |
 | ~SPC k a~   | Run arguments, kept    |
 | ~SPC k b~   | Build                  |
+| ~SPC k c~   | Check, without linking |
 | ~SPC k d~   | Debug                  |
 | ~SPC k m~   | The panel: what is set |
 | ~SPC k n~   | New project            |
@@ -3877,6 +3885,8 @@ bound.
   the build worked.
 - ~+core/build-panel~ (~SPC k m~) :: The panel of what this project's build
   depends on.
+- ~+core/check~ (~SPC k c~) :: Check this project without building it,
+  however its kind is checked.
 - ~+core/checksum~ :: The checksum of the marked files, SHA-256 unless
   ALGORITHM; one file's is copied, several are listed.
 - ~+core/checksum-choose~ :: The checksum of the marked files, as ALGORITHM.
@@ -4127,9 +4137,9 @@ bound.
   succeeded.
 - ~+cpp/build-type~ (~SPC k y~) :: Build as TYPE from now on: Debug,
   Release, RelWithDebInfo or MinSizeRel.
-- ~+cpp/check~ :: Check this file, errors only: its compile command, with
-  -fsyntax-only.
-- ~+cpp/cmake-clean~ :: Build the clean target, after asking.
+- ~+cpp/check~ (~SPC k c~) :: Check this file, errors only: its compile
+  command, with -fsyntax-only.
+- ~+cpp/cmake-clean~ (~SPC k C~) :: Build the clean target, after asking.
 - ~+cpp/cmake-clear-variable~ :: Drop the override on cache variable NAME.
 - ~+cpp/cmake-configure-fresh~ :: Configure from scratch, dropping the
   existing CMake cache, after asking.
@@ -4327,7 +4337,8 @@ bound.
 - ~+pascal/build~ (~SPC k b~) :: Build the project with what it is set to.
 - ~+pascal/build-and-run~ (~SPC k x~) :: Build, and run it when the build
   worked.
-- ~+pascal/check~ :: Check the program without linking it, with fpc -s.
+- ~+pascal/check~ (~SPC k c~) :: Check the program without linking it, with
+  fpc -s.
 - ~+pascal/clean~ (~SPC k C~) :: Move what the build made, lib/ and bin/, to
   the trash, after asking.
 - ~+pascal/debug~ (~SPC k d~) :: Debug what this project builds, given the

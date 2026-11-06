@@ -40,6 +40,7 @@ is all of them in a menu, under the names which-key shows. =S-F6=, and
 | ~SPC k R~   | with arguments asked now; ~SPC k x~ as ~SPC k r~   |
 | ~SPC k b~   | build                                          |
 | ~SPC k t~   | test                                           |
+| ~SPC k c~   | the types, without building                    |
 | ~SPC k d~   | debug node, or Electron's main process         |
 | ~SPC k m~   | the panel: everything below, and what this is  |
 | ~SPC k SPC~ | the menu: every key of SPC k, by its name      |

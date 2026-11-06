@@ -31,6 +31,13 @@ The module adds:
 - fpc's =file(line,col) Error:= messages as jumps in the build buffer,
   which none of Emacs's own patterns read: ~RET~ opens one, ~]e~ goes to
   the next,
+- a check on ~SPC k c~: =fpc -s= of the program, which compiles it and
+  every unit it uses and stops before the assembler and the linker,
+  writing into Doom's cache, so =lib/= and =bin/= stay the build's. A
+  Lazarus project is checked through its main file, with the unit and
+  include paths =lazbuild --get-expand-text= gives for its build mode,
+  widget set and target, and the syntax options Lazarus gives a new
+  project, =-MObjFPC -Scghi=,
 - the panel on ~SPC k m~, and a new project on ~SPC k n~,
 - gdb through dape, reading the DWARF the build asks fpc for, and
   given the run arguments,
@@ -47,6 +54,7 @@ menu, under the names which-key shows. The most used:
 | ~F6~        | run it                                        |
 | ~SPC k b~   | build, ~SPC k r~ run, ~SPC k d~ debug             |
 | ~SPC k t~   | build the tests and run them                  |
+| ~SPC k c~   | check, without linking; ~SPC k C~ clean         |
 | ~SPC k m~   | the panel: what is set, and everything else   |
 | ~SPC k SPC~ | the menu: every key of SPC k, by its name     |
 | ~SPC k n~   | a new project: Pascal, then console or lcl    |

@@ -189,6 +189,7 @@ buffer's `exec-path'."
                         ;; The dev server builds what it serves, as cargo
                         ;; run builds first: S-F6 starts it.
                         :build-and-run #'+web/dev
+                        :check #'+web/check
                         :debug #'+web/debug
                         :panel #'+web/menu
                         :new #'+web/new-project

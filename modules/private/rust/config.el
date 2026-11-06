@@ -60,6 +60,7 @@
                         :run-with-args #'+rust/run-with-args
                         ;; cargo run builds first.
                         :build-and-run #'+rust/run
+                        :check #'+rust/check
                         :debug #'+rust/debug
                         :panel #'+rust/menu
                         :new #'+rust/new-project

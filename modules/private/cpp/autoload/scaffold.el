@@ -68,7 +68,7 @@ is done here rather than left as a thing to remember."
       (with-temp-buffer
         (if (zerop (call-process "cmake" nil t nil "--preset" "dev"))
             t
-          (message "Created, but cmake --preset dev failed; SPC k c to try again")
+          (message "Created, but cmake --preset dev failed; SPC k k to try again")
           nil)))))
 
 (defun +cpp--add-qt-includes (dir)
@@ -131,7 +131,7 @@ framework: one key for whatever kind of project is being started."
       (message "%s created from the %s template%s" name kind
                (if configured
                    " and configured: F7 builds it"
-                 ". SPC k c configures it")))))
+                 ". SPC k k configures it")))))
 
 ;;;###autoload
 (defun +cpp/new-qt-project (dir name)

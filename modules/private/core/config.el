@@ -1445,7 +1445,10 @@ environment, which direnv may have set."
   (let ((map (+core-kit-keymap
               '(("b" "Build"             #'projection-commands-build-project)
                 ("B" "Build a target"    #'projection-multi-compile)
-                ("c" "Configure"         #'projection-commands-configure-project)
+                ;; c is check in every language, so it is here too,
+                ;; and says this kind has none; configure is k.
+                ("c" "Check"             #'+core/check)
+                ("k" "Configure"         #'projection-commands-configure-project)
                 ("t" "Test"              #'projection-commands-test-project)
                 ("r" "Run"               #'projection-commands-run-project)
                 ("i" "Install"           #'projection-commands-install-project)

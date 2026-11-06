@@ -71,17 +71,23 @@ are told apart by their path.
 * SPC k, the project's keys
 =SPC k= opens the keys of the project you are in, from the module that
 knows its kind: C and C++, Pascal, Rust or the web, each with the same
-letters for the same things, =b= build, =r= run, =R= with arguments, =t=
-test, =d= debug, =m= the panel, =n= a new project, =I= the project's
-status, which opens at the bottom in every language and closes with =q=
-or =ESC= (~+core-show-report~). A module registers its map with
-~+core-register-builder~.
+letters for the same things, =b= build, =c= check, =k= configure, =C=
+clean, =r= run, =R= with arguments, =t= test, =d= debug, =m= the panel,
+=n= a new project, =I= the project's status, which opens at the bottom
+in every language and closes with =q= or =ESC= (~+core-show-report~). A
+module registers its map with ~+core-register-builder~.
 
+- =c= checks without building, in every language: the file you are in
+  for C and C++, =fpc -s= of the program for Pascal, =cargo check=, the
+  types of a web project. ~+core/check~ is the same from anywhere.
+- =k= configures where a kind has that step, C and C++ and the kinds
+  projection knows, and =C= cleans, after asking, where a kind can.
 - Each module's =SPC k= has =SPC k SPC=, a menu of all its keys under
   the names which-key shows.
 - In a project no module knows, a Gradle or a Python one, =SPC k= has
-  what projection can do with it: build, test, run, install, and the
-  menu of its kind on =SPC k SPC=.
+  what projection can do with it: build, configure, test, run, install,
+  and the menu of its kind on =SPC k SPC=; =c= says this kind of
+  project cannot be checked.
 - Outside a project, it starts one or goes to one: =SPC k n= a new
   project, =p= open one, =f= a file in any of them, =o= the projects
   folder, =g= clone a repository, =D= forget one.

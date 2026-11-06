@@ -221,7 +221,7 @@ host, which a stopped container may hold, nor during a build."
 (defun +cpp--executable-artifacts (kit)
   "Executables CMake knows about in KIT's build directory, or nil.
 Read from the file API reply: projection's client query, which a
-configure through SPC k c writes, else the shared codemodel of a
+configure through SPC k k writes, else the shared codemodel of a
 directory Qt Creator configured, else one asked for now, for a
 directory configured on the command line.
 
@@ -279,7 +279,7 @@ One asked for is the project's run target from then on, kept in
                   (message "Run target: %s, saved to .dir-locals.el; SPC k m A picks another"
                            name)
                   (alist-get 'arg0 (cdr (assoc name rows)))))
-          (t (user-error "No executable known for kit %s; configure and build first (SPC k c, SPC k b)"
+          (t (user-error "No executable known for kit %s; configure and build first (SPC k k, SPC k b)"
                          (+cpp-kit-name kit))))))
 
 

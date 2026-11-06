@@ -536,7 +536,7 @@ wins whatever wrote it, and projection is told which preset that is."
                                       (+cpp--stale-directories root))
                             (message "+cpp-kit %S was configured before the project moved; SPC k m F configures it fresh"
                                      name)
-                          (message "+cpp-kit %S in .dir-locals.el is no preset or build directory here; SPC k K picks one, SPC k c configures it as named"
+                          (message "+cpp-kit %S in .dir-locals.el is no preset or build directory here; SPC k K picks one, SPC k k configures it as named"
                                    name)))
                       (+cpp-kit-make :name name :dir name :source 'chosen)))
                   (when-let* ((k (+cpp--qtcreator-active-kit root kits))

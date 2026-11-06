@@ -35,6 +35,7 @@
 (declare-function +cpp--need-cmake "kit")
 (declare-function +cpp--target-names "run")
 (declare-function +cpp-kit-qtc "kit")
+(declare-function +cpp--kind-p "project")
 (declare-function +cpp/forget-kits "kit")
 (declare-function +cpp--carried-args "build-type")
 (declare-function +cpp--arg-cell "kit")
@@ -204,7 +205,7 @@ it."
   (let ((overrides (+cpp--cache-overrides)))
     (setf (alist-get name overrides nil nil #'equal) value)
     (+cpp--set-setting '+cpp-cache-overrides overrides))
-  (message "%s = %s, saved to .dir-locals.el. SPC k c applies it" name value))
+  (message "%s = %s, saved to .dir-locals.el. SPC k k applies it" name value))
 
 ;;;###autoload
 (defun +cpp/cmake-clear-variable (name)
@@ -246,7 +247,7 @@ With no overrides left the next configure is back to the preset's values."
                                    (ignore-errors (projection-multi-cmake-targets))))
                          (+cpp--target-names kit root))))
        (unless targets
-         (user-error "No targets yet, configure first with SPC k c"))
+         (user-error "No targets yet, configure first with SPC k k"))
        (list (completing-read "Default build target: " targets nil t)))))
   ;; Kept with the other project settings; the kit macro hands it to
   ;; projection, which only exposes it through embark.
@@ -376,6 +377,11 @@ configure keeps the stale value."
   "Build the clean target, after asking.
 It deletes what the build made."
   (interactive)
+  ;; SPC k C in every C or C++ project; only CMake's has the target.
+  (unless (+cpp--kind-p 'cmake)
+    (user-error (if (+cpp--kind-p 'platformio)
+                    "A PlatformIO project is cleaned with SPC k p c"
+                  "This kind of project cannot be cleaned")))
   (let ((command (+cpp--cmake-clean-command)))
     (when (y-or-n-p (format "Delete what %s built, with its clean target? "
                             (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
@@ -526,7 +532,7 @@ The first place to look when a build, an index or a debugger misbehaves."
           (insert (format "kit         %s\n" (+cpp--kit-describe kit)))
           (insert (format "build dir   %s%s\n"
                           (abbreviate-file-name build)
-                          (if configured "" "  (not configured, SPC k c)")))
+                          (if configured "" "  (not configured, SPC k k)")))
           (insert (format "runs        %s%s\n" (+cpp-kit-where kit)
                           (if-let* ((script (+cpp-kit-env-script kit)))
                               (format ", after %s" script)
@@ -568,7 +574,7 @@ The first place to look when a build, an index or a debugger misbehaves."
                                        (if (file-exists-p root-db)
                                            ", linked into the root"
                                          "")))
-                              (t "no compile_commands.json, SPC k c"))))
+                              (t "no compile_commands.json, SPC k k"))))
         (insert (format "server      %s\n" (+cpp--lsp-status)))
         (let ((kit (+cpp--kit root)))
           (+cpp--insert-tool-version kit "clangd" "clangd" "--version")
@@ -705,7 +711,7 @@ file is asked for, CMakePresets.json to make it the project's own."
   (interactive)
   (let ((file (+cpp--cmake-cache-file)))
     (unless (and file (file-exists-p file))
-      (user-error "Not configured yet, run SPC k c"))
+      (user-error "Not configured yet, run SPC k k"))
     (find-file file)))
 
 ;;;###autoload
@@ -740,5 +746,5 @@ file is asked for, CMakePresets.json to make it the project's own."
                                                    (+core-project-root))))
                     (and (file-exists-p in-root) in-root)))))
     (unless file
-      (user-error "No compile_commands.json yet, run SPC k c"))
+      (user-error "No compile_commands.json yet, run SPC k k"))
     (find-file file)))

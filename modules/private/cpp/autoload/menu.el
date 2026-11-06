@@ -105,7 +105,9 @@ starts no container, as `+cpp--menu-description' does not."
   "What the project can do: build, run, fix, and the tools."
   [:description +cpp--menu-description
    ["Build"
-    ("c" "Configure"          projection-commands-configure-project)
+    ("c" "Check this file, errors only" +cpp/check :if +cpp-project-p)
+    ("c" "Check"              +core/check :if-not +cpp-project-p)
+    ("k" "Configure"          projection-commands-configure-project)
     ("b" "Build"              projection-commands-build-project)
     ("B" "Build a target"     projection-multi-compile)
     ("x" "Build, then run"    +cpp/build-and-run)
@@ -116,7 +118,8 @@ starts no container, as `+cpp--menu-description' does not."
     ("P" "Package"            projection-commands-package-project
      :if (lambda () (+cpp--kind-p 'cargo 'gradle 'maven 'npm 'python)))
     ("P" "Package"            +cpp/package :if (lambda () (+cpp--kind-p 'cmake)))
-    ("o" "Copy the package out" +cpp/package-copy :if (lambda () (+cpp--kind-p 'cmake)))]
+    ("o" "Copy the package out" +cpp/package-copy :if (lambda () (+cpp--kind-p 'cmake)))
+    ("C" "Clean"              +cpp/cmake-clean :if (lambda () (+cpp--kind-p 'cmake)))]
    ["Run"
     ("r" "Run"                +cpp/run)
     ("R" "Run with arguments" +cpp/run-with-args :if (lambda () (+cpp--kind-p 'cmake)))
@@ -218,7 +221,7 @@ CMake flags are the keys: -D sets a cache variable, -U clears one,
     ("A" "Run target"         +cpp/set-run-target :transient t)
     ("a" "Run arguments"      +cpp/set-run-args :transient t)]
    ["Configure and build"
-    ("c" "Configure"          projection-commands-configure-project)
+    ("k" "Configure"          projection-commands-configure-project)
     ("F" "Configure fresh, the cache dropped" +cpp/cmake-configure-fresh)
     ("z" "Configure, reindex, restart the server" +cpp/reconfigure-and-reindex)
     ("b" "Build"              projection-commands-build-project)

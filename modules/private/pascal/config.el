@@ -185,6 +185,7 @@ macOS installer puts them in /Applications/Lazarus.")
                         :run #'+pascal/run
                         :run-with-args #'+pascal/run-with-args
                         :build-and-run #'+pascal/build-and-run
+                        :check #'+pascal/check
                         :debug #'+pascal/debug
                         :panel #'+pascal/menu
                         :new #'+pascal/new-project
@@ -280,6 +281,7 @@ macOS installer puts them in /Applications/Lazarus.")
      ("m" "The panel: what is set"   #'+pascal/menu)
      ("b" "Build"                    #'+pascal/build)
      ("x" "Build, then run"          #'+pascal/build-and-run)
+     ("c" "Check, without linking"   #'+pascal/check)
      ("r" "Run"                      #'+pascal/run)
      ("R" "Run with arguments"       #'+pascal/run-with-args)
      ("t" "Test"                     #'+pascal/test)

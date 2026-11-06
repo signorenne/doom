@@ -419,6 +419,7 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
                         :run #'+cpp/run
                         :run-with-args #'+cpp/run-with-args
                         :build-and-run #'+cpp/build-and-run
+                        :check #'+cpp/check
                         :debug #'+cpp/debug
                         :panel #'+cpp/cmake-menu
                         :new #'+cpp/new-project
@@ -662,8 +663,11 @@ function, so `c-ts-mode-set-style' installs them."
   (+core-kit-keymap
    `(("SPC" "Kit menu: what you do" #'+cpp/menu)
      ("m" "CMake panel: what you set" #'+core/build-panel)
-     ;; Build. Doom's SPC c C recompiles, so the kit prefix does not.
-     ("c" "Configure" #'projection-commands-configure-project)
+     ;; Build. Doom's SPC c C recompiles, so the kit prefix does not. c
+     ;; checks in every language, so configure is k.
+     ("c" "Check this file, errors only" #'+cpp/check)
+     ("k" "Configure" #'projection-commands-configure-project)
+     ("C" "Clean" #'+cpp/cmake-clean)
      ("b" "Build" #'projection-commands-build-project)
      ("x" "Build, then run" #'+core/build-and-run)
      ("B" "Build a target" #'projection-multi-compile)
