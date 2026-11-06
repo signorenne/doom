@@ -32,6 +32,7 @@
 (declare-function +cpp--with-config "kit")
 (declare-function +cpp--kit-locate "kit")
 (declare-function +cpp--kit "kit")
+(declare-function +cpp--need-cmake "kit")
 (declare-function +cpp--target-names "run")
 (declare-function +cpp-kit-qtc "kit")
 (declare-function +cpp/forget-kits "kit")
@@ -339,12 +340,15 @@ command too, which writes only itself."
 Use it after changing compiler, generator or preset, when a plain
 configure keeps the stale value."
   (interactive)
-  (let* ((projection-cmake-configure-options
-          (cons "--fresh" projection-cmake-configure-options))
-         (command (+cpp--configure-command)))
+  ;; Building the command writes the file API query, so n would have
+  ;; changed something: it is built once the answer is yes.
+  (let ((kit (+cpp--kit (+core-project-root))))
+    (+cpp--need-cmake kit)
     (when (y-or-n-p (format "Drop the CMake cache of %s and configure it afresh? "
-                            (file-name-as-directory (+cpp-kit-dir (+cpp--kit)))))
-      (+cpp--compile "configure" command))))
+                            (file-name-as-directory (+cpp-kit-dir kit))))
+      (let ((projection-cmake-configure-options
+             (cons "--fresh" projection-cmake-configure-options)))
+        (+cpp--compile "configure" (+cpp--configure-command))))))
 
 (defun +cpp--cmake-clean-command ()
   "Command that builds the clean target, where the kit runs."
