@@ -220,6 +220,28 @@ own file list, the inbox, keeps it. Recent daily notes are agenda files
 for their dates but not refile targets. =.private/=, =.cache/= and =.git/=
 never become nodes.
 
+The graph's database never holds Emacs on the whole vault. A full sync
+runs in a background Emacs (=emacs --batch=, under =nice= at
+~+core-build-niceness~) given what this one writes a note with: the
+variables of ~+notes-roam-build-variables~, the link types, and the
+module's rules (the folders above, a heading tagged =:noroam:= or a
+card no node, a live table's links none of the note's). It runs once a
+session, a second after org-roam loads, for what changed while Emacs
+was not running; on ~SPC n r s~ (~SPC u SPC n r s~ builds it anew); after
+~SPC n G~ pulls. It writes a copy of the database, which then takes its
+place; a note saved meanwhile is written into the copy first, so no
+save is lost and the two Emacs never write one file. A save still
+updates its own note at once, 85 to 105 ms for most notes of a 1593
+note vault, about half of it the disk. On a copy of that vault the
+first build held Emacs 85 to 173 s and the session's sync 2.2 to 2.4 s;
+now neither holds it at all, the first build taking 30 s in the
+background and the sync 3. Until a first build is done, the finder, the
+tags, the starred notes, a map, the review, a live list and the menu say
+it is being built and how far, rather than show a vault with no notes;
+renaming waits for it, and a title changed meanwhile renames at the
+first save after it. When a build fails, the database stays as it was
+and the message names the buffer =*roam build*=.
+
 ** Studying, sources and keeping it
 | Key         | What it does                                         |
 |-------------+------------------------------------------------------|
@@ -249,8 +271,8 @@ is waiting, and says so when a commit fails. ~SPC n G~ pulls and pushes in
 the background; a conflict stops it with a message and magit finishes it.
 The org-roam database (=org-roam-knowledge.db= under Doom's cache) and the
 card review log are caches outside the vault, so only the files travel
-between machines; the database is rebuilt after the pull, so the finder
-knows the notes the other machine wrote.
+between machines; the database is synced in the background after the
+pull, so the finder knows the notes the other machine wrote.
 
 Maps live in =resources/collections/tags/=. A map is a note of its own, so
 it shows in the graph; only the list between =# BEGIN MAP= and =# END MAP=
@@ -555,11 +577,15 @@ and its colours are the same.
   finished task stays on a board.
 - ~+notes-latex-reach~ (4096), how far past the text being coloured org
   looks for LaTeX.
+- ~+notes-roam-build-variables~, what the background build of the
+  database takes from this Emacs: a variable that changes what a note
+  writes into the database belongs there.
 - The files: =config.el= (documents, the workflow block, the commit
   timer, keys), =+capture.el=, =+agenda.el=, =+roam.el=, =+study.el=
   (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=
   resolves the inbox, the owning project and the course for every
-  capture; =autoload/query.el= writes the live tables and moves cards.
+  capture; =autoload/query.el= writes the live tables and moves cards;
+  =autoload/roam-db.el= builds the database in the background.
 - TODO keywords: Doom's, plus NEXT. Tags: ~org-tag-alist~.
 
 * For other modules

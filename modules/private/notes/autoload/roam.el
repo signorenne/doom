@@ -11,6 +11,8 @@
 
 (declare-function org-roam-db-query "org-roam-db")
 (declare-function org-roam-node-file "org-roam-node")
+(declare-function +notes--roam-db-ready "roam-db")
+(declare-function +notes--roam-db-building "roam-db")
 
 ;;
 ;;; Tasks written inside notes
@@ -476,6 +478,8 @@ same ID, and renaming it would rename the links to the real one."
       (user-error "Rename a note of the vault from its own buffer"))
     (when (buffer-local-value 'buffer-read-only base)
       (user-error "This buffer is read only"))
+    ;; The links to rename are the database's.
+    (+notes--roam-db-ready)
     (let ((node (org-roam-node-at-point)))
       (unless (and node (org-roam-node-title node) (org-roam-node-level node))
         (user-error "Not in a note the graph knows yet; save it first"))
@@ -524,8 +528,10 @@ link described by exactly the old title then reads the new one."
 (defun +notes--rename-on-save-h ()
   "Rename the note's file and links when this save changed its #+title.
 Only the note's own file, in the vault: a buffer written out elsewhere
-keeps the hook it was given, and a copy carries the note's ID."
-  (unless +notes--renaming
+keeps the hook it was given, and a copy carries the note's ID.  While
+the database is built for the first time it knows none of the links,
+so the old title is kept and the first save after the build renames."
+  (unless (or +notes--renaming (+notes--roam-db-building))
     (let ((title (+notes--file-title))
           (old +notes--saved-title))
       (setq +notes--saved-title title)
@@ -601,6 +607,7 @@ headings of files that are not, which would otherwise be listed twice."
   "Open one of the starred notes."
   (interactive)
   (require 'org-roam)
+  (+notes--roam-db-ready)
   (let ((ids (+notes--roam-starred-ids)))
     (if (null ids)
         (message "No note is starred yet; SPC m m o s stars the one at point")
@@ -625,6 +632,7 @@ table holds them so."
 
 (defun +notes--read-tag ()
   "Read a tag of the graph, each shown with how many notes carry it."
+  (+notes--roam-db-ready)
   (let* ((counts (or (+notes--roam-tag-counts) (user-error "No note has a tag yet")))
          (annotate (lambda (tag)
                      (let ((n (cdr (assoc tag counts))))

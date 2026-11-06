@@ -2496,7 +2496,7 @@ how to work with it day to day.
 | ~SPC n r N~ | rename this note, its file and the links to it |
 | ~SPC c H~   | on a link, the note it points to, in a popup   |
 | ~SPC n r u~ | the graph in the browser                       |
-| ~SPC n r s~ | rebuild the database                           |
+| ~SPC n r s~ | sync the database, in the background           |
 
 ** The kinds of note
 ~SPC n r n~ then a letter. Each kind is a set of headings to fill in and
@@ -2662,13 +2662,15 @@ write.
 |-----------+---------------------------------------|
 | ~SPC n r v~ | notes with no links, no tags, no body |
 | ~SPC n r h~ | which notes carry tasks               |
-| ~SPC n r s~ | resync the database                   |
+| ~SPC n r s~ | resync it, in the background          |
 
 A task in the inbox, a project or an area reaches the agenda by itself;
 one written inside a knowledge or source note does not. The vault is a
 git repository: it commits itself after ten minutes idle and on exit,
 ~SPC n g~ commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows
-what changed.
+what changed. The graph's database syncs in a background Emacs, once a
+session and on ~SPC n r s~; while a first one is built, the note lists
+say so.
 
 * AI
 The [[file:../modules/private/ai/README.org][ai README]] explains the four tools and when each one fits. ~SPC l SPC~

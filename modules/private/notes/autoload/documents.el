@@ -4,7 +4,7 @@
 (defvar +notes-knowledge-directories)
 (defvar +notes-knowledge-dir)
 (declare-function org-id-new "org-id")
-(declare-function org-roam-db-sync "org-roam-db")
+(declare-function org-roam-db-update-file "org-roam-db")
 (declare-function +notes-repo-p "git")
 (declare-function +notes/init-repo "git")
 (defvar +notes-templates-dir)
@@ -79,9 +79,11 @@ repository when it is not one yet.  Run again, it changes nothing."
         (new-repo (not (+notes-repo-p))))
     (when new-repo
       (+notes/init-repo))
-    ;; The documents are nodes; the finder knows them at once.
+    ;; The documents are nodes; the finder knows the new ones at once.
+    ;; The rest of the vault is the session's sync's, in the background.
     (require 'org-roam)
-    (org-roam-db-sync)
+    (dolist (file created)
+      (org-roam-db-update-file file))
     (message "%s ready%s%s. SPC n SPC opens the notes menu"
              (abbreviate-file-name org-directory)
              (if created

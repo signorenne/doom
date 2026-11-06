@@ -9,6 +9,7 @@
 (declare-function org-roam-capture "org-roam-capture")
 (declare-function org-roam-node-find "org-roam-node")
 (declare-function org-roam-db-query "org-roam-db")
+(declare-function +notes--roam-db-building "roam-db")
 
 (defvar +notes--inbox-count nil
   "((FILE MTIME) . COUNT), the memo behind `+notes--inbox-count'.")
@@ -66,14 +67,16 @@ the same as pt."
 
 (defun +notes--menu-description ()
   "Header for `+notes/menu': where the notes are and what is waiting."
-  (let ((count (+notes--inbox-count))
-        (nodes (+notes--roam-count)))
+  (let* ((count (+notes--inbox-count))
+         (building (and (featurep 'org-roam) (+notes--roam-db-building)))
+         (nodes (unless building (+notes--roam-count))))
     (format "%s   inbox: %s   roam: %s"
             (propertize (abbreviate-file-name org-roam-directory) 'face 'bold)
             (cond ((null count) "no documents yet (d b)")
                   ((zerop count) "empty")
                   (t (format "%d to refile" count)))
-            (cond ((null nodes) "missing")
+            (cond (building (concat "being built" building))
+                  ((null nodes) "missing")
                   ((zerop nodes) "empty, r f starts a note")
                   (t (format "%d notes" nodes))))))
 ;; The SPC n keys, laid out: d the documents, c the captures, r roam, as

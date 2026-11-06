@@ -17,6 +17,7 @@
 (declare-function org-ql--query-string-to-sexp "org-ql")
 (declare-function org-roam-db-query "org-roam-db")
 (declare-function +notes--agenda-files-refresh-h "roam")
+(declare-function +notes--roam-db-ready "roam-db")
 
 ;;
 ;;; What a block reads
@@ -253,6 +254,8 @@ PROPERTIES read for each."
 MTIME POS) each, in no order.  The database narrows them roughly, by tag,
 link and folder; the exact choice is made here."
   (require 'org-roam)
+  ;; A database still being built would make an empty table of a full one.
+  (+notes--roam-db-ready)
   (let* ((from (or (plist-get params :from) 'folder))
          (tags (plist-get params :tags))
          (links (plist-get params :links-to))

@@ -22,7 +22,7 @@
 
 (declare-function +notes--watch "../config")
 (declare-function magit-status-setup-buffer "magit-status")
-(declare-function org-roam-db-sync "org-roam-db")
+(declare-function +notes--roam-db-sync "roam-db")
 
 (defun +notes--git (&rest args)
   "Run git with ARGS inside `org-directory', returning (CODE . OUTPUT)."
@@ -184,8 +184,8 @@ unreachable host is given ten seconds."
   "Commit the notes, then pull and push them, in the background.
 Run it before and after working on another machine.  Only the files
 travel: the org-roam database is a cache each machine builds for itself,
-so there is nothing to conflict over; it is rebuilt after the pull, so
-the finder knows the notes that arrived."
+so there is nothing to conflict over; it is synced in the background
+after the pull, so the finder knows the notes that arrived."
   (interactive)
   (when (and +notes--sync-process
              (process-live-p +notes--sync-process))
@@ -206,20 +206,21 @@ the finder knows the notes that arrived."
    '("pull" "--rebase")
    (lambda (_)
      ;; What the other machine wrote is on disk now, and the graph's
-     ;; database learns of a file only when it is visited: read them all.
-     ;; If that fails it is the graph that is behind, not the notes, and
+     ;; database learns of a file only when it is saved here: a sync in
+     ;; the background reads them all and says when it is done. If it
+     ;; cannot start it is the graph that is behind, not the notes, and
      ;; the push still has to happen: a sentinel that died would leave
      ;; the commits unpushed and say nothing.
      (let ((trouble (when (featurep 'org-roam)
                       (condition-case err
-                          (progn (org-roam-db-sync) nil)
+                          (progn (+notes--roam-db-sync nil t) nil)
                         (error (error-message-string err))))))
        (+notes--run
         '("push")
         (lambda (_)
           (if trouble
-              (message "Notes pushed; the graph was not rebuilt: %s" trouble)
-            (message "Notes synced, the graph is up to date"))))))))
+              (message "Notes pushed; the graph was not synced: %s" trouble)
+            (message "Notes synced; the graph follows in the background"))))))))
 
 ;;;###autoload
 (defun +notes/log ()

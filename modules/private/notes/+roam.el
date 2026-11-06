@@ -3,12 +3,6 @@
 ;; org-roam: the note templates, the dailies, the protocol captures from
 ;; the browser, consult over the graph, the graph UI.
 
-(defun +notes--roam-include-node-p ()
-  "Whether the heading at point is a node of the graph."
-  (let ((tags (org-get-tags)))
-    (not (or (member "noroam" tags)
-             (member (or (bound-and-true-p org-fc-flashcard-tag) "fc") tags)))))
-
 (defvar +notes-roam-head
   ":PROPERTIES:\n:CREATED:  %U\n:END:\n#+title: ${title}\n#+filetags: "
   "How every roam note starts: when it was written, its title, its tags.
@@ -63,12 +57,16 @@ day is written under.")
 
   ;; A live table's links are not the note's: the database, and the
   ;; backlinks, the graph and its review with it, read only the links
-  ;; and citations written outside the tables (autoload/query.el). Nor
-  ;; are its cells mentions: the roam buffer's unlinked mentions leave
-  ;; them out.
-  (advice-add 'org-roam-db-map-links :around #'+notes--roam-written-links-a)
-  (advice-add 'org-roam-db-map-citations :around #'+notes--roam-written-citations-a)
+  ;; and citations written outside the tables (autoload/query.el, set up
+  ;; below). Nor are its cells mentions: the roam buffer's unlinked
+  ;; mentions leave them out.
   (advice-add 'org-roam-unlinked-references-section :around #'+notes--roam-unlinked-a)
+
+  ;; Made for a big vault (autoload/roam-db.el): those rules, and the
+  ;; full syncs, the session's first and a first build, in a background
+  ;; Emacs with the settings below, its result then taking the
+  ;; database's place.
+  (+notes--roam-db-setup)
 
   ;; Journal and knowledge capture share the repository graph root.
   ;; org-roam matches these against the path relative to that root, so a

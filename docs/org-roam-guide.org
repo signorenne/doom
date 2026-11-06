@@ -488,19 +488,21 @@ linked, moved out of =drafts/=, is the part that stays yours.
 
 * On more than one machine
 The files are the notes. The org-roam database is a cache built from them,
-it lives outside the vault in Emacs' own cache directory, and it
-is rebuilt whenever a file changes. Nothing in it is worth carrying
+it lives outside the vault in Emacs' own cache directory, and a note
+saved updates it at once. Nothing in it is worth carrying
 between machines, and it cannot be the thing that breaks when two of them
 write notes.
 
 So syncing is syncing text:
 
 1. =SPC n G= before you leave a machine and after you arrive at one. It
-   commits the vault, pulls with a rebase, rebuilds the database from the
-   files that arrived, and pushes.
+   commits the vault, pulls with a rebase, syncs the database with the
+   files that arrived, in the background, and pushes.
 2. On the second machine, clone the vault into =~/notes= and this Doom
-   config, run =doom sync=, then open Emacs. The first =SPC n r f= builds that machine's database
-   from the files, which takes a moment once.
+   config, run =doom sync=, then open Emacs. It builds that machine's
+   database from the files in a background Emacs, which on a big vault
+   takes half a minute or more once; until then the finder and the
+   other note lists say so, and how far it is.
 3. Never sync the database file itself, and never put it inside the
    vault. Two machines writing one sqlite file through a file sync
    service is the one way to lose notes here.
@@ -528,7 +530,9 @@ minutes of idle time and when Emacs exits, =SPC n g= commits it on
 demand, =SPC n SPC H= shows what changed, and =SPC g t= in a note steps
 through its history.
 
-If a note seems missing from searches, =SPC n r s= resyncs the database.
+If a note seems missing from searches, =SPC n r s= resyncs the database,
+in the background, and says when it is done. Every session syncs it once
+by itself, the same way, for what changed while Emacs was not running.
 
 * Working with Claude on top of this
 The notes are plain files in the vault, so an agent can
@@ -631,7 +635,7 @@ its kind.
 | ~SPC n r h~ | which notes carry tasks      |
 | ~SPC n r u~ | the graph in the browser     |
 | ~SPC n r /~ | search the notes             |
-| ~SPC n r s~ | resync the database          |
+| ~SPC n r s~ | resync it, in the background |
 | ~SPC m N n~ | transclude the link at point |
 
 ** Around it
