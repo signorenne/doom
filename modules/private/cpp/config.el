@@ -258,6 +258,11 @@ Set with `+cpp/set-build-target', kept in .dir-locals.el.")
 (set-eglot-client! '(cmake-mode cmake-ts-mode)
                    '("cmake-language-server") '("neocmakelsp" "--stdio"))
 
+;; Doom starts it from cmake-mode's :config, which a file opened in the
+;; built-in cmake-ts-mode never loads: no CMakeLists.txt had a server.
+(when (modulep! :lang cc +lsp)
+  (add-hook 'cmake-ts-mode-local-vars-hook #'lsp! 'append))
+
 (after! projectile
   ;; Recognise CMake/PlatformIO trees that are not (yet) git repositories.
   ;; "top-down-recurring" keeps climbing while the marker is present, so a
