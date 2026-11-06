@@ -471,19 +471,26 @@ can, and `+ui--dashboard-shown-h' starts them again."
                             #'+ui--dashboard-tick)))))
 
 (defun +ui--dashboard-visible-p ()
-  "Non-nil when someone can see the dashboard.
-A daemon's initial frame is `terminal-frame': it counts as visible and
-always shows the dashboard, so it is not a viewer, or the ticks would run
-with no client frame open."
+  "Non-nil when someone is looking at the dashboard: it is the selected
+window of a frame that has the keyboard, or cannot tell, as a terminal's
+cannot.  Beside a file being edited, or behind another program, each
+tick would cost a redisplay of the frame for nobody, on a laptop's
+battery.  A daemon's initial frame is `terminal-frame': it always shows
+the dashboard, so it is not a viewer, or the ticks would run with no
+client frame open."
   (when-let* ((buffer (get-buffer +dashboard-name)))
     (seq-some (lambda (window)
-                (not (eq (window-frame window) terminal-frame)))
+                (let ((frame (window-frame window)))
+                  (and (not (eq frame terminal-frame))
+                       (eq window (frame-selected-window frame))
+                       (frame-focus-state frame))))
               (get-buffer-window-list buffer nil 'visible))))
 
 ;;;###autoload
 (defun +ui--dashboard-shown-h (&rest _)
-  "On `window-buffer-change-functions': the dashboard back on screen, the
-animation starts again."
+  "On `window-buffer-change-functions', `window-selection-change-functions'
+and a change of focus: the dashboard looked at again, the animation
+starts again."
   (when (and (not (timerp +ui--dashboard-timer))
              (+ui--dashboard-visible-p))
     (+ui--dashboard-animate)))

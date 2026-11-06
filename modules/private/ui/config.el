@@ -88,10 +88,12 @@
         (apply fn args)))
   (warn "+dashboard-resize-h is gone; the dashboard may lose its centring"))
 
-;; The animation stops when the dashboard leaves the screen and starts
-;; again when it comes back: a tick is a redisplay, wasted on a buffer
+;; The animation stops when nobody looks at the dashboard, and starts
+;; again when it is looked at: a tick is a redisplay, wasted on a buffer
 ;; nobody sees.
 (add-hook 'window-buffer-change-functions #'+ui--dashboard-shown-h)
+(add-hook 'window-selection-change-functions #'+ui--dashboard-shown-h)
+(add-function :after after-focus-change-function #'+ui--dashboard-shown-h)
 
 ;; Doom's resize only centres the dashboard again; one laid out for a
 ;; wider window runs off its edge, beside the side bar, after a resize.
