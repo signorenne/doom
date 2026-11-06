@@ -65,7 +65,7 @@ day is written under.")
   ;; Made for a big vault (autoload/roam-db.el): those rules, and the
   ;; full syncs, the session's first and a first build, in a background
   ;; Emacs with the settings below, its result then taking the
-  ;; database's place.
+  ;; database's place; the node list kept until the database changes.
   (+notes--roam-db-setup)
 
   ;; Journal and knowledge capture share the repository graph root.

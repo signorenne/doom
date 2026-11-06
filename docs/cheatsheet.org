@@ -2670,7 +2670,7 @@ git repository: it commits itself after ten minutes idle and on exit,
 ~SPC n g~ commits now, ~SPC n G~ syncs with the remote, ~SPC n SPC H~ shows
 what changed. The graph's database syncs in a background Emacs, once a
 session and on ~SPC n r s~; while a first one is built, the note lists
-say so.
+say so. ~SPC n r f~ keeps its list until the database changes.
 
 * AI
 The [[file:../modules/private/ai/README.org][ai README]] explains the four tools and when each one fits. ~SPC l SPC~

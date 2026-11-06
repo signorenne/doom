@@ -5,7 +5,8 @@
 ;; this one's org-roam settings and rules, into a copy that then takes
 ;; the database's place; the files this Emacs wrote into the database
 ;; meanwhile go into the copy first, so no update is lost and the two
-;; never write one file.
+;; never write one file. The node list the finder shows is kept until
+;; the database changes.
 ;;
 ;; The background Emacs loads this file with nothing of Doom around it:
 ;; plain Emacs Lisp only.
@@ -16,6 +17,8 @@
 (defvar org-roam-directory)
 (defvar org-roam-db-location)
 (defvar org-roam-db-gc-threshold)
+(defvar org-roam-node-display-template)
+(defvar org-roam-node-default-sort)
 (defvar org-link-parameters)
 (defvar org-id-track-globally)
 (defvar org-element-cache-persistent)
@@ -361,16 +364,53 @@ Starts the session's sync if nothing has yet."
     (user-error "The roam database could not be built, see the buffer %s; SPC n r s tries again"
                 +notes--roam-build-buffer)))
 
+;;
+;;; The node list
+
+(defvar +notes--roam-node-cache nil
+  "(KEY . CANDIDATES): the node list as the finder shows it, with what
+`+notes--roam-node-cache-key' gave when it was made.")
+
+(defun +notes--roam-node-cache-key ()
+  "What the node list depends on: the database file as it is on disk,
+and how the list is shown."
+  (let ((attributes (file-attributes org-roam-db-location)))
+    (list (expand-file-name org-roam-db-location)
+          (file-attribute-inode-number attributes)
+          (file-attribute-modification-time attributes)
+          (file-attribute-size attributes)
+          org-roam-directory org-roam-node-display-template org-roam-node-default-sort
+          ;; The width a candidate is padded to: the frame's under
+          ;; vertico (Doom's lang/org), the window's otherwise.
+          (if (bound-and-true-p vertico-mode) (frame-width) (window-width))
+          (minibufferp))))
+
+(defun +notes--roam-node-cache-a (fn &optional filter-fn sort-fn)
+  "The node list FN makes, made again only once the database changed: the
+finder opens at once from the second time.  FILTER-FN and SORT-FN apply
+to the kept list as FN would apply them."
+  (+notes--roam-db-ready)
+  (let ((nodes (if (equal (car +notes--roam-node-cache) (+notes--roam-node-cache-key))
+                   (cdr +notes--roam-node-cache)
+                 (let ((nodes (funcall fn)))
+                   (setq +notes--roam-node-cache (cons (+notes--roam-node-cache-key) nodes))
+                   nodes))))
+    (setq nodes (if filter-fn
+                    (seq-filter (lambda (candidate) (funcall filter-fn (cdr candidate))) nodes)
+                  (copy-sequence nodes)))
+    (if sort-fn (sort nodes sort-fn) nodes)))
+
 ;;;###autoload
 (defun +notes--roam-db-setup ()
   "Keep a big vault's database out of the way, for `after!' org-roam: the
 full syncs in a background Emacs, starting with the session's, the
-lists waiting for a first build."
+node list kept, the lists waiting for a first build."
   (+notes--roam-db-rules)
   (advice-remove 'org-roam-db-query '+org-roam-try-init-db-a)
   (advice-add 'org-roam-db-sync :around #'+notes--roam-db-sync-a)
   (advice-add 'org-roam-db-update-file :before #'+notes--roam-build-touch-a)
   (advice-add 'org-roam-db-clear-file :before #'+notes--roam-build-touch-a)
+  (advice-add 'org-roam-node-read--completions :around #'+notes--roam-node-cache-a)
   (advice-add 'org-roam-node-list :before #'+notes--roam-db-ready)
   (advice-add 'org-roam-ref-read--completions :before #'+notes--roam-db-ready)
   (add-hook 'kill-emacs-hook #'+notes--roam-build-cleanup)

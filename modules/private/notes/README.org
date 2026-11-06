@@ -240,7 +240,10 @@ tags, the starred notes, a map, the review, a live list and the menu say
 it is being built and how far, rather than show a vault with no notes;
 renaming waits for it, and a title changed meanwhile renames at the
 first save after it. When a build fails, the database stays as it was
-and the message names the buffer =*roam build*=.
+and the message names the buffer =*roam build*=. The finder and every
+command that lists nodes the same way build the list once, 680 ms
+there, and keep it until the database changes: 1 ms from the second
+time.
 
 ** Studying, sources and keeping it
 | Key         | What it does                                         |
@@ -585,7 +588,8 @@ and its colours are the same.
   (citar, org-fc, transclusion), =+export.el=; =autoload/capture.el=
   resolves the inbox, the owning project and the course for every
   capture; =autoload/query.el= writes the live tables and moves cards;
-  =autoload/roam-db.el= builds the database in the background.
+  =autoload/roam-db.el= builds the database in the background and keeps
+  the node list.
 - TODO keywords: Doom's, plus NEXT. Tags: ~org-tag-alist~.
 
 * For other modules
