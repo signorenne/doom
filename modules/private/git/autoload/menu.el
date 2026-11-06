@@ -4,9 +4,10 @@
 ;; dozen of its own transients, each under its key; these gather them
 ;; by what you are trying to do. SPC g SPC is the hub, SPC g h the
 ;; history (rewriting commits), SPC g n the branches. A command in two
-;; of them has the same key in both: u uncommits, r rebases, b switches;
-;; but pull, F in the branch menu as in magit, < in the hub, which keeps
-;; SPC g's keys and has F fetch there.
+;; of them has the same key in both, r rebasing and F pulling, but for
+;; the uncommit, which magit has no key for: u in the history menu,
+;; beside the other changes to the last commit, and X in the hub, whose
+;; git operations are on magit's own keys, X its reset.
 
 (require 'transient)
 
@@ -74,22 +75,27 @@
 ;;;###autoload (autoload '+git/menu "private/git/autoload/menu" nil t)
 (transient-define-prefix +git/menu ()
   "Git: every day, the menus, the repositories, the tools.
-A command SPC g has too is on its key there and under its name there,
-but for ] [ and r, which follow a view of the buffer's changes when one
-is on; push and pull are > and <, as p shows the change and F fetches
-there. What magit spreads over its own transients is one key away on
-/, its dispatch."
+A git operation is on magit's own key, as magit's manual has it, not as
+evil moves it in magit's buffers: c commit, P push, F pull, f fetch, l
+log, d diff, z stash, t tags, M remotes, Z worktrees, C clone, I init,
+i ignore, ! a git command, $ the process log, b the branch menu, this
+module's, and X, magit's reset, uncommits. The rest is on its SPC g key
+where it has one, but for the time machine, on T as t is the tags; < is
+the file as it was before. A command SPC g has too carries its name
+there; ] [ and r follow a view of the buffer's changes when one is on.
+What magit spreads over its own transients is one key away on /, its
+dispatch; every branch in one graph is b in the log menu, l b."
   [["Every day"
     ("g" "Magit status"        magit-status)
     ("c" "Commit"              magit-commit)
-    ("u" "Uncommit the last"   +git/uncommit)
-    (">" "Push"                magit-push)
-    ("<" "Pull"                magit-pull)
-    ("F" "Magit fetch"         magit-fetch)
+    ("P" "Push"                magit-push)
+    ("F" "Pull"                magit-pull)
+    ("f" "Magit fetch"         magit-fetch)
     ("l" "Log"                 magit-log)
-    ("A" "Every branch in one graph" magit-log-all-branches)
     ("d" "Diff"                magit-diff)
-    ("b" "Magit switch branch" magit-branch-checkout)
+    ("b" "Branches menu"       +git/branches)
+    ("z" "Stash"               magit-stash)
+    ("X" "Uncommit the last"   +git/uncommit)
     ("e" "Source Control side bar" +sidebar/source-control
      :if (lambda () (fboundp '+sidebar/source-control)))]
    ["This file"
@@ -98,8 +104,8 @@ there. What magit spreads over its own transients is one key away on
     ("a" "This function's history" magit-log-trace-definition)
     ("v" "Changes in place"    +git/live)
     ("V" "Old version beside it" +git/split)
-    ("P" "This file as it was before" magit-blob-previous)
-    ("t" "Git time machine"    git-timemachine-toggle
+    ("<" "This file as it was before" magit-blob-previous)
+    ("T" "Git time machine"    git-timemachine-toggle
      :if (lambda () (fboundp 'git-timemachine-toggle)))]
    ["Its changes"
     ("]" "Next change"         +git/next-change :transient t)
@@ -110,11 +116,9 @@ there. What magit spreads over its own transients is one key away on
     ("=" "Compare with: index, HEAD, a commit, the agent's turn" +git/live-baseline)]]
   [["Menus"
     ("h" "History menu"        +git/history)
-    ("n" "Branches menu"       +git/branches)
     ("x" "Conflicts"           +git/conflicts)
-    ("z" "Stashes"             magit-stash)
+    ("t" "Tags"                +git/tag)
     ("M" "Remotes"             magit-remote)
-    ("T" "Tags"                +git/tag)
     ("/" "Magit dispatch"      magit-dispatch)]
    ["Repositories"
     ("C" "Magit clone"         magit-clone)
@@ -125,9 +129,9 @@ there. What magit spreads over its own transients is one key away on
      :if (lambda () (fboundp '+vc/git-link-kill)))
     ("i" "Ignore a file"       magit-gitignore)]
    ["Tools"
-    ("w" "Worktrees"           magit-worktree)
+    ("Z" "Worktrees"           magit-worktree)
     ("!" "Run a git command"   magit-git-command)
-    ("$" "The process log"     magit-process-buffer)]])
+    ("$" "Process log"         magit-process-buffer)]])
 
 ;;
 ;;; Conflicts

@@ -27,12 +27,13 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
 - a safety net: ~magit-wip-mode~ keeps work-in-progress refs before every
   commit, checkout and reset and after every save, so a botched rebase
   is one log away (=SPC g h L=),
-- three menus in plain words: the hub, the history, the branches,
-- a tag menu on =t=: a tag on the commit under the cursor, on any commit
-  found by a word of its message or its hash, on a branch's head, or on
-  HEAD, and one deleted here and on the remote at once; every prompt for
-  a commit lists the latest ones, hash, date and subject, the one under
-  the cursor first,
+- three menus in plain words: the hub, on magit's own keys (=P= push,
+  =F= pull, =f= fetch, =z= stash), the history, the branches,
+- a tag menu on =t=, in magit's buffers and in the hub: a tag on the
+  commit under the cursor, on any commit found by a word of its message
+  or its hash, on a branch's head, or on HEAD, and one deleted here and
+  on the remote at once; every prompt for a commit lists the latest
+  ones, hash, date and subject, the one under the cursor first,
 - what magit has no command for: change a commit's date or author,
   split a commit, uncommit, a branch from the fetched main, the merged
   branches swept, the diff and the log against main,
@@ -40,7 +41,7 @@ buffer, the evil layer and the =SPC g= keys; this module adds:
   scope read off the staged paths,
 - the history of the function at point (=a= in the hub) and of the
   region's lines (=L= with a region), and the file as it was before
-  (=P=),
+  (=<=),
 - a file's changes in place, as VS Code shows them (=SPC g v=): added
   lines tinted, removed lines drawn where they were, kept up as the
   file is edited, by you or by an agent; =]d= =[d= step through them,
@@ -73,7 +74,10 @@ Everything else is magit's own, under the keys evil gives it: =SPC g g=
 status, then =s u= stage and unstage, =c= commit, =p= push, =F= pull,
 =l= log, =d= diff, =b= branch, =r= rebase, =Z= stash, =x= discard,
 =o O= reset, =%= worktree, =?= the dispatch. The cheat sheet's Git
-chapter lists them by activity.
+chapter lists them by activity. The hub takes magit's keys as its
+manual has them, not as evil moves them: =z= stashes there, =Z= is the
+worktrees, =t= the tags, and =X=, magit's reset, uncommits; =<= is the
+file as it was before and =T= the time machine.
 
 * Rewriting a commit that is not HEAD
 =SPC g h d= (date), =SPC g h a= (author) and =SPC g h s= (split) reach an

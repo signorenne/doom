@@ -1157,8 +1157,11 @@ all. The keys below are the ones evil leaves you, which differ from
 magit's manual in a few places: ~x~ discards, ~o O~ reset, ~p~ pushes,
 ~Z~ is the stash menu and ~%~ the worktrees, ~z~ folds. ~SPC g SPC~ is a
 hub of the everyday commands in plain words, ~SPC g h~ everything that
-rewrites history, ~SPC g n~ everything about branches. Every magit
-buffer opens this chapter with ~F12~.
+rewrites history, ~SPC g n~ everything about branches. The hub takes
+magit's keys as its manual has them, not as evil moves them: ~P~ push,
+~F~ pull, ~f~ fetch, ~z~ stash, ~Z~ worktrees, ~t~ tags, and ~X~,
+magit's reset, uncommits; ~<~ is the file as it was before, ~T~ the
+time machine. Every magit buffer opens this chapter with ~F12~.
 
 The log prints a commit's refs after its summary, so every summary starts at
 the same column and the eye runs down them; the graph's lines carry the
@@ -1188,7 +1191,7 @@ grouped by directory, from the same scan ~SPC p t~ uses.
 | ~SPC g B~   | blame this file                                          |
 | ~SPC g L~   | this file's history                                      |
 | ~SPC g SPC a~ | the history of the function the cursor is in          |
-| ~SPC g SPC P~ | this file as it was before the last change to it      |
+| ~SPC g SPC <~ | this file as it was before the last change to it      |
 | ~SPC g v~   | this file's changes in place, kept up as you edit        |
 | ~SPC g V~   | this file beside its old version, scrolled together      |
 | ~SPC g t~   | the time machine: this file at every revision            |
@@ -1615,7 +1618,8 @@ ready, ~ZZ~. Push it normally; nothing is rewritten. ~_ v~ puts the undo
 in the files only, to commit yourself.
 
 *** Tag a commit, a branch or HEAD
-~t~ opens the tag menu in any magit buffer, ~T~ in ~SPC g SPC~ from anywhere.
+~t~ opens the tag menu in any magit buffer, and in ~SPC g SPC~ from
+anywhere.
 - A commit: ~t t~, the name, ~RET~. The list shows every branch's latest
   commits with the branches and tags already on them, the one under the
   cursor first. Type a word of the message, or a hash, even of a commit no
