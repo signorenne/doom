@@ -97,7 +97,7 @@ folder made without =git init= still has the Pascal keys.
 | ~SPC h r u~   | ~+core/doom-upgrade~          | update Doom, pinned packages stay |
 | ~SPC t a~     | ~+corfu/toggle-auto-complete~ | as-you-type completion on and off |
 | ~SPC t S~     | ~subword-mode~                | move inside camelCase words       |
-| ~SPC t T~     | ~+core/toggle-transparency~   | frame opacity, ~C-u N~ to set it    |
+| ~SPC t T~     | ~+core/toggle-transparency~   | frame opacity, ~SPC u N~ sets it    |
 | ~SPC f x~     | ~+core/open-externally~       | open the file in its desktop app  |
 | ~SPC f n~     | ~+core/yank-file-name~        | copy the file name                |
 | ~SPC f N~     | ~+core/yank-file-directory~   | copy its directory                |
