@@ -90,7 +90,13 @@ private menu is set up under transient's conflict detection, which
 refuses a key bound twice or a suffix neither defined nor autoloaded,
 and its layout is read for a suffix on =q=, =Q= or =?=, which transient
 owns here and would move without a word, and for a command on two
-keys. Then every =SPC= key the sheet and the READMEs mention is looked
+keys. Each suffix's key is then looked up in the keymap transient set
+the menu up with, the way a press goes: once the first of two keys is
+down, transient ends the sequence on =q= and =C-g= and scrolls on =C-v=,
+so a suffix on =a q= closes the menu and never runs. A key that runs
+anything but its own suffix is reported; a suffix the menu leaves out
+where the check runs, in a group with an =:if=, is judged by that rule
+alone. Then every =SPC= key the sheet and the READMEs mention is looked
 up in the leader map, a menu key in that menu's layout, so a key that
 changed in the config cannot stay in the docs. The leader itself is
 read for one of our commands on two keys and for a Doom key rebound

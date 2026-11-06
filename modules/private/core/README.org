@@ -516,10 +516,11 @@ Three habits keep the config sound, each backed by a check:
 =bin/check-config= (run on the host after =doom sync=) starts a throwaway
 daemon, byte-compiles every private file into a temporary directory,
 reports the compiler's and the startup's complaints, lists the repeating
-timers, asks whether every referenced function is callable, and reloads
-the config twice to name any list, hook or timer of this config's that
-the second reload grew: ten seconds, the check to run after any large
-change.
+timers, asks whether every referenced function is callable, sets up
+every menu and looks each of its keys up as a press would go, looks up
+every documented key, and reloads the config twice to name any list,
+hook or timer of this config's that the second reload grew: ten
+seconds, the check to run after any large change.
 
 * Performance
 Measured on 2026-09-17 in a fresh frame: a 47 MB log opens in 216 ms

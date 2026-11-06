@@ -3,17 +3,21 @@
 ;; Do the menus and the documented keys hold up? A transient refuses a
 ;; key bound twice or a suffix it cannot find only when asked, and it
 ;; moves a suffix off q and Q on its own, since core binds q to quit.
-;; So every private menu is set up under conflict detection and its
-;; layout read for what transient would silently move. Every SPC key
-;; the docs mention is looked up, so a changed key cannot stay in the
-;; docs, and the leader is read for one of our commands on two keys and
-;; for a Doom key rebound by mistake. `+docs/check-keys' runs it all
-;; from a session.
+;; So every private menu is set up under conflict detection, its layout
+;; read for what transient would silently move, and each suffix's key
+;; looked up in the map the menu is built with, where q as the last of
+;; two keys quits too. Every SPC key the docs mention is looked up, so
+;; a changed key cannot stay in the docs, and the leader is read for one
+;; of our commands on two keys and for a Doom key rebound by mistake.
+;; `+docs/check-keys' runs it all from a session.
 
 (require 'transient)
 
 (defvar transient-detect-key-conflicts)
 (defvar transient--layout)
+(defvar transient--transient-map)
+(defvar transient--suffixes)
+(defvar transient-sticky-map)
 (defvar recentf-list)
 (defvar save-place-alist)
 (declare-function recentf-expand-file-name "recentf")
@@ -58,24 +62,83 @@ entries, the :info lines, left out."
     (autoload-do-load (symbol-function prefix) prefix))
   (mapcar #'car (+docs--layout-suffixes (get prefix 'transient--layout))))
 
+(defun +docs--menu-key-runs (map key)
+  "The command KEY, a key description, runs in a menu whose keymap is
+MAP, nil when none.  Once the first of several keys is pressed,
+transient lays `transient-sticky-map' over MAP for the rest, and that
+map ends the sequence on q and C-g: a suffix on \"a q\" never runs."
+  (let* ((events (kbd key))
+         (sticky (and (> (length events) 1)
+                      (lookup-key transient-sticky-map
+                                  (vector (aref events (1- (length events)))))))
+         (def (if (and sticky (not (numberp sticky)))
+                  sticky
+                (lookup-key map events))))
+    (and def (not (numberp def)) def)))
+
+(defun +docs--menu-unreachable (prefix suffixes map present)
+  "The suffixes of PREFIX that their own key does not reach, as
+sentences.  SUFFIXES is the layout's (KEY . COMMAND) list, MAP the
+keymap transient set the menu up with and PRESENT the suffixes it put
+in it, the same way.  A suffix this context leaves out, by a group's
+:if, is judged only by what no context changes, `transient-sticky-map'.
+A key two suffixes share, each for a context of its own, may run either."
+  (let (problems)
+    (pcase-dolist (`(,key . ,command) suffixes)
+      (unless (member key +docs--owned-keys)
+        (let* ((here (seq-some (lambda (suffix)
+                                 (and (eq (cdr suffix) command)
+                                      (equal (kbd (car suffix)) (kbd key))))
+                               present))
+               (runs (+docs--menu-key-runs (if here map (make-sparse-keymap)) key)))
+          (unless (or (and (not here) (null runs))
+                      (seq-some (lambda (suffix)
+                                  (and (eq (cdr suffix) runs)
+                                       (equal (kbd (car suffix)) (kbd key))))
+                                suffixes))
+            (push (format "%s: %s runs %s, not %s" prefix key (+docs--command-name runs) command)
+                  problems)))))
+    (nreverse problems)))
+
+(defun +docs--command-name (def)
+  "DEF, what a key runs, in a word for a report: a command's name,
+\"nothing\", or what kind of thing it is."
+  (cond ((null def) "nothing")
+        ((symbolp def) (symbol-name def))
+        ((keymapp def) "a prefix")
+        (t "an anonymous command")))
+
 ;; Autoloaded: bin/check-config.el calls it.
 ;;;###autoload
 (defun +docs-menu-problems ()
   "Every private menu that does not hold up, as a list of sentences:
 one that fails to set up under conflict detection (a key bound twice,
 a suffix neither defined nor autoloaded), a suffix on a key transient
-owns, a command on two keys.  Nil when all is well.  Needs a frame to
-show the menu in, so not doom doctor."
+owns, a suffix whose key runs another command in the menu as transient
+builds it (\"a q\" quits), a command on two keys.  Nil when all is
+well.  Needs a frame to show the menu in, so not doom doctor."
   (let (problems)
     (dolist (prefix (+docs--prefixes))
       (when (autoloadp (symbol-function prefix))
         (autoload-do-load (symbol-function prefix) prefix))
-      (let ((transient-detect-key-conflicts t))
+      (let ((transient-detect-key-conflicts t) map present)
         (condition-case err
-            (progn (transient-setup prefix) (transient-quit-all))
+            (progn (transient-setup prefix)
+                   ;; Read before the quit, which clears them.
+                   (setq map transient--transient-map
+                         present (mapcar (lambda (obj)
+                                           (cons (oref obj key) (oref obj command)))
+                                         transient--suffixes))
+                   (transient-quit-all))
           (error (ignore-errors (transient-quit-all))
+                 (setq map nil)
                  (push (format "%s does not set up: %s" prefix (error-message-string err))
-                       problems))))
+                       problems)))
+        (when map
+          (dolist (problem (+docs--menu-unreachable
+                            prefix (+docs--layout-suffixes (get prefix 'transient--layout))
+                            map present))
+            (push problem problems))))
       (let ((suffixes (+docs--layout-suffixes (get prefix 'transient--layout)))
             (by-command (make-hash-table)))
         (pcase-dolist (`(,key . ,command) suffixes)

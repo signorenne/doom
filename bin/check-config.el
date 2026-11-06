@@ -3,8 +3,9 @@
 ;; private file into a temporary directory, then report the compile
 ;; warnings, the load warnings, the errors in *Messages*, the repeating
 ;; timers, whether every function the config refers to is callable,
-;; whether every private menu sets up and every documented key is
-;; bound, and what grows when the config is reloaded twice.
+;; whether every private menu sets up and each of its keys reaches its
+;; suffix, whether every documented key is bound, and what grows when
+;; the config is reloaded twice.
 
 (require 'bytecomp)
 
