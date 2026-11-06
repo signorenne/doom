@@ -393,10 +393,10 @@ machine's debugger, `+core-os-debugger', lldb-dap on a Mac."
           :stopAtBeginningOfMainSubprogram t)
       (+core-os-debugger))))
 
-(defun +cpp--need-debugger (debugger)
-  "Say that gdb is not installed, and how to install it, when DEBUGGER,
+(defun +cpp--need-debugger (adapter)
+  "Say that gdb is not installed, and how to install it, when ADAPTER,
 the head of a dape config, runs gdb on the host and it is not there."
-  (when (equal (plist-get debugger 'command) "gdb")
+  (when (equal (plist-get adapter 'command) "gdb")
     (+core-need-program "gdb" (if (featurep :system 'macos)
                                   "xcode-select --install, or brew install llvm"
                                 "zypper in gdb"))))
@@ -413,22 +413,22 @@ program and uses the same debugger."
   (+cpp--save-project-buffers)
   (let* ((root (+core-project-root))
          (kit (and (+cpp--kind-p 'cmake) (+cpp--kit root)))
-         (debugger (+cpp--debugger kit))
+         (adapter (+cpp--debugger kit))
          ;; A missing gdb is said before the program is asked for.
-         (exe (cond (kit (+cpp--need-debugger debugger)
+         (exe (cond (kit (+cpp--need-debugger adapter)
                          (+cpp--pick-executable kit))
                     ((derived-mode-p 'rust-mode 'rust-ts-mode 'rustic-mode)
                      ;; dape's codelldb-rust config knows target/debug/<crate>.
                      (cl-return-from +cpp/debug
                        (dape (+cpp--dape-config 'codelldb-rust))))
-                    (t (+cpp--need-debugger debugger)
+                    (t (+cpp--need-debugger adapter)
                        (+cpp--read-program))))
          (active (and kit (+qtcreator-active root)))
          (args (or (+cpp--setting '+cpp-run-args) (plist-get active :run-args) ""))
          (cwd (let ((qtc (plist-get active :run-dir)))
                 (if (and qtc (file-directory-p qtc)) qtc (file-name-directory exe))))
          (config `(modes ,+cpp-modes
-                   ,@debugger
+                   ,@adapter
                    :request "launch"
                    :program ,exe
                    :cwd ,cwd
