@@ -132,11 +132,13 @@ A frame closes with ~SPC q f~ and the daemon lives on; closing the last
 frame of a daemon leaves Emacs running, which is the point of it.
 ~SPC q q~ asks once about each unsaved file, and not again whether to
 quit: in the daemon one you do not save stays open, unsaved, for the
-next frame; an Emacs of its own quits without it. A program still
-running is asked about too. Closing a frame any other way, its
-window's close button too, whether the frame is the one in front or not,
-asks nothing: its workspace goes, and an unsaved file or an unfinished
-capture stays open, named in a message; ~SPC b B~ finds it.
+next frame; an Emacs of its own quits without it. ~q~ or ~RET~ there
+stops the asking, and then whether to quit with the files not asked
+about comes after all. A program still running is asked about too.
+Closing a frame any other way, its window's close button too, whether
+the frame is the one in front or not, asks nothing: the workspace it
+was opened with goes, and an unsaved file or an unfinished capture
+stays open, named in a message; ~SPC b B~ finds it.
 
 ** Open the config
 | Key       | What it opens                |

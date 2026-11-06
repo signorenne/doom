@@ -1549,15 +1549,35 @@ It advises the commands that quit, SPC q q's among them."
 
 ;; Quitting asks about each unsaved file, then Emacs asks whether to
 ;; quit with modified buffers, which those answers settled: a file left
-;; unsaved was answered no. That second question is answered yes; the
-;; one about running processes still comes.
+;; unsaved was answered no. That second question is answered yes, but
+;; only when every file still unsaved was asked about: q or RET at the
+;; first stops the asking, and the files after it were never put to
+;; you, so then it comes. The one about running processes still comes.
 (defun +core--quit-asks-once-a (fn &rest args)
   "Call FN with ARGS, Emacs's question about the modified buffers left
-answered yes: the quit has asked about each of them."
-  (let ((ask (symbol-function 'yes-or-no-p)))
-    (cl-letf (((symbol-function 'yes-or-no-p)
+answered yes when the quit asked about each of them."
+  (let ((asked nil)
+        (ask (symbol-function 'yes-or-no-p))
+        (ask-each (symbol-function 'map-y-or-n-p)))
+    (cl-letf (((symbol-function 'map-y-or-n-p)
+               (lambda (prompter &rest more)
+                 (apply ask-each
+                        (if (functionp prompter)
+                            (lambda (object)
+                              (let ((prompt (funcall prompter object)))
+                                (when (stringp prompt)
+                                  (push object asked))
+                                prompt))
+                          prompter)
+                        more)))
+              ((symbol-function 'yes-or-no-p)
                (lambda (prompt)
-                 (or (string-prefix-p "Modified buffers exist" prompt)
+                 (or (and (string-prefix-p "Modified buffers exist" prompt)
+                          (seq-every-p (lambda (buffer)
+                                         (or (not (buffer-file-name buffer))
+                                             (not (buffer-modified-p buffer))
+                                             (memq buffer asked)))
+                                       (buffer-list)))
                      (funcall ask prompt)))))
       (apply fn args))))
 
