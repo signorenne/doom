@@ -337,7 +337,9 @@ bindings, and a context otherwise.")
 command, a register, a snippet's abbreviation or prose."
   (unless (or (string-match-p "\\`[:\"]" key)
               (string-match-p "\\.\\.\\." key)
-              (string-match-p "\\`[a-z]\\{3,\\}\\'" key)) ; doxy, qobj, tc
+              ;; Case counts: RET and TAB are keys.
+              (let ((case-fold-search nil))
+                (string-match-p "\\`[a-z]\\{3,\\}\\'" key))) ; doxy, qobj, tc
     (let ((key (seq-reduce (lambda (k rule)
                              (if (string-match-p (car rule) k)
                                  ;; Fixed case: the replacement's <f2> would
