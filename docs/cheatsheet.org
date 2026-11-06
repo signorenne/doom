@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview entitiespretty
-#+generated: 2026-11-04 10:16
+#+generated: 2026-11-06 21:56
 #+options: toc:nil ^:{}
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3293,7 +3293,7 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC h r e~    | doom/reload-env                  |
 | ~SPC h r f~    | doom/reload-font                 |
 | ~SPC h r p~    | doom/reload-packages             |
-| ~SPC h r r~    | doom/reload                      |
+| ~SPC h r r~    | Reload the config                |
 | ~SPC h r s~    | Doom sync                        |
 | ~SPC h r t~    | doom/reload-theme                |
 | ~SPC h r u~    | Doom upgrade                     |
@@ -4013,6 +4013,8 @@ bound.
   menu, under KEY, described as DESC, for this session and the next ones.
 - ~+core/quick-access-remove~ (~SPC m B~) :: Drop an entry added with
   '+core/quick-access-add' from the b menu.
+- ~+core/reload~ (~SPC h r r~) :: Reload the config in this Emacs, keeping
+  its frames and buffers.
 - ~+core/rename-apply~ :: Rename the files as the preview shows.
 - ~+core/rename-lower~ :: Rename the marked files in lower case.
 - ~+core/rename-number~ :: Rename the marked files BASE and a number from

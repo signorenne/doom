@@ -1819,8 +1819,10 @@ the first of ARGS."
       (:prefix "h"
        :desc "Delays: what paused" "D" #'+core/latency-show))
 
-;; Next to Doom's own reload keys (SPC h r ...).
+;; Next to Doom's own reload keys (SPC h r ...). r is this config's
+;; reload: it syncs only when it must, and writes no envvar file.
 (map! :map help-map
+      :desc "Reload the config" "rr" #'+core/reload
       :desc "Doom sync"    "rs" #'+core/doom-sync
       :desc "Doom doctor"  "rd" #'+core/doom-doctor
       :desc "Doom upgrade" "ru" #'+core/doom-upgrade)

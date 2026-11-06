@@ -45,6 +45,107 @@ after upgrading Emacs itself)."
   (apply #'+core--doom-cli "sync"
          (append '("sync" "--aot" "--force") (when rebuild '("--rebuild")))))
 
+(defvar +core--reloaded-at nil
+  "When `+core/reload' last read the config, as a float time.")
+
+(defun +core--mtime (file)
+  "FILE's modification time as a float time."
+  (float-time (file-attribute-modification-time (file-attributes file))))
+
+(defun +core--sync-needed ()
+  "The config's files changed since the last doom sync that need one:
+init.el, a packages.el, an autoload file."
+  (let* ((profile (doom-profile-init-file doom-profile))
+         (synced (and (file-exists-p profile) (+core--mtime profile))))
+    (seq-filter
+     (lambda (file) (or (null synced) (> (+core--mtime file) synced)))
+     (append
+      (seq-filter #'file-exists-p
+                  (list (expand-file-name "init.el" doom-user-dir)
+                        (expand-file-name "packages.el" doom-user-dir)))
+      (seq-filter
+       (lambda (file)
+         (or (member (file-name-nondirectory file) '("packages.el" "autoload.el"))
+             (string-match-p "/autoload/" file)))
+       (directory-files-recursively
+        (expand-file-name "modules/" doom-user-dir) "\\.el\\'"))))))
+
+(defun +core--reload-in-place (&optional note)
+  "Read the config again in this Emacs, as `doom/reload' does after its
+sync, then the private autoload files already loaded that changed since
+the last reload: those load on first use, not with the config. NOTE,
+when given, ends the message."
+  (let ((start (float-time))
+        (since (or +core--reloaded-at (float-time before-init-time)))
+        (private (expand-file-name "modules/" doom-user-dir)))
+    (condition-case err
+        ;; In *scratch*, as Doom does: a setq of a buffer-local variable
+        ;; would otherwise land in whatever file is current.
+        (with-current-buffer (get-scratch-buffer-create)
+          (with-doom-context 'reload
+            (doom-run-hooks 'doom-before-reload-hook)
+            (general-auto-unbind-keys)
+            (unwind-protect
+                (startup--load-user-init-file nil)
+              (general-auto-unbind-keys t))
+            (doom-run-hooks 'doom-after-reload-hook))
+          (let ((files (delete-dups
+                        (delq nil
+                              (mapcar
+                               (lambda (entry)
+                                 (when-let* ((loaded (car entry))
+                                             ((stringp loaded))
+                                             ((string-prefix-p private loaded))
+                                             (file (concat (file-name-sans-extension loaded) ".el"))
+                                             ((string-match-p "/autoload\\(?:/\\|\\.el\\'\\)" file))
+                                             ((file-exists-p file))
+                                             ((> (+core--mtime file) since)))
+                                   file))
+                               load-history)))))
+            (dolist (file files)
+              (load file nil 'nomessage 'nosuffix))
+            (setq +core--reloaded-at start)
+            (message "Config reloaded in %.1f s%s%s"
+                     (- (float-time) start)
+                     (if files (format ", with %d autoload file%s" (length files)
+                                       (if (cdr files) "s" ""))
+                       "")
+                     (or note ""))))
+      (error (message "Reload stopped: %s" (error-message-string err))))))
+
+;;;###autoload
+(defun +core/reload ()
+  "Reload the config in this Emacs, keeping its frames and buffers.
+When init.el, a packages.el or an autoload file changed since the last
+doom sync, the sync runs first, in the background and without the
+envvar file `doom/reload' writes; a failed sync leaves the config as it
+was and shows why. What an old version added and the new one dropped,
+a hook or an advice, stays until a restart."
+  (interactive)
+  (if-let* ((changed (+core--sync-needed)))
+      (let ((buffer (get-buffer-create " *doom sync for reload*"))
+            (default-directory doom-emacs-dir)
+            (packages (seq-find (lambda (file)
+                                  (member (file-name-nondirectory file) '("init.el" "packages.el")))
+                                changed)))
+        (with-current-buffer buffer (erase-buffer))
+        (message "Syncing first: %s changed..." (file-relative-name (car changed) doom-user-dir))
+        ;; --force: no terminal to answer the CLI's prompts. And stdin
+        ;; closed at once: the CLI reads a pipe to its end, and waits.
+        (process-send-eof
+         (make-process
+          :name "doom-sync-reload" :buffer buffer :noquery t :connection-type 'pipe
+          :command (list (expand-file-name "bin/doom" doom-emacs-dir)
+                         "sync" "-B" "--aot" "--force")
+          :sentinel (lambda (process _event)
+                      (unless (process-live-p process)
+                        (if (zerop (process-exit-status process))
+                            (+core--reload-in-place
+                             (and packages "; a new package may need SPC q r"))
+                          (pop-to-buffer buffer)
+                          (message "doom sync failed; the config was not reloaded")))))))
+    (+core--reload-in-place)))
+
 ;;;###autoload
 (defun +core/doom-doctor ()
   "Run `doom doctor' in a compilation buffer."

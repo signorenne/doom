@@ -99,6 +99,7 @@ folder made without =git init= still has the Pascal keys.
 * Keybindings
 | Key             | Command                          | What it does                                               |
 |-----------------+----------------------------------+------------------------------------------------------------|
+| ~SPC h r r~       | ~+core/reload~                     | reload the config in place, after a sync if one is due     |
 | ~SPC h r s~       | ~+core/doom-sync~                  | sync, then offer a restart                                 |
 | ~SPC h r d~       | ~+core/doom-doctor~                | run doom doctor                                            |
 | ~SPC h r u~       | ~+core/doom-upgrade~               | update Doom, pinned packages stay                          |
@@ -490,7 +491,7 @@ autoloaded, so a module calls them without a declaration.
 * Working on the config
 Three habits keep the config sound, each backed by a check:
 
-- A config file must survive =SPC h r r= (~doom/reload~): a form that
+- A config file must survive =SPC h r r= (~+core/reload~): a form that
   appends to a list, adds a hook or starts a timer runs again on reload,
   so it removes its own entries first, or keeps a handle it cancels.
   Twice a reload doubled a list here (dc7a3ca, the capture templates);
