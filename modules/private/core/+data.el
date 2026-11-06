@@ -64,11 +64,13 @@
 
 ;; nxml says which schema it took for every XML file it opens, "Using
 ;; vacuous schema" for an SVG and any other it has none for. Said when
-;; asked, C-c C-s C-w, and not at each file.
+;; asked, by C-c C-s C-w or by a command that sets the schema, and not
+;; at each file.
 (declare-function rng-what-schema "rng-loc")
 (defun +core--rng-quiet-a (fn &rest args)
   "Set the schema as FN does with ARGS, without naming it unless asked."
-  (if (eq this-command 'rng-auto-set-schema)
+  (if (memq this-command '(rng-auto-set-schema rng-auto-set-schema-and-validate
+                           rng-validate-mode))
       (apply fn args)
     (cl-letf (((symbol-function 'rng-what-schema) #'ignore))
       (apply fn args))))
