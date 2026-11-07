@@ -308,16 +308,20 @@ warnings, and its changed hunks; nothing that is zero."
 
 (defvar-local +ui--scope-cache nil
   "(LINE-START TICK FN . SCOPE): the scope and function of the line point
-was on, reused until point leaves the line or the buffer changes; the
-facts about the function, which servers and git change in between, are
-worked out at each redisplay, a few overlays counted.")
+was on, reused until point leaves the line, the buffer changes or the
+tree is parsed again; the facts about the function, which servers and
+git change in between, are worked out at each redisplay, a few overlays
+counted.")
 
 (defun +ui--scope ()
   "(FN . SCOPE): the function holding point, or nil, and the header's
 scope and function label."
   (let ((here (pos-bol)) (tick (buffer-chars-modified-tick)))
     (pcase-let ((`(,line ,old-tick ,fn . ,scope) +ui--scope-cache))
-      (if (and line (eq line here) (eq tick old-tick))
+      ;; A parser can parse again with no edit (its visible region or
+      ;; ranges changed), and the function's node is then stale.
+      (if (and line (eq line here) (eq tick old-tick)
+               (not (and fn (treesit-node-check fn 'outdated))))
           (cons fn scope)
         (let* ((node (treesit-node-at (save-excursion (skip-chars-forward " \t") (point))))
                (sep (propertize " › " 'face 'shadow))
