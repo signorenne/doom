@@ -86,9 +86,11 @@
   ;; since its first commit is the one that would go wrong.
   (let ((attributes (expand-file-name ".gitattributes" vault)))
     (when (and (file-exists-p attributes)
+               (executable-find "git")
                (with-temp-buffer
                  (insert-file-contents attributes)
-                 (re-search-forward "filter=lfs" nil t))
+                 (let ((case-fold-search nil))
+                   (re-search-forward "filter=lfs" nil t)))
                (let ((default-directory (file-name-as-directory vault)))
                  (not (and (with-temp-buffer
                              (and (zerop (call-process "git" nil t nil "config" "--get" "filter.lfs.process"))

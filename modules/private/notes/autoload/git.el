@@ -60,7 +60,8 @@ doctor.el checks the same."
     (and (file-exists-p attributes)
          (with-temp-buffer
            (insert-file-contents attributes)
-           (re-search-forward "filter=lfs" nil t))
+           (let ((case-fold-search nil))
+             (re-search-forward "filter=lfs" nil t)))
          (let ((process (+notes--git "config" "--get" "filter.lfs.process")))
            (not (and (zerop (car process))
                      (not (string-empty-p (cdr process)))
@@ -149,15 +150,17 @@ index.lock), which is reported rather than swallowed."
          (message "Notes not committed, git said: %s" (cdr result))
          nil)))))
 
-(defvar +notes--autocommit-script
+(defconst +notes--autocommit-script
   "d=$(git rev-parse --git-dir) || exit 0
 for s in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD; do
   [ -e \"$d/$s\" ] && exit 0
 done
 git status --porcelain | grep -qE '^(U.|.U|AA|DD) ' && exit 0
-[ -z \"$(git status --porcelain)\" ] && exit 0
+s=$(git status --porcelain 2>&1) || { echo \"$s\"; exit 1; }
+[ -z \"$s\" ] && exit 0
 if grep -qs 'filter=lfs' .gitattributes; then
-  [ -n \"$(git config --get filter.lfs.process)\" ] && git lfs version >/dev/null 2>&1 ||
+  [ -n \"$(git config --get filter.lfs.process | tr -d '[:space:]')\" ] &&
+    git lfs version >/dev/null 2>&1 ||
     { echo \"$2\"; exit 1; }
 fi
 git add -A && { git diff --cached --quiet || git commit -q -m \"$1\"; }"
@@ -180,8 +183,8 @@ the background: git never holds up the editor."
                    (unless (process-live-p process)
                      (unless (zerop (process-exit-status process))
                        (let ((said (string-trim (with-current-buffer buffer (buffer-string)))))
-                         (if (equal said +notes--lfs-missing)
-                             (message "%s" said)
+                         (if (string-suffix-p +notes--lfs-missing said)
+                             (message "%s" +notes--lfs-missing)
                            (message "Notes not committed, git said: %s" said))))
                      (kill-buffer buffer)))))))
 
