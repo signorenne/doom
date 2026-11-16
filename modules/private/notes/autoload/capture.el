@@ -138,11 +138,12 @@ name never creates a PARA commitment by itself."
              (choice (completing-read "Owning project: " choices nil t)))
         (cdr (assoc choice choices)))))))
 
-(defun +notes--capture-at (file heading &optional text)
+(defun +notes--capture-at (file heading)
   "Visit FILE and target its top-level HEADING, adding it when absent.
 Point stays on HEADING, where `org-capture' files an entry template as
-its last child.  With TEXT, point moves to the end of HEADING's own
-text instead, where a plain template is inserted as written."
+its last child and a plain one at the end of HEADING's own text: Org
+moves there itself, so moving first put a project's goal under the
+next heading."
   (set-buffer (find-file-noselect file))
   (widen)
   (goto-char (point-min))
@@ -151,9 +152,7 @@ text instead, where a plain template is inserted as written."
     (goto-char (point-max))
     (unless (bolp) (insert "\n"))
     (insert "* " heading "\n")
-    (forward-line -1))
-  (when text
-    (outline-next-heading)))
+    (forward-line -1)))
 
 ;;;###autoload
 (defun +notes--capture-project-task ()
@@ -170,7 +169,7 @@ removes it again instead of leaving an empty active project."
          (existed (file-exists-p (+notes--project-path title)))
          (file (+notes--create-project title)))
     (unless existed (org-capture-put :+notes-new-project file))
-    (+notes--capture-at file "Goal" t)))
+    (+notes--capture-at file "Goal")))
 
 ;;;###autoload
 (defun +notes--roam-project-path (node)
