@@ -252,14 +252,17 @@ going through every link of a long note is the slow part."
 ;; Pictures of the vault live under assets/images/<subject>/, linked from
 ;; the note with a relative file: link (the vault's rule): the subject is
 ;; the note's folder under resources/wiki/, or under the vault for a note
-;; elsewhere. Pasted (org-download, SPC m a p), captured (SPC m a c),
-;; dropped and yanked (Org's own handlers) all go there; nothing new is
-;; written under .attach/. A file outside the vault keeps Org's and
-;; Doom's attachments.
+;; elsewhere, so a note at the vault's root files into assets/images/
+;; itself. Pasted (org-download, SPC m a p), captured (SPC m a c), dropped
+;; (Org's own handler, or org-download's for a URL or inline data) and
+;; yanked pictures all go there, by true names, so a vault reached through
+;; a link (~/org) files them the same. Any other dropped file still goes
+;; into the note's attachment folder, and a file outside the vault keeps
+;; Org's and Doom's attachments.
 (declare-function org-entry-get "org")
 (declare-function org-link--normalize-filename "ol")
-(declare-function org-download--fullname "org-download")
 (declare-function org-download-image "org-download")
+(declare-function org-download-dnd-base64 "org-download")
 (defvar org-download-method)
 (defvar org-download-image-dir)
 (defvar org-download-heading-lvl)
@@ -272,51 +275,50 @@ going through every link of a long note is the slow part."
 (defun +notes--picture-dir (&optional file)
   "The folder a picture of the note FILE goes into, nil outside the vault."
   (when-let* ((file (or file (+notes--note-file)))
-              (vault (file-name-as-directory (expand-file-name org-directory)))
+              (file (file-truename file))
+              (vault (file-name-as-directory (file-truename org-directory)))
               ((file-in-directory-p file vault)))
-    (let* ((dir (file-name-directory (expand-file-name file)))
-           (wiki (expand-file-name "resources/wiki/" vault)))
+    (let ((dir (file-name-directory file))
+          (wiki (expand-file-name "resources/wiki/" vault)))
       (file-name-as-directory
        (expand-file-name (file-relative-name dir (if (file-in-directory-p dir wiki) wiki vault))
                          (expand-file-name "assets/images/" vault))))))
 
-(defun +notes--link-path (file)
+(defun +notes--file-link-path (file)
   "The path of a file: link to FILE: relative for the vault's assets, so
 the link holds wherever the vault is, as Org's own setting otherwise."
-  (if (file-in-directory-p file (expand-file-name "assets/" org-directory))
-      (file-relative-name file (file-name-directory (+notes--note-file)))
-    (org-link--normalize-filename file (default-value 'org-link-file-path-type))))
+  (let ((note (+notes--note-file))
+        (target (file-truename file)))
+    (if (and note
+             (file-in-directory-p target (file-truename (expand-file-name "assets/" org-directory))))
+        (file-relative-name target (file-name-directory (file-truename note)))
+      (org-link--normalize-filename file (default-value 'org-link-file-path-type)))))
 
 (add-hook! 'org-mode-hook
   (defun +notes--pictures-into-assets-h ()
     "In a note of the vault, Org's drop and yank handlers copy a picture
-under assets/images/<subject>/ and link it relatively."
+under assets/images/<subject>/ and link it relatively.  A dropped
+picture whose name is already in that folder is refused by Org; rename
+it first."
     (when-let* ((dir (+notes--picture-dir)))
       (setq-local org-yank-image-save-method dir
-                  org-link-file-path-type #'+notes--link-path))))
-
-(defvar +notes--download-dir nil
-  "The folder `+notes--download-into-assets-a' is saving a picture into.")
-
-(defun +notes--download-file (link)
-  "Where org-download saves LINK: in `+notes--download-dir'.
-A symbol, as org-download takes only a named function for its method."
-  (let ((org-download-image-dir +notes--download-dir)
-        (org-download-heading-lvl nil))
-    (expand-file-name (org-download--fullname link))))
+                  org-link-file-path-type #'+notes--file-link-path))))
 
 (defun +notes--download-link (filename)
   "The link org-download inserts for FILENAME: a relative file: link."
-  (format "[[file:%s]]\n" (org-link-escape (+notes--link-path filename))))
+  (format "[[file:%s]]\n" (org-link-escape (+notes--file-link-path filename))))
 
 (defadvice! +notes--download-into-assets-a (fn &rest args)
-  "Save a pasted or captured picture of a vault note under
-assets/images/<subject>/, with a relative file: link."
-  :around #'org-download-image
+  "Save a picture org-download pastes, captures or takes from a drop into
+a vault note under assets/images/<subject>/, with a relative file: link.
+Its method is a plain directory there, so a URL keeps the extension
+org-download finds for it."
+  :around '(org-download-image org-download-dnd-base64)
   (if-let* (((derived-mode-p 'org-mode))
             (dir (+notes--picture-dir)))
-      (let ((+notes--download-dir dir)
-            (org-download-method #'+notes--download-file)
+      (let ((org-download-method 'directory)
+            (org-download-image-dir dir)
+            (org-download-heading-lvl nil)
             (org-download-link-format-function #'+notes--download-link))
         (apply fn args))
     (apply fn args)))
