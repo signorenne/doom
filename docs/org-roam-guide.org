@@ -589,11 +589,13 @@ the inbox, and the notes are in git, so anything Claude wrote can be read
 as a diff and undone.
 
 * Pictures, diagrams, callouts
-A screenshot or a figure belongs to the note it explains. =SPC m a p=
-pastes the picture on the clipboard, =SPC m a c= takes a screenshot, and a
-picture file dropped on the note is copied in; each goes into the note's
-own folder under =.attach/=, and the note shows it as it opens. A diagram
-or picture of no one note, a PlantUML file, lives in =assets/=.
+A screenshot or a figure is filed by the subject of the note it explains.
+=SPC m a p= pastes the picture on the clipboard, =SPC m a c= takes a
+screenshot, and a picture file dropped on the note is copied in; each goes
+into =assets/images/<subject>/=, the note's folder under =resources/wiki/=
+(or under the vault, for a note elsewhere), with a relative link, and the
+note shows it as it opens. A PlantUML diagram and its rendered =.svg= live
+in =assets/diagrams/<subject>/=.
 
 A callout says how to read a passage: =#+begin_warning Careful= ...
 =#+end_warning=, or note, tip, important, caution. =C-c C-,= then =W=, or

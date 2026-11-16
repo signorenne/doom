@@ -2451,7 +2451,9 @@ refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= or
 | ~C-c C-o~   | open the link at point |
 | ~SPC m a a~ | attach a file          |
 
-Images dropped on a buffer are downloaded and attached.
+Images dropped on a note are copied into the vault's
+=assets/images/<subject>/= and linked; in an Org file outside the vault
+they are attached.
 
 ** Export and babel
 | Key         | What it does                  |
@@ -2570,10 +2572,10 @@ which git ignores.
 | ~SPC m a c~ | take a screenshot into the note                                          |
 | ~C-c C-,~   | a block; then ~W~ a warning callout, ~N~ ~T~ ~I~ ~X~ note, tip, important, caution |
 
-A picture file dropped on a note is copied in too. Each goes into the
-note's folder under =.attach/=, with a link where the cursor is, and the
-note shows it as it opens. A diagram or picture of no one note goes in
-=assets/=.
+A picture file dropped on a note is copied in too. Each goes into
+=assets/images/<subject>/=, the note's folder under =resources/wiki/= or
+under the vault, with a relative link where the cursor is, and the note
+shows it as it opens. Diagrams go in =assets/diagrams/<subject>/=.
 
 ** Cards and sources
 | Key       | What it does                          |
