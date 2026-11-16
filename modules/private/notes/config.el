@@ -287,9 +287,10 @@ going through every link of a long note is the slow part."
 (defun +notes--file-link-path (file)
   "The path of a file: link to FILE: relative for the vault's assets, so
 the link holds wherever the vault is, as Org's own setting otherwise."
-  (let ((note (+notes--note-file))
-        (target (file-truename file)))
-    (if (and note
+  ;; A remote file is never in the vault: no truename, so no round trip.
+  (let* ((note (and (not (file-remote-p file)) (+notes--note-file)))
+         (target (and note (file-truename file))))
+    (if (and target
              (file-in-directory-p target (file-truename (expand-file-name "assets/" org-directory))))
         (file-relative-name target (file-name-directory (file-truename note)))
       (org-link--normalize-filename file (default-value 'org-link-file-path-type)))))
