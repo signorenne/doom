@@ -34,7 +34,10 @@ each from templates/org/NAME.org and each a node of the graph.")
 (defvar +notes-knowledge-directories
   '("projects" "areas" "areas/university" "archives/projects" "archives/areas"
     "capture/journal" "capture/meetings" "capture/drafts"
-    "resources/wiki" "resources/wiki/people" "resources/case-studies"
+    ;; Not resources/wiki/people: the vault gives every wiki folder an
+    ;; index, so that one appears with the first person note, which the
+    ;; capture makes it for.
+    "resources/wiki" "resources/case-studies"
     "resources/sources/papers" "resources/sources/manuals"
     "resources/sources/websites" "resources/collections/tags" "assets")
   "Folders of the vault, the PARA layout the captures write into, made
