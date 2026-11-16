@@ -21,8 +21,10 @@ The documents, the inbox and the agenda take the two for one folder.")
 (defvar +notes-documents
   '(("inbox"    . "inbox.org")              ; everything captured lands here first
     ("projects" . "projects/index.org")     ; links to each project's own file
-    ("someday"  . "someday.org")            ; parked tasks, kept out of the agenda
-    ("reading"  . "resources/reading.org")  ; books and articles to read
+    ;; Reading and someday hold tasks, so they are areas, not resources
+    ;; (the vault's own rule, which wins over this module's old layout).
+    ("someday"  . "areas/someday.org")      ; parked tasks, kept out of the agenda
+    ("reading"  . "areas/reading.org")      ; books and articles to read
     ("snippets" . "resources/snippets.org") ; code snippets
     ("habits"   . "areas/habits.org")       ; org-habit entries
     ("university" . "areas/university/index.org")) ; the courses and what is due

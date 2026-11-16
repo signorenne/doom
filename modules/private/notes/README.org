@@ -38,10 +38,14 @@ being org-noter, and org-ql find is ~a /~, since ~q~, as a key's last,
 closes the menu.
 
 ** Documents
-The inbox and someday are at the vault's root, the project index is
-=projects/index.org=, reading and snippets are in =resources/=, the
-habits in =areas/= and University in =areas/university/=. The inbox and
-the habits are in the agenda; someday and =resources/= never are.
+The inbox is at the vault's root, the project index is
+=projects/index.org=, someday, reading and the habits are in =areas/=
+(they hold tasks, and the vault keeps tasks out of =resources/=),
+snippets in =resources/= and University in =areas/university/=. The
+inbox and the habits are in the agenda; someday, reading and
+=resources/= never are. University and every course open with the four
+sections of an area page: Responsibility, Standards, Review, Projects
+and knowledge.
 
 | Key         | What it opens                                    |
 |-------------+--------------------------------------------------|

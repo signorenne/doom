@@ -13,6 +13,7 @@
 (declare-function org-roam-node-file "org-roam-node")
 (declare-function +notes--roam-db-ready "roam-db")
 (declare-function +notes--roam-db-building "roam-db")
+(declare-function +notes--document-path "documents")
 
 ;;
 ;;; Tasks written inside notes
@@ -58,13 +59,20 @@ added there is found in the notes as well."
                          keywords "|")
               ") "))))
 
+(defconst +notes--off-agenda-documents '("someday" "reading")
+  "Documents under areas/ whose tasks are not for now: parked ones and
+the books to read.  The agenda scan leaves them out by name.")
+
 (defun +notes--active-task-file-p (file)
   "Whether FILE belongs to an active task context, outside archives.
 The journal counts: a task typed into a daily note stays in view until it
-is refiled into its project. Knowledge, sources and drafts never hold tasks."
+is refiled into its project. Knowledge, sources and drafts never hold
+tasks, and the documents of `+notes--off-agenda-documents' are not for now."
   (let ((root (expand-file-name org-roam-directory)))
     (and (file-in-directory-p file root)
          (not (file-in-directory-p file (expand-file-name "archives/" root)))
+         (not (member (expand-file-name file)
+                      (mapcar #'+notes--document-path +notes--off-agenda-documents)))
          (or (equal (expand-file-name file) (+notes--inbox-file))
              (file-in-directory-p file (expand-file-name "projects/" root))
              (file-in-directory-p file (expand-file-name "areas/" root))

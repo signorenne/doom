@@ -7,6 +7,18 @@
 
 Each course is areas/university/<course>/index.org, made with SPC n r n C.
 
+* Responsibility
+The degree: the courses of this term and the exams still to pass.
+
+* Standards
+Every course has its index, with its timetable and its deadlines.
+
+* Review
+At the start of each term and before each exam session.
+
+* Projects and knowledge
+The courses below; each course's page lists its lectures and sources.
+
 * Courses
 #+BEGIN: notes-list :from folder :tags ("course") :columns (title (property "STATUS") modified)
 #+END:

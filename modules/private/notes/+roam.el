@@ -21,7 +21,14 @@ live tables, then the headings a project is worked under.  Both ways of
 making a project write it, so it has no capture escape.")
 
 (defvar +notes-course-body
-  (concat "* Overview\n- Teacher:\n- Term:\n- Exam:\n\n"
+  (concat
+          ;; A course is an area of the vault, so it opens with the four
+          ;; sections every area page has.
+          "* Responsibility\nPassing this course: its classes, its assignments and its exam.\n\n"
+          "* Standards\nEach class has its lecture note; each assignment goes in before its deadline.\n\n"
+          "* Review\nEvery week of the term, and before the exam.\n\n"
+          "* Projects and knowledge\nThe lectures, case studies and sources below.\n\n"
+          "* Overview\n- Teacher:\n- Term:\n- Exam:\n\n"
           "* Timetable\nEach class is a repeating date in angle brackets, as this one in square ones: [2026-11-03 Tue 10:00-12:00 +1w]\n\n"
           "* Assignments and exams\n\n"
           "* Lectures\n#+BEGIN: notes-list :from folder :tags (\"lecture\") :columns (title created) :sort created\n#+END:\n\n"
@@ -29,9 +36,9 @@ making a project write it, so it has no capture escape.")
           "* Deadlines\n#+BEGIN: notes-query :from folder :query \"todo: deadline:to=14\" :columns (deadline todo heading file) :sort deadline\n#+END:\n\n"
           "* Case studies\n#+BEGIN: notes-list :from vault :tags (\"case_study\") :links-to this\n#+END:\n\n"
           "* Sources\n")
-  "How a new course index is laid out, below its head: the timetable, what
-is due, and live tables of its lectures, tasks and case studies.  No
-capture escape: the template adds its own.")
+  "How a new course index is laid out, below its head: the area sections,
+the timetable, what is due, and live tables of its lectures, tasks and
+case studies.  No capture escape: the template adds its own.")
 
 ;; The daily note, in capture template syntax: %<...> is the date. The
 ;; dailies template below and `+notes-daily-file', which other modules
