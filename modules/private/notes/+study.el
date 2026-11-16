@@ -8,8 +8,15 @@
 ;; thing. The .bib and the PDFs are the library's, apart from the vault;
 ;; the notes about them are in the vault.
 (defvar +notes-library-dir "~/projects/personal/knowledge_base/"
-  "The library of books and papers; init.el sets it.  Only citar reads it,
-and nothing here creates anything in it.")
+  "The library of books and papers; init.el sets it.  citar and the
+library: links read it, and nothing here creates anything in it.")
+
+;; A note names a book by its place in the library, not on this machine:
+;; [[library:library/books/digital/x.pdf][Title]], the page in the text.
+;; By key, so a reload with another library replaces the entry.
+(after! org
+  (setf (alist-get "library" org-link-abbrev-alist nil nil #'equal)
+        (concat (file-name-as-directory (expand-file-name +notes-library-dir)) "%s")))
 
 (defvar +notes-bibliography (file-name-concat +notes-library-dir "research/academic/references.bib")
   "The BibTeX library citar reads.")

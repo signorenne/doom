@@ -7,7 +7,8 @@ this machine (set in =init.el=): org notes, PlantUML diagrams and
 pictures. The vault is ~org-directory~ and ~org-roam-directory~ at once,
 one Org-roam graph where Zettelkasten knowledge and PARA work meet, and
 one git repository that commits itself. Books and papers are a library
-apart, ~+notes-library-dir~, which only citar reads.
+apart, ~+notes-library-dir~, which citar reads and notes link into with
+=library:= links.
 
 - the inbox =inbox.org= and one =projects/<slug>/index.org= per
   bounded outcome, with Dashboard, Goal, Completion criteria, Next
@@ -586,7 +587,11 @@ and its colours are the same.
 - ~+notes-library-dir~, the library of books and papers, set in
   =init.el= (=~/projects/personal/knowledge_base/= here and by default);
   ~+notes-bibliography~ (=research/academic/references.bib= under it),
-  with ~citar-library-paths~ its =research/academic/papers=.
+  with ~citar-library-paths~ its =research/academic/papers=. A note links
+  a file there by its path under the library,
+  =[[library:library/books/digital/x.pdf][Title]]=, the page in the
+  text, so the link holds on every machine whose =init.el= names its
+  library; a link to a missing file opens nothing and says so.
 - ~+notes-commit-idle~ (600).
 - ~+notes-board-states~ (TODO NEXT STRT WAIT DONE), a board's columns
   when it names none, and ~+notes-board-done-days~ (14), how many days a
