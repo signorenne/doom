@@ -10,7 +10,7 @@
 ;; graph. Set before any module or the doctor reads it; a missing folder
 ;; is made on first use. Unset, it is ~/org. Books and papers are a
 ;; library apart, which only citar reads and nothing creates.
-(setq +core-notes-dir "~/notes/"
+(setq +core-notes-dir "~/memex/"
       +notes-library-dir "~/projects/personal/knowledge_base/")
 
 ;; With the login daemon running, a GUI Emacs opens its files there.

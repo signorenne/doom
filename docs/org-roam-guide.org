@@ -8,7 +8,7 @@ fill up with notes nobody ever reads again. The cheat sheet, =F12=, links
 it. Start with the tutorial if this is the first time; the keys are
 collected at the end.
 
-Everything you write lives in one vault, =~/notes=: the notes, the
+Everything you write lives in one vault, =~/memex=: the notes, the
 documents, the pictures and the diagrams. It is the graph, and paths such
 as =capture/journal/= below are relative to it; it is also one git
 repository that commits itself. Books and papers are a library apart,
@@ -498,8 +498,10 @@ So syncing is syncing text:
 1. =SPC n G= before you leave a machine and after you arrive at one. It
    commits the vault, pulls with a rebase, syncs the database with the
    files that arrived, in the background, and pushes.
-2. On the second machine, clone the vault into =~/notes= and this Doom
-   config, run =doom sync=, then open Emacs. It builds that machine's
+2. On the second machine, install git-lfs and run =git lfs install=
+   first: the vault's PDFs go through Git LFS, and a clone without it
+   holds only their pointers. Then clone the vault into =~/memex= and this
+   Doom config, run =doom sync=, then open Emacs. It builds that machine's
    database from the files in a background Emacs, which on a big vault
    takes half a minute or more once; until then the finder and the
    other note lists say so, and how far it is.

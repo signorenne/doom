@@ -2,7 +2,7 @@
 #+subtitle: documents, capture, agenda and roam
 
 * Description
-Everything written lives in one vault, ~+core-notes-dir~, =~/notes= on
+Everything written lives in one vault, ~+core-notes-dir~, =~/memex= on
 this machine (set in =init.el=): org notes, PlantUML diagrams and
 pictures. The vault is ~org-directory~ and ~org-roam-directory~ at once,
 one Org-roam graph where Zettelkasten knowledge and PARA work meet, and

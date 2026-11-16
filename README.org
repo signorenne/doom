@@ -78,7 +78,7 @@ Nothing here needs doing by hand; each happens once per machine.
 
 ** 5. What is this machine's
 =init.el= says where the notes are, =+core-notes-dir=, the one vault
-(=~/notes/=), and where the library of books and papers is,
+(=~/memex/=), and where the library of books and papers is,
 =+notes-library-dir=; change them there for a machine with its notes
 elsewhere. A missing vault folder is made on first use, and =SPC n d b=
 makes the vault's documents and its git repository; the library is

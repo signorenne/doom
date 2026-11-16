@@ -2471,7 +2471,7 @@ Images dropped on a buffer are downloaded and attached.
 | ~SPC t p~   | present the file as slides                   |
 
 * Notes and roam
-Roam is the note graph of the vault, =~/notes= (~+core-notes-dir~, set in
+Roam is the note graph of the vault, =~/memex= (~+core-notes-dir~, set in
 =init.el=); the dailies are the journal. [[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says
 how to work with it day to day.
 
