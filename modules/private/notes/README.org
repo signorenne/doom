@@ -274,7 +274,12 @@ missing. citar writes its notes into the vault as
 about it are the same thing. The vault is a git repository, made
 by ~SPC n d b~, and commits everything in it after ~+notes-commit-idle~
 seconds of idle time and when Emacs exits, never while a rebase or merge
-is waiting, and says so when a commit fails. ~SPC n G~ pulls and pushes in
+is waiting, and says so when a commit fails. When the vault's
+=.gitattributes= sends files through Git LFS, its PDFs, nothing is
+committed until git-lfs is installed and =git lfs install= has run: the
+idle commit, ~SPC n g~ and making the repository say so instead, and
+~doom doctor~ warns; a vault with nothing to commit is left alone.
+~SPC n G~ pulls and pushes in
 the background; a conflict stops it with a message and magit finishes it.
 The org-roam database (=org-roam-knowledge.db= under Doom's cache) and the
 card review log are caches outside the vault, so only the files travel
@@ -571,7 +576,8 @@ and its colours are the same.
   =init.el=, before any module or ~doom doctor~ reads it; unset, it is
   =~/org=. A folder that is missing is made when org loads, with
   ~+notes-knowledge-directories~ inside; ~doom doctor~ says when the vault
-  is missing or not a git repository.
+  is missing, is not a git repository, or needs Git LFS that is not set
+  up.
 - ~+notes-documents~, the seven documents, and ~+notes-templates-dir~,
   where their templates are.
 - ~+notes-roam-head~, the header every roam note starts with;

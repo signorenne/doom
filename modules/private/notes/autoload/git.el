@@ -47,6 +47,30 @@ The one state every command below branches on."
   "A commit message: the date and time."
   (format-time-string "notes: %Y-%m-%d %H:%M"))
 
+(defconst +notes--lfs-missing
+  "Notes not committed: Git LFS is not set up (install git-lfs, then run git lfs install)"
+  "What a commit refused by `+notes--lfs-missing-p' says.")
+
+(defun +notes--lfs-missing-p ()
+  "Non-nil when the vault's .gitattributes sends files through Git LFS
+and git cannot run it: no filter.lfs.process in git's config, or no
+git-lfs.  A PDF would then go into git whole, or the commit fail on it.
+doctor.el checks the same."
+  (let ((attributes (expand-file-name ".gitattributes" org-directory)))
+    (and (file-exists-p attributes)
+         (with-temp-buffer
+           (insert-file-contents attributes)
+           (re-search-forward "filter=lfs" nil t))
+         (let ((process (+notes--git "config" "--get" "filter.lfs.process")))
+           (not (and (zerop (car process))
+                     (not (string-empty-p (cdr process)))
+                     (zerop (car (+notes--git "lfs" "version")))))))))
+
+(defun +notes--refuse-without-lfs ()
+  "Signal a user error when Git LFS is needed and not set up."
+  (when (+notes--lfs-missing-p)
+    (user-error "%s" +notes--lfs-missing)))
+
 ;;;###autoload
 (defun +notes/init-repo ()
   "Turn the notes into a git repository and commit what is there.
@@ -58,6 +82,8 @@ down in the first place."
   (cond
    ((+notes-repo-p)
     (message "%s is already a repository" (abbreviate-file-name org-directory)))
+   ;; Before git init: a repository made now would commit without LFS.
+   ((+notes--lfs-missing-p) (user-error "%s" +notes--lfs-missing))
    ((not (zerop (car (+notes--git "config" "user.email"))))
     (user-error "git has no identity here: git config --global user.email"))
    (t
@@ -77,6 +103,8 @@ down in the first place."
   "Commit the notes with MESSAGE, or a timestamp when none is given."
   (interactive
    (list (and (eq (+notes--state) 'dirty)
+              ;; Refused before the prompt, not after a message is typed.
+              (progn (+notes--refuse-without-lfs) t)
               (let ((default (+notes--message)))
                 (read-string (format-prompt "Message" default) nil nil default)))))
   (when (and message (string-blank-p message))
@@ -89,6 +117,7 @@ down in the first place."
     ('clean (message "Nothing to commit in %s"
                      (abbreviate-file-name org-directory)))
     ('dirty
+     (+notes--refuse-without-lfs)
      (+notes--git "add" "-A")
      (let ((result (+notes--git "commit" "-q" "-m"
                                     (or message (+notes--message)))))
@@ -109,6 +138,9 @@ index.lock), which is reported rather than swallowed."
   (pcase (+notes--state)
     ((or 'no-repo 'clean) t)
     ('stopped nil)
+    ((and 'dirty (guard (+notes--lfs-missing-p)))
+     (message "%s" +notes--lfs-missing)
+     nil)
     ('dirty
      (+notes--git "add" "-A")
      (let ((result (+notes--git "commit" "-q" "-m" (+notes--message))))
@@ -123,8 +155,14 @@ for s in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD; do
   [ -e \"$d/$s\" ] && exit 0
 done
 git status --porcelain | grep -qE '^(U.|.U|AA|DD) ' && exit 0
+[ -z \"$(git status --porcelain)\" ] && exit 0
+if grep -qs 'filter=lfs' .gitattributes; then
+  [ -n \"$(git config --get filter.lfs.process)\" ] && git lfs version >/dev/null 2>&1 ||
+    { echo \"$2\"; exit 1; }
+fi
 git add -A && { git diff --cached --quiet || git commit -q -m \"$1\"; }"
-  "The idle commit, as `+notes--autocommit' decides it, in one shell.")
+  "The idle commit, as `+notes--autocommit' decides it, in one shell:
+$1 is the message, $2 what it says when Git LFS is not set up.")
 
 ;;;###autoload
 (defun +notes--autocommit-in-background ()
@@ -136,12 +174,15 @@ the background: git never holds up the editor."
           (buffer (generate-new-buffer " *notes autocommit*")))
       (make-process
        :name "notes-autocommit" :buffer buffer :noquery t
-       :command (list "sh" "-c" +notes--autocommit-script "sh" (+notes--message))
+       :command (list "sh" "-c" +notes--autocommit-script "sh" (+notes--message)
+                      +notes--lfs-missing)
        :sentinel (lambda (process _event)
                    (unless (process-live-p process)
                      (unless (zerop (process-exit-status process))
-                       (message "Notes not committed, git said: %s"
-                                (string-trim (with-current-buffer buffer (buffer-string)))))
+                       (let ((said (string-trim (with-current-buffer buffer (buffer-string)))))
+                         (if (equal said +notes--lfs-missing)
+                             (message "%s" said)
+                           (message "Notes not committed, git said: %s" said))))
                      (kill-buffer buffer)))))))
 
 (defvar +notes--sync-process nil

@@ -80,7 +80,24 @@
   (unless (or (equal (file-name-as-directory graph) (file-name-as-directory vault))
               (file-directory-p graph))
     (warn! "The graph %s doesn't exist yet" (abbreviate-file-name graph))
-    (explain! "Run M-x +notes/bootstrap, or press SPC n d b")))
+    (explain! "Run M-x +notes/bootstrap, or press SPC n d b"))
+  ;; As +notes--lfs-missing-p in autoload/git.el decides it, which the
+  ;; CLI does not load; a vault that is no repository yet is asked too,
+  ;; since its first commit is the one that would go wrong.
+  (let ((attributes (expand-file-name ".gitattributes" vault)))
+    (when (and (file-exists-p attributes)
+               (with-temp-buffer
+                 (insert-file-contents attributes)
+                 (re-search-forward "filter=lfs" nil t))
+               (let ((default-directory (file-name-as-directory vault)))
+                 (not (and (with-temp-buffer
+                             (and (zerop (call-process "git" nil t nil "config" "--get" "filter.lfs.process"))
+                                  (not (string-blank-p (buffer-string)))))
+                           (zerop (call-process "git" nil nil nil "lfs" "version"))))))
+      (warn! "Git LFS is not set up, so the notes will not be committed: install git-lfs, then run git lfs install")
+      (explain! (if (featurep :system 'macos)
+                    "brew install git-lfs, then git lfs install"
+                  "openSUSE: zypper in git-lfs, then git lfs install")))))
 
 ;; The library is the user's own and nothing makes it: the default is
 ;; the one +study.el gives.
