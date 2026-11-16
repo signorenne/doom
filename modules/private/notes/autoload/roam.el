@@ -13,7 +13,6 @@
 (declare-function org-roam-node-file "org-roam-node")
 (declare-function +notes--roam-db-ready "roam-db")
 (declare-function +notes--roam-db-building "roam-db")
-(declare-function +notes--document-path "documents")
 
 ;;
 ;;; Tasks written inside notes
@@ -63,6 +62,19 @@ added there is found in the notes as well."
   "Documents under areas/ whose tasks are not for now: parked ones and
 the books to read.  The agenda scan leaves them out by name.")
 
+(defvar +notes-documents)
+
+(defun +notes--off-agenda-file-p (file)
+  "Non-nil when FILE is one of `+notes--off-agenda-documents', by true
+name: the scan's paths come from the truename Doom gives
+`org-roam-directory', the documents' from `org-directory' as written.
+A name taken out of `+notes-documents' is simply not looked for."
+  (let ((true (file-truename file)))
+    (seq-some (lambda (name)
+                (when-let* ((doc (cdr (assoc name +notes-documents))))
+                  (equal true (file-truename (expand-file-name doc org-directory)))))
+              +notes--off-agenda-documents)))
+
 (defun +notes--active-task-file-p (file)
   "Whether FILE belongs to an active task context, outside archives.
 The journal counts: a task typed into a daily note stays in view until it
@@ -71,8 +83,7 @@ tasks, and the documents of `+notes--off-agenda-documents' are not for now."
   (let ((root (expand-file-name org-roam-directory)))
     (and (file-in-directory-p file root)
          (not (file-in-directory-p file (expand-file-name "archives/" root)))
-         (not (member (expand-file-name file)
-                      (mapcar #'+notes--document-path +notes--off-agenda-documents)))
+         (not (+notes--off-agenda-file-p file))
          (or (equal (expand-file-name file) (+notes--inbox-file))
              (file-in-directory-p file (expand-file-name "projects/" root))
              (file-in-directory-p file (expand-file-name "areas/" root))
