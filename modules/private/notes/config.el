@@ -259,6 +259,7 @@ going through every link of a long note is the slow part."
 (declare-function org-entry-get "org")
 (declare-function org-link--normalize-filename "ol")
 (declare-function org-download--fullname "org-download")
+(declare-function org-download-image "org-download")
 (defvar org-download-method)
 (defvar org-download-image-dir)
 (defvar org-download-heading-lvl)
