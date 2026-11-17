@@ -480,6 +480,67 @@ startup from loading it; .git is a file in a worktree."
 
 
 ;;
+;;; Reading
+
+;; A note of the vault wraps at a reading width rather than at the
+;; window's edge, its text at the left and its line numbers kept. A note
+;; whose tables or code are wider gets their width, so a row or a line
+;; of code is never broken by it; M-x visual-fill-column-mode turns the
+;; width off in a note. Zen mode sets a width of its own and drops this
+;; one when it ends, so it is set again then.
+(defvar +notes-reading-width 100
+  "Columns a vault note's text wraps at, its line numbers included.")
+
+(defun +notes--widest-fixed-line ()
+  "Columns of this buffer's widest table row or source or example block
+line, as shown: a link by its description, under its heading's indent."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((case-fold-search t) (level 0) (widest 0))
+      (while (re-search-forward
+              "^\\(?:\\(\\*+\\) \\|[ \t]*\\(|\\)\\|[ \t]*#\\+begin_\\(?:src\\|example\\)\\)"
+              nil t)
+        (cond ((match-beginning 1)
+               (setq level (- (match-end 1) (match-beginning 1))))
+              ((match-beginning 2)
+               (let ((row (buffer-substring-no-properties
+                           (line-beginning-position) (line-end-position))))
+                 (setq widest (max widest
+                                   (+ (* 2 level)
+                                      (string-width (if (string-search "[[" row)
+                                                        (org-link-display-format row)
+                                                      row)))))))
+              (t
+               (let ((end (save-excursion
+                            (if (re-search-forward "^[ \t]*#\\+end_" nil t)
+                                (line-beginning-position)
+                              (point-max)))))
+                 (forward-line 1)
+                 (while (< (point) end)
+                   (setq widest (max widest (+ (* 2 level)
+                                               (- (line-end-position) (point)))))
+                   (forward-line 1)))))
+        (forward-line 1))
+      widest)))
+
+(add-hook! '(org-mode-hook writeroom-mode-disable-hook)
+  (defun +notes--reading-width-h ()
+    "Wrap a note of the vault at `+notes-reading-width' columns, or at its
+widest table or code, with room for the line numbers."
+    (when (and buffer-file-name
+               (derived-mode-p 'org-mode)
+               (file-in-directory-p buffer-file-name org-directory)
+               (require 'visual-fill-column nil t))
+      (setq-local visual-fill-column-width
+                  (max +notes-reading-width
+                       (+ (+notes--widest-fixed-line)
+                          (length (number-to-string (line-number-at-pos (point-max))))
+                          2))
+                  visual-fill-column-center-text nil)
+      (visual-fill-column-mode +1))))
+
+
+;;
 ;;; Spelling and style
 
 ;; The notes are spelt British, colour and centre, and American is taken

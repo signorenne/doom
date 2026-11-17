@@ -21,6 +21,8 @@
 (package! ox-gfm :pin "4f774f13d34b3db9ea4ddb0b1edc070b1526ccbb")
 ;; LaTeX previews while the cursor is away
 (package! org-fragtog :pin "562f6590843eeab30ac8aa2ced285aff8d590861")
+;; A note's reading width; :ui zen has it too, through writeroom.
+(package! visual-fill-column :pin "e1be9a1545157d24454d950c0ac79553c540edb7")
 
 ;; Spaced repetition over the notes themselves; the awk scripts are its
 ;; indexer, so they have to ship with the package.
