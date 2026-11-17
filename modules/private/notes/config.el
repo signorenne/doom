@@ -491,6 +491,12 @@ startup from loading it; .git is a file in a worktree."
 (defvar +notes-reading-width 100
   "Columns a vault note's text wraps at, its line numbers included.")
 
+(defun +notes--vault-note-p ()
+  "Non-nil when this buffer visits an Org file of the vault."
+  (and buffer-file-name
+       (derived-mode-p 'org-mode)
+       (file-in-directory-p buffer-file-name org-directory)))
+
 (defun +notes--widest-fixed-line ()
   "Columns of this buffer's widest table row or source or example block
 line, as shown: a link by its description, under its heading's indent."
@@ -527,9 +533,7 @@ line, as shown: a link by its description, under its heading's indent."
   (defun +notes--reading-width-h ()
     "Wrap a note of the vault at `+notes-reading-width' columns, or at its
 widest table or code, with room for the line numbers."
-    (when (and buffer-file-name
-               (derived-mode-p 'org-mode)
-               (file-in-directory-p buffer-file-name org-directory)
+    (when (and (+notes--vault-note-p)
                (require 'visual-fill-column nil t))
       (setq-local visual-fill-column-width
                   (max +notes-reading-width
@@ -588,6 +592,69 @@ widest table or code, with room for the line numbers."
     (spell-fu-mode -1)))
 
 (add-hook '+core-warm-up-functions #'+notes--warm-up-h 50)
+
+;; The vault's own words are spelt right in its notes: those of the titles,
+;; the aliases and the =code= and ~code~ spans, wg and PostUp from
+;; =wg-quick= and =PostUp=. ripgrep gathers them once a session, in the
+;; background while Emacs waits after starting; a note opened before
+;; that gets them when they come. They are a word list of the session
+;; only, so zg still adds to dictionary.pws without asking which list.
+(defvar +notes--vault-words nil
+  "The words of the vault's titles, aliases and code spans, one list
+shared by every note of the vault.")
+
+(defvar +notes--vault-words-process nil
+  "The search gathering `+notes--vault-words', made once a session.")
+
+(defvar spell-fu-buffer-session-localwords)
+(declare-function spell-fu-buffer-session-localwords-update "spell-fu")
+(declare-function spell-fu-mode "spell-fu")
+
+(defun +notes--vault-words-scan (&rest _)
+  "Gather the vault's own words in the background, once a session."
+  (when (and (null +notes--vault-words-process)
+             (file-directory-p org-directory)
+             (executable-find "rg"))
+    (setq +notes--vault-words-process
+          (make-process
+           :name "notes-vault-words"
+           :buffer (generate-new-buffer " *notes-vault-words*")
+           :noquery t
+           :connection-type 'pipe
+           :command
+           (list "sh" "-c"
+                 (concat "rg -i --no-filename --no-line-number --no-heading --color never"
+                         " -o -g '*.org' -e '^#\\+title:.*' -e '^[ \t]*:ROAM_ALIASES:.*'"
+                         " -e '=[^=[:space:]][^=]*=' -e '~[^~[:space:]][^~]*~' -- "
+                         (shell-quote-argument (expand-file-name org-directory))
+                         " 2>/dev/null | rg -o '\\p{L}+' | sort -u"))
+           :sentinel #'+notes--vault-words-done))))
+
+(defun +notes--vault-words-done (process _event)
+  "Take PROCESS's words, and give them to the notes open with spelling on."
+  (unless (process-live-p process)
+    (let ((buffer (process-buffer process)))
+      (if (not (zerop (process-exit-status process)))
+          (message "The vault's words were not gathered: exit %d"
+                   (process-exit-status process))
+        (setq +notes--vault-words
+              (split-string (with-current-buffer buffer (buffer-string)) "\n" t))
+        (dolist (note (buffer-list))
+          (with-current-buffer note
+            (when (and (bound-and-true-p spell-fu-mode) (+notes--vault-note-p))
+              ;; Again, so the marks on the words now known go.
+              (spell-fu-mode -1)
+              (spell-fu-mode +1)))))
+      (kill-buffer buffer))))
+
+(add-hook '+core-warm-up-functions #'+notes--vault-words-scan 60)
+
+(add-hook! 'spell-fu-mode-hook
+  (defun +notes--vault-words-h ()
+    "In a note of the vault, take the vault's own words as spelt right."
+    (when (and (bound-and-true-p spell-fu-mode) +notes--vault-words (+notes--vault-note-p))
+      (setq-local spell-fu-buffer-session-localwords +notes--vault-words)
+      (spell-fu-buffer-session-localwords-update))))
 
 ;; writegood marks the passive voice, vague words and a word said twice
 ;; as you type, and in these notes what it marks is not an error: "is
