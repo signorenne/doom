@@ -284,7 +284,9 @@ With no copy yet, fetch it and show it once it is saved."
            (file (expand-file-name
                   (format "image.%s.%s" (sha1 url) (file-name-extension path))
                   +org-preview-dir)))
-      (if (file-exists-p file)
+      ;; A copy Emacs cannot read as a picture, such as an error page or
+      ;; a picture Doom's own download saved re-encoded, is fetched again.
+      (if (and (file-exists-p file) (image-type-from-file-header file))
           (org-link-preview-file ov file link)
         (+notes--fetch-picture url file (copy-marker (org-element-begin link)))
         nil))))
@@ -313,8 +315,13 @@ file renamed into place, so no half picture is ever taken for the copy."
     (unwind-protect
         (if (or (plist-get status :error)
                 (not (eql (bound-and-true-p url-http-response-status) 200))
-                (not (string-prefix-p "image/" (or (bound-and-true-p url-http-content-type) "")))
-                (not (bound-and-true-p url-http-end-of-headers)))
+                (not (bound-and-true-p url-http-end-of-headers))
+                ;; A picture by its type, or by its first bytes when the
+                ;; host calls it something else, application/octet-stream.
+                (not (or (string-prefix-p "image/" (or (bound-and-true-p url-http-content-type) ""))
+                         (image-type-from-data
+                          (buffer-substring (1+ url-http-end-of-headers)
+                                            (min (point-max) (+ url-http-end-of-headers 1025)))))))
             (message "Picture not fetched: %s" url)
           (let ((part (make-temp-name (concat file ".part")))
                 (coding-system-for-write 'binary))
