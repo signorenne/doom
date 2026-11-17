@@ -69,6 +69,10 @@ day is written under.")
   ;; mentions leave them out.
   (advice-add 'org-roam-unlinked-references-section :around #'+notes--roam-unlinked-a)
 
+  ;; The roam panel follows the note in front once it has been still,
+  ;; rather than after every command (autoload/panel.el).
+  (advice-add 'org-roam-buffer--redisplay-h :override #'+notes--roam-panel-later-a)
+
   ;; Made for a big vault (autoload/roam-db.el): those rules, and the
   ;; full syncs, the session's first and a first build, in a background
   ;; Emacs with the settings below, its result then taking the
@@ -196,11 +200,14 @@ day is written under.")
         ;; flashcards: org-fc gives every card an ID, which would make
         ;; each one a node.
         org-roam-db-node-include-function #'+notes--roam-include-node-p
-        ;; Under the backlinks, the lines that name the note without
-        ;; linking to it: the links still to be made.
-        org-roam-mode-sections '(org-roam-backlinks-section
+        ;; Each linking note once, the first few quoted by the passage
+        ;; that links; under them the lines that name the note without
+        ;; linking to it, the links still to be made, searched when that
+        ;; section is opened (autoload/panel.el).
+        org-roam-mode-sections '(+notes--roam-backlinks-section
                                  org-roam-reflinks-section
-                                 org-roam-unlinked-references-section)))
+                                 +notes--roam-unlinked-section)
+        org-roam-preview-function #'+notes--roam-quote))
 
 ;; A course, a lecture, a case study or a design doc is always a new note:
 ;; picked from the finder, an existing node would get the template added
