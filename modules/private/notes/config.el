@@ -505,13 +505,14 @@ startup from loading it; .git is a file in a worktree."
        (file-in-directory-p buffer-file-name org-directory)))
 
 (defun +notes--widest-fixed-line ()
-  "Columns of this buffer's widest table row or source or example block
-line, as shown: a link by its description, under its heading's indent."
+  "Columns of this buffer's widest table row, fixed-width line or source
+or example block line, as shown: a link by its description, a tab to its
+stop, under its heading's indent."
   (save-excursion
     (goto-char (point-min))
     (let ((case-fold-search t) (level 0) (widest 0))
       (while (re-search-forward
-              "^\\(?:\\(\\*+\\) \\|[ \t]*\\(|\\)\\|[ \t]*#\\+begin_\\(?:src\\|example\\)\\)"
+              "^\\(?:\\(\\*+\\) \\|[ \t]*\\(|\\)\\|[ \t]*\\(:\\)\\(?: \\|$\\)\\|[ \t]*#\\+begin_\\(?:src\\|example\\)\\)"
               nil t)
         (cond ((match-beginning 1)
                (setq level (- (match-end 1) (match-beginning 1))))
@@ -523,6 +524,9 @@ line, as shown: a link by its description, under its heading's indent."
                                       (string-width (if (string-search "[[" row)
                                                         (org-link-display-format row)
                                                       row)))))))
+              ((match-beginning 3)
+               (end-of-line)
+               (setq widest (max widest (+ (* 2 level) (current-column)))))
               (t
                (let ((end (save-excursion
                             (if (re-search-forward "^[ \t]*#\\+end_" nil t)
@@ -530,8 +534,8 @@ line, as shown: a link by its description, under its heading's indent."
                               (point-max)))))
                  (forward-line 1)
                  (while (< (point) end)
-                   (setq widest (max widest (+ (* 2 level)
-                                               (- (line-end-position) (point)))))
+                   (end-of-line)
+                   (setq widest (max widest (+ (* 2 level) (current-column))))
                    (forward-line 1)))))
         (forward-line 1))
       widest)))

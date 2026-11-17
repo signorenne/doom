@@ -197,8 +197,11 @@ note. The side bar, opened there by hand, shows the vault. The other
 workspaces keep their own windows; the side bar shows each one's project.
 
 A note of the vault wraps at 100 columns, line numbers included, from the
-left, wherever it shows (=+notes-reading-width=). A table wider than that
-wraps too; ~M-x visual-fill-column-mode~ turns the width off in a note.
+left, wherever it shows (=+notes-reading-width=). A note whose tables,
+code or fixed-width lines are wider gets their width, so only its prose
+wraps sooner; any of them wider than the window still wraps at its edge.
+The width is set when the note opens; ~M-x visual-fill-column-mode~ turns
+it off in a note.
 
 A picture is filed by the subject of the note it is in: ~SPC m a p~ pastes
 the one on the clipboard (=pngpaste= on a Mac, which ~doom doctor~ asks
