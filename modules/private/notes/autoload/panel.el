@@ -101,7 +101,18 @@ NODE alone, its value being NODE's ID; another note starts closed."
       (org-roam-unlinked-references-section node)
       (let ((found (car (last (oref section children)))))
         (unless (and found (oref found children))
-          (insert (propertize "none found\n" 'font-lock-face 'org-roam-dim) ?\n))))))
+          ;; org-roam searches nothing, and says nothing, without them.
+          (insert (propertize (if (+notes--roam-search-ready-p)
+                                  "none found\n"
+                                "needs ripgrep with PCRE2\n")
+                              'font-lock-face 'org-roam-dim)
+                  ?\n))))))
+
+(defun +notes--roam-search-ready-p ()
+  "Non-nil when ripgrep, with PCRE2, is there for the unlinked mentions."
+  (and (executable-find "rg")
+       (not (string-match-p "PCRE2 is not available"
+                            (shell-command-to-string "rg --pcre2-version")))))
 
 ;;;###autoload
 (defun +notes--roam-quote ()
@@ -119,6 +130,8 @@ is long; a table row's cells on one line; a heading's text."
                                  "|" t "[ \t]+")
                    " | "))
        ('headline (org-element-property :raw-value element))
+       ;; No element: a stale place in a file emptied since the last sync.
+       ('nil (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
        (_
         (let* ((beg (or (org-element-contents-begin element) (org-element-begin element)))
                (end (or (org-element-contents-end element) (org-element-end element)))
