@@ -262,6 +262,78 @@ going through every link of a long note is the slow part."
     (setf (image-property image :background) "white"))
   image)
 
+;; A picture on the web is shown from a copy fetched once, in the
+;; background, and shown when it lands. Doom's preview fetched each
+;; picture of a note again every time the note opened, while Emacs
+;; waited, and saved a photo as text: Emacs then stopped to ask for a
+;; coding system, which looked like a freeze, and the photo never
+;; showed. The copy keeps Doom's name, so what it fetched is reused.
+(defvar +org-preview-dir)
+(defvar url-http-end-of-headers)
+(defvar +notes--picture-fetches (make-hash-table :test #'equal)
+  "URL -> (WHEN-IT-BEGAN . MARKERS) for the pictures on their way, where
+MARKERS are the links waiting for it.")
+
+(defun +notes--preview-web-picture (ov path link)
+  "Show the web picture of LINK, whose PATH names it, in OV from its copy.
+With no copy yet, fetch it and show it once it is saved."
+  (when (and (display-graphic-p)
+             (image-supported-file-p path)
+             (not (eq org-display-remote-inline-images 'skip)))
+    (let* ((url (org-element-property :raw-link link))
+           (file (expand-file-name
+                  (format "image.%s.%s" (sha1 url) (file-name-extension path))
+                  +org-preview-dir)))
+      (if (file-exists-p file)
+          (org-link-preview-file ov file link)
+        (+notes--fetch-picture url file (copy-marker (org-element-begin link)))
+        nil))))
+
+(defun +notes--fetch-picture (url file marker)
+  "Fetch the picture at URL into FILE, then show the link at MARKER.
+A fetch of the same URL begun less than a minute ago is left to finish,
+and shows this link too."
+  (let ((fetch (gethash url +notes--picture-fetches)))
+    (if (and fetch (< (float-time (time-since (car fetch))) 60))
+        (push marker (cdr fetch))
+      (setq fetch (list (current-time) marker))
+      (puthash url fetch +notes--picture-fetches)
+      ;; The queue fetches a few at a time and gives up on one after
+      ;; `url-queue-timeout': 31 at once left some unanswered for good.
+      (url-queue-retrieve url #'+notes--picture-fetched (list url file fetch) t t))))
+
+(defun +notes--picture-fetched (status url file fetch)
+  "Save the picture of this response to FILE, then show the links waiting.
+STATUS is what `url-queue-retrieve' reports; URL is the picture's address and
+FETCH its entry in `+notes--picture-fetches'. The bytes go to a partial
+file renamed into place, so no half picture is ever taken for the copy."
+  (when (eq (gethash url +notes--picture-fetches) fetch)
+    (remhash url +notes--picture-fetches))
+  (let ((response (current-buffer)))
+    (unwind-protect
+        (if (or (plist-get status :error)
+                (not (eql (bound-and-true-p url-http-response-status) 200))
+                (not (string-prefix-p "image/" (or (bound-and-true-p url-http-content-type) "")))
+                (not (bound-and-true-p url-http-end-of-headers)))
+            (message "Picture not fetched: %s" url)
+          (let ((part (make-temp-name (concat file ".part")))
+                (coding-system-for-write 'binary))
+            (make-directory (file-name-directory file) t)
+            (write-region (1+ url-http-end-of-headers) (point-max) part nil 'silent)
+            (rename-file part file t)))
+      (kill-buffer response)))
+  (dolist (marker (cdr fetch))
+    (when (and (buffer-live-p (marker-buffer marker)) (file-exists-p file))
+      (org-with-point-at marker
+        (when-let* ((link (org-element-lineage (org-element-context) 'link t))
+                    ((equal (org-element-property :raw-link link) url)))
+          (org-link-preview-region nil nil (org-element-begin link) (org-element-end link)))))
+    (set-marker marker nil)))
+
+(after! org
+  (dolist (type '("http" "https"))
+    (org-link-set-parameters type :preview #'+notes--preview-web-picture)))
+
 ;; Pictures of the vault live under assets/images/<subject>/, linked from
 ;; the note with a relative file: link (the vault's rule): the subject is
 ;; the note's folder under resources/wiki/, or under the vault for a note
