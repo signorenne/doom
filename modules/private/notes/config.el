@@ -631,9 +631,6 @@ shared by every note of the vault.")
   "What may come before a code span, in ripgrep's syntax, for a shell's
 single quotes: \\x27 is the quote.")
 
-(defconst +notes--vault-span-end-re "($|[-[:space:].,:!?;\"\\x27)}\\[])"
-  "What may come after a code span, as `+notes--vault-span-re'.")
-
 (defvar spell-fu-buffer-session-localwords)
 (declare-function spell-fu-buffer-session-localwords-update "spell-fu")
 (declare-function spell-fu-mode "spell-fu")
@@ -653,12 +650,12 @@ single quotes: \\x27 is the quote.")
            (list "sh" "-c"
                  (concat "rg -i --no-filename --no-line-number --no-heading --color never"
                          " -o -g '*.org' -e '^#\\+title:.*' -e '^[ \t]*:ROAM_ALIASES:.*'"
-                         ;; A span as Org reads one: opened after a space,
-                         ;; a dash or an opening mark, closed before a space,
-                         ;; a stop or a closing mark, so no prose between two
-                         ;; spans of a line comes along.
-                         " -e '" +notes--vault-span-re "=[^=[:space:]]([^=]*[^=[:space:]])?=" +notes--vault-span-end-re "'"
-                         " -e '" +notes--vault-span-re "~[^~[:space:]]([^~]*[^~[:space:]])?~" +notes--vault-span-end-re "'"
+                         ;; A span opens as Org's do, after a space, a dash
+                         ;; or an opening mark, so the prose between two
+                         ;; spans of a line, which starts after a closing =,
+                         ;; does not come along.
+                         " -e '" +notes--vault-span-re "=[^=[:space:]]([^=]*[^=[:space:]])?='"
+                         " -e '" +notes--vault-span-re "~[^~[:space:]]([^~]*[^~[:space:]])?~'"
                          " -- "
                          (shell-quote-argument (expand-file-name org-directory))
                          " 2>/dev/null | rg -o '\\p{L}+' | sort -u"))
