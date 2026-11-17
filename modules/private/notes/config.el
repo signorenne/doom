@@ -274,6 +274,9 @@ going through every link of a long note is the slow part."
   "URL -> (WHEN-IT-BEGAN . MARKERS) for the pictures on their way, where
 MARKERS are the links waiting for it.")
 
+(defvar +notes--pictures-fetched (make-hash-table :test #'equal)
+  "The URLs fetched this session, kept or not: each is fetched once.")
+
 (defun +notes--preview-web-picture (ov path link)
   "Show the web picture of LINK, whose PATH names it, in OV from its copy.
 With no copy yet, fetch it and show it once it is saved."
@@ -284,9 +287,13 @@ With no copy yet, fetch it and show it once it is saved."
            (file (expand-file-name
                   (format "image.%s.%s" (sha1 url) (file-name-extension path))
                   +org-preview-dir)))
-      ;; A copy Emacs cannot read as a picture, such as an error page or
-      ;; a picture Doom's own download saved re-encoded, is fetched again.
-      (if (and (file-exists-p file) (image-type-from-file-header file))
+      ;; A copy Emacs does not know by its first bytes, such as an error
+      ;; page or a picture Doom's own download saved re-encoded, is
+      ;; fetched again, once a session: a BMP or an ICO, shown through
+      ;; the external converter, is not known by its bytes either.
+      (if (and (file-exists-p file)
+               (or (image-type-from-file-header file)
+                   (gethash url +notes--pictures-fetched)))
           (org-link-preview-file ov file link)
         (+notes--fetch-picture url file (copy-marker (org-element-begin link)))
         nil))))
@@ -311,11 +318,14 @@ FETCH its entry in `+notes--picture-fetches'. The bytes go to a partial
 file renamed into place, so no half picture is ever taken for the copy."
   (when (eq (gethash url +notes--picture-fetches) fetch)
     (remhash url +notes--picture-fetches))
+  (puthash url t +notes--pictures-fetched)
   (let ((response (current-buffer)))
     (unwind-protect
         (if (or (plist-get status :error)
                 (not (eql (bound-and-true-p url-http-response-status) 200))
                 (not (bound-and-true-p url-http-end-of-headers))
+                ;; No body, or none left after the headers.
+                (>= (1+ url-http-end-of-headers) (point-max))
                 ;; A picture by its type, or by its first bytes when the
                 ;; host calls it something else, application/octet-stream.
                 (not (or (string-prefix-p "image/" (or (bound-and-true-p url-http-content-type) ""))
