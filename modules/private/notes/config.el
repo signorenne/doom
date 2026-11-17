@@ -249,6 +249,19 @@ going through every link of a long note is the slow part."
         ;; org-mode again are made anew, not added to.
         (org-link-preview-region nil t)))))
 
+;; An SVG is drawn for a white page. PlantUML's, the blog's diagrams among
+;; them, set that white only as a CSS background, which librsvg leaves
+;; out, so Emacs put the dark theme behind their black text and lines and
+;; only the boxes showed. One that sets a background keeps it.
+(defadvice! +notes--svg-on-white-a (image)
+  "Draw IMAGE on white when it is an SVG with no background of its own."
+  :filter-return #'org--create-inline-image
+  (when (and image
+             (eq (image-property image :type) 'svg)
+             (not (image-property image :background)))
+    (setf (image-property image :background) "white"))
+  image)
+
 ;; Pictures of the vault live under assets/images/<subject>/, linked from
 ;; the note with a relative file: link (the vault's rule): the subject is
 ;; the note's folder under resources/wiki/, or under the vault for a note
