@@ -171,8 +171,8 @@ Inside any note: =SPC n r r= for what links here and the lines that name
 it without a link, =SPC n r u= for the whole graph in the browser with
 this note in the middle, =SPC n r B= for backlinks with a preview, =SPC n
 r L= for what this note links to. On a link, the echo area says what it
-points to and =SPC c H= shows the note itself. =SPC n h= lays it all out at
-once: the vault's tree, the note, what links here and the note's outline.
+points to and =SPC c H= shows the note itself. =SPC n h= lays it out: the
+note, and beside it what links here, which follows the note you stop on.
 =SPC n r a= opens a note at random, for rereading.
 
 For a question you cannot phrase as a search, =SPC l l= and ask Claude:
@@ -309,8 +309,9 @@ explanation is a third note. Extract it, =SPC m m e=, and link both.
 
 =SPC n r r= shows what points here, and below it the unlinked mentions:
 lines that name this note without linking to it, each a link still to be
-made. Read it when you open a note: it is the part you did not remember
-writing, and it is where the value hides.
+made. They are searched when you open their section with =TAB=. Open it
+when you come to a note: it is the part you did not remember writing,
+and it is where the value hides.
 
 * Maps
 A map is a note that collects other notes. =SPC n r m= asks for a tag and
