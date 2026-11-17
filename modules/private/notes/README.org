@@ -539,7 +539,7 @@ its tools, config, keymap, clangd, magit, gathered from the notes, the
 READMEs and the cheat sheet, where aspell alone marked 300 of them. ~zg~
 adds a word to it and ~z=~ corrects one. In a note of the vault, the
 vault's own words pass too: those of its titles, aliases and =code= and
-~code~ spans, wg and PostUp among them, about 10,000, gathered by ripgrep
+~code~ spans, wg and PostUp among them, about 9,700, gathered by ripgrep
 once a session while Emacs waits after starting. A title written during
 the session joins them at the next start. A possessive is checked as its
 word, so config's passes with config. The tags, dates and labels

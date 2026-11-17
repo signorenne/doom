@@ -617,6 +617,13 @@ shared by every note of the vault.")
 (defvar +notes--vault-words-process nil
   "The search gathering `+notes--vault-words', made once a session.")
 
+(defconst +notes--vault-span-re "(^|[-[:space:]({\"\\x27])"
+  "What may come before a code span, in ripgrep's syntax, for a shell's
+single quotes: \\x27 is the quote.")
+
+(defconst +notes--vault-span-end-re "($|[-[:space:].,:!?;\"\\x27)}\\[])"
+  "What may come after a code span, as `+notes--vault-span-re'.")
+
 (defvar spell-fu-buffer-session-localwords)
 (declare-function spell-fu-buffer-session-localwords-update "spell-fu")
 (declare-function spell-fu-mode "spell-fu")
@@ -636,7 +643,13 @@ shared by every note of the vault.")
            (list "sh" "-c"
                  (concat "rg -i --no-filename --no-line-number --no-heading --color never"
                          " -o -g '*.org' -e '^#\\+title:.*' -e '^[ \t]*:ROAM_ALIASES:.*'"
-                         " -e '=[^=[:space:]][^=]*=' -e '~[^~[:space:]][^~]*~' -- "
+                         ;; A span as Org reads one: opened after a space,
+                         ;; a dash or an opening mark, closed before a space,
+                         ;; a stop or a closing mark, so no prose between two
+                         ;; spans of a line comes along.
+                         " -e '" +notes--vault-span-re "=[^=[:space:]]([^=]*[^=[:space:]])?=" +notes--vault-span-end-re "'"
+                         " -e '" +notes--vault-span-re "~[^~[:space:]]([^~]*[^~[:space:]])?~" +notes--vault-span-end-re "'"
+                         " -- "
                          (shell-quote-argument (expand-file-name org-directory))
                          " 2>/dev/null | rg -o '\\p{L}+' | sort -u"))
            :sentinel #'+notes--vault-words-done))))
@@ -664,7 +677,11 @@ shared by every note of the vault.")
   (defun +notes--vault-words-h ()
     "In a note of the vault, take the vault's own words as spelt right."
     (when (and (bound-and-true-p spell-fu-mode) +notes--vault-words (+notes--vault-note-p))
-      (setq-local spell-fu-buffer-session-localwords +notes--vault-words)
+      ;; A note's own word list, a file-local variable, is kept as well.
+      (let ((own (cdr (assq 'spell-fu-buffer-session-localwords
+                            file-local-variables-alist))))
+        (setq-local spell-fu-buffer-session-localwords
+                    (if own (append own +notes--vault-words) +notes--vault-words)))
       (spell-fu-buffer-session-localwords-update))))
 
 ;; writegood marks the passive voice, vague words and a word said twice
