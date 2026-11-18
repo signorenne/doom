@@ -211,9 +211,14 @@ goes into =assets/images/<subject>/=, the subject being the note's folder
 under =resources/wiki/=, or under the vault for a note elsewhere
 (=areas/x/index.org= files into =assets/images/areas/x/=), and a relative
 =file:= link to it is put where the cursor is; the heading stays as it
-was, not a note of its own. A PDF dropped or pasted on a note goes the
-same way into =assets/documents/<subject>/= (the vault's KB-044); one whose
-name is already there is refused, so rename it first. Any other dropped
+was, not a note of its own. A PDF dropped on a note goes the same way
+into =assets/documents/<subject>/= (the vault's KB-044), copied whatever
+the drop asks, moved only on a move; one already under the vault's
+=assets/= is linked where it is, and one whose name is taken there is
+refused, so rename it first. A file a program saves straight onto the
+note as it drops it (direct save) still goes into =.attach/=, and a
+copied file pasted with =yank-media= is not taken at all: Org 9.8 listens
+for a clipboard type no file manager offers. Any other dropped
 file, and a picture in an Org file outside the vault, still goes into the
 attachment folder under =.attach/=. A note opens with the pictures
 its links name shown, as Org shows them: a link with no description, of
@@ -499,7 +504,7 @@ has no counterpart, and there is no phone app.
 | backlinks, unlinked mentions | ~SPC n r r~, the roam buffer                                                                                                 |
 | page preview                 | the echo area on a link, ~SPC c H~ the note itself                                                                           |
 | rename with links            | ~SPC n r N~, or edit =#+title= and save                                                                                        |
-| pasted and dropped pictures  | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline                                                                         |
+| pasted and dropped pictures  | ~SPC m a p~, ~SPC m a c~, a dropped file; shown inline; a dropped PDF goes beside them                                         |
 | callouts                     | =#+begin_warning= and the other kinds, ~C-c C-,~ ~W~                                                                             |
 | the workspace layout         | ~SPC n h~: the note and the roam buffer                                                                                      |
 | tag pane with counts         | ~SPC n r t~                                                                                                                  |

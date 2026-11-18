@@ -2452,8 +2452,8 @@ refresh, =f= and =b= move by week, =SPC m SPC= the agenda menu, =q= or
 | ~SPC m a a~ | attach a file          |
 
 Images dropped on a note are copied into the vault's
-=assets/images/<subject>/= and linked; in an Org file outside the vault
-they are attached.
+=assets/images/<subject>/= and linked, a PDF into =assets/documents/<subject>/=;
+in an Org file outside the vault they are attached.
 
 ** Export and babel
 | Key         | What it does                  |

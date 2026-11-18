@@ -358,10 +358,13 @@ file renamed into place, so no half picture is ever taken for the copy."
 ;; itself. Pasted (org-download, SPC m a p), captured (SPC m a c), dropped
 ;; (Org's own handler, or org-download's for a URL or inline data) and
 ;; yanked pictures all go there, by true names, so a vault reached through
-;; a link (~/org) files them the same. A PDF dropped or pasted on a note
-;; goes the same way under assets/documents/<subject>/ (the vault's
-;; KB-044). Any other dropped file still goes into the note's attachment
-;; folder, and a file outside the vault keeps Org's and Doom's attachments.
+;; a link (~/org) files them the same. A PDF dropped on a note goes the
+;; same way under assets/documents/<subject>/ (the vault's KB-044). Any
+;; other dropped file still goes into the note's attachment folder, and a
+;; file outside the vault keeps Org's and Doom's attachments. A pasted
+;; file never reaches Org's drop code: Org 9.8 registers its yank-media
+;; handler for x/special-...-files, while the clipboard offers
+;; x-special/...-copied-files.
 (declare-function org-entry-get "org")
 (declare-function org-link--normalize-filename "ol")
 (declare-function org-download-image "org-download")
@@ -417,9 +420,11 @@ it first."
 (declare-function dnd-get-local-file-name "dnd")
 
 (defadvice! +notes--documents-into-assets-a (fn url action separator)
-  "Copy a PDF dropped or pasted on a note of the vault under
+  "Copy a PDF dropped on a note of the vault under
 assets/documents/<subject>/ and link it relatively, as a picture is.
-A PDF whose name is already there is refused; rename it first.  Any
+A PDF already under the vault's assets/ is linked where it is; one
+whose name is taken in the folder is refused, so rename it first.  It
+is copied whatever method the drop asks, moved only on a move.  Any
 other file, or a note outside the vault, goes to Org's attachments."
   :around #'org--dnd-attach-file
   (let* ((file (dnd-get-local-file-name url))
@@ -429,13 +434,20 @@ other file, or a note outside the vault, goes to Org's attachments."
     (if (not dir)
         (funcall fn url action separator)
       (let ((target (expand-file-name (file-name-nondirectory file) dir)))
-        (when (file-exists-p target)
-          (user-error "%s is already in %s; rename it first"
-                      (file-name-nondirectory file) (abbreviate-file-name dir)))
-        (make-directory dir t)
-        (if (eq action 'move)
-            (rename-file file target)
-          (copy-file file target))
+        (if (file-in-directory-p (file-truename file)
+                                 (file-truename (expand-file-name "assets/" org-directory)))
+            (setq target file)
+          (when (file-exists-p target)
+            (user-error "%s is already in %s; rename it first"
+                        (file-name-nondirectory file) (abbreviate-file-name dir)))
+          (make-directory dir t)
+          ;; Into place whole: a copy cut short leaves no name that would
+          ;; refuse the next try.
+          (let ((part (make-temp-name (concat target ".part"))))
+            (if (eq action 'move)
+                (rename-file file part)
+              (copy-file file part))
+            (rename-file part target)))
         (insert (org-link-make-string
                  (concat "file:" (+notes--file-link-path target))
                  (file-name-nondirectory target))
