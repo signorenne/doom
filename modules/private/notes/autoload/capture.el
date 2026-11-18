@@ -205,7 +205,6 @@ subject's directory is made."
 (declare-function url-filename "url-parse")
 (declare-function org-roam-node-from-ref "org-roam-node")
 (declare-function org-roam-node-title "org-roam-node")
-(declare-function +notes--roam-reference-kind "roam")
 
 ;;;###autoload
 (defun +notes--roam-organisation-path (node)
