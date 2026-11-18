@@ -992,9 +992,9 @@ return `+notes--roam-kinds-builtin'."
 
 (defun +notes--roam-kind-usable-p (row)
   "Non-nil when ROW, (KEY . PLIST), can make a template: every row needs a
-key, a kind and table or own in its emacs column; one marked table needs its tags, its headings, a
-folder whose only placeholder is <subject> or <organisation>, and a file
-whose only placeholders are <slug> and <date>."
+key, a kind and table or own in its emacs column; one marked table needs
+its tags, its headings, a folder whose only placeholder is <subject> or
+<organisation>, and a file whose only placeholders are <slug> and <date>."
   (pcase-let ((`(,key . ,row) row))
     (and (stringp key) (not (string-empty-p key))
          (plist-get row :kind)
