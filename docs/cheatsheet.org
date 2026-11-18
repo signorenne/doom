@@ -2477,6 +2477,68 @@ Roam is the note graph of the vault, =~/memex= (~+core-notes-dir~, set in
 =init.el=); the dailies are the journal. [[file:org-roam-guide.org][The roam guide]], =SPC n r ?=, says
 how to work with it day to day.
 
+** Add and file things
+Everything in the vault has one home. Not sure of it yet? Capture it to
+the inbox and decide later. The vault's =meta/WORKFLOWS.org= and
+=meta/CONVENTIONS.org= hold the full rules; this is their everyday form.
+
+| You have                   | Key                        | It goes to                                  |
+|----------------------------+----------------------------+---------------------------------------------|
+| a task, an idea, a link    | ~SPC X~ then ~t~, ~i~, ~l~ | the inbox, =inbox.org=                      |
+| a task for a project       | ~SPC X p t~                | its Next actions; it asks when unsure       |
+| something to read later    | ~SPC X r~                  | =areas/reading.org=, Queue                  |
+| new work with an end       | ~SPC X P~                  | =projects/<name>/index.org=                 |
+| what happened today        | ~SPC n r d n~              | today's note in =capture/journal/=          |
+| an idea to keep for good   | ~SPC n r n c~              | =resources/wiki/<subject>/=, you pick it    |
+| how to do something        | ~SPC n r n h~              | =resources/wiki/<subject>/=                 |
+| a bug and its fix          | ~SPC n r n s~              | =resources/wiki/<subject>/=                 |
+| a manual, a vendor page    | ~SPC n r n r~              | =resources/sources/manuals/=                |
+| a page open in the browser | a bookmarklet              | the inbox, or =resources/sources/websites/= |
+| a picture                  | ~SPC m a p~ in the note    | =assets/images/<subject>/=, linked there    |
+
+~SPC X~ and ~SPC n n~ open the same capture menu. The two bookmarklets
+come from ~SPC n d P~: one puts the page in the inbox, the other makes
+it a source note. A manual's note lands in =resources/sources/manuals/=
+itself, while the vault files it under its organisation,
+=manuals/<organisation>/=: move it there with ~SPC f R~ (links are by ID
+and keep working), then ~SPC n r s~.
+
+Before you write a note:
+1. Look for it first, ~SPC n r f~: when a note on the same idea exists,
+   add to it rather than write a second.
+2. One idea a note: the title says exactly that idea, and the first
+   sentence defines it by name.
+3. Give it the vault's headings. An idea: Meaning, Mechanism and
+   evidence, Example, Limits, Connections, Sources. How to do something:
+   When to use, Preconditions, Steps, Verification, Limits, Connections,
+   Sources. A bug: Symptom, Cause, Fix, Verification, Limits,
+   Connections, Sources. ~SPC n r n~ still writes older ones (In one
+   sentence, How it works and so on): rename them to these until its
+   templates are brought in line.
+4. Link it. Under Connections, first the broader note it belongs to,
+   then its neighbours, each with a sentence on why (~SPC n r i~ inserts
+   a link); under Sources, the note of the source it came from.
+5. Link it from its folder's =index.org=; a new folder needs an
+   =index.org= of its own, linked from its parent's. The vault's check
+   wants every note under =resources/wiki/= linked from its index, at
+   least 120 words long and with at least two ID links.
+
+Empty the inbox once a day or a week: ~SPC n d i~ opens it. For each
+entry, a task of a project: ~SPC m r r~ moves it there. A new project:
+~SPC X P~, then move it. Something worth knowing: write or extend its
+note, then delete the entry. Nothing: delete it.
+
+| Key         | What it finds                     |
+|-------------+-----------------------------------|
+| ~SPC n r f~ | a note by title or alias          |
+| ~SPC n s~   | any text in the notes             |
+| ~SPC n r /~ | the roam notes, with a preview    |
+| ~SPC n r t~ | the notes of a tag                |
+| ~SPC n r r~ | what links to the note you are in |
+
+Nothing needs saving by hand: the vault commits itself after ten
+minutes idle and on exit, and ~SPC n g~ commits now.
+
 ** The loop
 | Key         | What it does                        |
 |-------------+-------------------------------------|
@@ -2528,7 +2590,7 @@ When an existing note already has the title you want, type it and press
 ** Around a note
 | Key         | What it does                                                   |
 |-------------+----------------------------------------------------------------|
-| ~SPC n h~     | the notes layout: tree, note, roam buffer, outline; again, off |
+| ~SPC n h~     | the notes layout: the note and the roam buffer; again, off     |
 | ~SPC m m o s~ | star this note, or unstar it                                   |
 | ~SPC n r S~   | the starred notes                                              |
 | ~SPC n r t~   | every tag with its count, then its notes                       |
