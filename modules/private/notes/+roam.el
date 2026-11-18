@@ -73,6 +73,10 @@ day is written under.")
   ;; rather than after every command (autoload/panel.el).
   (advice-add 'org-roam-buffer--redisplay-h :override #'+notes--roam-panel-later-a)
 
+  ;; File names take hyphens, as the vault's 5,000 do: org-roam joins a
+  ;; title's words with underscores.
+  (advice-add 'org-roam-node-slug :filter-return #'+notes--roam-slug-hyphens-a)
+
   ;; Made for a big vault (autoload/roam-db.el): those rules, and the
   ;; full syncs, the session's first and a first build, in a background
   ;; Emacs with the settings below, its result then taking the
@@ -89,54 +93,31 @@ day is written under.")
         ;; Plain org-roam-extract-subtree also files under resources/wiki;
         ;; +notes/roam-extract asks for the subject directory instead.
         org-roam-extract-new-file-path "%(+notes--roam-path \"resources/wiki/${slug}.org\")"
-        ;; One template per kind; knowledge chooses a subject home. The
-        ;; headings that say what to write: an empty note is still a shape
-        ;; to fill. The finder shows the directory as the note's type. The
+        ;; One template per kind; knowledge chooses a subject home, a
+        ;; reference its organisation. The headings that say what to write:
+        ;; an empty note is still a shape to fill. The finder shows the directory as the note's type. The
         ;; head holds the properties, the title and the tags only: org-roam
         ;; puts the note's ID where the head ends, and a heading there
         ;; would take the ID and be the node instead of the file.
         org-roam-capture-templates
-        `(("c" "concept: what a thing is" plain
-           "* In one sentence\n%?\n\n* How it works\n\n* Example\n\n* Where it bites\n\n* Related\n\n* Sources\n"
-           :target (file+head "${+notes--roam-subject-path}"
-                              ,(concat +notes-roam-head ":concept:\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ("s" "solution: a bug and its fix" plain
-           "* Symptom\n%?\n\n* Cause\n\n* Fix\n\n* How to verify\n\n* Applies to\nBoard, SDK, compiler, version.\n"
-           :target (file+head "${+notes--roam-subject-path}"
-                              ,(concat +notes-roam-head ":fix:\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ("h" "howto: a procedure" plain
-           "* When\n%?\n\n* Steps\n\n* Gotchas\n\n* Sources\n"
-           :target (file+head "${+notes--roam-subject-path}"
-                              ,(concat +notes-roam-head ":howto:\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ("b" "hardware: a board, a part, a probe" plain
-           "* What it is\n%?\n\n* Pinout and links\n\n* Toolchain\n\n* Gotchas\n"
-           :target (file+head "${+notes--roam-subject-path}"
-                              ,(concat +notes-roam-head ":hardware:\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ("r" "reference: a source" plain
-           "* Key points\n%?\n\n* Quotes\n\n* My take\n"
-           :target (file+head "%(+notes--roam-path \"resources/sources/manuals/${slug}.org\")"
-                              ,(concat (replace-regexp-in-string ":END:" ":ROAM_REFS: ${ref}\n:END:" +notes-roam-head t t) ":ref:\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ;; The one citar fills. `r' asks for the source; citar has
+        `(;; The kinds the vault's templates page marks table, c a Q s h b r P,
+          ;; in its shapes and with its tags (autoload/roam.el). q and C
+          ;; are org-capture's own keys in its menu, Abort and Customize:
+          ;; the question is on Q and the course on u.
+          ,@(+notes--roam-table-templates)
+          ;; The one citar fills, in Lisp of its own for the citation key.
+          ;; `r' asks for the source; citar has
           ;; already handed over the key, so this one does not ask again.
           ;; The file is named for the key as well, which is how citar
           ;; finds the note again.
           ("R" "reference: a source citar already knows" plain
-           "* Key points\n%?\n\n* Quotes\n\n* My take\n"
+           "* What it is\n%?\n\n* Use in this knowledge base\n\n* Provenance and limits\n"
            :target (file+head "%(+notes--roam-path \"resources/sources/papers/${citar-citekey}.org\")"
-                              ,(concat +notes-roam-head ":ref:\n"
+                              ,(concat (replace-regexp-in-string
+                                        ":END:" ":SOURCE_KIND: reference\n:REFERENCE_KIND: paper\n:END:"
+                                        +notes-roam-head t t)
+                                       ":source:reference:\n"
                                        "#+source: [cite:@${citar-citekey}]\n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ;; q and C are org-capture's own keys in its menu, Abort and
-          ;; Customize: the question is on Q and the course on u.
-          ("Q" "question: something to work out" plain
-           "* Answer in one line\n%?\n\n* What I do not understand\n\n* What I tried\n\n* Answer\n"
-           :target (file+head "${+notes--roam-subject-path}"
-                              ,(concat +notes-roam-head ":question:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ;; Active, as one made with SPC X P is: a project with no
           ;; status counted as active, and now says so.
@@ -145,11 +126,6 @@ day is written under.")
            :target (file+head "${+notes--roam-project-path}"
                               ,(concat (replace-regexp-in-string ":END:" ":STATUS: active\n:END:" +notes-roam-head t t)
                                        ":project:\n#+repository: \n#+kit: \n\n"))
-           :unnarrowed t :empty-lines-before 1)
-          ("P" "person" plain
-           "* Context\n%?\n\n* Notes\n"
-           :target (file+head "%(+notes--roam-path \"resources/wiki/people/${slug}.org\")"
-                              ,(concat +notes-roam-head ":person:\n\n"))
            :unnarrowed t :empty-lines-before 1)
           ;; Not among the dailies: org-roam takes every file of their
           ;; folder for a day, and a meeting there was the next day of

@@ -105,25 +105,35 @@ say their folder after it.
 
 Every project and course, the project index and University are an
 =index.org=: each opens as a buffer named for its folder,
-=alpha_outcome/index.org=, its tasks show in the agenda under its title,
+=alpha-outcome/index.org=, its tasks show in the agenda under its title,
 and a message names it by its place in the vault,
-=projects/alpha_outcome/index.org=.
+=projects/alpha-outcome/index.org=.
 
 ** Roam
 [[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
-it. A note is one of thirteen kinds, each a set of
-headings that say what to write: concept (in one sentence, how it works,
-example, where it bites), solution (symptom, cause, fix, how to verify,
-applies to), howto (when, steps, gotchas), hardware (a board or part:
-pinout, toolchain, gotchas), reference (a source: key points, quotes, my
-take), question, project (a dashboard, goal, completion criteria, next
-actions, decisions, progress, with the repository and the kit in its
-head), person, meeting, and for work and study, course (~u~), lecture
-(~l~), case study (~k~) and design doc (~D~). Concept, solution, howto,
-hardware and question ask for their subject directory under
-=resources/wiki/=, a new one when you type a name that is not there and
-press ~M-RET~; a reference goes to =resources/sources/manuals/= with its URL in
-=ROAM_REFS=, a project to =projects/=, a person to
+it. A note is one of fourteen kinds, each a set of headings that say
+what to write, its tags and its folder. Most come from the table of kinds
+in the vault's =meta/templates.org= (its KB-027), read when org-roam
+loads, so a new note has the shape and tags the vault's notes have:
+concept (~c~) and claim (~a~) (meaning, mechanism and evidence, example,
+limits, connections, sources), question (~Q~, the same without example),
+failure (~s~: symptom, cause, fix, verification, limits, connections,
+sources), procedure (~h~: when to use, preconditions, steps,
+verification, and the same last three), hardware (~b~), reference (~r~:
+what it is, use in this knowledge base, provenance and limits) and person
+(~P~). Without that page Emacs warns once and uses its own copy of the
+table. Project (a dashboard, goal, completion criteria, next actions,
+decisions, progress, with the repository and the kit in its head),
+meeting, a paper from the bibliography (~R~), and for work and study,
+course (~u~), lecture (~l~), case study (~k~) and design doc (~D~) keep
+their own templates here. File names are the title's words joined by
+hyphens. Concept, claim, question, failure, procedure and hardware ask
+for their subject directory under =resources/wiki/=, a new one when you
+type a name that is not there and press ~M-RET~; a reference asks for its
+URL and its organisation's folder under =resources/sources/manuals/=
+(the vault's KB-039), offering the one that holds most references from
+the same site, and keeps the URL in =ROAM_REFS=; a project goes to
+=projects/=, a person to
 =resources/wiki/people/=, a meeting to =capture/meetings/=, apart from the
 dailies in =capture/journal/= so that the next and previous daily
 (~SPC n r d f~, ~SPC n r d b~) are days only. Where the four others go is
@@ -134,7 +144,7 @@ meeting straight away.
 | Key         | What it does                                        |
 |-------------+-----------------------------------------------------|
 | ~SPC n r f~   | find or create a node, ~i~ links to one               |
-| ~SPC n r n~   | new note, one of the thirteen kinds                 |
+| ~SPC n r n~   | new note, one of the fourteen kinds                 |
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links      |
 | ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions    |
 | ~SPC c H~     | on a link, the linked note's first lines in a popup |

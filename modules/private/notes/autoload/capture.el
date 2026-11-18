@@ -196,6 +196,64 @@ subject's directory is made."
     (make-directory (file-name-directory file) t)
     file))
 
+(defvar org-roam-capture--info)
+(declare-function org-roam-node-slugify "org-roam-node")
+(declare-function org-roam-db-query "org-roam-db")
+(declare-function url-host "url-parse")
+(declare-function url-generic-parse-url "url-parse")
+
+;;;###autoload
+(defun +notes--roam-organisation-path (node)
+  "Ask for the organisation folder of reference NODE under
+resources/sources/manuals/ (the vault's KB-039) and return the note's
+path there, which must be new.  The URL is asked first when the capture
+did not bring it, so the folder offered first can be the one holding
+most references from its host, else a name made from the host.  Called
+as ${...}: an error in a %(...) of a template is written into the path."
+  (let* ((ref (or (plist-get org-roam-capture--info :ref)
+                  (let ((url (read-string "URL: ")))
+                    (setq org-roam-capture--info (plist-put org-roam-capture--info :ref url))
+                    url)))
+         (root (expand-file-name "resources/sources/manuals/" org-roam-directory))
+         (folders (and (file-directory-p root)
+                       (seq-filter (lambda (name) (file-directory-p (expand-file-name name root)))
+                                   (directory-files root nil "\\`[^.]"))))
+         (default (+notes--organisation-for ref))
+         (folder (replace-regexp-in-string
+                  "_" "-" (org-roam-node-slugify
+                           (completing-read (format-prompt "Organisation" default)
+                                            folders nil nil nil nil default)))))
+    (when (string-empty-p folder) (user-error "A reference needs its organisation's folder"))
+    (+notes--roam-new-path (concat "resources/sources/manuals/" folder "/"
+                                   (org-roam-node-slug node) ".org"))))
+
+(defun +notes--organisation-for (url)
+  "The organisation folder for a reference at URL: the folder holding most
+references from its host, else the host's name without its domain."
+  (require 'url-parse)
+  (when-let* ((host (and url (url-host (url-generic-parse-url url))))
+              ((not (string-empty-p host))))
+    (or (+notes--organisation-of-host host)
+        (let ((labels (split-string (string-remove-prefix "www." host) "\\." t)))
+          (if (cdr labels) (nth (- (length labels) 2) labels) (car labels))))))
+
+(defun +notes--organisation-of-host (host)
+  "The folder under resources/sources/manuals/ with most references from
+HOST, as the graph knows them, or nil."
+  (let ((root (file-name-as-directory
+               (expand-file-name "resources/sources/manuals/" org-roam-directory)))
+        counts)
+    (dolist (row (ignore-errors
+                   (org-roam-db-query
+                    [:select [nodes:file] :from refs :join nodes :on (= refs:node-id nodes:id)
+                     :where (like refs:ref $s1)]
+                    (concat "//" host "/%"))))
+      (let ((file (car row)))
+        (when (string-prefix-p root file)
+          (cl-incf (alist-get (car (split-string (substring file (length root)) "/"))
+                              counts 0 nil #'equal)))))
+    (caar (sort counts (lambda (a b) (> (cdr a) (cdr b)))))))
+
 ;;;###autoload
 (defun +notes--capture-project-decision ()
   "Target a decision to its owning project's Decisions, or the inbox."

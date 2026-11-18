@@ -45,21 +45,27 @@ write in it directly.
 Press =SPC n r n=. The prompt says =Node:=. Type =Nordic BLE fundamentals=
 and press =RET=.
 
-A list of kinds appears: =[c] concept [s] solution [h] howto [b] hardware
-[r] reference [q] question [p] project [P] person [m] meeting=. Press =r=.
+A list of kinds appears: =[c] concept [a] claim [Q] question [s] failure
+[h] procedure [b] hardware [r] reference [P] person=, and more below it.
+Press =r=.
 
-It asks =ref:=, the source that goes into =ROAM_REFS=. Paste the URL, =RET=.
+It asks =URL:=, the source that goes into =ROAM_REFS=. Paste the URL, =RET=.
+Then it asks for the organisation, the folder under
+=resources/sources/manuals/= for whoever publishes the page; it offers the
+one that already holds the site's other references, or a name made from
+the site. =RET= takes it.
 
-The note opens with =Key points=, =Quotes=, =My take= already there. Write
-one key point in your own words under the first heading. =ESC=, =ZZ=. The
+The note opens with =What it is=, =Use in this knowledge base= and
+=Provenance and limits= already there. Under the first, say what the
+document is: who publishes it and the version you read. =ESC=, =ZZ=. The
 note is saved and stays open.
 
 Now tag it: =SPC m m o t=, type =ble=, =RET=. Look at the top of the file:
-=#+filetags: :ref:ble:=. Every note in this subject gets =ble=, because
+=#+filetags: :source:reference:ble:=. Every note in this subject gets =ble=, because
 that is what the map is built from in step 6.
 
 ** Step 3, link a new idea from inside it
-Still in the reference note, under =Key points=, start a sentence: =Every
+Still in the reference note, under =Use in this knowledge base=, start a sentence: =Every
 service is a table of characteristics, see=.
 
 Press =ESC=, then =SPC n r i=. The =Node:= prompt appears. Type =GATT=,
@@ -81,10 +87,12 @@ interval. Five minutes of reading, five notes, all linked from the source.
 
 ** Step 4, write a question
 Press =SPC n r n=, type =Why the connection interval changes after
-pairing=, =RET=, then =q= and its subject directory, =RET=.
+pairing=, =RET=, then =Q= and its subject directory, =RET=.
 
-Three headings: what I do not understand, what I tried, answer. Fill the
-first one. Leave the answer empty. =ESC=, =ZZ=, then =SPC m m o t= =ble=.
+Five headings, the vault's: Meaning, where the question goes in one
+sentence; Mechanism and evidence, for the answer once you have it;
+Limits, Connections and Sources. Write the question under Meaning and
+leave the rest empty. =ESC=, =ZZ=, then =SPC m m o t= =ble=.
 
 ** Step 5, turn a journal entry into a note
 Press =SPC n r d t= to open today. Put the cursor on the heading you wrote
@@ -231,46 +239,52 @@ close it. Then rebuild the maps you care about with =SPC n r m=.
 
 * The kinds of note
 =SPC n r n= picks the kind. Each one is a set of headings, which are
-really the questions the note has to answer, and a place: concept,
-solution, howto, hardware and question ask for their subject directory
-under =resources/wiki/=, the others have a directory of their own. The
-finder shows the kind beside the title, so a note is never "some note".
+really the questions the note has to answer, its tags and a place. Most
+come from the table of kinds in the vault's =meta/templates.org=, so a new
+note is shaped like the notes already there: concept, claim, question,
+failure, procedure and hardware ask for their subject directory under
+=resources/wiki/=, a reference for its organisation's folder, the others
+have a directory of their own. File names are the title with hyphens.
+The finder shows the kind beside the title, so a note is never "some
+note".
 
-| Key | Kind       | Lands in                   | The questions it asks                                                                         |
-|-----+------------+----------------------------+-----------------------------------------------------------------------------------------------|
-| =c=   | concept    | =resources/wiki/<subject>/=  | in one sentence, how it works, example, where it bites                                        |
-| =s=   | solution   | =resources/wiki/<subject>/=  | symptom, cause, fix, how to verify, applies to                                                |
-| =h=   | howto      | =resources/wiki/<subject>/=  | when, steps, gotchas, sources                                                                 |
-| =b=   | hardware   | =resources/wiki/<subject>/=  | what it is, pinout and links, toolchain, gotchas                                              |
-| =r=   | reference  | =resources/sources/manuals/= | the source, key points, quotes, my take                                                       |
-| =q=   | question   | =resources/wiki/<subject>/=  | answer in one line, what I do not get, tried, answer                                          |
-| =p=   | project    | =projects/<slug>/=           | repository, kit, dashboard, goal, completion criteria, next actions, decisions, progress      |
-| =P=   | person     | =resources/wiki/people/=     | context, notes                                                                                |
-| =m=   | meeting    | =capture/meetings/=          | attendees, agenda, notes, actions                                                             |
-| =C=   | course     | =areas/university/<slug>/=   | overview, timetable, assignments and exams, lectures, board, deadlines, case studies, sources |
-| =l=   | lecture    | its course's =lectures/=     | the course, summary, notes, questions, cards                                                  |
-| =k=   | case study | =resources/case-studies/=    | for whom, context, problem, analysis, options, decision, outcome, lessons, sources            |
-| =D=   | design doc | its project's =design/=      | context, goals, non-goals, requirements, design, alternatives, risks, open questions          |
+| Key | Kind       | Lands in                                    | The questions it asks                                                                         |
+|-----+------------+---------------------------------------------+-----------------------------------------------------------------------------------------------|
+| =c= | concept    | =resources/wiki/<subject>/=                 | meaning, mechanism and evidence, example, limits, connections, sources                        |
+| =a= | claim      | =resources/wiki/<subject>/=                 | the same as a concept, for a statement and when it holds                                      |
+| =Q= | question   | =resources/wiki/<subject>/=                 | meaning, mechanism and evidence, limits, connections, sources                                 |
+| =s= | failure    | =resources/wiki/<subject>/=                 | symptom, cause, fix, verification, limits, connections, sources                               |
+| =h= | procedure  | =resources/wiki/<subject>/=                 | when to use, preconditions, steps, verification, limits, connections, sources                 |
+| =b= | hardware   | =resources/wiki/<subject>/=                 | what it is, pinout and links, toolchain, gotchas                                              |
+| =r= | reference  | =resources/sources/manuals/<organisation>/= | what it is, use in this knowledge base, provenance and limits                                 |
+| =P= | person     | =resources/wiki/people/=                    | context, notes                                                                                |
+| =p= | project    | =projects/<slug>/=                          | repository, kit, dashboard, goal, completion criteria, next actions, decisions, progress      |
+| =m= | meeting    | =capture/meetings/=                         | attendees, agenda, notes, actions                                                             |
+| =u= | course     | =areas/university/<slug>/=                  | overview, timetable, assignments and exams, lectures, board, deadlines, case studies, sources |
+| =l= | lecture    | its course's =lectures/=                    | the course, summary, notes, questions, cards                                                  |
+| =k= | case study | =resources/case-studies/=                   | for whom, context, problem, analysis, options, decision, outcome, lessons, sources            |
+| =D= | design doc | its project's =design/=                     | context, goals, non-goals, requirements, design, alternatives, risks, open questions          |
 
 Every note is stamped with a =CREATED= date, so the graph can be read in
 the order you learned things. There is no plain kind on purpose: a note
-that fits none is a concept, and "in one sentence" is the line the
-finder will show you nothing of otherwise.
+that fits none is a concept, and its Meaning opens with the one sentence
+that says what it is.
 
-Concept notes are the ones that compound. Solution notes are for the
+Concept notes are the ones that compound. Failure notes are for the
 thing you fixed at 23:00 and will hit again next year: what you saw,
 what was actually wrong, what fixed it, how you know, and on which
-board, SDK and compiler. Howtos are the procedures, flash this board,
+board, SDK and compiler. Procedure notes are the howtos, flash this board,
 set up that SDK, half of what an embedded week writes down. Hardware
 notes hold what a board or a part is and where its pinout and datasheet
 are, tagged with the project that uses it. Reference notes are the
-sources: one per book, paper, video or page, with what it actually said.
+sources: one per book, paper, video or page, saying what it is and what
+the notes take from it; the ideas themselves go in notes of their own.
 Question notes are the most useful when studying, see below. A project
 note names its repository and its kit in the head, so the note and the
 build stay together.
 
-None of this is only about work. The same kinds take a recipe (a howto),
-a setting you had to hunt for (a solution), what the doctor said (a
+None of this is only about work. The same kinds take a recipe (a procedure),
+a setting you had to hunt for (a failure), what the doctor said (a
 reference). One idea per note, a topic tag, a link to something else:
 that is all the system asks, whatever the subject.
 
@@ -286,7 +300,7 @@ now think of it.
 
 Tags are the map's raw material. Two kinds are enough:
 
-- the kind, which the template already wrote: =concept=, =ref=, =question=;
+- the kind, which the template already wrote: =knowledge concept=, =source reference=, =knowledge question=;
 - the topic: =cpp=, =qt=, =embedded=, =emacs=, =ai=.
 
 Reuse them; five good tags beat fifty precise ones. A URL a note came from
@@ -366,7 +380,7 @@ your notes on it are the same object.
 The pattern that works, from a paper, a chapter or a library's docs:
 
 1. one reference note for the source, =SPC n r n r=, filled while reading:
-   key points in your words, quotes only when the wording matters;
+   what it is and what the notes take from it, the ideas in their own notes;
 2. a concept note for each idea worth its own name, linked from the
    reference;
 3. a question note, =SPC n r n Q=, for every thing you did not follow. It
@@ -455,11 +469,11 @@ The first session: open the day, =SPC n r d n=, one line on what you are
 about to do. The thing you are reading gets a reference note, =SPC n r n=
 then =r=, titled "Nordic BLE fundamentals", the URL as its source, tagged
 =ble= with =SPC m m o t=; in the browser the second bookmarklet does the
-same in one click. Read, and write the key points in your own words.
+same in one click. Read, and note under Use in this knowledge base what you take from it.
 Every name that deserves its own note, GAP, GATT, advertising, the
 connection interval, gets one from inside the sentence: =SPC n r i=,
 create, =c=; the reference keeps a link to it. Whatever you did not
-follow is a question note, =q=, titled as the question, its answer
+follow is a question note, =Q=, titled as the question, its answer
 heading left empty on purpose.
 
 The sessions after: write into the day first, always, and at the end
@@ -467,9 +481,9 @@ promote what is worth keeping with =SPC m m e= on the heading; then in
 the new note a real title, one link with =SPC n r i=, the =ble= tag.
 The same explanation in two notes is a third note: extract it, link
 both. The board the code runs on gets a hardware note, =b=, with its
-pinout and the toolchain that flashed it; the flashing itself a howto,
-=h=; the bug of the evening a solution, =s=, with how you verified the
-fix and which SDK it applied to.
+pinout and the toolchain that flashed it; the flashing itself a
+procedure, =h=; the bug of the evening a failure, =s=, with how you
+verified the fix and which SDK it applied to.
 
 Once there is a handful: =SPC n r m=, =ble=, and
 =resources/collections/tags/ble.org= lists everything tagged so; write
@@ -480,7 +494,7 @@ review. A task belongs where the thinking is: a =TODO= inside the project
 note shows in =SPC o a x= like any other.
 
 After a week: a reference, four concepts, a question, a hardware note, a
-howto, a solution, one map, the dailies. Every one tagged and linked,
+procedure, a failure, one map, the dailies. Every one tagged and linked,
 the map explaining the order. That is a subject you can come back to in
 a year. Claude helps from =SPC l l=: search what you have, read a note
 and quiz you, draft a note on a topic; what it writes lands in the day
@@ -608,7 +622,7 @@ its kind.
 | Key         | What it does                          |
 |-------------+---------------------------------------|
 | ~SPC n r d n~ | capture into today's note             |
-| ~SPC n r n~   | a new note, one of the thirteen kinds |
+| ~SPC n r n~   | a new note, one of the fourteen kinds |
 | ~SPC n r f~   | find a note, or create it             |
 | ~SPC n r i~   | insert a link, creating on the fly    |
 | ~SPC m m e~   | extract this heading into a note      |

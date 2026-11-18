@@ -2388,7 +2388,7 @@ keys: ~d~ the documents, ~c~ the captures, ~a~ the agenda views, ~r~ roam.
 | ~SPC n n d~   | a decision, into its project's Decisions       |
 | ~SPC n n e~   | an assignment or exam, into its course         |
 | ~SPC n n a~   | an AI session log                              |
-| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][thirteen kinds]]     |
+| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][fourteen kinds]]     |
 
 A note and a meeting are roam notes, not documents: ~SPC n r n~ then
 the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
@@ -2482,40 +2482,37 @@ Everything in the vault has one home. Not sure of it yet? Capture it to
 the inbox and decide later. The vault's =meta/WORKFLOWS.org= and
 =meta/CONVENTIONS.org= hold the full rules; this is their everyday form.
 
-| You have                   | Key                        | It goes to                                  |
-|----------------------------+----------------------------+---------------------------------------------|
-| a task, an idea, a link    | ~SPC X~ then ~t~, ~i~, ~l~ | the inbox, =inbox.org=                      |
-| a task for a project       | ~SPC X p t~                | its Next actions; it asks when unsure       |
-| something to read later    | ~SPC X r~                  | =areas/reading.org=, Queue                  |
-| new work with an end       | ~SPC X P~                  | =projects/<name>/index.org=                 |
-| what happened today        | ~SPC n r d n~              | today's note in =capture/journal/=          |
-| an idea to keep for good   | ~SPC n r n c~              | =resources/wiki/<subject>/=, you pick it    |
-| how to do something        | ~SPC n r n h~              | =resources/wiki/<subject>/=                 |
-| a bug and its fix          | ~SPC n r n s~              | =resources/wiki/<subject>/=                 |
-| a manual, a vendor page    | ~SPC n r n r~              | =resources/sources/manuals/=                |
-| a page open in the browser | a bookmarklet              | the inbox, or =resources/sources/websites/= |
-| a picture                  | ~SPC m a p~ in the note    | =assets/images/<subject>/=, linked there    |
-| a PDF                      | drop it on the note        | =assets/documents/<subject>/=, linked there |
+| You have                      | Key                        | It goes to                                  |
+|-------------------------------+----------------------------+---------------------------------------------|
+| a task, an idea, a link       | ~SPC X~ then ~t~, ~i~, ~l~ | the inbox, =inbox.org=                      |
+| a task for a project          | ~SPC X p t~                | its Next actions; it asks when unsure       |
+| something to read later       | ~SPC X r~                  | =areas/reading.org=, Queue                  |
+| new work with an end          | ~SPC X P~                  | =projects/<name>/index.org=                 |
+| what happened today           | ~SPC n r d n~              | today's note in =capture/journal/=          |
+| an idea to keep for good      | ~SPC n r n c~              | =resources/wiki/<subject>/=, you pick it    |
+| a statement and when it holds | ~SPC n r n a~              | =resources/wiki/<subject>/=                 |
+| how to do something           | ~SPC n r n h~              | =resources/wiki/<subject>/=                 |
+| a bug and its fix             | ~SPC n r n s~              | =resources/wiki/<subject>/=                 |
+| a manual, a vendor page       | ~SPC n r n r~              | =resources/sources/manuals/<organisation>/= |
+| a page open in the browser    | a bookmarklet              | the inbox, or =resources/sources/websites/= |
+| a picture                     | ~SPC m a p~ in the note    | =assets/images/<subject>/=, linked there    |
+| a PDF                         | drop it on the note        | =assets/documents/<subject>/=, linked there |
 
 ~SPC X~ and ~SPC n n~ open the same capture menu. The two bookmarklets
 come from ~SPC n d P~: one puts the page in the inbox, the other makes
-it a source note. A manual's note lands in =resources/sources/manuals/=
-itself, while the vault files it under its organisation,
-=manuals/<organisation>/=: move it there with ~SPC f R~ (links are by ID
-and keep working), then ~SPC n r s~.
+it a source note. A manual's note asks for its organisation's folder and
+offers the one that already holds the site's other references.
 
 Before you write a note:
 1. Look for it first, ~SPC n r f~: when a note on the same idea exists,
    add to it rather than write a second.
 2. One idea a note: the title says exactly that idea, and the first
    sentence defines it by name.
-3. Give it the vault's headings. An idea: Meaning, Mechanism and
-   evidence, Example, Limits, Connections, Sources. How to do something:
-   When to use, Preconditions, Steps, Verification, Limits, Connections,
-   Sources. A bug: Symptom, Cause, Fix, Verification, Limits,
-   Connections, Sources. ~SPC n r n~ still writes older ones (In one
-   sentence, How it works and so on): rename them to these until its
-   templates are brought in line.
+3. Fill in the headings ~SPC n r n~ writes, the vault's: an idea or a
+   claim, Meaning, Mechanism and evidence, Example, Limits, Connections,
+   Sources; how to do something, When to use to Verification; a bug,
+   Symptom to Verification. Meaning opens with one sentence that states
+   the idea.
 4. Link it. Under Connections, first the broader note it belongs to,
    then its neighbours, each with a sentence on why (~SPC n r i~ inserts
    a link); under Sources, the note of the source it came from.
@@ -2564,25 +2561,30 @@ minutes idle and on exit, and ~SPC n g~ commits now.
 | ~SPC n r s~ | sync the database, in the background           |
 
 ** The kinds of note
-~SPC n r n~ then a letter. Each kind is a set of headings to fill in and
-a folder of its own; the first five ask for their subject folder under
-=resources/wiki/=. A note that fits no kind is a concept.
+~SPC n r n~ then a letter. Each kind is a set of headings to fill in, its
+tags and a folder of its own, read from the table of kinds in the vault's
+=meta/templates.org=, so a new note has the shape the vault's notes have.
+The first six ask for their subject folder under =resources/wiki/=; a
+reference asks for its URL and its organisation's folder, offering the
+one that holds most references from the same site. File names take
+hyphens. A note that fits no kind is a concept.
 
-| Key         | Kind       | Lands in                   |
-|-------------+------------+----------------------------|
-| ~SPC n r n c~ | concept    | =resources/wiki/<subject>/=  |
-| ~SPC n r n s~ | solution   | =resources/wiki/<subject>/=  |
-| ~SPC n r n h~ | howto      | =resources/wiki/<subject>/=  |
-| ~SPC n r n b~ | hardware   | =resources/wiki/<subject>/=  |
-| ~SPC n r n Q~ | question   | =resources/wiki/<subject>/=  |
-| ~SPC n r n r~ | reference  | =resources/sources/manuals/= |
-| ~SPC n r n p~ | project    | =projects/<project>/=        |
-| ~SPC n r n P~ | person     | =resources/wiki/people/=     |
-| ~SPC n r n m~ | meeting    | =capture/meetings/=          |
-| ~SPC n r n u~ | course     | =areas/university/<course>/= |
-| ~SPC n r n l~ | lecture    | its course's =lectures/=     |
-| ~SPC n r n k~ | case study | =resources/case-studies/=    |
-| ~SPC n r n D~ | design doc | its project's =design/=      |
+| Key           | Kind       | Lands in                                    |
+|---------------+------------+---------------------------------------------|
+| ~SPC n r n c~ | concept    | =resources/wiki/<subject>/=                 |
+| ~SPC n r n a~ | claim      | =resources/wiki/<subject>/=                 |
+| ~SPC n r n Q~ | question   | =resources/wiki/<subject>/=                 |
+| ~SPC n r n s~ | failure    | =resources/wiki/<subject>/=                 |
+| ~SPC n r n h~ | procedure  | =resources/wiki/<subject>/=                 |
+| ~SPC n r n b~ | hardware   | =resources/wiki/<subject>/=                 |
+| ~SPC n r n r~ | reference  | =resources/sources/manuals/<organisation>/= |
+| ~SPC n r n P~ | person     | =resources/wiki/people/=                    |
+| ~SPC n r n p~ | project    | =projects/<project>/=                       |
+| ~SPC n r n m~ | meeting    | =capture/meetings/=                         |
+| ~SPC n r n u~ | course     | =areas/university/<course>/=                |
+| ~SPC n r n l~ | lecture    | its course's =lectures/=                    |
+| ~SPC n r n k~ | case study | =resources/case-studies/=                   |
+| ~SPC n r n D~ | design doc | its project's =design/=                     |
 
 A course, a lecture, a case study and a design doc are always new notes.
 When an existing note already has the title you want, type it and press

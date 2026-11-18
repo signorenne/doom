@@ -859,3 +859,190 @@ is the list of the ones that are neither."
                     (lambda (&rest _) (+notes/roam-review)))
         (view-mode +1)))
     (pop-to-buffer buffer)))
+
+;;
+;;; Note kinds
+
+;; The vault's meta/templates.org holds the one list of note kinds, a
+;; table named kinds (its KB-027): SPC n r n builds the templates of the
+;; rows marked table from it when org-roam loads, so a note is written in
+;; the shape and with the tags the vault's notes have. Without the page,
+;; or with a table it cannot read, a warning once a session and the copy
+;; below, which the vault's tests hold equal to the page.
+
+(defvar +notes--roam-kinds-warned nil
+  "Non-nil once this session has warned that the vault has no kinds table.")
+
+(defconst +notes--roam-kinds-builtin
+  '(
+    ("c" :kind "concept" :tags ("knowledge" "concept") :aliases nil
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("Meaning" "Mechanism and evidence" "Example" "Limits" "Connections" "Sources")
+     :emacs "table")
+    ("a" :kind "claim" :tags ("knowledge" "claim") :aliases nil
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("Meaning" "Mechanism and evidence" "Example" "Limits" "Connections" "Sources")
+     :emacs "table")
+    ("Q" :kind "question" :tags ("knowledge" "question") :aliases nil
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("Meaning" "Mechanism and evidence" "Limits" "Connections" "Sources")
+     :emacs "table")
+    ("s" :kind "failure" :tags ("knowledge" "failure") :aliases ("fix")
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("Symptom" "Cause" "Fix" "Verification" "Limits" "Connections" "Sources")
+     :emacs "table")
+    ("h" :kind "procedure" :tags ("knowledge" "procedure") :aliases ("howto")
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("When to use" "Preconditions" "Steps" "Verification" "Limits" "Connections" "Sources")
+     :emacs "table")
+    ("b" :kind "hardware" :tags ("hardware") :aliases nil
+     :folder "resources/wiki/<subject>" :file "<slug>.org" :extra nil
+     :headings ("What it is" "Pinout and links" "Toolchain" "Gotchas")
+     :emacs "table")
+    ("r" :kind "source" :tags ("source" "reference") :aliases ("ref")
+     :folder "resources/sources/manuals/<organisation>" :file "<slug>.org" :extra ("ROAM_REFS" "SOURCE_KIND reference" "REFERENCE_KIND documentation")
+     :headings ("What it is" "Use in this knowledge base" "Provenance and limits")
+     :emacs "table")
+    ("P" :kind "person" :tags ("person") :aliases nil
+     :folder "resources/wiki/people" :file "<slug>.org" :extra nil
+     :headings ("Context" "Notes")
+     :emacs "table")
+    ("R" :kind "paper" :tags ("source" "reference") :aliases ("ref")
+     :folder "resources/sources/papers" :file "<citekey>.org" :extra ("ROAM_REFS" "SOURCE_KIND reference" "REFERENCE_KIND paper")
+     :headings ("What it is" "Use in this knowledge base" "Provenance and limits")
+     :emacs "own")
+    ("m" :kind "meeting" :tags ("meeting") :aliases nil
+     :folder "capture/meetings" :file "<date>-<slug>.org" :extra nil
+     :headings ("Attendees" "Agenda" "Notes" "Actions")
+     :emacs "own")
+    ("k" :kind "case-study" :tags ("case_study") :aliases nil
+     :folder "resources/case-studies" :file "<slug>.org" :extra ("For")
+     :headings ("Context" "Problem" "Analysis" "Options" "Decision" "Outcome" "Lessons" "Sources")
+     :emacs "own")
+    ("p" :kind "project" :tags ("project") :aliases nil
+     :folder "projects/<slug>" :file "index.org" :extra ("STATUS active")
+     :headings ("Goal" "Completion criteria" "Next actions" "Decisions" "Progress" "Knowledge and sources")
+     :emacs "own")
+    ("u" :kind "course" :tags ("course") :aliases nil
+     :folder "areas/university/<slug>" :file "index.org" :extra ("STATUS active")
+     :headings ("Responsibility" "Standards" "Review" "Projects and knowledge" "Overview" "Timetable" "Assignments and exams" "Lectures" "Board" "Deadlines" "Case studies" "Sources")
+     :emacs "own")
+    ("l" :kind "lecture" :tags ("lecture") :aliases nil
+     :folder "areas/university/<course>/lectures" :file "<slug>.org" :extra ("Course")
+     :headings ("Summary" "Notes" "Questions" "Cards")
+     :emacs "own")
+    ("D" :kind "design" :tags ("design") :aliases nil
+     :folder "projects/<project>/design" :file "<slug>.org" :extra ("STATUS draft")
+     :headings ("Context" "Goals" "Non-goals" "Requirements" "Design" "Alternatives" "Risks" "Open questions")
+     :emacs "own"))
+  "The kinds table of the vault's meta/templates.org as
+`+notes--roam-kind-rows' reads it: what Emacs uses without the page.")
+
+(defvar +notes-roam-kind-descriptions
+  '(("concept" . "concept: what a thing is")
+    ("claim" . "claim: a statement and when it holds")
+    ("question" . "question: something to work out")
+    ("failure" . "failure: a bug and its fix")
+    ("procedure" . "procedure: how to do something")
+    ("hardware" . "hardware: a board, a part, a probe")
+    ("source" . "reference: a document, by its organisation")
+    ("person" . "person"))
+  "What SPC n r n says for each kind built from the table.")
+
+(defvar +notes-roam-head)
+
+;;;###autoload
+(defun +notes--roam-kind-rows (&optional root)
+  "The note kinds of the vault at ROOT, `org-roam-directory' by default:
+the rows of the table named kinds in its meta/templates.org, each
+\(KEY . PLIST).  Without the page or the table, warn once a session and
+return `+notes--roam-kinds-builtin'."
+  (or (ignore-errors
+        (+notes--roam-read-kinds
+         (expand-file-name "meta/templates.org" (or root org-roam-directory))))
+      (progn
+        (unless +notes--roam-kinds-warned
+          (setq +notes--roam-kinds-warned t)
+          (display-warning
+           'notes "The vault's meta/templates.org has no kinds table; SPC n r n uses Doom's copy"))
+        +notes--roam-kinds-builtin)))
+
+(defun +notes--roam-read-kinds (file)
+  "The rows of the table named kinds in FILE, or nil."
+  (when (file-readable-p file)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (let ((case-fold-search t))
+        (when (re-search-forward "^[ \t]*#\\+name:[ \t]*kinds[ \t]*$" nil t)
+          (forward-line 1)
+          (when (looking-at-p "[ \t]*|")
+            (require 'org-table)
+            (let* ((rows (delq 'hline (org-table-to-lisp)))
+                   (header (mapcar #'intern (car rows))))
+              (mapcar (lambda (row) (+notes--roam-kind-row header row)) (cdr rows)))))))))
+
+(defun +notes--roam-kind-row (header row)
+  "ROW of the kinds table, under HEADER, as (KEY . PLIST): a cell of -
+is nil, and tags, aliases, extra and headings are lists split on ;."
+  (let ((cells (cl-mapcar #'cons header row)) plist)
+    (dolist (column '(kind tags aliases folder file extra headings emacs))
+      (let* ((text (string-trim (or (alist-get column cells) "")))
+             (text (unless (member text '("" "-")) text)))
+        (setq plist (append plist
+                            (list (intern (concat ":" (symbol-name column)))
+                                  (if (memq column '(tags aliases extra headings))
+                                      (and text (split-string text ";" t "[ \t]+"))
+                                    text))))))
+    (cons (string-trim (alist-get 'key cells)) plist)))
+
+;;;###autoload
+(defun +notes--roam-table-templates (&optional root)
+  "The org-roam capture templates of the kinds the table marks table."
+  (cl-loop for (key . row) in (+notes--roam-kind-rows root)
+           when (equal (plist-get row :emacs) "table")
+           collect (list key
+                         (or (alist-get (plist-get row :kind) +notes-roam-kind-descriptions
+                                        nil nil #'equal)
+                             (plist-get row :kind))
+                         'plain (+notes--roam-kind-body (plist-get row :headings))
+                         :target (list 'file+head (+notes--roam-kind-target row)
+                                       (+notes--roam-kind-head row))
+                         :unnarrowed t :empty-lines-before 1)))
+
+(defun +notes--roam-kind-body (headings)
+  "A template body of HEADINGS, the cursor under the first."
+  (concat "* " (car headings) "\n%?\n"
+          (mapconcat (lambda (heading) (concat "\n* " heading "\n")) (cdr headings) "")))
+
+(defun +notes--roam-kind-target (row)
+  "Where a note of the kind ROW goes: a subject folder or an organisation
+folder that capture asks for, or its fixed folder."
+  (let ((folder (plist-get row :folder)))
+    (cond ((string-search "<subject>" folder) "${+notes--roam-subject-path}")
+          ((string-search "<organisation>" folder) "${+notes--roam-organisation-path}")
+          (t (format "%%(+notes--roam-path \"%s/%s\")" folder
+                     (replace-regexp-in-string
+                      "<date>" "%<%Y%m%d>"
+                      (replace-regexp-in-string "<slug>" "${slug}" (plist-get row :file) t t)
+                      t t))))))
+
+(defun +notes--roam-kind-head (row)
+  "The head of a note of the kind ROW: `+notes-roam-head' with the
+row's extra properties in the drawer, then its tags."
+  (concat (replace-regexp-in-string
+           ":END:"
+           (concat (mapconcat (lambda (extra)
+                                (pcase-let ((`(,name . ,value) (split-string extra " " t)))
+                                  (format ":%s: %s\n" name
+                                          (if value (string-join value " ")
+                                            (if (equal name "ROAM_REFS") "${ref}" "")))))
+                              (plist-get row :extra) "")
+                   ":END:")
+           +notes-roam-head t t)
+          ":" (string-join (plist-get row :tags) ":") ":\n\n"))
+
+;;;###autoload
+(defun +notes--roam-slug-hyphens-a (slug)
+  "SLUG with hyphens where org-roam puts underscores, as the vault's
+file names have them."
+  (replace-regexp-in-string "_" "-" slug))
