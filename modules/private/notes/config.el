@@ -449,7 +449,7 @@ other file, or a note outside the vault, goes to Org's attachments."
             (condition-case err
                 (progn (if move (rename-file file part) (copy-file file part))
                        (rename-file part target))
-              (error
+              ((error quit)
                (when (file-exists-p part)
                  (if (and move (not (file-exists-p file)))
                      (rename-file part file)
