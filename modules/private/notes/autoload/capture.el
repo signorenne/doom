@@ -201,17 +201,27 @@ subject's directory is made."
 (declare-function org-roam-db-query "org-roam-db")
 (declare-function url-host "url-parse")
 (declare-function url-generic-parse-url "url-parse")
+(declare-function url-filename "url-parse")
+(declare-function org-roam-node-from-ref "org-roam-node")
+(declare-function org-roam-node-title "org-roam-node")
 
 ;;;###autoload
 (defun +notes--roam-organisation-path (node)
   "Ask for the organisation folder of reference NODE under
 resources/sources/manuals/ (the vault's KB-039) and return the note's
 path there, which must be new.  The URL is asked first when the capture
-did not bring it, so the folder offered first can be the one holding
-most references from its host, else a name made from the host.  Called
-as ${...}: an error in a %(...) of a template is written into the path."
+did not bring it, refused when empty or when a note already owns it, so
+the folder offered first can be the one holding most references from its
+site, else a name made from the site.  A folder made for it goes again
+when the capture is aborted.  Called as ${...}: an error in a %(...) of
+a template is written into the path."
   (let* ((ref (or (plist-get org-roam-capture--info :ref)
-                  (let ((url (read-string "URL: ")))
+                  (let ((url (string-trim (read-string "URL: "))))
+                    (when (string-empty-p url)
+                      (user-error "A reference needs its URL"))
+                    (when-let* ((owner (org-roam-node-from-ref url)))
+                      (user-error "%s already owns %s; link that note instead"
+                                  (org-roam-node-title owner) url))
                     (setq org-roam-capture--info (plist-put org-roam-capture--info :ref url))
                     url)))
          (root (expand-file-name "resources/sources/manuals/" org-roam-directory))
@@ -222,29 +232,70 @@ as ${...}: an error in a %(...) of a template is written into the path."
          (folder (replace-regexp-in-string
                   "_" "-" (org-roam-node-slugify
                            (completing-read (format-prompt "Organisation" default)
-                                            folders nil nil nil nil default)))))
+                                            folders nil nil nil nil default))))
+         (dir (expand-file-name folder root)))
     (when (string-empty-p folder) (user-error "A reference needs its organisation's folder"))
+    (unless (file-directory-p dir) (+notes--remove-if-aborted dir))
     (+notes--roam-new-path (concat "resources/sources/manuals/" folder "/"
                                    (org-roam-node-slug node) ".org"))))
 
+(defvar org-note-abort)
+
+(defun +notes--remove-if-aborted (dir)
+  "Remove DIR, made for the capture in progress, if that capture is
+aborted and leaves it empty, so an organisation never chosen is not
+offered next time."
+  (letrec ((hook (lambda ()
+                   (remove-hook 'org-capture-after-finalize-hook hook)
+                   (when (and org-note-abort (file-directory-p dir) (directory-empty-p dir))
+                     (delete-directory dir)))))
+    (add-hook 'org-capture-after-finalize-hook hook)))
+
+(defvar +notes-shared-hosts
+  '(("github.com" . path) ("gitlab.com" . path) ("bitbucket.org" . path)
+    ("codeberg.org" . path) ("sourceforge.net" . path) ("medium.com" . path)
+    ("github.io" . label) ("gitlab.io" . label) ("readthedocs.io" . label)
+    ("blogspot.com" . label) ("wordpress.com" . label) ("substack.com" . label))
+  "Hosts many organisations publish on: the organisation is the first
+part of the path (path) or the label in front of the host (label), and
+the host alone says nothing.")
+
 (defun +notes--organisation-for (url)
   "The organisation folder for a reference at URL: the folder holding most
-references from its host, else the host's name without its domain."
+references from its site, else a name made from the site.  On a host
+many organisations share, the site is the account or the subdomain."
   (require 'url-parse)
-  (when-let* ((host (and url (url-host (url-generic-parse-url url))))
+  (when-let* ((parsed (and url (url-generic-parse-url url)))
+              (host (url-host parsed))
               ((not (string-empty-p host))))
-    (or (+notes--organisation-of-host host)
-        (let ((labels (split-string (string-remove-prefix "www." host) "\\." t)))
-          (if (cdr labels) (nth (- (length labels) 2) labels) (car labels))))))
-
-(defun +notes--organisation-of-host (host)
-  "The folder under resources/sources/manuals/ with most references from
-HOST, as the graph knows them, else from any host of its domain, or nil."
-  (let ((domain (string-join (last (split-string host "\\." t) 2) ".")))
-    (or (+notes--organisation-of-refs (concat "//" host "/%"))
-        (and (not (equal domain host))
-             (+notes--organisation-of-refs (concat "//" domain "/%")))
-        (+notes--organisation-of-refs (concat "//%." domain "/%")))))
+    (let* ((host (string-remove-prefix "www." host))
+           (shared (seq-find (lambda (entry) (or (equal host (car entry))
+                                                 (string-suffix-p (concat "." (car entry)) host)))
+                             +notes-shared-hosts)))
+      (if shared
+          (let* ((account (if (eq (cdr shared) 'path)
+                              (seq-find (lambda (part) (not (member part '("" "projects" "p"))))
+                                        (split-string (or (url-filename parsed) "") "/"))
+                            (string-remove-suffix (concat "." (car shared)) host)))
+                 (account (and account (string-remove-prefix "@" account))))
+            (and account (not (string-empty-p account))
+                 (or (+notes--organisation-of-refs
+                      (if (eq (cdr shared) 'path)
+                          (concat "//" (car shared) "/" account "/%")
+                        (concat "//" host "/%")))
+                     (downcase account))))
+        (let* ((labels (split-string host "\\." t))
+               ;; co.uk, com.au: the name is one label further in.
+               (two-level (and (>= (length labels) 3)
+                               (= (length (car (last labels))) 2)
+                               (member (car (last labels 2)) '("co" "com" "net" "org" "ac" "gov" "edu"))))
+               (domain (string-join (last labels (if two-level 3 2)) "."))
+               (name (nth (- (length labels) (if two-level 3 2)) labels)))
+          (or (+notes--organisation-of-refs (concat "//" host "/%"))
+              (and (not (equal domain host))
+                   (+notes--organisation-of-refs (concat "//" domain "/%")))
+              (+notes--organisation-of-refs (concat "//%." domain "/%"))
+              name))))))
 
 (defun +notes--organisation-of-refs (pattern)
   "The folder under resources/sources/manuals/ holding most references

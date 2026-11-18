@@ -111,7 +111,7 @@ and a message names it by its place in the vault,
 
 ** Roam
 [[file:../../../docs/org-roam-guide.org][The guide]] says how to work with the graph day to day; ~SPC n r ?~ opens
-it. A note is one of fourteen kinds, each a set of headings that say
+it. A note is one of fifteen kinds, each a set of headings that say
 what to write, its tags and its folder. Most come from the table of kinds
 in the vault's =meta/templates.org= (its KB-027), read when org-roam
 loads, so a new note has the shape and tags the vault's notes have:
@@ -121,8 +121,10 @@ failure (~s~: symptom, cause, fix, verification, limits, connections,
 sources), procedure (~h~: when to use, preconditions, steps,
 verification, and the same last three), hardware (~b~), reference (~r~:
 what it is, use in this knowledge base, provenance and limits) and person
-(~P~). Without that page Emacs warns once and uses its own copy of the
-table. Project (a dashboard, goal, completion criteria, next actions,
+(~P~). A reference also asks what kind of document it is, documentation
+offered first: essay is for a blog or a marketing page, which the vault
+cites only for its argument. Without the page, or with a table it cannot
+use, Emacs warns once and uses its own copy of the table. Project (a dashboard, goal, completion criteria, next actions,
 decisions, progress, with the repository and the kit in its head),
 meeting, a paper from the bibliography (~R~), and for work and study,
 course (~u~), lecture (~l~), case study (~k~) and design doc (~D~) keep
@@ -144,7 +146,7 @@ meeting straight away.
 | Key         | What it does                                        |
 |-------------+-----------------------------------------------------|
 | ~SPC n r f~   | find or create a node, ~i~ links to one               |
-| ~SPC n r n~   | new note, one of the fourteen kinds                 |
+| ~SPC n r n~   | new note, one of the fifteen kinds                  |
 | ~SPC n r /~   | search the notes, ~B~ backlinks, ~L~ forward links      |
 | ~SPC n r r~   | the roam buffer: backlinks and unlinked mentions    |
 | ~SPC c H~     | on a link, the linked note's first lines in a popup |
@@ -179,8 +181,9 @@ subtree. Read once per change of the file.
 
 ~SPC n r N~ renames the note at point: the =#+title= of a file, the text
 of a heading that is a node, its keyword, priority and tags kept. A file
-named for the old title, =signal_integrity.org= or a meeting's
-=20261031-signal_integrity.org=, takes the new one; any other name, a
+named for the old title, =signal-integrity.org= or a meeting's
+=20261031-signal-integrity.org=, takes the new one, and since file names
+take hyphens that holds for the vault's existing notes too; any other name, a
 daily note's, a project's =index.org=, a paper's citekey, stays, and so
 does one whose new name is taken, which the message says. Every =id:=
 link described by exactly the old title then reads the new one, in open

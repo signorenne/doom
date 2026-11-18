@@ -53,7 +53,9 @@ It asks =URL:=, the source that goes into =ROAM_REFS=. Paste the URL, =RET=.
 Then it asks for the organisation, the folder under
 =resources/sources/manuals/= for whoever publishes the page; it offers the
 one that already holds the site's other references, or a name made from
-the site. =RET= takes it.
+the site. =RET= takes it. Last, the kind of document: documentation, a
+specification, a datasheet; essay for a blog or a marketing page.
+=RET= takes documentation.
 
 The note opens with =What it is=, =Use in this knowledge base= and
 =Provenance and limits= already there. Under the first, say what the
@@ -257,6 +259,7 @@ note".
 | =h= | procedure  | =resources/wiki/<subject>/=                 | when to use, preconditions, steps, verification, limits, connections, sources                 |
 | =b= | hardware   | =resources/wiki/<subject>/=                 | what it is, pinout and links, toolchain, gotchas                                              |
 | =r= | reference  | =resources/sources/manuals/<organisation>/= | what it is, use in this knowledge base, provenance and limits                                 |
+| =R= | paper      | =resources/sources/papers/<citekey>.org=    | the same, for a paper citar already knows                                                     |
 | =P= | person     | =resources/wiki/people/=                    | context, notes                                                                                |
 | =p= | project    | =projects/<slug>/=                          | repository, kit, dashboard, goal, completion criteria, next actions, decisions, progress      |
 | =m= | meeting    | =capture/meetings/=                         | attendees, agenda, notes, actions                                                             |
@@ -365,8 +368,9 @@ Two other views of the same graph:
 A page in the browser becomes a note in one keystroke once the handler is
 installed, =SPC n d P=. It writes the desktop entry and prints two
 bookmarklets: one captures the page into the inbox, the other makes a
-reference note whose =ROAM_REFS= is the URL, so opening the same page later
-finds the note you already wrote about it.
+reference note as =SPC n r n r= does, under its organisation, whose
+=ROAM_REFS= is the URL, so opening the same page later finds the note you
+already wrote about it.
 
 Papers go through the bibliography in the library,
 =~/projects/personal/knowledge_base/research/academic/references.bib=,
@@ -622,7 +626,7 @@ its kind.
 | Key         | What it does                          |
 |-------------+---------------------------------------|
 | ~SPC n r d n~ | capture into today's note             |
-| ~SPC n r n~   | a new note, one of the fourteen kinds |
+| ~SPC n r n~   | a new note, one of the fifteen kinds  |
 | ~SPC n r f~   | find a note, or create it             |
 | ~SPC n r i~   | insert a link, creating on the fly    |
 | ~SPC m m e~   | extract this heading into a note      |

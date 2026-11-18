@@ -2388,7 +2388,7 @@ keys: ~d~ the documents, ~c~ the captures, ~a~ the agenda views, ~r~ roam.
 | ~SPC n n d~   | a decision, into its project's Decisions       |
 | ~SPC n n e~   | an assignment or exam, into its course         |
 | ~SPC n n a~   | an AI session log                              |
-| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][fourteen kinds]]     |
+| ~SPC n r n~   | a note in the graph, one of [[*The kinds of note][fifteen kinds]]      |
 
 A note and a meeting are roam notes, not documents: ~SPC n r n~ then
 the kind, or ~c n~ and ~c m~ in ~SPC n SPC~; they link to people,
@@ -2494,14 +2494,15 @@ the inbox and decide later. The vault's =meta/WORKFLOWS.org= and
 | how to do something           | ~SPC n r n h~              | =resources/wiki/<subject>/=                 |
 | a bug and its fix             | ~SPC n r n s~              | =resources/wiki/<subject>/=                 |
 | a manual, a vendor page       | ~SPC n r n r~              | =resources/sources/manuals/<organisation>/= |
-| a page open in the browser    | a bookmarklet              | the inbox, or =resources/sources/websites/= |
+| a page open in the browser    | a bookmarklet              | the inbox, or a reference by organisation   |
 | a picture                     | ~SPC m a p~ in the note    | =assets/images/<subject>/=, linked there    |
 | a PDF                         | drop it on the note        | =assets/documents/<subject>/=, linked there |
 
 ~SPC X~ and ~SPC n n~ open the same capture menu. The two bookmarklets
 come from ~SPC n d P~: one puts the page in the inbox, the other makes
-it a source note. A manual's note asks for its organisation's folder and
-offers the one that already holds the site's other references.
+it a reference note as ~SPC n r n r~ does. A reference asks for its
+organisation's folder, offering the one that already holds the site's
+other references, then the kind of document, documentation first.
 
 Before you write a note:
 1. Look for it first, ~SPC n r f~: when a note on the same idea exists,
@@ -2578,6 +2579,7 @@ hyphens. A note that fits no kind is a concept.
 | ~SPC n r n h~ | procedure  | =resources/wiki/<subject>/=                 |
 | ~SPC n r n b~ | hardware   | =resources/wiki/<subject>/=                 |
 | ~SPC n r n r~ | reference  | =resources/sources/manuals/<organisation>/= |
+| ~SPC n r n R~ | paper      | =resources/sources/papers/=                 |
 | ~SPC n r n P~ | person     | =resources/wiki/people/=                    |
 | ~SPC n r n p~ | project    | =projects/<project>/=                       |
 | ~SPC n r n m~ | meeting    | =capture/meetings/=                         |

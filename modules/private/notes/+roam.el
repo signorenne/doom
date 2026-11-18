@@ -211,16 +211,12 @@ day is written under.")
 (set-popup-rule! #'+notes--roam-map-popup-p
   :side 'right :size 0.5 :select t :quit t :ttl nil :modeline t)
 
-;; What org-protocol://roam-ref captures with: one note per page, found
-;; again by URL.
+;; What org-protocol://roam-ref captures with, the browser's second
+;; bookmarklet: a reference note as SPC n r n r makes one, under its
+;; organisation, found again by its URL.
 (after! org-roam-protocol
   (setq org-roam-capture-ref-templates
-        `(("w" "web page" plain
-           "* Key points\n%?\n\n* Quotes\n%i\n\n* My take\n"
-           :target (file+head "%(+notes--roam-path \"resources/sources/websites/${slug}.org\")"
-                              ,(concat +notes-roam-head ":ref:\n"
-                                       "#+source: ${ref}\n\n"))
-           :unnarrowed t :empty-lines-before 1))))
+        (list (cons "w" (cdr (assoc "r" (+notes--roam-table-templates)))))))
 
 ;; The list of notes to fix (SPC n r v) and the browser's bookmarklets
 ;; open at the bottom and close with ESC or q. The list is kept while you

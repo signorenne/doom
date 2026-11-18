@@ -920,15 +920,15 @@ is the list of the ones that are neither."
      :headings ("Context" "Problem" "Analysis" "Options" "Decision" "Outcome" "Lessons" "Sources")
      :emacs "own")
     ("p" :kind "project" :tags ("project") :aliases nil
-     :folder "projects/<slug>" :file "index.org" :extra ("STATUS active")
-     :headings ("Goal" "Completion criteria" "Next actions" "Decisions" "Progress" "Knowledge and sources")
+     :folder "projects/<slug>" :file "index.org" :extra ("STATUS active" "#+repository" "#+kit")
+     :headings ("Dashboard" "Goal" "Completion criteria" "Next actions" "Decisions" "Progress" "Knowledge and sources")
      :emacs "own")
     ("u" :kind "course" :tags ("course") :aliases nil
      :folder "areas/university/<slug>" :file "index.org" :extra ("STATUS active")
      :headings ("Responsibility" "Standards" "Review" "Projects and knowledge" "Overview" "Timetable" "Assignments and exams" "Lectures" "Board" "Deadlines" "Case studies" "Sources")
      :emacs "own")
     ("l" :kind "lecture" :tags ("lecture") :aliases nil
-     :folder "areas/university/<course>/lectures" :file "<slug>.org" :extra ("Course")
+     :folder "areas/university/<course>/lectures" :file "<date>-<slug>.org" :extra ("Course")
      :headings ("Summary" "Notes" "Questions" "Cards")
      :emacs "own")
     ("D" :kind "design" :tags ("design") :aliases nil
@@ -951,21 +951,54 @@ is the list of the ones that are neither."
 
 (defvar +notes-roam-head)
 
+(defvar +notes-reference-kinds
+  '("documentation" "specification" "standard-summary" "paper" "book"
+    "application-note" "datasheet" "essay")
+  "The REFERENCE_KIND values a reference capture offers: the vault's.")
+
+(defvar +notes--roam-reference-kind-default "documentation"
+  "The reference kind offered first, the kinds table's value.")
+
+;;;###autoload
+(defun +notes--roam-reference-kind (_node)
+  "Ask what kind of document a new reference is, for its REFERENCE_KIND:
+essay is for a blog or marketing page, cited only for its argument (the
+vault's KB-034)."
+  (completing-read (format-prompt "Reference kind" +notes--roam-reference-kind-default)
+                   +notes-reference-kinds nil t nil nil +notes--roam-reference-kind-default))
+
 ;;;###autoload
 (defun +notes--roam-kind-rows (&optional root)
   "The note kinds of the vault at ROOT, `org-roam-directory' by default:
 the rows of the table named kinds in its meta/templates.org, each
 \(KEY . PLIST).  Without the page or the table, warn once a session and
 return `+notes--roam-kinds-builtin'."
-  (or (ignore-errors
-        (+notes--roam-read-kinds
-         (expand-file-name "meta/templates.org" (or root org-roam-directory))))
-      (progn
-        (unless +notes--roam-kinds-warned
-          (setq +notes--roam-kinds-warned t)
-          (display-warning
-           'notes "The vault's meta/templates.org has no kinds table; SPC n r n uses Doom's copy"))
-        +notes--roam-kinds-builtin)))
+  (let ((rows (ignore-errors
+                (+notes--roam-read-kinds
+                 (expand-file-name "meta/templates.org" (or root org-roam-directory))))))
+    (if (and rows (seq-every-p #'+notes--roam-kind-usable-p rows))
+        rows
+      (unless +notes--roam-kinds-warned
+        (setq +notes--roam-kinds-warned t)
+        (display-warning
+         'notes "The vault's meta/templates.org has no usable kinds table; SPC n r n uses Doom's copy"))
+      +notes--roam-kinds-builtin)))
+
+(defun +notes--roam-kind-usable-p (row)
+  "Non-nil when ROW, (KEY . PLIST), can make a template: every row needs a
+key and a kind; one marked table also needs its tags, its headings, a
+folder whose only placeholder is <subject> or <organisation>, and a file
+whose only placeholders are <slug> and <date>."
+  (pcase-let ((`(,key . ,row) row))
+    (and (stringp key) (not (string-empty-p key))
+         (plist-get row :kind)
+         (or (not (equal (plist-get row :emacs) "table"))
+             (and (plist-get row :tags) (plist-get row :headings)
+                  (stringp (plist-get row :folder)) (stringp (plist-get row :file))
+                  (not (string-search "<" (replace-regexp-in-string
+                                           "<\\(?:subject\\|organisation\\)>" "" (plist-get row :folder))))
+                  (not (string-search "<" (replace-regexp-in-string
+                                           "<\\(?:slug\\|date\\)>" "" (plist-get row :file)))))))))
 
 (defun +notes--roam-read-kinds (file)
   "The rows of the table named kinds in FILE, or nil."
@@ -1028,15 +1061,21 @@ folder that capture asks for, or its fixed folder."
 
 (defun +notes--roam-kind-head (row)
   "The head of a note of the kind ROW: `+notes-roam-head' with the
-row's extra properties in the drawer, then its tags."
+row's extra properties in the drawer, then its tags.  ROAM_REFS is left
+to org-roam, which writes the URL the capture has once the note exists;
+REFERENCE_KIND is asked, the row's value offered first."
   (concat (replace-regexp-in-string
            ":END:"
-           (concat (mapconcat (lambda (extra)
-                                (pcase-let ((`(,name . ,value) (split-string extra " " t)))
-                                  (format ":%s: %s\n" name
-                                          (if value (string-join value " ")
-                                            (if (equal name "ROAM_REFS") "${ref}" "")))))
-                              (plist-get row :extra) "")
+           (concat (mapconcat
+                    (lambda (extra)
+                      (pcase-let ((`(,name . ,value) (split-string extra " " t)))
+                        (cond ((equal name "ROAM_REFS") "")
+                              ((equal name "REFERENCE_KIND")
+                               (setq +notes--roam-reference-kind-default
+                                     (or (car value) "documentation"))
+                               ":REFERENCE_KIND: ${+notes--roam-reference-kind}\n")
+                              (t (format ":%s: %s\n" name (string-join value " "))))))
+                    (plist-get row :extra) "")
                    ":END:")
            +notes-roam-head t t)
           ":" (string-join (plist-get row :tags) ":") ":\n\n"))
