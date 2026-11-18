@@ -950,22 +950,28 @@ is the list of the ones that are neither."
   "What SPC n r n says for each kind built from the table.")
 
 (defvar +notes-roam-head)
+(defvar org-roam-capture--info)
 
 (defvar +notes-reference-kinds
-  '("documentation" "specification" "standard-summary" "paper" "book"
+  '("documentation" "specification" "standard-summary" "book"
     "application-note" "datasheet" "essay")
-  "The REFERENCE_KIND values a reference capture offers: the vault's.")
+  "The REFERENCE_KIND values a reference capture offers: the vault's, but
+paper, which R files under resources/sources/papers/ (the vault's KB-039).")
 
 (defvar +notes--roam-reference-kind-default "documentation"
   "The reference kind offered first, the kinds table's value.")
 
 ;;;###autoload
 (defun +notes--roam-reference-kind (_node)
-  "Ask what kind of document a new reference is, for its REFERENCE_KIND:
-essay is for a blog or marketing page, cited only for its argument (the
-vault's KB-034)."
-  (completing-read (format-prompt "Reference kind" +notes--roam-reference-kind-default)
-                   +notes-reference-kinds nil t nil nil +notes--roam-reference-kind-default))
+  "What kind of document a new reference is, for its REFERENCE_KIND: the
+answer the capture already has, else asked.  Essay is for a blog or a
+marketing page, cited only for its argument (the vault's KB-034)."
+  (or (plist-get org-roam-capture--info :reference-kind)
+      (let ((kind (completing-read (format-prompt "Reference kind" +notes--roam-reference-kind-default)
+                                   +notes-reference-kinds nil t nil nil
+                                   +notes--roam-reference-kind-default)))
+        (setq org-roam-capture--info (plist-put org-roam-capture--info :reference-kind kind))
+        kind)))
 
 ;;;###autoload
 (defun +notes--roam-kind-rows (&optional root)
@@ -986,12 +992,13 @@ return `+notes--roam-kinds-builtin'."
 
 (defun +notes--roam-kind-usable-p (row)
   "Non-nil when ROW, (KEY . PLIST), can make a template: every row needs a
-key and a kind; one marked table also needs its tags, its headings, a
+key, a kind and table or own in its emacs column; one marked table needs its tags, its headings, a
 folder whose only placeholder is <subject> or <organisation>, and a file
 whose only placeholders are <slug> and <date>."
   (pcase-let ((`(,key . ,row) row))
     (and (stringp key) (not (string-empty-p key))
          (plist-get row :kind)
+         (member (plist-get row :emacs) '("table" "own"))
          (or (not (equal (plist-get row :emacs) "table"))
              (and (plist-get row :tags) (plist-get row :headings)
                   (stringp (plist-get row :folder)) (stringp (plist-get row :file))
@@ -1062,14 +1069,15 @@ folder that capture asks for, or its fixed folder."
 (defun +notes--roam-kind-head (row)
   "The head of a note of the kind ROW: `+notes-roam-head' with the
 row's extra properties in the drawer, then its tags.  ROAM_REFS is left
-to org-roam, which writes the URL the capture has once the note exists;
+empty, where the vault's notes have it, for org-roam, which writes the
+URL the capture has into it once the note exists;
 REFERENCE_KIND is asked, the row's value offered first."
   (concat (replace-regexp-in-string
            ":END:"
            (concat (mapconcat
                     (lambda (extra)
                       (pcase-let ((`(,name . ,value) (split-string extra " " t)))
-                        (cond ((equal name "ROAM_REFS") "")
+                        (cond ((equal name "ROAM_REFS") ":ROAM_REFS:\n")
                               ((equal name "REFERENCE_KIND")
                                (setq +notes--roam-reference-kind-default
                                      (or (car value) "documentation"))

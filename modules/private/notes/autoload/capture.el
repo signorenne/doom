@@ -7,6 +7,7 @@
 (declare-function org-roam-node-create "org-roam-node")
 (declare-function org-roam-node-slug "org-roam-node")
 (declare-function org-roam-node-title "org-roam-node")
+(declare-function +notes--roam-reference-kind "roam")
 (declare-function org-id-new "org-id")
 (declare-function outline-next-heading "outline")
 (declare-function org-link-make-string "ol")
@@ -204,6 +205,7 @@ subject's directory is made."
 (declare-function url-filename "url-parse")
 (declare-function org-roam-node-from-ref "org-roam-node")
 (declare-function org-roam-node-title "org-roam-node")
+(declare-function +notes--roam-reference-kind "roam")
 
 ;;;###autoload
 (defun +notes--roam-organisation-path (node)
@@ -235,6 +237,8 @@ a template is written into the path."
                                             folders nil nil nil nil default))))
          (dir (expand-file-name folder root)))
     (when (string-empty-p folder) (user-error "A reference needs its organisation's folder"))
+    ;; Asked here, before any folder is made, so a C-g leaves nothing.
+    (+notes--roam-reference-kind node)
     (unless (file-directory-p dir) (+notes--remove-if-aborted dir))
     (+notes--roam-new-path (concat "resources/sources/manuals/" folder "/"
                                    (org-roam-node-slug node) ".org"))))

@@ -215,8 +215,8 @@ day is written under.")
 ;; bookmarklet: a reference note as SPC n r n r makes one, under its
 ;; organisation, found again by its URL.
 (after! org-roam-protocol
-  (setq org-roam-capture-ref-templates
-        (list (cons "w" (cdr (assoc "r" (+notes--roam-table-templates)))))))
+  (when-let* ((reference (assoc "r" (+notes--roam-table-templates))))
+    (setq org-roam-capture-ref-templates (list (cons "w" (cdr reference))))))
 
 ;; The list of notes to fix (SPC n r v) and the browser's bookmarklets
 ;; open at the bottom and close with ESC or q. The list is kept while you
