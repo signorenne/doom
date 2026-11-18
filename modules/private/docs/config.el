@@ -11,6 +11,12 @@
   '(:groups (("docs" "Docs" () +docs-cheatsheet-mode)))
   "How the cheat sheet documents this module; see `+docs--module-docs'.")
 
+(defvar +docs-sheet-system-commands "\\`\\+macos/"
+  "Commands of a module one system loads and another does not, left out
+of the sheet's generated key tables: Doom binds SPC o o and SPC o s only
+with :os macos, which init.el enables on the Mac alone, so the tables
+would differ between the machines.  The sheet lists them by hand.")
+
 (defvar +docs-leader-features '(winum eglot)
   "Features loaded before the leader keys are read for the sheet: what
 Doom binds under the leader only once the package has loaded, and it

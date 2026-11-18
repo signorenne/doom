@@ -1,7 +1,7 @@
 #+title: Doom cheat sheet
 #+author: Nicolò Plebani
 #+startup: overview entitiespretty
-#+generated: 2026-11-06 21:56
+#+generated: 2026-11-18 11:06
 #+options: toc:nil ^:{}
 
 =F12= or =SPC h /= opens this sheet next to your buffer, at the section for
@@ -3055,7 +3055,12 @@ back.
 | gptel returns an error                 | the API key belongs in =~/.authinfo.gpg=  |
 
 * Reference: leader keys
-Generated from the running config. Rebuild it with ~gr~ in this buffer.
+Generated from the running config. Rebuild it with ~gr~ in this buffer;
+it comes out the same on Linux and on the Mac. What Doom binds on one
+system alone is here instead: on the Mac, ~SPC o o~ reveals the file in
+Finder and ~SPC o O~ the project, ~SPC o s i~ and ~I~ open iTerm, ~SPC o s l~
+and ~L~ send the file or the project to Launchbar, ~SPC o s t~ and ~T~ to
+Transmit.
 # BEGIN GENERATED-KEYS
 ** Top level (SPC)
 | Key     | What it does                 |
@@ -3535,7 +3540,6 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o E~   | Open eshell here             |
 | ~SPC o F~   | Select frame                 |
 | ~SPC o M~   | Media player                 |
-| ~SPC o O~   | Reveal project in Finder     |
 | ~SPC o P~   | This file in the Explorer    |
 | ~SPC o R~   | REPL (same window)           |
 | ~SPC o T~   | Open vterm here              |
@@ -3563,15 +3567,8 @@ Generated from the running config. Rebuild it with ~gr~ in this buffer.
 | ~SPC o l o~ | Org: set topic               |
 | ~SPC o l r~ | Rewrite                      |
 | ~SPC o l s~ | Send to gptel                |
-| ~SPC o o~   | Reveal in Finder             |
 | ~SPC o p~   | Explorer side bar            |
 | ~SPC o r~   | REPL                         |
-| ~SPC o s I~ | Open in new iTerm window     |
-| ~SPC o s L~ | Send project to Launchbar    |
-| ~SPC o s T~ | Send project to Transmit     |
-| ~SPC o s i~ | Open in iTerm                |
-| ~SPC o s l~ | Send to Launchbar            |
-| ~SPC o s t~ | Send to Transmit             |
 | ~SPC o t~   | Toggle vterm popup           |
 
 ** SPC p: project
@@ -4662,8 +4659,7 @@ bound.
 - ~+notes/install-protocol-handler~ (~SPC n d P~) :: Register
   org-protocol:// with the desktop, so the browser can capture.
 - ~+notes/layout~ (~SPC n h~) :: Lay the notes out in the workspace "notes":
-  the side bar at the left, the vault's tree above the note's outline, the
-  note, and at the right the roam buffer, which follows the note.
+  the note, and at its right the roam buffer, which follows the note.
 - ~+notes/log~ :: Show what changed in the notes lately.
 - ~+notes/menu~ (~SPC n SPC~) :: Notes and tasks: documents, capture,
   agenda, roam, the same keys as SPC n.

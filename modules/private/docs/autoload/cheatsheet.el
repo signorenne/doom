@@ -12,6 +12,7 @@
 
 (defvar +docs-cheatsheet-sections)
 (defvar +docs-leader-features)
+(defvar +docs-sheet-system-commands)
 (defvar evil-minor-mode-keymaps-alist)
 (declare-function doom-module-list "doom-lib")
 
@@ -869,7 +870,12 @@ what the session has done."
               (cons key (or (+docs--describe-key key)
                             label
                             (if (symbolp def) (symbol-name def) "a function"))))
-            (+docs--leader-walk doom-leader-map))))
+            ;; The same tables on every machine: what one system alone
+            ;; binds is listed by hand above them.
+            (seq-remove (pcase-lambda (`(,_key ,_label . ,def))
+                          (and (symbolp def)
+                               (string-match-p +docs-sheet-system-commands (symbol-name def))))
+                        (+docs--leader-walk doom-leader-map)))))
 
 (defun +docs--org-escape (s)
   "Make S safe inside an org table cell.  A | would end the cell, so it
