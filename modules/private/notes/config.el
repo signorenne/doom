@@ -442,12 +442,19 @@ other file, or a note outside the vault, goes to Org's attachments."
                         (file-name-nondirectory file) (abbreviate-file-name dir)))
           (make-directory dir t)
           ;; Into place whole: a copy cut short leaves no name that would
-          ;; refuse the next try.
-          (let ((part (make-temp-name (concat target ".part"))))
-            (if (eq action 'move)
-                (rename-file file part)
-              (copy-file file part))
-            (rename-file part target)))
+          ;; refuse the next try, and no partial file in the vault; a move
+          ;; that fails puts the file back where it was.
+          (let ((part (make-temp-name (concat target ".part")))
+                (move (eq action 'move)))
+            (condition-case err
+                (progn (if move (rename-file file part) (copy-file file part))
+                       (rename-file part target))
+              (error
+               (when (file-exists-p part)
+                 (if (and move (not (file-exists-p file)))
+                     (rename-file part file)
+                   (delete-file part)))
+               (signal (car err) (cdr err))))))
         (insert (org-link-make-string
                  (concat "file:" (+notes--file-link-path target))
                  (file-name-nondirectory target))
