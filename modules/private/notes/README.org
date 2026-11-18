@@ -211,9 +211,11 @@ goes into =assets/images/<subject>/=, the subject being the note's folder
 under =resources/wiki/=, or under the vault for a note elsewhere
 (=areas/x/index.org= files into =assets/images/areas/x/=), and a relative
 =file:= link to it is put where the cursor is; the heading stays as it
-was, not a note of its own. Any other dropped file, and a picture in an
-Org file outside the vault, still goes into the attachment folder under
-=.attach/=. A note opens with the pictures
+was, not a note of its own. A PDF dropped or pasted on a note goes the
+same way into =assets/documents/<subject>/= (the vault's KB-044); one whose
+name is already there is refused, so rename it first. Any other dropped
+file, and a picture in an Org file outside the vault, still goes into the
+attachment folder under =.attach/=. A note opens with the pictures
 its links name shown, as Org shows them: a link with no description, of
 any kind Org draws, an =attachment:=, a =file:= or a plain =./img/a.png=, 500
 pixels wide unless an =#+attr_org: :width= says otherwise. A note whose

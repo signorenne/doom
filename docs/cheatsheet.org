@@ -2495,6 +2495,7 @@ the inbox and decide later. The vault's =meta/WORKFLOWS.org= and
 | a manual, a vendor page    | ~SPC n r n r~              | =resources/sources/manuals/=                |
 | a page open in the browser | a bookmarklet              | the inbox, or =resources/sources/websites/= |
 | a picture                  | ~SPC m a p~ in the note    | =assets/images/<subject>/=, linked there    |
+| a PDF                      | drop it on the note        | =assets/documents/<subject>/=, linked there |
 
 ~SPC X~ and ~SPC n n~ open the same capture menu. The two bookmarklets
 come from ~SPC n d P~: one puts the page in the inbox, the other makes
@@ -2637,7 +2638,8 @@ which git ignores.
 A picture file dropped on a note is copied in too. Each goes into
 =assets/images/<subject>/=, the note's folder under =resources/wiki/= or
 under the vault, with a relative link where the cursor is, and the note
-shows it as it opens. Diagrams go in =assets/diagrams/<subject>/=.
+shows it as it opens. A dropped PDF goes the same way into
+=assets/documents/<subject>/=. Diagrams go in =assets/diagrams/<subject>/=.
 
 ** Cards and sources
 | Key       | What it does                          |

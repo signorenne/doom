@@ -358,9 +358,10 @@ file renamed into place, so no half picture is ever taken for the copy."
 ;; itself. Pasted (org-download, SPC m a p), captured (SPC m a c), dropped
 ;; (Org's own handler, or org-download's for a URL or inline data) and
 ;; yanked pictures all go there, by true names, so a vault reached through
-;; a link (~/org) files them the same. Any other dropped file still goes
-;; into the note's attachment folder, and a file outside the vault keeps
-;; Org's and Doom's attachments.
+;; a link (~/org) files them the same. A PDF dropped or pasted on a note
+;; goes the same way under assets/documents/<subject>/ (the vault's
+;; KB-044). Any other dropped file still goes into the note's attachment
+;; folder, and a file outside the vault keeps Org's and Doom's attachments.
 (declare-function org-entry-get "org")
 (declare-function org-link--normalize-filename "ol")
 (declare-function org-download-image "org-download")
@@ -376,6 +377,12 @@ file renamed into place, so no half picture is ever taken for the copy."
 
 (defun +notes--picture-dir (&optional file)
   "The folder a picture of the note FILE goes into, nil outside the vault."
+  (+notes--asset-dir "images" file))
+
+(defun +notes--asset-dir (kind &optional file)
+  "The folder of assets/KIND/ a file of the note FILE goes into: the
+note's subject, its folder under resources/wiki/ or else under the vault.
+Nil outside the vault."
   (when-let* ((file (or file (+notes--note-file)))
               (file (file-truename file))
               (vault (file-name-as-directory (file-truename org-directory)))
@@ -384,7 +391,7 @@ file renamed into place, so no half picture is ever taken for the copy."
           (wiki (expand-file-name "resources/wiki/" vault)))
       (file-name-as-directory
        (expand-file-name (file-relative-name dir (if (file-in-directory-p dir wiki) wiki vault))
-                         (expand-file-name "assets/images/" vault))))))
+                         (expand-file-name (concat "assets/" kind "/") vault))))))
 
 (defun +notes--file-link-path (file)
   "The path of a file: link to FILE: relative for the vault's assets, so
@@ -406,6 +413,34 @@ it first."
     (when-let* ((dir (+notes--picture-dir)))
       (setq-local org-yank-image-save-method dir
                   org-link-file-path-type #'+notes--file-link-path))))
+
+(declare-function dnd-get-local-file-name "dnd")
+
+(defadvice! +notes--documents-into-assets-a (fn url action separator)
+  "Copy a PDF dropped or pasted on a note of the vault under
+assets/documents/<subject>/ and link it relatively, as a picture is.
+A PDF whose name is already there is refused; rename it first.  Any
+other file, or a note outside the vault, goes to Org's attachments."
+  :around #'org--dnd-attach-file
+  (let* ((file (dnd-get-local-file-name url))
+         (dir (and file (derived-mode-p 'org-mode)
+                   (string-match-p "\\.pdf\\'" (downcase file))
+                   (+notes--asset-dir "documents"))))
+    (if (not dir)
+        (funcall fn url action separator)
+      (let ((target (expand-file-name (file-name-nondirectory file) dir)))
+        (when (file-exists-p target)
+          (user-error "%s is already in %s; rename it first"
+                      (file-name-nondirectory file) (abbreviate-file-name dir)))
+        (make-directory dir t)
+        (if (eq action 'move)
+            (rename-file file target)
+          (copy-file file target))
+        (insert (org-link-make-string
+                 (concat "file:" (+notes--file-link-path target))
+                 (file-name-nondirectory target))
+                separator)
+        'private))))
 
 (defun +notes--download-link (filename)
   "The link org-download inserts for FILENAME: a relative file: link."
