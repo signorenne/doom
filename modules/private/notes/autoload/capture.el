@@ -239,7 +239,16 @@ references from its host, else the host's name without its domain."
 
 (defun +notes--organisation-of-host (host)
   "The folder under resources/sources/manuals/ with most references from
-HOST, as the graph knows them, or nil."
+HOST, as the graph knows them, else from any host of its domain, or nil."
+  (let ((domain (string-join (last (split-string host "\\." t) 2) ".")))
+    (or (+notes--organisation-of-refs (concat "//" host "/%"))
+        (and (not (equal domain host))
+             (+notes--organisation-of-refs (concat "//" domain "/%")))
+        (+notes--organisation-of-refs (concat "//%." domain "/%")))))
+
+(defun +notes--organisation-of-refs (pattern)
+  "The folder under resources/sources/manuals/ holding most references
+whose ROAM_REFS match the SQL LIKE PATTERN, or nil."
   (let ((root (file-name-as-directory
                (expand-file-name "resources/sources/manuals/" org-roam-directory)))
         counts)
@@ -247,7 +256,7 @@ HOST, as the graph knows them, or nil."
                    (org-roam-db-query
                     [:select [nodes:file] :from refs :join nodes :on (= refs:node-id nodes:id)
                      :where (like refs:ref $s1)]
-                    (concat "//" host "/%"))))
+                    pattern)))
       (let ((file (car row)))
         (when (string-prefix-p root file)
           (cl-incf (alist-get (car (split-string (substring file (length root)) "/"))
